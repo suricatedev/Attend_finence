@@ -922,6 +922,119 @@ body {
     margin-bottom: 8px;
 }
 
+/* Estilos para card-info (solicitante, recebedor, valor) */
+.card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 12px;
+    background: rgba(255, 203, 87, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 203, 87, 0.2);
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: #ffffff;
+    border-radius: 6px;
+    border: 1px solid rgba(84, 67, 80, 0.1);
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+}
+
+.info-item:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+    border-color: #FFCB57;
+}
+
+.info-item i {
+    color: #544350;
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #544350;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+.info-value {
+    color: #1C1C1C;
+    font-size: 0.85rem;
+    font-weight: 500;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Estilo especial para valor */
+.info-item:has(.info-label:contains("VALOR")) .info-value,
+.info-value:contains("R$") {
+    font-weight: 700;
+    color: #27ae60;
+    font-size: 0.9rem;
+}
+
+/* Estilo especial para solicitante */
+.info-item:has(.info-label:contains("SOLICITANTE")) {
+    border-left: 3px solid #3498db;
+}
+
+/* Estilo especial para recebedor */
+.info-item:has(.info-label:contains("RECEBEDOR")) {
+    border-left: 3px solid #9b59b6;
+}
+
+/* Estilo especial para valor */
+.info-item:has(.info-label:contains("VALOR")) {
+    border-left: 3px solid #27ae60;
+    background: rgba(39, 174, 96, 0.05);
+}
+
+.info-item:has(.info-label:contains("VALOR")) i {
+    color: #27ae60;
+}
+
+/* Estilo especial para data de criação */
+.info-item:has(.info-label:contains("CRIAÇÃO")) {
+    border-left: 3px solid #f39c12;
+    background: rgba(243, 156, 18, 0.05);
+}
+
+.info-item:has(.info-label:contains("CRIAÇÃO")) i {
+    color: #f39c12;
+}
+
+/* Estilo especial para data de pagamento */
+.info-item:has(.info-label:contains("PAGAMENTO")) {
+    border-left: 3px solid #8e44ad;
+    background: rgba(142, 68, 173, 0.05);
+}
+
+.info-item:has(.info-label:contains("PAGAMENTO")) i {
+    color: #8e44ad;
+}
+
+/* Estilos para valores de data */
+.info-value:contains("/") {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
 .card-id {
     font-size: 0.8rem;
     color: #666;
@@ -1183,6 +1296,37 @@ body {
     .card {
         min-height: 180px;
         max-height: 400px;
+    }
+    
+    /* Responsividade para card-info */
+    .card-info {
+        padding: 8px;
+        gap: 6px;
+    }
+    
+    .info-item {
+        padding: 4px 6px;
+        font-size: 0.75rem;
+    }
+    
+    .info-label {
+        font-size: 0.6rem;
+        margin-right: 4px;
+    }
+    
+    .info-value {
+        font-size: 0.75rem;
+    }
+    
+    .info-item i {
+        font-size: 0.8rem;
+        width: 14px;
+    }
+    
+    /* Responsividade para campos de data */
+    .info-value:contains("/") {
+        font-size: 0.7rem;
+        letter-spacing: 0.3px;
     }
 }
 
