@@ -19,9 +19,6 @@
                     <i class="fas fa-chart-line"></i>
                     <span>Attend Finance</span>
                 </div>
-                <button class="sidebar-toggle" id="sidebarToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
             </div>
             
             <nav class="sidebar-nav">
@@ -33,7 +30,7 @@
                         </a>
                     
                     <li class="nav-item">
-                        <a href="#" class="nav-link">
+                        <a href="#" class="nav-link" id="reportsNavLink">
                             <i class="fas fa-chart-bar"></i>
                             <span>Relatórios</span>
                         </a>
@@ -43,6 +40,13 @@
                         <a href="#" class="nav-link">
                             <i class="fas fa-home"></i>
                             <span>Galeria de Templates</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" id="servicesNavLink">
+                            <i class="fas fa-cog"></i>
+                            <span>Serviços</span>
                         </a>
                     </li>
                 </ul>
@@ -698,6 +702,10 @@
         </main>
     </div>
 
+
+
+<!--############################################ FORM 01 ##################################### FORM 01 ##################################################### -->
+
     <!-- Modal para criar nova campanha -->
     <div class="modal" id="createCampaignModal">
         <div class="modal-content">
@@ -725,6 +733,7 @@
                             <label for="campaignSolicitante">Nome do Solicitante</label>
                             <input type="text" id="campaignSolicitante" name="solicitante" required>
                         </div>
+
                         <div class="form-group">
                             <label for="campaignRecebedor">Nome do Recebedor</label>
                             <input type="text" id="campaignRecebedor" name="recebedor" required>
@@ -735,11 +744,28 @@
                         <label for="campaignValor">Valor</label>
                         <input type="number" id="campaignValor" name="valor" step="0.01" min="0" required>
                     </div>
-                    
+
+                    <div class="form-group">
+                        <label for="campaignService">Serviço</label>
+                        <select id="campaignService" name="service" required>
+                            <option value="">Selecione o tipo de serviço</option>
+                            <option value="consultoria">Consultoria</option>
+                            <option value="desenvolvimento">Desenvolvimento</option>
+                            <option value="manutencao">Manutenção</option>
+                            <option value="treinamento">Treinamento</option>
+                            <option value="suporte">Suporte</option>
+                            <option value="infraestrutura">Infraestrutura</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="outros">Outros</option>
+                        </select>
+                    </div>
+
                     <div class="form-group">
                         <label for="campaignDescription">Descrição</label>
                         <textarea id="campaignDescription" name="description" rows="3" required></textarea>
                     </div>
+                    
+                
                     
                     <div class="form-row">
                         <div class="form-group">
@@ -941,6 +967,12 @@
             </div>
         </div>
     </div>
+                
+
+
+  <!--########################################## FORM02 ##################################### FORM02 ##################################################### -->
+
+
 
     <!-- Modal para adicionar/editar membro -->
     <div class="modal" id="addMemberModal">
@@ -1011,6 +1043,275 @@
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" id="cancelAddMember">Cancelar</button>
                 <button type="submit" class="btn-primary" form="addMemberForm" id="saveMember">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para gerenciar serviços -->
+    <div class="modal" id="manageServicesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Gerenciar Serviços</h2>
+                <button class="close-btn" id="closeServicesModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="services-container">
+                    <div class="services-header">
+                        <h3>
+                            <i class="fas fa-cogs"></i>
+                            Gerenciar Serviços da Empresa
+                        </h3>
+                        <button class="btn-primary" id="addServiceBtn">
+                            <i class="fas fa-plus"></i>
+                            Adicionar Serviço
+                        </button>
+                    </div>
+                    <div class="services-list" id="servicesList">
+                        <!-- Lista de serviços será preenchida dinamicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+<!--########################################## FORM03 ##################################### FORM03 ##################################################### -->
+
+
+    <!-- Modal para adicionar/editar serviço -->
+    <div class="modal" id="addServiceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="addServiceTitle">Adicionar Serviço</h2>
+                <button class="close-btn" id="closeAddServiceModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="service-form-container">
+                    <div class="service-form-header">
+                        <h3>
+                            <i class="fas fa-plus-circle"></i>
+                            Cadastrar Novo Serviço
+                        </h3>
+                        <p>Preencha os dados do serviço que será oferecido pela empresa</p>
+                    </div>
+                    <form id="addServiceForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="serviceName">
+                                    <i class="fas fa-tag"></i>
+                                    Nome do Serviço
+                                </label>
+                                <input type="text" id="serviceName" name="name" required placeholder="Ex: Consultoria em TI">
+                                <small class="form-help">Digite um nome claro e descritivo para o serviço</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="serviceCategory">
+                                    <i class="fas fa-folder"></i>
+                                    Categoria
+                                </label>
+                                <select id="serviceCategory" name="category" required>
+                                    <option value="">Selecione uma categoria</option>
+                                    <option value="consultoria">Consultoria</option>
+                                    <option value="desenvolvimento">Desenvolvimento</option>
+                                    <option value="manutencao">Manutenção</option>
+                                    <option value="treinamento">Treinamento</option>
+                                    <option value="suporte">Suporte</option>
+                                    <option value="infraestrutura">Infraestrutura</option>
+                                    <option value="marketing">Marketing</option>
+                                    <option value="outros">Outros</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="serviceDescription">
+                                <i class="fas fa-align-left"></i>
+                                Descrição do Serviço
+                            </label>
+                            <textarea id="serviceDescription" name="description" rows="4" placeholder="Descreva detalhadamente o que este serviço oferece, suas características e benefícios"></textarea>
+                            <small class="form-help">Uma descrição clara ajuda os solicitantes a entenderem o serviço</small>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="serviceIcon">
+                                    <i class="fas fa-palette"></i>
+                                    Ícone do Serviço
+                                </label>
+                                <select id="serviceIcon" name="icon" required>
+                                    <option value="">Selecione um ícone</option>
+                                    <option value="fas fa-user-tie">👔 Consultoria</option>
+                                    <option value="fas fa-code">💻 Desenvolvimento</option>
+                                    <option value="fas fa-tools">🔧 Manutenção</option>
+                                    <option value="fas fa-graduation-cap">🎓 Treinamento</option>
+                                    <option value="fas fa-headset">🎧 Suporte</option>
+                                    <option value="fas fa-server">🖥️ Infraestrutura</option>
+                                    <option value="fas fa-bullhorn">📢 Marketing</option>
+                                    <option value="fas fa-ellipsis-h">➕ Outros</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="serviceActive">
+                                    <i class="fas fa-toggle-on"></i>
+                                    Status do Serviço
+                                </label>
+                                <select id="serviceActive" name="active" required>
+                                    <option value="true">Ativo - Disponível para seleção</option>
+                                    <option value="false">Inativo - Não disponível</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelAddService">Cancelar</button>
+                <button type="submit" class="btn-primary" form="addServiceForm" id="saveService">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Relatórios -->
+    <div class="modal" id="reportsModal">
+        <div class="modal-content reports-modal">
+            <div class="modal-header">
+                <div class="header-left">
+                    <button class="back-button" id="backToDashboard">
+                        <i class="fas fa-arrow-left"></i>
+                        Voltar
+                    </button>
+                    <h2>
+                        <i class="fas fa-chart-bar"></i>
+                        Relatórios Financeiros
+                    </h2>
+                </div>
+                <button class="close-btn" id="closeReportsModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Filtros de Status -->
+                <div class="reports-filters">
+                    <div class="status-filters">
+                        <button class="status-filter active" data-status="all">
+                            <i class="fas fa-list"></i>
+                            Todos
+                        </button>
+                        <button class="status-filter" data-status="completed">
+                            <i class="fas fa-check"></i>
+                            Concluído
+                        </button>
+                        <button class="status-filter" data-status="pending">
+                            <i class="fas fa-clock"></i>
+                            Pendente
+                        </button>
+                        <button class="status-filter" data-status="approved">
+                            <i class="fas fa-thumbs-up"></i>
+                            Aprovado
+                        </button>
+                        <button class="status-filter" data-status="rejected">
+                            <i class="fas fa-times"></i>
+                            Rejeitado
+                        </button>
+                    </div>
+                    
+                    <!-- Filtros Avançados -->
+                    <div class="advanced-filters">
+                        <div class="filter-group">
+                            <label for="dateFrom">Data Inicial:</label>
+                            <input type="date" id="dateFrom" class="filter-input">
+                        </div>
+                        <div class="filter-group">
+                            <label for="dateTo">Data Final:</label>
+                            <input type="date" id="dateTo" class="filter-input">
+                        </div>
+                        <div class="filter-group">
+                            <label for="serviceFilter">Serviço:</label>
+                            <select id="serviceFilter" class="filter-input">
+                                <option value="">Todos os serviços</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="searchInput">Buscar:</label>
+                            <input type="text" id="searchInput" placeholder="ID, título, solicitante..." class="filter-input">
+                        </div>
+                        <button class="btn-clear" id="clearFilters">
+                            <i class="fas fa-eraser"></i>
+                            Limpar
+                        </button>
+                        <button class="btn-filter" id="applyFilters">
+                            <i class="fas fa-filter"></i>
+                            Aplicar Filtros
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tabela de Relatórios -->
+                <div class="reports-table-container">
+                    <div class="table-header">
+                        <div class="table-info">
+                            <span id="totalRecords">Total: 0 registros</span>
+                            <span id="filteredRecords">Filtrados: 0 registros</span>
+                        </div>
+                        <div class="table-actions">
+                            <button class="btn-export" id="exportExcel">
+                                <i class="fas fa-file-excel"></i>
+                                Exportar Excel
+                            </button>
+                            <button class="btn-export" id="exportPDF">
+                                <i class="fas fa-file-pdf"></i>
+                                Exportar PDF
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-wrapper">
+                        <table class="reports-table" id="reportsTable">
+                            <thead>
+                                <tr>
+                                    <th class="sortable" data-column="id">
+                                        ID <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-column="title">
+                                        Título <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-column="solicitante">
+                                        Solicitante <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-column="recebedor">
+                                        Recebedor <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-column="service">
+                                        Serviço <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-column="valor">
+                                        Valor <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-column="status">
+                                        Status <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-column="dataCriacao">
+                                        Data Criação <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-column="dataPagamento">
+                                        Data Pagamento <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportsTableBody">
+                                <!-- Dados serão preenchidos dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
