@@ -471,9 +471,8 @@ class CampaignManager {
         const now = new Date();
         const currentDate = now.toISOString().split('T')[0];
         
-        // Gerar ID único
-        const uniqueId = this.generateUniqueId();
-        document.getElementById('campaignId').value = uniqueId;
+        // Limpar campo ID para o usuário preencher
+        document.getElementById('campaignId').value = '';
         
         // Definir data de criação
         document.getElementById('campaignDataCriacao').value = currentDate;
@@ -503,7 +502,19 @@ class CampaignManager {
         const formData = new FormData(form);
         
         const cardId = formData.get('id');
+        
+        // Validar se o ID foi preenchido
+        if (!cardId || cardId.trim() === '') {
+            this.showNotification('Por favor, preencha o campo ID com o código do sistema externo.', 'error');
+            return;
+        }
+        
+        // Verificar se o ID já existe (apenas para novos cards)
         const isEditing = this.cards.find(c => c.id === cardId);
+        if (!isEditing && this.cards.find(c => c.id === cardId)) {
+            this.showNotification('Este ID já existe. Por favor, use um ID único.', 'error');
+            return;
+        }
         
         // Data atual
         const now = new Date();
