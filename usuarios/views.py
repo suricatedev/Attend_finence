@@ -5,15 +5,13 @@ from django.shortcuts import render, redirect
 
 class LoginUsuarios(View):
 
-    def get(request):
-        return render(request, "login.html")
+    def get(self, request):
+        return render(request, "login01/index2.html")
     
-    def post(request):
-        username = request.POST["username"]
+    def post(self, request):
+        email = request.POST["email"]
         password = request.POST["password"]
 
-        user = authenticate(username=username, password=password)
+    
 
-        if user is not None:
-            login(request, user)
-            redirect("/")
+

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attend Finance - Login</title>
+    <link rel="stylesheet" href="../../static/css/style2.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="main-container">
+        <div class="login-container">
+            <div class="login-box">
+                <form class="form" method="POST" action="{% url 'login'%}">
+                    {% csrf_token %}
+                    <div class="logo">
+                        <i class="fas fa-user" style="color: #ffffff; font-size: 20px;"></i>
+                    </div>
+                    <h1 class="header">Bem-vindo de volta</h1>
+                    <p class="subtitle">Por favor, insira seus dados.</p>
+                    
+                    <div class="input-group">
+                        <label class="input-label">E-mail</label>
+                        <input name="email" type="email" placeholder="Coloque seu e-mail" class="input" required />
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">Senha</label>
+                        <input type="password" name="password" placeholder="Coloque sua senha" class="input" required />
+                    </div>
+                    
+                    <div class="options">
+                        <label class="remember-me">
+                            <input type="checkbox" />
+                            Lembrar senha
+                        </label>
+                        <a href="#" class="forgot-password">Esqueceu sua senha?</a>
+                    </div>
+                    
+                    <button type="submit" class="button">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Entrar
+                    </button>
+                    
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
