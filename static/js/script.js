@@ -15,14 +15,6 @@ class CampaignManager {
     }
 
     setupEventListeners() {
-        // Sidebar toggle
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebar = document.getElementById('sidebar');
-        
-        sidebarToggle?.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            this.toggleSidebarOverlay();
-        });
 
         // Create campaign button
         const createCampaignBtn = document.getElementById('createCampaignBtn');
@@ -404,8 +396,12 @@ class CampaignManager {
     handleSettingsAction(action) {
         switch(action) {
             case 'Gerenciar membros':
-                this.showNotification('Abrindo gerenciamento de membros...', 'info');
-                // Aqui você pode adicionar a lógica para abrir o modal de gerenciamento
+                // Abrir modal de gerenciamento de membros
+                if (window.membersManager) {
+                    window.membersManager.showManageMembersModal();
+                } else {
+                    this.showNotification('Sistema de membros não inicializado', 'error');
+                }
                 break;
             case 'Equipe':
                 this.showNotification('Abrindo configurações de equipe...', 'info');
@@ -520,6 +516,10 @@ class CampaignManager {
         const now = new Date();
         const currentDate = now.toISOString().split('T')[0];
         
+        // Obter dados do serviço selecionado
+        const serviceId = formData.get('service');
+        const selectedService = window.servicesManager?.services.find(s => s.id == serviceId);
+        
         const cardData = {
             id: cardId,
             status: formData.get('status'),
@@ -528,6 +528,8 @@ class CampaignManager {
             recebedor: formData.get('recebedor'),
             valor: parseFloat(formData.get('valor')) || 0,
             description: formData.get('description'),
+            service: selectedService ? selectedService.name : formData.get('service'),
+            serviceId: serviceId,
             dataPagamento: formData.get('dataPagamento'),
             dataCriacao: isEditing ? isEditing.dataCriacao : currentDate,
             anexos: this.handleFileUpload(formData.getAll('anexos')),
@@ -607,6 +609,20 @@ class CampaignManager {
             'completed': 'Concluído'
         };
         return statusTexts[status] || 'Pendente';
+    }
+
+    getServiceText(service) {
+        const serviceTexts = {
+            'consultoria': 'Consultoria',
+            'desenvolvimento': 'Desenvolvimento',
+            'manutencao': 'Manutenção',
+            'treinamento': 'Treinamento',
+            'suporte': 'Suporte Técnico',
+            'infraestrutura': 'Infraestrutura',
+            'marketing': 'Marketing',
+            'outros': 'Outros'
+        };
+        return serviceTexts[service] || 'Não especificado';
     }
 
     formatAttachmentsList(anexos) {
@@ -717,6 +733,14 @@ class CampaignManager {
                                 <span class="info-value status-${card.status || 'pending'}">${this.getStatusText(card.status)}</span>
                             </div>
                         </div>
+                        
+                        <div class="info-item">
+                            <i class="fas fa-cogs"></i>
+                            <div class="info-content">
+                                <span class="info-label">Serviço</span>
+                                <span class="info-value">${this.getServiceText(card.service)}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -805,12 +829,23 @@ class CampaignManager {
         if (card) {
             // Preencher o formulário com dados existentes
             document.getElementById('campaignId').value = card.id;
-            document.getElementById('campaignStatus').value = card.status || 'pending';
             document.getElementById('campaignTitle').value = card.title || '';
             document.getElementById('campaignSolicitante').value = card.solicitante || card.assignee || '';
             document.getElementById('campaignRecebedor').value = card.recebedor || '';
             document.getElementById('campaignValor').value = card.valor || 0;
             document.getElementById('campaignDescription').value = card.description || '';
+            
+            // Preencher campo de serviço
+            if (card.serviceId) {
+                document.getElementById('campaignService').value = card.serviceId;
+            } else if (card.service) {
+                // Fallback para compatibilidade com dados antigos
+                const service = window.servicesManager?.services.find(s => s.name === card.service);
+                if (service) {
+                    document.getElementById('campaignService').value = service.id;
+                }
+            }
+            
             document.getElementById('campaignDataPagamento').value = card.dataPagamento || '';
             document.getElementById('campaignDataCriacao').value = card.dataCriacao || '';
             document.getElementById('campaignTempoCriacao').value = card.tempoCriacao || '0 dias';
@@ -1081,7 +1116,8 @@ class MembersManager {
     showManageMembersModal() {
         const modal = document.getElementById('manageMembersModal');
         if (modal) {
-            modal.style.display = 'flex';
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
             this.renderMembers();
         }
     }
@@ -1089,7 +1125,8 @@ class MembersManager {
     hideManageMembersModal() {
         const modal = document.getElementById('manageMembersModal');
         if (modal) {
-            modal.style.display = 'none';
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
         }
     }
 
@@ -1110,14 +1147,16 @@ class MembersManager {
             // Configurar título
             title.textContent = 'Adicionar Membro';
             
-            modal.style.display = 'flex';
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
         }
     }
 
     hideAddMemberModal() {
         const modal = document.getElementById('addMemberModal');
         if (modal) {
-            modal.style.display = 'none';
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
         }
     }
 
@@ -1266,13 +1305,675 @@ class MembersManager {
     }
 }
 
+// Classe para gerenciamento de serviços
+class ServicesManager {
+    constructor() {
+        this.services = [
+            {
+                id: 1,
+                name: 'Consultoria em TI',
+                description: 'Serviços de consultoria especializada em tecnologia da informação',
+                category: 'consultoria',
+                icon: 'fas fa-user-tie',
+                active: true
+            },
+            {
+                id: 2,
+                name: 'Desenvolvimento de Software',
+                description: 'Desenvolvimento de aplicações e sistemas personalizados',
+                category: 'desenvolvimento',
+                icon: 'fas fa-code',
+                active: true
+            },
+            {
+                id: 3,
+                name: 'Manutenção de Equipamentos',
+                description: 'Manutenção preventiva e corretiva de equipamentos',
+                category: 'manutencao',
+                icon: 'fas fa-tools',
+                active: true
+            },
+            {
+                id: 4,
+                name: 'Treinamento Corporativo',
+                description: 'Cursos e capacitação profissional para equipes',
+                category: 'treinamento',
+                icon: 'fas fa-graduation-cap',
+                active: true
+            }
+        ];
+        this.currentServiceId = 5;
+        this.init();
+    }
+
+    init() {
+        console.log('ServicesManager initializing...');
+        this.setupEventListeners();
+        this.renderServices();
+        this.updateServiceDropdown();
+        console.log('ServicesManager initialized successfully');
+    }
+
+    setupEventListeners() {
+        // Abrir modal de gerenciar serviços
+        const servicesLink = document.getElementById('servicesNavLink');
+        if (servicesLink) {
+            servicesLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Serviços link clicked!');
+                this.showManageServicesModal();
+            });
+        } else {
+            console.log('Services link not found!');
+        }
+
+        // Botão adicionar serviço
+        document.getElementById('addServiceBtn')?.addEventListener('click', () => {
+            this.showAddServiceModal();
+        });
+
+        // Fechar modais
+        document.getElementById('closeServicesModal')?.addEventListener('click', () => {
+            this.hideManageServicesModal();
+        });
+
+        document.getElementById('closeAddServiceModal')?.addEventListener('click', () => {
+            this.hideAddServiceModal();
+        });
+
+        document.getElementById('cancelAddService')?.addEventListener('click', () => {
+            this.hideAddServiceModal();
+        });
+
+        // Formulário de adicionar serviço
+        document.getElementById('addServiceForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveService();
+        });
+
+        // Event listeners para ações dos serviços
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-edit-service')) {
+                const serviceItem = e.target.closest('.service-item');
+                const serviceId = parseInt(serviceItem.dataset.serviceId);
+                this.editService(serviceId);
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-remove-service')) {
+                const serviceItem = e.target.closest('.service-item');
+                const serviceId = parseInt(serviceItem.dataset.serviceId);
+                this.removeService(serviceId);
+            }
+        });
+    }
+
+    showManageServicesModal() {
+        console.log('showManageServicesModal called');
+        const modal = document.getElementById('manageServicesModal');
+        if (modal) {
+            console.log('Modal found, showing...');
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            this.renderServices();
+        } else {
+            console.log('Modal not found!');
+        }
+    }
+
+    hideManageServicesModal() {
+        const modal = document.getElementById('manageServicesModal');
+        if (modal) {
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    showAddServiceModal() {
+        const modal = document.getElementById('addServiceModal');
+        const form = document.getElementById('addServiceForm');
+        const title = document.getElementById('addServiceTitle');
+        
+        if (modal && form) {
+            form.reset();
+            title.textContent = 'Adicionar Serviço';
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    hideAddServiceModal() {
+        const modal = document.getElementById('addServiceModal');
+        if (modal) {
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    renderServices() {
+        const container = document.getElementById('servicesList');
+        if (!container) return;
+
+        container.innerHTML = '';
+        
+        this.services.forEach(service => {
+            const serviceElement = this.createServiceElement(service);
+            container.appendChild(serviceElement);
+        });
+    }
+
+    createServiceElement(service) {
+        const serviceDiv = document.createElement('div');
+        serviceDiv.className = 'service-item';
+        serviceDiv.dataset.serviceId = service.id;
+        
+        serviceDiv.innerHTML = `
+            <div class="service-info">
+                <div class="service-icon">
+                    <i class="${service.icon}"></i>
+                </div>
+                <div class="service-details">
+                    <div class="service-name">${service.name}</div>
+                    <div class="service-description">${service.description}</div>
+                    <div class="service-category">${service.category}</div>
+                </div>
+            </div>
+            <div class="service-status">
+                <span class="status-badge ${service.active ? 'active' : 'inactive'}">
+                    ${service.active ? 'Ativo' : 'Inativo'}
+                </span>
+            </div>
+            <div class="service-actions">
+                <button class="btn-edit-service" title="Editar">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-remove-service" title="Remover">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        
+        return serviceDiv;
+    }
+
+    saveService() {
+        const form = document.getElementById('addServiceForm');
+        const formData = new FormData(form);
+        
+        const service = {
+            id: this.currentServiceId++,
+            name: formData.get('name'),
+            description: formData.get('description'),
+            category: formData.get('category'),
+            icon: formData.get('icon'),
+            active: formData.get('active') === 'true'
+        };
+        
+        this.services.push(service);
+        this.renderServices();
+        this.updateServiceDropdown();
+        this.hideAddServiceModal();
+        this.showNotification('Serviço adicionado com sucesso!', 'success');
+    }
+
+    editService(serviceId) {
+        const service = this.services.find(s => s.id === serviceId);
+        if (!service) return;
+        
+        const form = document.getElementById('addServiceForm');
+        const title = document.getElementById('addServiceTitle');
+        
+        // Preencher formulário
+        document.getElementById('serviceName').value = service.name;
+        document.getElementById('serviceDescription').value = service.description;
+        document.getElementById('serviceCategory').value = service.category;
+        document.getElementById('serviceIcon').value = service.icon;
+        document.getElementById('serviceActive').value = service.active.toString();
+        
+        title.textContent = 'Editar Serviço';
+        form.dataset.editingServiceId = serviceId;
+        
+        this.showAddServiceModal();
+    }
+
+    removeService(serviceId) {
+        if (confirm('Tem certeza que deseja remover este serviço?')) {
+            this.services = this.services.filter(s => s.id !== serviceId);
+            this.renderServices();
+            this.updateServiceDropdown();
+            this.showNotification('Serviço removido com sucesso!', 'success');
+        }
+    }
+
+    updateServiceDropdown() {
+        const select = document.getElementById('campaignService');
+        if (!select) return;
+
+        // Limpar opções existentes (exceto a primeira)
+        while (select.children.length > 1) {
+            select.removeChild(select.lastChild);
+        }
+
+        // Adicionar serviços ativos
+        this.services
+            .filter(service => service.active)
+            .forEach(service => {
+                const option = document.createElement('option');
+                option.value = service.id;
+                option.textContent = service.name;
+                select.appendChild(option);
+            });
+    }
+
+    showNotification(message, type = 'info') {
+        console.log(`${type.toUpperCase()}: ${message}`);
+    }
+}
+
+// Classe para gerenciamento de relatórios
+class ReportsManager {
+    constructor() {
+        this.currentFilter = 'all';
+        this.sortColumn = null;
+        this.sortDirection = 'asc';
+        this.filteredData = [];
+        this.init();
+    }
+
+    init() {
+        console.log('ReportsManager initializing...');
+        this.setupEventListeners();
+        this.populateServiceFilter();
+        this.loadReportsData();
+        console.log('ReportsManager initialized successfully');
+    }
+
+    setupEventListeners() {
+        // Abrir modal de relatórios
+        const reportsLink = document.getElementById('reportsNavLink');
+        if (reportsLink) {
+            reportsLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Relatórios link clicked!');
+                this.showReportsModal();
+            });
+        } else {
+            console.log('Reports link not found!');
+        }
+
+        // Fechar modal
+        document.getElementById('closeReportsModal')?.addEventListener('click', () => {
+            this.hideReportsModal();
+        });
+
+        // Botão voltar
+        document.getElementById('backToDashboard')?.addEventListener('click', () => {
+            this.hideReportsModal();
+        });
+
+        // Fechar dropdowns ao clicar fora
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.action-buttons')) {
+                document.querySelectorAll('.action-dropdown').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+            }
+        });
+
+        // Filtros de status
+        document.querySelectorAll('.status-filter').forEach(button => {
+            button.addEventListener('click', (e) => {
+                this.setActiveFilter(e.target.closest('.status-filter'));
+            });
+        });
+
+        // Filtros avançados
+        document.getElementById('applyFilters')?.addEventListener('click', () => {
+            this.applyFilters();
+        });
+
+        document.getElementById('clearFilters')?.addEventListener('click', () => {
+            this.clearFilters();
+        });
+
+        // Busca em tempo real
+        document.getElementById('searchInput')?.addEventListener('input', (e) => {
+            this.searchReports(e.target.value);
+        });
+
+        // Ordenação de colunas
+        document.querySelectorAll('.sortable').forEach(th => {
+            th.addEventListener('click', (e) => {
+                this.sortTable(e.target.closest('th').dataset.column);
+            });
+        });
+
+        // Exportação
+        document.getElementById('exportExcel')?.addEventListener('click', () => {
+            this.exportToExcel();
+        });
+
+        document.getElementById('exportPDF')?.addEventListener('click', () => {
+            this.exportToPDF();
+        });
+    }
+
+    showReportsModal() {
+        console.log('showReportsModal called');
+        const modal = document.getElementById('reportsModal');
+        if (modal) {
+            console.log('Modal found, showing...');
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            this.loadReportsData();
+        } else {
+            console.log('Modal not found!');
+        }
+    }
+
+    hideReportsModal() {
+        const modal = document.getElementById('reportsModal');
+        if (modal) {
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    populateServiceFilter() {
+        const serviceFilter = document.getElementById('serviceFilter');
+        if (!serviceFilter || !window.servicesManager) return;
+
+        // Limpar opções existentes (exceto a primeira)
+        while (serviceFilter.children.length > 1) {
+            serviceFilter.removeChild(serviceFilter.lastChild);
+        }
+
+        // Adicionar serviços ativos
+        window.servicesManager.services
+            .filter(service => service.active)
+            .forEach(service => {
+                const option = document.createElement('option');
+                option.value = service.name;
+                option.textContent = service.name;
+                serviceFilter.appendChild(option);
+            });
+    }
+
+    loadReportsData() {
+        if (!window.campaignManager) return;
+        
+        this.filteredData = [...window.campaignManager.cards];
+        this.renderTable();
+        this.updateTableInfo();
+    }
+
+    setActiveFilter(button) {
+        // Remover classe active de todos os botões
+        document.querySelectorAll('.status-filter').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Adicionar classe active ao botão clicado
+        button.classList.add('active');
+        
+        // Aplicar filtro
+        this.currentFilter = button.dataset.status;
+        this.applyStatusFilter();
+    }
+
+    applyStatusFilter() {
+        if (this.currentFilter === 'all') {
+            this.filteredData = [...window.campaignManager.cards];
+        } else {
+            this.filteredData = window.campaignManager.cards.filter(card => 
+                card.status === this.currentFilter
+            );
+        }
+        
+        this.renderTable();
+        this.updateTableInfo();
+    }
+
+    applyFilters() {
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        const serviceFilter = document.getElementById('serviceFilter').value;
+        const searchTerm = document.getElementById('searchInput').value;
+
+        let filtered = [...window.campaignManager.cards];
+
+        // Filtro por status
+        if (this.currentFilter !== 'all') {
+            filtered = filtered.filter(card => card.status === this.currentFilter);
+        }
+
+        // Filtro por data
+        if (dateFrom) {
+            filtered = filtered.filter(card => card.dataCriacao >= dateFrom);
+        }
+        if (dateTo) {
+            filtered = filtered.filter(card => card.dataCriacao <= dateTo);
+        }
+
+        // Filtro por serviço
+        if (serviceFilter) {
+            filtered = filtered.filter(card => card.service === serviceFilter);
+        }
+
+        // Filtro por busca
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            filtered = filtered.filter(card => 
+                card.id.toLowerCase().includes(term) ||
+                card.title.toLowerCase().includes(term) ||
+                card.solicitante.toLowerCase().includes(term) ||
+                card.recebedor.toLowerCase().includes(term)
+            );
+        }
+
+        this.filteredData = filtered;
+        this.renderTable();
+        this.updateTableInfo();
+    }
+
+    clearFilters() {
+        document.getElementById('dateFrom').value = '';
+        document.getElementById('dateTo').value = '';
+        document.getElementById('serviceFilter').value = '';
+        document.getElementById('searchInput').value = '';
+        
+        // Resetar filtro de status para "Todos"
+        document.querySelectorAll('.status-filter').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector('.status-filter[data-status="all"]').classList.add('active');
+        
+        this.currentFilter = 'all';
+        this.loadReportsData();
+    }
+
+    searchReports(term) {
+        if (!term.trim()) {
+            this.applyStatusFilter();
+            return;
+        }
+
+        const searchTerm = term.toLowerCase();
+        this.filteredData = this.filteredData.filter(card => 
+            card.id.toLowerCase().includes(searchTerm) ||
+            card.title.toLowerCase().includes(searchTerm) ||
+            card.solicitante.toLowerCase().includes(searchTerm) ||
+            card.recebedor.toLowerCase().includes(searchTerm)
+        );
+
+        this.renderTable();
+        this.updateTableInfo();
+    }
+
+    sortTable(column) {
+        if (this.sortColumn === column) {
+            this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            this.sortColumn = column;
+            this.sortDirection = 'asc';
+        }
+
+        this.filteredData.sort((a, b) => {
+            let aVal = a[column];
+            let bVal = b[column];
+
+            if (column === 'valor') {
+                aVal = parseFloat(aVal) || 0;
+                bVal = parseFloat(bVal) || 0;
+            }
+
+            if (aVal < bVal) return this.sortDirection === 'asc' ? -1 : 1;
+            if (aVal > bVal) return this.sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        this.renderTable();
+    }
+
+    renderTable() {
+        const tbody = document.getElementById('reportsTableBody');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+
+        this.filteredData.forEach(card => {
+            const row = this.createTableRow(card);
+            tbody.appendChild(row);
+        });
+    }
+
+    createTableRow(card) {
+        const row = document.createElement('tr');
+        
+        const statusClass = card.status || 'pending';
+        const statusText = this.getStatusText(card.status);
+        const valorFormatado = new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        }).format(card.valor || 0);
+
+        row.innerHTML = `
+            <td><strong>${card.id}</strong></td>
+            <td>${card.title}</td>
+            <td>${card.solicitante}</td>
+            <td>${card.recebedor}</td>
+            <td>${card.service || 'Não especificado'}</td>
+            <td><strong>${valorFormatado}</strong></td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td>${card.dataCriacao || 'N/A'}</td>
+            <td>${card.dataPagamento || 'N/A'}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="action-menu-btn" onclick="window.reportsManager.toggleActionMenu(this)">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="action-dropdown">
+                        <button class="action-dropdown-item details" onclick="window.reportsManager.viewDetails('${card.id}')">
+                            <i class="fas fa-eye"></i>
+                            Detalhes
+                        </button>
+                        <button class="action-dropdown-item edit" onclick="window.reportsManager.editCard('${card.id}')">
+                            <i class="fas fa-edit"></i>
+                            Editar
+                        </button>
+                        <button class="action-dropdown-item delete" onclick="window.reportsManager.deleteCard('${card.id}')">
+                            <i class="fas fa-trash"></i>
+                            Excluir
+                        </button>
+                    </div>
+                </div>
+            </td>
+        `;
+
+        return row;
+    }
+
+    getStatusText(status) {
+        const statusTexts = {
+            'completed': 'Concluído',
+            'pending': 'Pendente',
+            'approved': 'Aprovado',
+            'rejected': 'Rejeitado'
+        };
+        return statusTexts[status] || 'Pendente';
+    }
+
+    toggleActionMenu(button) {
+        // Fechar todos os outros menus
+        document.querySelectorAll('.action-dropdown').forEach(dropdown => {
+            if (dropdown !== button.nextElementSibling) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Toggle do menu atual
+        const dropdown = button.nextElementSibling;
+        dropdown.classList.toggle('show');
+    }
+
+    updateTableInfo() {
+        const totalRecords = document.getElementById('totalRecords');
+        const filteredRecords = document.getElementById('filteredRecords');
+        
+        if (totalRecords) {
+            totalRecords.textContent = `Total: ${window.campaignManager.cards.length} registros`;
+        }
+        
+        if (filteredRecords) {
+            filteredRecords.textContent = `Filtrados: ${this.filteredData.length} registros`;
+        }
+    }
+
+    viewDetails(cardId) {
+        const card = window.campaignManager.cards.find(c => c.id === cardId);
+        if (card) {
+            alert(`Detalhes do Card ${cardId}:\n\nTítulo: ${card.title}\nSolicitante: ${card.solicitante}\nRecebedor: ${card.recebedor}\nValor: R$ ${card.valor}\nStatus: ${this.getStatusText(card.status)}`);
+        }
+    }
+
+    editCard(cardId) {
+        this.hideReportsModal();
+        window.campaignManager.editCard(cardId);
+    }
+
+    deleteCard(cardId) {
+        if (confirm('Tem certeza que deseja excluir este registro?')) {
+            window.campaignManager.cards = window.campaignManager.cards.filter(c => c.id !== cardId);
+            this.loadReportsData();
+            window.campaignManager.updateCardCounts();
+        }
+    }
+
+    exportToExcel() {
+        // Implementar exportação para Excel
+        console.log('Exportando para Excel...');
+        alert('Funcionalidade de exportação para Excel será implementada em breve!');
+    }
+
+    exportToPDF() {
+        // Implementar exportação para PDF
+        console.log('Exportando para PDF...');
+        alert('Funcionalidade de exportação para PDF será implementada em breve!');
+    }
+}
+
 // Inicializar o sistema quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing managers...');
     window.campaignManager = new CampaignManager();
     window.membersManager = new MembersManager();
+    window.servicesManager = new ServicesManager();
+    window.reportsManager = new ReportsManager();
     
     // Adicionar funcionalidades extras
     console.log('Sistema de Gestão Financeira carregado com sucesso!');
+    console.log('ReportsManager available:', !!window.reportsManager);
     
     // Expor métodos globais para debug
     window.searchCards = (query) => window.campaignManager.searchCards(query);
