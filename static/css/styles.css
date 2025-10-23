@@ -364,7 +364,7 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #FFCB57, #544350);
+    background: linear-gradient(135deg, #ffe8b6, #ffc21c);
     color: #1C1C1C;
     border: none;
     padding: 12px 24px;
@@ -554,7 +554,7 @@ body {
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #FFCB57, #544350);
+    background: linear-gradient(90deg, #FFCB57, #FFCB57);
     opacity: 0.8;
 }
 
@@ -2433,30 +2433,6 @@ body {
     background: #1C1C1C;
 }
 
-/* Chat flutuante */
-.floating-chat {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, #FFCB57, #544350);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #1C1C1C;
-    font-size: 1.5rem;
-    cursor: pointer;
-    box-shadow: 0 4px 20px rgba(255, 203, 87, 0.4);
-    transition: all 0.2s ease;
-    z-index: 1000;
-}
-
-.floating-chat:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 25px rgba(255, 203, 87, 0.5);
-}
 
 /* Responsividade */
 @media (max-width: 768px) {
