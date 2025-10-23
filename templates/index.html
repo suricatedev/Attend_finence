@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Gestão Financeira</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="../static/css/styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
@@ -717,8 +717,8 @@
             </div>
             <div class="modal-body">
                 <form id="createCampaignForm">
-                    <div class="form-group">
-                        <label for="campaignId">ID</label>
+                        <div class="form-group">
+                            <label for="campaignId">ID</label>
                         <input type="text" id="campaignId" name="id" placeholder="Digite o ID padrão do sistema externo" required>
                         <small class="form-help">Exemplo: ORD-2024-001, REQ-12345, SOL-20240115-001</small>
                     </div>
@@ -759,7 +759,7 @@
                             <option value="outros">Outros</option>
                         </select>
                     </div>
-
+                    
                     <div class="form-group">
                         <label for="campaignDescription">Descrição</label>
                         <textarea id="campaignDescription" name="description" rows="3" required></textarea>
@@ -826,29 +826,88 @@
     <div class="modal" id="manageMembersModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Gerenciar Membros</h2>
+                <h2><i class="fas fa-user-plus"></i> Cadastro de Usuário</h2>
                 <button class="close-btn" id="closeMembersModal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
-                <div class="members-container">
-                    <!-- Setor 1 - SuperUser -->
-                    <div class="sector-section">
-                        <div class="sector-header">
-                            <h3><i class="fas fa-crown"></i> SuperUser</h3>
-                            <button class="btn-add-member" data-sector="superuser">
-                                <i class="fas fa-plus"></i> Adicionar
-                            </button>
-                        </div>
-                        <div class="members-list" id="superuser-members">
-                            <div class="member-item">
-                                <div class="member-info">
-                                    <div class="member-avatar">
-                                        <i class="fas fa-user-shield"></i>
-                                    </div>
-                                    <div class="member-details">
-                                        <span class="member-name">Admin Principal</span>
+                <form id="userRegistrationForm" class="user-form">
+                    <div class="form-group">
+                        <label for="username">Nome de usuário:</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Senha:</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="first_name">Primeiro nome:</label>
+                        <input type="text" id="first_name" name="first_name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="last_name">Último nome:</label>
+                        <input type="text" id="last_name" name="last_name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">E-mail:</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="role">Função:</label>
+                        <select id="role" name="role" required>
+                            <option value="">Selecione uma função</option>
+                            <option value="superuser">SuperUser</option>
+                            <option value="financeiro">Financeiro</option>
+                            <option value="solicitante">Solicitante</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn-register">
+                            <i class="fas fa-user-plus"></i>
+                            Cadastrar
+                        </button>
+                        <button type="button" class="btn-cancel" id="cancelUserRegistration">
+                            <i class="fas fa-times"></i>
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+                
+    <!--########################################## FORM02 ##################################### FORM02 ##################################################### -->
+
+    <!-- Modal para adicionar/editar membro -->
+    <div class="modal" id="addMemberModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="addMemberTitle">Adicionar Membro</h2>
+                <button class="close-btn" id="closeAddMemberModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addMemberForm">
+                    <div class="form-group">
+                        <label for="memberName">Nome Completo</label>
+                        <input type="text" id="memberName" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="memberEmail">E-mail</label>
+                        <input type="email" id="memberEmail" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="memberSector">Setor</label>
                                         <span class="member-email">admin@empresa.com</span>
                                     </div>
                                 </div>
@@ -1183,10 +1242,6 @@
         <div class="modal-content reports-modal">
             <div class="modal-header">
                 <div class="header-left">
-                    <button class="back-button" id="backToDashboard">
-                        <i class="fas fa-arrow-left"></i>
-                        Voltar
-                    </button>
                     <h2>
                         <i class="fas fa-chart-bar"></i>
                         Relatórios Financeiros
@@ -1321,6 +1376,6 @@
         <i class="fas fa-comment"></i>
     </div>
 
-    <script src="/static/js/script.js"></script>
+    <script src="../static/js/script-light.js"></script>
 </body>
 </html>

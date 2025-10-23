@@ -7,6 +7,7 @@ class CampaignManager {
     }
 
     init() {
+        // Carregar de forma simples e direta
         this.setupEventListeners();
         this.loadInitialData();
         this.setupDragAndDrop();
@@ -127,164 +128,24 @@ class CampaignManager {
     }
 
     loadInitialData() {
-        // Dados iniciais dos cards
+        // Dados mínimos para carregamento rápido
         this.cards = [
             {
                 id: 'SF001',
-                status: 'pending',
                 title: 'Solicitação de reembolso de viagem',
                 solicitante: 'Maria Silva',
                 recebedor: 'Maria Silva',
                 valor: 850.50,
-                description: 'Reembolso de despesas de viagem a trabalho para São Paulo',
-                dataPagamento: '2024-01-15',
-                dataCriacao: '2024-01-10',
-                anexos: [
-                    { name: 'nota_fiscal.pdf', size: 245760, type: 'application/pdf' }
-                ],
-                tempoCriacao: '5 dias',
-                tempoFila: '2 dias',
                 priority: 'high',
                 column: 'planning',
-                stage: 'Solicitação pendente de análise',
-                timeSpent: 0,
-                // Campos legados para compatibilidade
-                assignee: 'Maria Silva',
-                email: 'maria@empresa.com'
-            },
-            {
-                id: 'SF002',
-                status: 'rejected',
-                title: 'Compra de equipamentos de escritório',
-                solicitante: 'João Santos',
-                recebedor: 'João Santos',
-                valor: 2500.00,
-                description: 'Aquisição de computadores e impressoras para o departamento',
-                dataPagamento: null,
-                dataCriacao: '2024-01-08',
-                anexos: [],
-                tempoCriacao: '7 dias',
-                tempoFila: '5 dias',
-                priority: 'low',
-                column: 'test',
-                stage: 'Solicitação recusada - orçamento insuficiente',
-                timeSpent: 0,
-                // Campos legados para compatibilidade
-                assignee: 'João Santos',
-                email: 'joao@empresa.com'
-            },
-            {
-                id: 'SF003',
-                status: 'approved',
-                title: 'Pagamento de fornecedor',
-                solicitante: 'Ana Costa',
-                recebedor: 'Fornecedor ABC Ltda',
-                valor: 15000.00,
-                description: 'Pagamento referente aos serviços de consultoria prestados no mês de dezembro, incluindo análise de processos e implementação de melhorias no sistema de gestão.',
-                dataPagamento: '2024-01-20',
-                dataCriacao: '2024-01-05',
-                anexos: [
-                    { name: 'contrato_consultoria.pdf', size: 1024000, type: 'application/pdf' },
-                    { name: 'nota_fiscal.pdf', size: 512000, type: 'application/pdf' }
-                ],
-                tempoCriacao: '10 dias',
-                tempoFila: '3 dias',
-                priority: 'medium',
-                column: 'launch',
-                stage: 'Aprovado e em processamento',
-                timeSpent: 0,
-                dueDate: 'Abr, 4 • 2 anos atrás',
-                overdue: true,
-                // Campos legados para compatibilidade
-                assignee: 'Ana Costa',
-                email: 'ana@empresa.com'
-            },
-            {
-                id: 5,
-                title: 'Renovação de licenças de software',
-                assignee: 'Paula Lima',
-                email: 'paula@empresa.com',
-                priority: 'medium',
-                column: 'success',
-                stage: 'Solicitação concluída com sucesso',
-                timeSpent: 0,
-                completed: true
-            },
-            {
-                id: 6,
-                title: 'Solicitação de compra de material',
-                assignee: 'Carlos Oliveira',
-                email: 'carlos@empresa.com',
-                priority: 'medium',
-                column: 'planning',
-                stage: 'Aguardando aprovação do gestor',
-                timeSpent: 0
-            },
-            {
-                id: 7,
-                title: 'Solicitação de investimento em tecnologia',
-                assignee: 'Roberto Santos',
-                email: 'roberto@empresa.com',
-                priority: 'high',
-                column: 'planning',
-                stage: 'Análise de viabilidade em andamento',
-                timeSpent: 0
-            },
-            {
-                id: 8,
-                title: 'Solicitação de treinamento',
-                assignee: 'Fernanda Costa',
-                email: 'fernanda@empresa.com',
-                priority: 'low',
-                column: 'planning',
-                stage: 'Aguardando definição de orçamento',
-                timeSpent: 0
-            },
-            {
-                id: 9,
-                title: 'Solicitação de manutenção de equipamentos',
-                assignee: 'Pedro Lima',
-                email: 'pedro@empresa.com',
-                priority: 'medium',
-                column: 'planning',
-                stage: 'Aguardando orçamento do fornecedor',
-                timeSpent: 0
-            },
-            {
-                id: 10,
-                title: 'Solicitação de atualização de software',
-                assignee: 'Lucas Ferreira',
-                email: 'lucas@empresa.com',
-                priority: 'high',
-                column: 'planning',
-                stage: 'Aguardando aprovação técnica',
-                timeSpent: 0
-            },
-            {
-                id: 11,
-                title: 'Solicitação de material de escritório',
-                assignee: 'Carla Mendes',
-                email: 'carla@empresa.com',
-                priority: 'low',
-                column: 'planning',
-                stage: 'Aguardando definição de quantidade',
-                timeSpent: 0
-            },
-            {
-                id: 12,
-                title: 'Solicitação de consultoria externa',
-                assignee: 'Rafael Costa',
-                email: 'rafael@empresa.com',
-                priority: 'medium',
-                column: 'planning',
-                stage: 'Aguardando análise de viabilidade',
-                timeSpent: 0
+                assignee: 'Maria Silva'
             }
         ];
 
-        this.currentCardId = 3;
+        this.currentCardId = 1;
         this.updateCardCounts();
     }
+
 
     setupDragAndDrop() {
         const cards = document.querySelectorAll('.card');
@@ -1312,37 +1173,12 @@ class ServicesManager {
             {
                 id: 1,
                 name: 'Consultoria em TI',
-                description: 'Serviços de consultoria especializada em tecnologia da informação',
+                description: 'Serviços de consultoria especializada',
                 category: 'consultoria',
-                icon: 'fas fa-user-tie',
-                active: true
-            },
-            {
-                id: 2,
-                name: 'Desenvolvimento de Software',
-                description: 'Desenvolvimento de aplicações e sistemas personalizados',
-                category: 'desenvolvimento',
-                icon: 'fas fa-code',
-                active: true
-            },
-            {
-                id: 3,
-                name: 'Manutenção de Equipamentos',
-                description: 'Manutenção preventiva e corretiva de equipamentos',
-                category: 'manutencao',
-                icon: 'fas fa-tools',
-                active: true
-            },
-            {
-                id: 4,
-                name: 'Treinamento Corporativo',
-                description: 'Cursos e capacitação profissional para equipes',
-                category: 'treinamento',
-                icon: 'fas fa-graduation-cap',
                 active: true
             }
         ];
-        this.currentServiceId = 5;
+        this.currentServiceId = 2;
         this.init();
     }
 
@@ -1966,18 +1802,43 @@ class ReportsManager {
 // Inicializar o sistema quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing managers...');
-    window.campaignManager = new CampaignManager();
-    window.membersManager = new MembersManager();
-    window.servicesManager = new ServicesManager();
-    window.reportsManager = new ReportsManager();
     
-    // Adicionar funcionalidades extras
-    console.log('Sistema de Gestão Financeira carregado com sucesso!');
-    console.log('ReportsManager available:', !!window.reportsManager);
+    try {
+        // Carregar manager principal primeiro
+        window.campaignManager = new CampaignManager();
+        console.log('CampaignManager carregado com sucesso!');
+        
+        // Funcionalidades básicas de serviços e relatórios
+        this.setupBasicServices();
+        this.setupBasicReports();
+        
+        // Expor métodos globais para debug
+        window.searchCards = (query) => window.campaignManager.searchCards(query);
+        window.filterByPriority = (priority) => window.campaignManager.filterByPriority(priority);
+        window.exportData = () => window.campaignManager.exportData();
+        window.importData = (file) => window.campaignManager.importData(file);
+    }
     
-    // Expor métodos globais para debug
-    window.searchCards = (query) => window.campaignManager.searchCards(query);
-    window.filterByPriority = (priority) => window.campaignManager.filterByPriority(priority);
-    window.exportData = () => window.campaignManager.exportData();
-    window.importData = (file) => window.campaignManager.importData(file);
+    setupBasicServices() {
+        const servicesLink = document.getElementById('servicesNavLink');
+        if (servicesLink) {
+            servicesLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('Funcionalidade de Serviços será implementada em breve!');
+            });
+        }
+    }
+    
+    setupBasicReports() {
+        const reportsLink = document.getElementById('reportsNavLink');
+        if (reportsLink) {
+            reportsLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('Funcionalidade de Relatórios será implementada em breve!');
+            });
+        }
+        
+    } catch (error) {
+        console.error('Erro ao inicializar o sistema:', error);
+    }
 });

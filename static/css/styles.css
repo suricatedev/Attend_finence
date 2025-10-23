@@ -5,6 +5,135 @@
     box-sizing: border-box;
 }
 
+/* Indicador de carregamento otimizado */
+.loading-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.3s ease;
+}
+
+/* Estilos para formulário de cadastro de usuário */
+.user-form {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.user-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.user-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #1C1C1C;
+    font-size: 0.9rem;
+}
+
+.user-form input,
+.user-form select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.user-form input:focus,
+.user-form select:focus {
+    outline: none;
+    border-color: #FFCB57;
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.1);
+}
+
+.user-form select {
+    cursor: pointer;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.btn-register {
+    background: linear-gradient(135deg, #FFCB57, #e0bc18);
+    color: #1C1C1C;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-register:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 203, 87, 0.3);
+}
+
+.btn-cancel {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-cancel:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.loading-indicator.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #FFCB57;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-indicator span {
+    color: #1C1C1C;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #ffffff;
@@ -26,7 +155,7 @@ body {
     color: #F4F7F5;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease;
+    transition: transform 0.2s ease;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
     z-index: 1000;
     position: fixed;
@@ -77,7 +206,7 @@ body {
     z-index: 999;
     opacity: 0;
     visibility: hidden;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .sidebar-overlay.active {
@@ -127,7 +256,7 @@ body {
     padding: 12px 20px;
     color: #F4F7F5;
     text-decoration: none;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     border-left: 3px solid transparent;
 }
 
@@ -164,7 +293,7 @@ body {
     color: rgba(244, 247, 245, 0.8);
     text-decoration: none;
     font-size: 0.9rem;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .help-link:hover {
@@ -246,7 +375,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     box-shadow: 0 4px 15px rgba(255, 203, 87, 0.3);
 }
 
@@ -273,7 +402,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     color: #544350;
     font-weight: 500;
 }
@@ -303,7 +432,7 @@ body {
     border-radius: 6px;
     cursor: pointer;
     color: #544350;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -347,7 +476,7 @@ body {
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .settings-dropdown.active .settings-menu {
@@ -363,7 +492,7 @@ body {
     padding: 12px 16px;
     color: #1C1C1C;
     text-decoration: none;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     border-bottom: 1px solid rgba(84, 67, 80, 0.1);
 }
 
@@ -381,7 +510,7 @@ body {
     width: 16px;
     text-align: center;
     color: #544350;
-    transition: color 0.3s ease;
+    transition: color 0.2s ease;
 }
 
 .settings-item:hover i {
@@ -477,7 +606,7 @@ body {
     border-radius: 6px;
     cursor: pointer;
     color: #544350;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .add-card-btn:hover,
@@ -541,7 +670,7 @@ body {
 
 /* Animação suave para scrollbar */
 .column-content {
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .column-content.has-scroll {
@@ -564,7 +693,7 @@ body {
     border-radius: 12px;
     padding: 16px;
     cursor: move;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     box-shadow: 0 4px 12px rgba(28, 28, 28, 0.08);
     position: relative;
     overflow-y: auto;
@@ -805,7 +934,7 @@ body {
     cursor: pointer;
     padding: 5px;
     border-radius: 4px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .close-btn:hover {
@@ -882,7 +1011,7 @@ body {
     border: 2px dashed #544350;
     background-color: #f8f9fa;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .form-group input[type="file"]:hover {
@@ -954,7 +1083,7 @@ body {
     background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
     border: 2px solid #e0e0e0;
     border-radius: 12px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     position: relative;
     overflow: hidden;
@@ -999,7 +1128,7 @@ body {
     color: #1C1C1C;
     font-size: 1.4rem;
     box-shadow: 0 4px 12px rgba(255, 203, 87, 0.3);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     position: relative;
     overflow: hidden;
 }
@@ -1107,7 +1236,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     font-size: 1rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     position: relative;
@@ -1146,7 +1275,7 @@ body {
     background: rgba(255, 255, 255, 0.3);
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .btn-edit-service:hover::before, .btn-remove-service:hover::before {
@@ -1233,7 +1362,7 @@ body {
     border-radius: 8px;
     padding: 12px;
     font-size: 1rem;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     background: #ffffff;
 }
 
@@ -1394,7 +1523,7 @@ body {
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     font-size: 0.9rem;
 }
 
@@ -1428,7 +1557,7 @@ body {
     border-radius: 25px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -1494,7 +1623,7 @@ body {
     border: 2px solid #dee2e6;
     border-radius: 8px;
     font-size: 0.9rem;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     background: white;
 }
 
@@ -1513,7 +1642,7 @@ body {
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     font-size: 0.9rem;
 }
 
@@ -1574,7 +1703,7 @@ body {
     border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     font-size: 0.85rem;
 }
 
@@ -1719,7 +1848,7 @@ body {
     justify-content: center;
     font-size: 1rem;
     font-weight: bold;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     box-shadow: 0 2px 8px rgba(255, 203, 87, 0.3);
 }
 
@@ -1741,7 +1870,7 @@ body {
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .action-dropdown.show {
@@ -2297,7 +2426,7 @@ body {
     border-radius: 6px;
     cursor: pointer;
     font-size: 1rem;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .btn-secondary:hover {
@@ -2320,7 +2449,7 @@ body {
     font-size: 1.5rem;
     cursor: pointer;
     box-shadow: 0 4px 20px rgba(255, 203, 87, 0.4);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     z-index: 1000;
 }
 
@@ -2568,7 +2697,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .btn-add-member:hover {
@@ -2590,7 +2719,7 @@ body {
     background: #ffffff;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .member-item:hover {
@@ -2647,7 +2776,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     font-size: 0.9rem;
 }
 
@@ -2685,7 +2814,7 @@ body {
     background: #f5f5f5;
     border-radius: 6px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .permission-item:hover {
