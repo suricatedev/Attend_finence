@@ -1,5 +1,6 @@
 from django.db import models
 
+# Create your models here.
 class Solicitacoes(models.Model):
     status = models.Chard.CharField(max_length = 30)
     titulo = models.CharField(max_length = 70) 
@@ -38,6 +39,5 @@ SERVICO_CHOICES = [
 status = models.ChardCharField(max_length = 30, choices = STATUS_CHOICES, default = 'pendentes')
 prioridade = models.CharField(max_length = 20, choices = PRIORIDADE_CHOICES, default = 'baixa')
 servico = models.CharField(max_length = 30, choices = SERVICO_CHOICES, default = 'consultoria_TI')
-
 
 
