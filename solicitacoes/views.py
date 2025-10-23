@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 
 def receber_dados(request):
     if request.method == 'POST':
@@ -18,4 +18,13 @@ def receber_dados(request):
         servico = request.POST.get('service') 
     
     elif request.method == 'GET':
-        return render(request, 'index.html')
+        """
+
+            Verifica se o usuario que está dentro da requsição esta autenticado, se sim ele retorna e renderiza a pagina de home.
+            Se não, retorna e rediriciona para a área do login.
+
+        """
+        if request.user.is_authenticated:
+            return render(request, 'index.html')
+        else:
+            return redirect('login')
