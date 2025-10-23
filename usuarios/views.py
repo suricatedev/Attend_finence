@@ -16,20 +16,15 @@ class LoginUsuarios(View):
         return LoginUsuarios.autenticacao_usuario(self,request)
 
 
-
-    def autenticacao_usuario(self, request):
-      
-
+    def autenticacao_usuario(self, request):    
         user = authenticate(request,username=self.name, password=self.password)
-        print("ok")
 
         try:
-            if user is not None:
+            if user is not None:    
                 
-                login(request, user)
-                print("Ok")
-                return redirect('home')
-            
+                login(request, user)        
+                return redirect('home')   
+                
             else:
                 return render(request, "login01/index2.html", {"erro":"Erro"})
             
