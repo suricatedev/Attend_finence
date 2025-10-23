@@ -1,0 +1,451 @@
+/* Estilos Compactos para Modal de Relatórios */
+
+/* Container de Filtros Compactos */
+.reports-filters-compact {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    border: 1px solid #e9ecef;
+}
+
+/* Primeira linha: Status e Busca */
+.filters-row-1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 16px;
+}
+
+.status-filters-compact {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.status-filter-compact {
+    padding: 6px 12px;
+    border: 1px solid #dee2e6;
+    background: white;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.status-filter-compact:hover {
+    background: #f8f9fa;
+    border-color: #007bff;
+}
+
+.status-filter-compact.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+/* Cores específicas para cada status */
+.status-filter-compact[data-status="all"] {
+    background: #6c757d;
+    color: white;
+    border-color: #6c757d;
+}
+
+.status-filter-compact[data-status="all"]:hover {
+    background: #5a6268;
+}
+
+.status-filter-compact[data-status="all"].active {
+    background: #495057;
+    border-color: #495057;
+}
+
+.status-filter-compact[data-status="completed"] {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.status-filter-compact[data-status="completed"]:hover {
+    background: #218838;
+}
+
+.status-filter-compact[data-status="completed"].active {
+    background: #1e7e34;
+    border-color: #1e7e34;
+}
+
+.status-filter-compact[data-status="pending"] {
+    background: #ffc107;
+    color: #212529;
+    border-color: #ffc107;
+}
+
+.status-filter-compact[data-status="pending"]:hover {
+    background: #e0a800;
+}
+
+.status-filter-compact[data-status="pending"].active {
+    background: #d39e00;
+    border-color: #d39e00;
+}
+
+.status-filter-compact[data-status="approved"] {
+    background: #17a2b8;
+    color: white;
+    border-color: #17a2b8;
+}
+
+.status-filter-compact[data-status="approved"]:hover {
+    background: #138496;
+}
+
+.status-filter-compact[data-status="approved"].active {
+    background: #117a8b;
+    border-color: #117a8b;
+}
+
+.status-filter-compact[data-status="rejected"] {
+    background: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+
+.status-filter-compact[data-status="rejected"]:hover {
+    background: #c82333;
+}
+
+.status-filter-compact[data-status="rejected"].active {
+    background: #bd2130;
+    border-color: #bd2130;
+}
+
+.search-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 250px;
+}
+
+.search-input-compact {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 12px;
+    background: white;
+}
+
+.btn-search {
+    padding: 6px 10px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s ease;
+}
+
+.btn-search:hover {
+    background: #218838;
+}
+
+/* Segunda linha: Filtros de Data e Serviço */
+.filters-row-2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.date-filters {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.date-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.date-group label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #495057;
+    white-space: nowrap;
+}
+
+.date-input-compact {
+    padding: 6px 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 12px;
+    background: white;
+    width: 120px;
+}
+
+.service-filter {
+    flex: 1;
+    max-width: 200px;
+}
+
+.service-select-compact {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 12px;
+    background: white;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-clear-compact,
+.btn-filter-compact {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-clear-compact {
+    background: #6c757d;
+    color: white;
+    border: 1px solid #6c757d;
+}
+
+.btn-clear-compact:hover {
+    background: #5a6268;
+    border-color: #5a6268;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-filter-compact {
+    background: #007bff;
+    color: white;
+    border: 1px solid #007bff;
+}
+
+.btn-filter-compact:hover {
+    background: #0056b3;
+    border-color: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Cabeçalho da Tabela Compacto */
+.table-header-compact {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.table-info-compact {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: #495057;
+}
+
+.table-actions-compact {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-export-compact {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-export-compact:first-child {
+    background: #28a745;
+    color: white;
+    border: 1px solid #28a745;
+}
+
+.btn-export-compact:first-child:hover {
+    background: #218838;
+    border-color: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.btn-export-compact:last-child {
+    background: #dc3545;
+    color: white;
+    border: 1px solid #dc3545;
+}
+
+.btn-export-compact:last-child:hover {
+    background: #c82333;
+    border-color: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+/* Tabela Compacta */
+.reports-table-compact {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.reports-table-compact th {
+    background: #495057;
+    color: white;
+    padding: 8px 6px;
+    text-align: left;
+    font-weight: 500;
+    border: 1px solid #6c757d;
+}
+
+.sortable-compact {
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s ease;
+}
+
+.sortable-compact:hover {
+    background: #6c757d;
+}
+
+.actions-header {
+    text-align: center;
+    width: 80px;
+}
+
+/* Responsividade */
+@media (max-width: 1200px) {
+    .filters-row-1 {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .search-group {
+        min-width: auto;
+    }
+    
+    .filters-row-2 {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    
+    .date-filters {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 768px) {
+    .reports-filters-compact {
+        padding: 8px;
+    }
+    
+    .status-filters-compact {
+        justify-content: center;
+    }
+    
+    .status-filter-compact {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+    
+    .filters-row-2 {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .date-filters {
+        justify-content: center;
+    }
+    
+    .filter-actions {
+        justify-content: center;
+    }
+    
+    .table-header-compact {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+    }
+    
+    .table-info-compact {
+        justify-content: center;
+    }
+    
+    .table-actions-compact {
+        justify-content: center;
+    }
+}
+
+/* Melhorias para visualização dos dados */
+.table-wrapper {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+}
+
+.reports-table-compact td {
+    padding: 6px;
+    border: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+
+.reports-table-compact tbody tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+.reports-table-compact tbody tr:hover {
+    background: #e9ecef;
+}
+
+/* Scrollbar personalizada */
+.table-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
