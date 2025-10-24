@@ -440,7 +440,8 @@
                     </div>
                 </div>
             </div>
-
+            <!-- Aqui devem ser feitas as alteracoes -->
+            
             <!-- Kanban Board -->
             <div class="kanban-board" id="kanbanBoard">
                 <div class="kanban-column" data-column="planning">
@@ -1014,11 +1015,22 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form id="createCampaignForm">
-                        <div class="form-group">
-                            <label for="campaignId">ID</label>
+                <form id="createCampaignForm" method="POST" action="{% url 'home' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="campaignId">ID</label>
                         <input type="text" id="campaignId" name="id" placeholder="Digite o ID padrão do sistema externo" required>
                         <small class="form-help">Exemplo: ORD-2024-001, REQ-12345, SOL-20240115-001</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="campaignStatus">Status</label>
+                        <select id="campaignStatus" name="status" required>
+                            <option value="pendente">Pendente</option>
+                            <option value="aprovado">Aprovado</option>
+                            <option value="recusado">Recusado</option>
+                            <option value="concluido">Concluído</option>
+                        </select>
                     </div>
                     
                     <div class="form-group">
@@ -1047,14 +1059,10 @@
                         <label for="campaignService">Serviço</label>
                         <select id="campaignService" name="service" required>
                             <option value="">Selecione o tipo de serviço</option>
-                            <option value="consultoria">Consultoria</option>
-                            <option value="desenvolvimento">Desenvolvimento</option>
-                            <option value="manutencao">Manutenção</option>
-                            <option value="treinamento">Treinamento</option>
-                            <option value="suporte">Suporte</option>
-                            <option value="infraestrutura">Infraestrutura</option>
-                            <option value="marketing">Marketing</option>
-                            <option value="outros">Outros</option>
+                            <option value="consultoria_TI">Consultoria em TI</option>
+                            <option value="desenvolvimento">Desenvolvimento de Software</option>
+                            <option value="manutencao_equipamentos">Manutenção de Equipamentos</option>
+                            <option value="treinamento_corporativo">Treinamento Corporativo</option>
                         </select>
                     </div>
                     
@@ -1068,47 +1076,37 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="campaignDataPagamento">Data de Pagamento</label>
-                            <input type="date" id="campaignDataPagamento" name="dataPagamento">
+                            <input type="date" id="campaignDataPagamento" name="dataPagamento" required>
                         </div>
                         <div class="form-group">
                             <label for="campaignDataCriacao">Data de Criação</label>
-                            <input type="date" id="campaignDataCriacao" name="dataCriacao" readonly>
+                            <input type="date" id="campaignDataCriacao" name="dataCriacao" required>
                         </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="campaignAnexos">Anexos</label>
-                        <input type="file" id="campaignAnexos" name="anexos" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                        <small class="form-help">Formatos aceitos: PDF, DOC, DOCX, JPG, PNG</small>
                     </div>
                     
                     <div class="form-row">
                         <div class="form-group">
                             <label for="campaignTempoCriacao">Tempo de Criação</label>
-                            <input type="text" id="campaignTempoCriacao" name="tempoCriacao" readonly>
+                            <input type="time" id="campaignTempoCriacao" name="tempoCriacao" required>
                         </div>
                         <div class="form-group">
                             <label for="campaignTempoFila">Tempo na Fila</label>
-                            <input type="text" id="campaignTempoFila" name="tempoFila" readonly>
+                            <input type="time" id="campaignTempoFila" name="tempoFila" required>
                         </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="campaignAnexos">Anexos</label>
+                        <input type="file" id="campaignAnexos" name="anexos" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+                        <small class="form-help">Formatos aceitos: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="campaignPriority">Prioridade</label>
-                        <select id="campaignPriority" name="priority">
-                            <option value="low">Baixa</option>
-                            <option value="medium">Média</option>
-                            <option value="high">Alta</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="campaignColumn">Coluna</label>
-                        <select id="campaignColumn" name="column">
-                            <option value="planning">Pendente</option>
-                            <option value="test">Recusado</option>
-                            <option value="launch">Aprovado</option>
-                            <option value="success">Concluído</option>
+                        <select id="campaignPriority" name="priority" required>
+                            <option value="baixa">Baixa</option>
+                            <option value="media">Média</option>
+                            <option value="alta">Alta</option>
                         </select>
                     </div>
                 </form>
