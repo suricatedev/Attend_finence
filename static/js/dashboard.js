@@ -545,10 +545,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateDashboardData() {
         // Simular atualização de dados
         setInterval(() => {
-            // Atualizar métricas
-            updateMetrics();
-            // Atualizar gráficos
-            updateCharts();
+            try {
+                // Atualizar métricas
+                updateMetrics();
+                // Atualizar gráficos
+                updateCharts();
+            } catch (error) {
+                console.error('Erro ao atualizar dados do dashboard:', error);
+            }
         }, 30000); // Atualizar a cada 30 segundos
     }
     
@@ -635,7 +639,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Inicializar com view padrão
-    switchView('kanban');
+    if (kanbanBoard) {
+        switchView('kanban');
+    }
 });
 
 // Função para exportar dados do dashboard
