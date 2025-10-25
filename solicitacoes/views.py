@@ -6,16 +6,15 @@ from django.utils import timezone
 def receber_dados(request):
     if request.method == 'POST':
         try:
+
             # Capturar dados do POST
-            id_externo = request.POST.get('id')
+            id = request.POST.get('id')
             status = request.POST.get('status')
             titulo = request.POST.get('title')  
-            solicitante_nome = request.POST.get('solicitante')
             nome_do_recebedor = request.POST.get('recebedor')  
             valor = request.POST.get('valor')
             descricao = request.POST.get('description') 
-            data_de_pagamento = request.POST.get('dataPagamento')  
-            data_de_criacao = request.POST.get('dataCriacao')  
+            data_de_pagamento = request.POST.get('dataPagamento')   
             tempo_criacao = request.POST.get('tempoCriacao') 
             tempo_fila = request.POST.get('tempoFila')  
             prioridade = request.POST.get('priority') 
@@ -26,6 +25,7 @@ def receber_dados(request):
             
             # Criar e salvar no banco
             solicitacao = Solicitacoes.objects.create(
+                ticket = id,
                 status=status,
                 titulo=titulo,
                 nome_solicitante=request.user,  # Usuário logado
@@ -33,7 +33,7 @@ def receber_dados(request):
                 valor=float(valor),
                 descricao=descricao,
                 data_de_pagamento=data_de_pagamento,
-                data_de_criacao=data_de_criacao or timezone.now().date(),
+                data_de_criacao= timezone.now().date(),
                 anexo=anexo,
                 tempo_criacao=tempo_criacao,
                 tempo_fila=tempo_fila,
@@ -59,9 +59,34 @@ def receber_dados(request):
         Se não, retorna e redireciona para a área do login.
         """
         if request.user.is_authenticated:
-            solicitacoes = Solicitacoes.objects.all().order_by('-data_de_criacao')
+            solicitacoes_pendentes = Solicitacoes.objects.filter(status="pendente")
+            num_solicitacoes_pendentes = solicitacoes_pendentes.count()
+
+            solicitacoes_recusados = Solicitacoes.objects.filter(status="recusado")
+            num_solicitacoes_recusados = solicitacoes_recusados.count()
+
+            solicitacoes_aprovado= Solicitacoes.objects.filter(status="aprovado")
+            num_solicitacoes_aprovado = solicitacoes_aprovado.count()
+
+            solicitacoes_concluido= Solicitacoes.objects.filter(status="concluido")
+            num_solicitacoes_concluido = solicitacoes_concluido.count()
+
+
+            
             return render(request, 'index.html', {
-                'solicitacoes': solicitacoes
+                'solicitacoes_pendentes': solicitacoes_pendentes,
+                'num_solicitacoes_pendentes': num_solicitacoes_pendentes,
+
+                'solicitacoes_recusados': solicitacoes_recusados,
+                'num_solicitacoes_recusados': num_solicitacoes_recusados,
+
+
+                'solicitacoes_aprovado': solicitacoes_aprovado,
+                'num_solicitacoes_aprovado':num_solicitacoes_aprovado,
+
+
+                'solicitacoes_concluido': solicitacoes_concluido,
+                'num_solicitacoes_concluido': num_solicitacoes_concluido,
             })
         else:
             return redirect('login')
