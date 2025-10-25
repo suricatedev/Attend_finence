@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Gestão Financeira</title>
-    <link rel="stylesheet" href="../static/css/styles.css">
-    <link rel="stylesheet" href="../static/css/reports-compact.css">
-    <link rel="stylesheet" href="../static/css/card-status-colors.css">
-    <link rel="stylesheet" href="../static/css/kanban-fix.css">
-    <link rel="stylesheet" href="../static/css/dashboard-modern.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/reports-compact.css">
+    <link rel="stylesheet" href="/static/css/card-status-colors.css">
+    <link rel="stylesheet" href="/static/css/kanban-fix.css">
+    <link rel="stylesheet" href="/static/css/dashboard-modern.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
@@ -449,7 +449,7 @@
                         <div class="column-title">
                             <i class="fas fa-clock"></i>
                             <span>Pendente</span>
-                            <span class="card-count">9</span>
+                            <span class="card-count">{{num_solicitacoes_pendentes}}</span>
                         </div>
                         <div class="column-actions">
                             <button class="add-card-btn" title="Adicionar card">
@@ -461,37 +461,39 @@
                         </div>
                     </div>
                     <div class="column-content" data-column="planning">
+
+                    {% for solicitacao in solicitacoes_pendentes %}
                         <div class="card card-status-pending" draggable="true" data-card-id="1">
                             <div class="card-header">
-                                <span class="priority high">Alta</span>
+                                <span class="priority high">{{solicitacao.prioridade}}</span>
                             </div>
                             <div class="card-body">
-                                <h3 class="card-title">Solicitação de reembolso de viagem</h3>
+                                <h3 class="card-title">{{solicitacao.titulo}}</h3>
                                 <div class="card-info">
                                     <div class="info-item">
                                         <i class="fas fa-user"></i>
                                         <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">Maria Silva</span>
+                                        <span class="info-value">{{solicitacao.nome_solicitante}}</span>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-user-check"></i>
                                         <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">Maria Silva</span>
+                                        <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
-                                        <span class="info-value">R$ 1.250,00</span>
+                                        <span class="info-value">{{solicitacao.valor}}</span>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
                                         <span class="info-label">CRIAÇÃO</span>
-                                        <span class="info-value">15/01/2024</span>
+                                        <span class="info-value">{{solicitacao.data_de_criacao}}</span>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-check"></i>
                                         <span class="info-label">PAGAMENTO</span>
-                                        <span class="info-value">22/01/2024</span>
+                                        <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
                                     </div>
                                 </div>
                                 <div class="card-time">
@@ -503,307 +505,10 @@
                                 <span class="card-stage">Solicitação pendente de análise</span>
                             </div>
                         </div>
-                        
-                        <div class="card card-status-pending" draggable="true" data-card-id="6">
-                            <div class="card-header">
-                                <span class="priority medium">Média</span>
-                            </div>
-                            <div class="card-body">
-                                <h3 class="card-title">Solicitação de compra de material</h3>
-                                <div class="card-info">
-                                    <div class="info-item">
-                                        <i class="fas fa-user"></i>
-                                        <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">Carlos Oliveira</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-user-check"></i>
-                                        <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">Fornecedor ABC</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-dollar-sign"></i>
-                                        <span class="info-label">VALOR</span>
-                                        <span class="info-value">R$ 3.500,00</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-plus"></i>
-                                        <span class="info-label">CRIAÇÃO</span>
-                                        <span class="info-value">12/01/2024</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-check"></i>
-                                        <span class="info-label">PAGAMENTO</span>
-                                        <span class="info-value">19/01/2024</span>
-                                    </div>
-                                </div>
-                                <div class="card-time">
-                                    <i class="fas fa-clock"></i>
-                                    <span>0min</span>
-                                </div>
-                            </div>
-                            <div class="card-footer">
-                                <span class="card-stage">Aguardando aprovação do gestor</span>
-                            </div>
-                        </div>
-                        
-                        <div class="card card-status-pending" draggable="true" data-card-id="7">
-                            <div class="card-header">
-                                <span class="priority high">Alta</span>
-                            </div>
-                            <div class="card-body">
-                                <h3 class="card-title">Solicitação de investimento em tecnologia</h3>
-                                <div class="card-info">
-                                    <div class="info-item">
-                                        <i class="fas fa-user"></i>
-                                        <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">Roberto Santos</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-user-check"></i>
-                                        <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">Departamento de TI</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-dollar-sign"></i>
-                                        <span class="info-label">VALOR</span>
-                                        <span class="info-value">R$ 15.000,00</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-plus"></i>
-                                        <span class="info-label">CRIAÇÃO</span>
-                                        <span class="info-value">10/01/2024</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-check"></i>
-                                        <span class="info-label">PAGAMENTO</span>
-                                        <span class="info-value">25/01/2024</span>
-                                    </div>
-                                </div>
-                                <div class="card-time">
-                                    <i class="fas fa-clock"></i>
-                                    <span>0min</span>
-                                </div>
-                            </div>
-                            <div class="card-footer">
-                                <span class="card-stage">Análise de viabilidade em andamento</span>
-                            </div>
-                        </div>
-                        
-                        <div class="card card-status-pending" draggable="true" data-card-id="8">
-                            <div class="card-header">
-                                <span class="priority low">Baixa</span>
-                            </div>
-                            <div class="card-body">
-                                <h3 class="card-title">Solicitação de treinamento</h3>
-                                <div class="card-info">
-                                    <div class="info-item">
-                                        <i class="fas fa-user"></i>
-                                        <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">Fernanda Costa</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-user-check"></i>
-                                        <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">Instituto de Treinamento</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-dollar-sign"></i>
-                                        <span class="info-label">VALOR</span>
-                                        <span class="info-value">R$ 800,00</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-plus"></i>
-                                        <span class="info-label">CRIAÇÃO</span>
-                                        <span class="info-value">08/01/2024</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-check"></i>
-                                        <span class="info-label">PAGAMENTO</span>
-                                        <span class="info-value">15/01/2024</span>
-                                    </div>
-                                </div>
-                                <div class="card-time">
-                                    <i class="fas fa-clock"></i>
-                                    <span>0min</span>
-                                </div>
-                            </div>
-                            <div class="card-footer">
-                                <span class="card-stage">Aguardando definição de orçamento</span>
-                            </div>
-                        </div>
-                        
-                        <div class="card card-status-pending" draggable="true" data-card-id="9">
-                            <div class="card-header">
-                                <span class="priority medium">Média</span>
-                            </div>
-                            <div class="card-body">
-                                <h3 class="card-title">Solicitação de manutenção de equipamentos</h3>
-                                <div class="card-info">
-                                    <div class="info-item">
-                                        <i class="fas fa-user"></i>
-                                        <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">Pedro Lima</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-user-check"></i>
-                                        <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">Técnico de Manutenção</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-dollar-sign"></i>
-                                        <span class="info-label">VALOR</span>
-                                        <span class="info-value">R$ 2.300,00</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-plus"></i>
-                                        <span class="info-label">CRIAÇÃO</span>
-                                        <span class="info-value">05/01/2024</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-check"></i>
-                                        <span class="info-label">PAGAMENTO</span>
-                                        <span class="info-value">12/01/2024</span>
-                                    </div>
-                                </div>
-                                <div class="card-time">
-                                    <i class="fas fa-clock"></i>
-                                    <span>0min</span>
-                                </div>
-                            </div>
-                            <div class="card-footer">
-                                <span class="card-stage">Aguardando orçamento do fornecedor</span>
-                            </div>
-                        </div>
-                        
-                        <div class="card card-status-pending" draggable="true" data-card-id="10">
-                            <div class="card-header">
-                                <span class="priority high">Alta</span>
-                            </div>
-                            <div class="card-body">
-                                <h3 class="card-title">Solicitação de atualização de software</h3>
-                                <div class="card-info">
-                                    <div class="info-item">
-                                        <i class="fas fa-user"></i>
-                                        <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">Lucas Ferreira</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-user-check"></i>
-                                        <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">Fornecedor de Software</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-dollar-sign"></i>
-                                        <span class="info-label">VALOR</span>
-                                        <span class="info-value">R$ 5.750,00</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-plus"></i>
-                                        <span class="info-label">CRIAÇÃO</span>
-                                        <span class="info-value">03/01/2024</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-check"></i>
-                                        <span class="info-label">PAGAMENTO</span>
-                                        <span class="info-value">10/01/2024</span>
-                                    </div>
-                                </div>
-                                <div class="card-time">
-                                    <i class="fas fa-clock"></i>
-                                    <span>0min</span>
-                                </div>
-                            </div>
-                            <div class="card-footer">
-                                <span class="card-stage">Aguardando aprovação técnica</span>
-                            </div>
-                        </div>
-                        
-                        <div class="card card-status-pending" draggable="true" data-card-id="11">
-                            <div class="card-header">
-                                <span class="priority low">Baixa</span>
-                            </div>
-                            <div class="card-body">
-                                <h3 class="card-title">Solicitação de material de escritório</h3>
-                                <div class="card-info">
-                                    <div class="info-item">
-                                        <i class="fas fa-user"></i>
-                                        <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">Carla Mendes</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-user-check"></i>
-                                        <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">Papelaria Central</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-dollar-sign"></i>
-                                        <span class="info-label">VALOR</span>
-                                        <span class="info-value">R$ 450,00</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-plus"></i>
-                                        <span class="info-label">CRIAÇÃO</span>
-                                        <span class="info-value">01/01/2024</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-check"></i>
-                                        <span class="info-label">PAGAMENTO</span>
-                                        <span class="info-value">08/01/2024</span>
-                                    </div>
-                                </div>
-                                <div class="card-time">
-                                    <i class="fas fa-clock"></i>
-                                    <span>0min</span>
-                                </div>
-                            </div>
-                            <div class="card-footer">
-                                <span class="card-stage">Aguardando definição de quantidade</span>
-                            </div>
-                        </div>
-                        
-                        <div class="card card-status-pending" draggable="true" data-card-id="12">
-                            <div class="card-header">
-                                <span class="priority medium">Média</span>
-                            </div>
-                            <div class="card-body">
-                                <h3 class="card-title">Solicitação de consultoria externa</h3>
-                                <div class="card-info">
-                                    <div class="info-item">
-                                        <i class="fas fa-user"></i>
-                                        <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">Rafael Costa</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-user-check"></i>
-                                        <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">Consultoria XYZ</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-dollar-sign"></i>
-                                        <span class="info-label">VALOR</span>
-                                        <span class="info-value">R$ 8.500,00</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-plus"></i>
-                                        <span class="info-label">CRIAÇÃO</span>
-                                        <span class="info-value">28/12/2023</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-check"></i>
-                                        <span class="info-label">PAGAMENTO</span>
-                                        <span class="info-value">05/01/2024</span>
-                                    </div>
-                                </div>
-                                <div class="card-time">
-                                    <i class="fas fa-clock"></i>
-                                    <span>0min</span>
-                                </div>
-                            </div>
-                            <div class="card-footer">
-                                <span class="card-stage">Aguardando análise de viabilidade</span>
-                            </div>
-                        </div>
+                    {% endfor %}
+                       
+                       
+                       
                     </div>
                 </div>
 
@@ -812,7 +517,7 @@
                         <div class="column-title">
                             <i class="fas fa-times-circle"></i>
                             <span>Recusado</span>
-                            <span class="card-count">1</span>
+                            <span class="card-count">{{num_solicitacoes_recusados}}</span>
                         </div>
                         <div class="column-actions">
                             <button class="add-card-btn" title="Adicionar card">
@@ -824,37 +529,41 @@
                         </div>
                     </div>
                     <div class="column-content" data-column="test">
+
+                    {% for solicitacao in solicitacoes_recusados%}
+
+                    
                         <div class="card card-status-rejected" draggable="true" data-card-id="2">
                             <div class="card-header">
-                                <span class="priority low">Baixa</span>
+                                <span class="priority low">{{solicitacao.prioridade}}</span>
                             </div>
                             <div class="card-body">
-                                <h3 class="card-title">Compra de equipamentos de escritório</h3>
+                                <h3 class="card-title">{{solicitacao.titulo}}</h3>
                                 <div class="card-info">
                                     <div class="info-item">
                                         <i class="fas fa-user"></i>
                                         <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">João Santos</span>
+                                        <span class="info-value">{{solicitacao.nome_do_solicitante}}</span>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-user-check"></i>
                                         <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">Fornecedor de Equipamentos</span>
+                                        <span class="info-value">{{solicitante.nome_do_recebedor}}</span>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
-                                        <span class="info-value">R$ 4.200,00</span>
+                                        <span class="info-value">{{solicitante.valor}}</span>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
                                         <span class="info-label">CRIAÇÃO</span>
-                                        <span class="info-value">25/12/2023</span>
+                                        <span class="info-value">{{solicitacao.data_de_criacao}}</span>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-check"></i>
                                         <span class="info-label">PAGAMENTO</span>
-                                        <span class="info-value">02/01/2024</span>
+                                        <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
                                     </div>
                                 </div>
                                 <div class="card-time">
@@ -866,6 +575,8 @@
                                 <span class="card-stage">Solicitação recusada - orçamento insuficiente</span>
                             </div>
                         </div>
+                    {% endfor %}
+         
                     </div>
                 </div>
 
@@ -874,7 +585,7 @@
                         <div class="column-title">
                             <i class="fas fa-check-circle"></i>
                             <span>Aprovado</span>
-                            <span class="card-count">1</span>
+                            <span class="card-count">{{num_solicitacoes_aprovado}}</span>
                         </div>
                         <div class="column-actions">
                             <button class="add-card-btn" title="Adicionar card">
@@ -886,52 +597,56 @@
                         </div>
                     </div>
                     <div class="column-content" data-column="launch">
-                        <div class="card card-status-approved" draggable="true" data-card-id="3">
-                            <div class="card-header">
-                                <span class="priority medium">Média</span>
-                            </div>
-                            <div class="card-body">
-                                <h3 class="card-title">Pagamento de fornecedor</h3>
-                                <div class="card-info">
-                                    <div class="info-item">
-                                        <i class="fas fa-user"></i>
-                                        <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">Ana Costa</span>
+                        {% for solicitacao in solicitacoes_aprovado %}
+                            <div class="card card-status-approved" draggable="true" data-card-id="3">
+                            
+                                <div class="card-header">
+                                    <span class="priority medium">{{solicitacao.prioridade}}</span>
+                                </div>
+                                <div class="card-body">
+                                    <h3 class="card-title">{{solicitacao.titulo}}</h3>
+                                    <div class="card-info">
+                                        <div class="info-item">
+                                            <i class="fas fa-user"></i>
+                                            <span class="info-label">SOLICITANTE</span>
+                                            <span class="info-value">{{solicitacao.nome_do_solicitante}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-user-check"></i>
+                                            <span class="info-label">RECEBEDOR</span>
+                                            <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-dollar-sign"></i>
+                                            <span class="info-label">VALOR</span>
+                                            <span class="info-value">{{solicitacao.valor}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-calendar-plus"></i>
+                                            <span class="info-label">CRIAÇÃO</span>
+                                            <span class="info-value">{{solicitacao.data_de_criacao}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-calendar-check"></i>
+                                            <span class="info-label">PAGAMENTO</span>
+                                            <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
+                                        </div>
                                     </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-user-check"></i>
-                                        <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">Fornecedor Principal</span>
+                                    <div class="card-due-date overdue">
+                                        <i class="fas fa-calendar-times"></i>
+                                        <span>Abr, 4 • 2 anos atrás</span>
                                     </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-dollar-sign"></i>
-                                        <span class="info-label">VALOR</span>
-                                        <span class="info-value">R$ 12.000,00</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-plus"></i>
-                                        <span class="info-label">CRIAÇÃO</span>
-                                        <span class="info-value">20/12/2023</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-check"></i>
-                                        <span class="info-label">PAGAMENTO</span>
-                                        <span class="info-value">27/12/2023</span>
+                                    <div class="card-time">
+                                        <i class="fas fa-clock"></i>
+                                        <span>0min</span>
                                     </div>
                                 </div>
-                                <div class="card-due-date overdue">
-                                    <i class="fas fa-calendar-times"></i>
-                                    <span>Abr, 4 • 2 anos atrás</span>
-                                </div>
-                                <div class="card-time">
-                                    <i class="fas fa-clock"></i>
-                                    <span>0min</span>
+                                <div class="card-footer">
+                                    <span class="card-stage">Aprovado e em processamento</span>
                                 </div>
                             </div>
-                            <div class="card-footer">
-                                <span class="card-stage">Aprovado e em processamento</span>
-                            </div>
-                        </div>
+                        {% endfor %}
+                        
                     </div>
                 </div>
 
@@ -941,7 +656,7 @@
                         <div class="column-title">
                             <i class="fas fa-flag-checkered"></i>
                             <span>Concluído</span>
-                            <span class="card-count">1</span>
+                            <span class="card-count">{{num_solicitacoes_concluido}}</span>
                         </div>
                         <div class="column-actions">
                             <button class="add-card-btn" title="Adicionar card">
@@ -953,48 +668,50 @@
                         </div>
                     </div>
                     <div class="column-content" data-column="success">
-                        <div class="card card-status-completed" draggable="true" data-card-id="5">
-                            <div class="card-header">
-                                <span class="priority medium">Média</span>
-                            </div>
-                            <div class="card-body">
-                                <h3 class="card-title">Renovação de licenças de software</h3>
-                                <div class="card-info">
-                                    <div class="info-item">
-                                        <i class="fas fa-user"></i>
-                                        <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">Paula Lima</span>
+                        {% for solicitacao in solicitacoes_concluido %}
+                            <div class="card card-status-completed" draggable="true" data-card-id="5">
+                                <div class="card-header">
+                                    <span class="priority medium">{{solicitacao.prioridade}}</span>
+                                </div>
+                                <div class="card-body">
+                                    <h3 class="card-title">{{solicitacao.titulo}}</h3>
+                                    <div class="card-info">
+                                        <div class="info-item">
+                                            <i class="fas fa-user"></i>
+                                            <span class="info-label">SOLICITANTE</span>
+                                            <span class="info-value">{{solicitacao.nome_do_solicitante}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-user-check"></i>
+                                            <span class="info-label">RECEBEDOR</span>
+                                            <span class="info-value">{{solicitante.nome_do_recebedor}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-dollar-sign"></i>
+                                            <span class="info-label">VALOR</span>
+                                            <span class="info-value">{{solicitante.valor}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-calendar-plus"></i>
+                                            <span class="info-label">CRIAÇÃO</span>
+                                            <span class="info-value">{{solicitacao.data_de_criacao}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-calendar-check"></i>
+                                            <span class="info-label">PAGAMENTO</span>
+                                            <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
+                                        </div>
                                     </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-user-check"></i>
-                                        <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">Microsoft Corporation</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-dollar-sign"></i>
-                                        <span class="info-label">VALOR</span>
-                                        <span class="info-value">R$ 2.800,00</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-plus"></i>
-                                        <span class="info-label">CRIAÇÃO</span>
-                                        <span class="info-value">15/12/2023</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-check"></i>
-                                        <span class="info-label">PAGAMENTO</span>
-                                        <span class="info-value">22/12/2023</span>
+                                    <div class="card-time completed">
+                                        <i class="fas fa-check"></i>
+                                        <span>Concluído</span>
                                     </div>
                                 </div>
-                                <div class="card-time completed">
-                                    <i class="fas fa-check"></i>
-                                    <span>Concluído</span>
+                                <div class="card-footer">
+                                    <span class="card-stage">Solicitação concluída com sucesso</span>
                                 </div>
                             </div>
-                            <div class="card-footer">
-                                <span class="card-stage">Solicitação concluída com sucesso</span>
-                            </div>
-                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
@@ -1015,17 +732,23 @@
                 </button>
             </div>
             <div class="modal-body">
+
+
+
+
+
+
                 <form id="createCampaignForm" method="POST" action="{% url 'home' %}" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="form-group">
                         <label for="campaignId">ID</label>
-                        <input type="text" id="campaignId" name="id" placeholder="Digite o ID padrão do sistema externo" required>
+                        <input type="text" id="campaignId" name="id" placeholder="Digite o ID padrão do sistema externo">
                         <small class="form-help">Exemplo: ORD-2024-001, REQ-12345, SOL-20240115-001</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="campaignStatus">Status</label>
-                        <select id="campaignStatus" name="status" required>
+                        <select id="campaignStatus" name="status">
                             <option value="pendente">Pendente</option>
                             <option value="aprovado">Aprovado</option>
                             <option value="recusado">Recusado</option>
@@ -1678,7 +1401,7 @@
     </div>
 
 
-    <script src="../static/js/script-light.js"></script>
-    <script src="../static/js/dashboard.js"></script>
+    <script src="/static/js/script-light.js?v=2"></script>
+    <script src="/static/js/dashboard.js?v=2"></script>
 </body>
 </html>
