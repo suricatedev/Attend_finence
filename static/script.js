@@ -291,7 +291,8 @@ class CampaignManager {
         ];
 
         this.currentCardId = 3;
-        this.updateCardCounts();
+        // Não sobrescrever contadores do Django na inicialização
+        // this.updateCardCounts();
     }
 
     setupDragAndDrop() {
@@ -1070,7 +1071,8 @@ class MembersManager {
     showManageMembersModal() {
         const modal = document.getElementById('manageMembersModal');
         if (modal) {
-            modal.style.display = 'flex';
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
             this.renderMembers();
         }
     }
@@ -1078,7 +1080,8 @@ class MembersManager {
     hideManageMembersModal() {
         const modal = document.getElementById('manageMembersModal');
         if (modal) {
-            modal.style.display = 'none';
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
         }
     }
 
@@ -1099,14 +1102,16 @@ class MembersManager {
             // Configurar título
             title.textContent = 'Adicionar Membro';
             
-            modal.style.display = 'flex';
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
         }
     }
 
     hideAddMemberModal() {
         const modal = document.getElementById('addMemberModal');
         if (modal) {
-            modal.style.display = 'none';
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
         }
     }
 

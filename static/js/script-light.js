@@ -33,11 +33,15 @@ class CampaignManager {
         });
 
         // Create campaign form
+        // Formulário será submetido diretamente para o backend Django
+        // Não interceptar o submit - deixar o Django processar
+        /*
         const createCampaignForm = document.getElementById('createCampaignForm');
         createCampaignForm?.addEventListener('submit', (e) => {
             e.preventDefault();
             this.createCampaign();
         });
+        */
 
         // View tabs
         const tabBtns = document.querySelectorAll('.tab-btn');
@@ -91,7 +95,8 @@ class CampaignManager {
         ];
 
         this.currentCardId = 1;
-        this.updateCardCounts();
+        // Não sobrescrever contadores do Django na inicialização
+        // this.updateCardCounts();
     }
 
     setupDragAndDrop() {
@@ -155,89 +160,26 @@ class CampaignManager {
     }
 
     createCampaign() {
-        const form = document.getElementById('createCampaignForm');
-        const formData = new FormData(form);
-        
-        const campaignData = {
-            id: formData.get('campaignId'),
-            title: formData.get('campaignTitle'),
-            description: formData.get('campaignDescription'),
-            solicitante: formData.get('campaignSolicitante'),
-            recebedor: formData.get('campaignRecebedor'),
-            valor: parseFloat(formData.get('campaignValor')),
-            priority: formData.get('campaignPriority'),
-            column: formData.get('campaignColumn'),
-            status: 'pending',
-            dataCriacao: new Date().toLocaleDateString('pt-BR'),
-            dataPagamento: null,
-            tempoCriacao: '0 dias',
-            tempoFila: '0 dias',
-            stage: 'Solicitação pendente de análise',
-            timeSpent: 0,
-            assignee: formData.get('campaignSolicitante')
-        };
-
-        if (!campaignData.id) {
-            alert('ID é obrigatório!');
-            return;
-        }
-
-        if (!campaignData.title) {
-            alert('Título é obrigatório!');
-            return;
-        }
-
-        if (!campaignData.solicitante) {
-            alert('Solicitante é obrigatório!');
-            return;
-        }
-
-        if (!campaignData.recebedor) {
-            alert('Recebedor é obrigatório!');
-            return;
-        }
-
-        if (!campaignData.valor || campaignData.valor <= 0) {
-            alert('Valor deve ser maior que zero!');
-            return;
-        }
-
-        // Adicionar card ao array
-        this.cards.push(campaignData);
-        
-        // Renderizar o novo card no Kanban
-        this.renderNewCard(campaignData);
-        
-        // Atualizar contadores
-        this.updateCardCounts();
-        
-        // Fechar modal e limpar formulário
-        this.hideModal();
-        form.reset();
-        
-        // Mostrar notificação de sucesso
-        this.showNotification('Solicitação criada com sucesso!', 'success');
+        // FUNÇÃO DESABILITADA
+        // O formulário agora é submetido diretamente para o backend Django
+        // Todas as validações e processamento são feitos no backend
+        console.log('Formulário será processado pelo backend Django');
     }
 
     moveCard(cardId, newColumn) {
         const card = this.cards.find(c => c.id == cardId);
         if (card) {
             card.column = newColumn;
-            this.updateCardCounts();
+            // Contadores gerenciados pelo backend - não atualizar aqui
+            // this.updateCardCounts();
         }
     }
 
     updateCardCounts() {
-        // Update card counts
-        const columns = document.querySelectorAll('.kanban-column');
-        columns.forEach(column => {
-            const columnName = column.dataset.column;
-            const cardCount = this.cards.filter(card => card.column === columnName).length;
-            const countElement = column.querySelector('.card-count');
-            if (countElement) {
-                countElement.textContent = cardCount;
-            }
-        });
+        // FUNÇÃO DESABILITADA
+        // Contadores são gerenciados completamente pelo backend Django
+        // Não manipular os contadores via JavaScript
+        console.log('Contadores são gerenciados pelo backend');
     }
 
     renderNewCard(cardData) {
@@ -419,7 +361,8 @@ function setupBasicServices() {
     if (servicesLink) {
         servicesLink.addEventListener('click', (e) => {
             e.preventDefault();
-            showServicesModal();
+            // Implementar funcionalidade básica de serviços
+            console.log('Serviços link clicado');
         });
     }
 }
@@ -429,7 +372,8 @@ function setupBasicReports() {
     if (reportsLink) {
         reportsLink.addEventListener('click', (e) => {
             e.preventDefault();
-            showReportsModal();
+            // Implementar funcionalidade básica de relatórios
+            console.log('Relatórios link clicado');
         });
     }
 }
@@ -518,7 +462,7 @@ function setupServicesModal() {
     const addServiceBtn = document.getElementById('addServiceBtn');
     if (addServiceBtn) {
         addServiceBtn.addEventListener('click', () => {
-            showAddServiceModal();
+            console.log('Botão adicionar serviço clicado');
         });
     }
 }
@@ -598,51 +542,9 @@ function handleUserRegistration(e) {
         role: formData.get('role')
     };
     
-    // Validações
-    if (!userData.username) {
-        alert('Nome de usuário é obrigatório!');
-        return;
-    }
+    // Validações removidas - serão feitas no backend Django
     
-    if (!userData.password) {
-        alert('Senha é obrigatória!');
-        return;
-    }
-    
-    if (!userData.first_name) {
-        alert('Primeiro nome é obrigatório!');
-        return;
-    }
-    
-    if (!userData.last_name) {
-        alert('Último nome é obrigatório!');
-        return;
-    }
-    
-    if (!userData.email) {
-        alert('E-mail é obrigatório!');
-        return;
-    }
-    
-    if (!userData.role) {
-        alert('Função é obrigatória!');
-        return;
-    }
-    
-    // Validar email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(userData.email)) {
-        alert('E-mail inválido!');
-        return;
-    }
-    
-    // Validar senha (mínimo 6 caracteres)
-    if (userData.password.length < 6) {
-        alert('Senha deve ter pelo menos 6 caracteres!');
-        return;
-    }
-    
-    // Simular envio dos dados (aqui você faria a requisição para o backend)
+    // Enviar dados para o backend
     console.log('Dados do usuário para cadastro:', userData);
     
     // Mostrar notificação de sucesso

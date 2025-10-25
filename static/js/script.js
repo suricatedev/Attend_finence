@@ -103,17 +103,19 @@ class CampaignManager {
         const settingsMenu = document.getElementById('settingsMenu');
         const settingsDropdown = document.querySelector('.settings-dropdown');
         
-        settingsBtn?.addEventListener('click', (e) => {
-            e.stopPropagation();
-            settingsDropdown.classList.toggle('active');
-        });
+        if (settingsBtn && settingsDropdown) {
+            settingsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                settingsDropdown.classList.toggle('active');
+            });
 
-        // Fechar dropdown ao clicar fora
-        document.addEventListener('click', (e) => {
-            if (!settingsDropdown.contains(e.target)) {
-                settingsDropdown.classList.remove('active');
-            }
-        });
+            // Fechar dropdown ao clicar fora
+            document.addEventListener('click', (e) => {
+                if (!settingsDropdown.contains(e.target)) {
+                    settingsDropdown.classList.remove('active');
+                }
+            });
+        }
 
         // Settings menu items
         const settingsItems = document.querySelectorAll('.settings-item');
@@ -143,7 +145,8 @@ class CampaignManager {
         ];
 
         this.currentCardId = 1;
-        this.updateCardCounts();
+        // Não sobrescrever contadores do Django na inicialização
+        // this.updateCardCounts();
     }
 
 
@@ -823,13 +826,19 @@ class CampaignManager {
     searchCards(query) {
         const cards = document.querySelectorAll('.card');
         cards.forEach(card => {
-            const title = card.querySelector('.card-title').textContent.toLowerCase();
-            const assignee = card.querySelector('.assignee-name').textContent.toLowerCase();
-            const email = card.querySelector('.assignee-email').textContent.toLowerCase();
+            const titleElement = card.querySelector('.card-title');
+            const assigneeElement = card.querySelector('.info-value');
+            
+            if (!titleElement) {
+                card.style.display = 'none';
+                return;
+            }
+            
+            const title = titleElement.textContent.toLowerCase();
+            const assignee = assigneeElement ? assigneeElement.textContent.toLowerCase() : '';
             
             const matches = title.includes(query.toLowerCase()) || 
-                          assignee.includes(query.toLowerCase()) || 
-                          email.includes(query.toLowerCase());
+                          assignee.includes(query.toLowerCase());
             
             card.style.display = matches ? 'block' : 'none';
         });
@@ -1799,6 +1808,27 @@ class ReportsManager {
     }
 }
 
+// Funções auxiliares de configuração
+function setupBasicServices() {
+    const servicesLink = document.getElementById('servicesNavLink');
+    if (servicesLink) {
+        servicesLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('Funcionalidade de Serviços será implementada em breve!');
+        });
+    }
+}
+
+function setupBasicReports() {
+    const reportsLink = document.getElementById('reportsNavLink');
+    if (reportsLink) {
+        reportsLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('Funcionalidade de Relatórios será implementada em breve!');
+        });
+    }
+}
+
 // Inicializar o sistema quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing managers...');
@@ -1809,35 +1839,14 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('CampaignManager carregado com sucesso!');
         
         // Funcionalidades básicas de serviços e relatórios
-        this.setupBasicServices();
-        this.setupBasicReports();
+        setupBasicServices();
+        setupBasicReports();
         
         // Expor métodos globais para debug
         window.searchCards = (query) => window.campaignManager.searchCards(query);
         window.filterByPriority = (priority) => window.campaignManager.filterByPriority(priority);
         window.exportData = () => window.campaignManager.exportData();
         window.importData = (file) => window.campaignManager.importData(file);
-    }
-    
-    setupBasicServices() {
-        const servicesLink = document.getElementById('servicesNavLink');
-        if (servicesLink) {
-            servicesLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                alert('Funcionalidade de Serviços será implementada em breve!');
-            });
-        }
-    }
-    
-    setupBasicReports() {
-        const reportsLink = document.getElementById('reportsNavLink');
-        if (reportsLink) {
-            reportsLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                alert('Funcionalidade de Relatórios será implementada em breve!');
-            });
-        }
-        
     } catch (error) {
         console.error('Erro ao inicializar o sistema:', error);
     }

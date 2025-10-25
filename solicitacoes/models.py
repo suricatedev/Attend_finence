@@ -23,6 +23,7 @@ SERVICO_CHOICES = [
 
 # Create your models here.
 class Solicitacoes(models.Model):
+    ticket = models.CharField(max_length=25, default=0)
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='pendente')
     titulo = models.CharField(max_length = 70) 
     nome_solicitante = models.ForeignKey(User, on_delete=models.CASCADE) 
