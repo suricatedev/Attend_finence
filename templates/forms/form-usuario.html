@@ -1,0 +1,279 @@
+<!-- Modal para cadastro de usuário -->
+<div class="modal" id="manageMembersModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-user-plus"></i> Cadastro de Usuário</h2>
+            <button class="close-btn" id="closeMembersModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="userRegistrationForm" class="user-form">
+                <div class="form-group">
+                    <label for="username">Nome de usuário:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Senha:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="first_name">Primeiro nome:</label>
+                    <input type="text" id="first_name" name="first_name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="last_name">Último nome:</label>
+                    <input type="text" id="last_name" name="last_name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">E-mail:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="role">Função:</label>
+                    <select id="role" name="role" required>
+                        <option value="">Selecione uma função</option>
+                        <option value="superuser">SuperUser</option>
+                        <option value="financeiro">Financeiro</option>
+                        <option value="solicitante">Solicitante</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-register">
+                        <i class="fas fa-user-plus"></i>
+                        Cadastrar
+                    </button>
+                    <button type="button" class="btn-cancel" id="cancelUserRegistration">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para gerenciar membros -->
+<div class="modal" id="manageMembersModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-users"></i> Gerenciar Membros</h2>
+            <button class="close-btn" id="closeMembersModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="members-container">
+                <!-- Setor 1 - Administradores -->
+                <div class="sector-section">
+                    <div class="sector-header">
+                        <h3><i class="fas fa-crown"></i> Administradores</h3>
+                        <button class="btn-add-member" data-sector="administradores">
+                            <i class="fas fa-plus"></i> Adicionar
+                        </button>
+                    </div>
+                    <div class="members-list" id="administradores-members">
+                        <div class="member-item">
+                            <div class="member-info">
+                                <div class="member-avatar">
+                                    <i class="fas fa-user-shield"></i>
+                                </div>
+                                <div class="member-details">
+                                    <span class="member-name">Admin Sistema</span>
+                                    <span class="member-email">admin@empresa.com</span>
+                                </div>
+                            </div>
+                            <div class="member-actions">
+                                <button class="btn-edit" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-remove" title="Remover">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Setor 2 - Financeiro -->
+                <div class="sector-section">
+                    <div class="sector-header">
+                        <h3><i class="fas fa-dollar-sign"></i> Financeiro</h3>
+                        <button class="btn-add-member" data-sector="financeiro">
+                            <i class="fas fa-plus"></i> Adicionar
+                        </button>
+                    </div>
+                    <div class="members-list" id="financeiro-members">
+                        <div class="member-item">
+                            <div class="member-info">
+                                <div class="member-avatar">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                                <div class="member-details">
+                                    <span class="member-name">João Silva</span>
+                                    <span class="member-email">joao.financeiro@empresa.com</span>
+                                </div>
+                            </div>
+                            <div class="member-actions">
+                                <button class="btn-edit" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-remove" title="Remover">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="member-item">
+                            <div class="member-info">
+                                <div class="member-avatar">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                                <div class="member-details">
+                                    <span class="member-name">Maria Santos</span>
+                                    <span class="member-email">maria.financeiro@empresa.com</span>
+                                </div>
+                            </div>
+                            <div class="member-actions">
+                                <button class="btn-edit" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-remove" title="Remover">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Setor 3 - Solicitantes -->
+                <div class="sector-section">
+                    <div class="sector-header">
+                        <h3><i class="fas fa-users"></i> Solicitantes</h3>
+                        <button class="btn-add-member" data-sector="solicitantes">
+                            <i class="fas fa-plus"></i> Adicionar
+                        </button>
+                    </div>
+                    <div class="members-list" id="solicitantes-members">
+                        <div class="member-item">
+                            <div class="member-info">
+                                <div class="member-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="member-details">
+                                    <span class="member-name">Carlos Oliveira</span>
+                                    <span class="member-email">carlos@empresa.com</span>
+                                </div>
+                            </div>
+                            <div class="member-actions">
+                                <button class="btn-edit" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-remove" title="Remover">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="member-item">
+                            <div class="member-info">
+                                <div class="member-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="member-details">
+                                    <span class="member-name">Ana Costa</span>
+                                    <span class="member-email">ana@empresa.com</span>
+                                </div>
+                            </div>
+                            <div class="member-actions">
+                                <button class="btn-edit" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-remove" title="Remover">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para adicionar/editar membro -->
+<div class="modal" id="addMemberModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="addMemberTitle">Adicionar Membro</h2>
+            <button class="close-btn" id="closeAddMemberModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="addMemberForm">
+                <div class="form-group">
+                    <label for="memberName">Nome Completo</label>
+                    <input type="text" id="memberName" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="memberEmail">E-mail</label>
+                    <input type="email" id="memberEmail" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="memberSector">Setor</label>
+                    <select id="memberSector" name="sector" required>
+                        <option value="administradores">Administradores</option>
+                        <option value="financeiro">Financeiro</option>
+                        <option value="solicitantes">Solicitantes</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="memberRole">Cargo</label>
+                    <input type="text" id="memberRole" name="role" placeholder="Ex: Gerente Financeiro, Analista, etc.">
+                </div>
+                
+                <div class="form-group">
+                    <label for="memberPermissions">Permissões</label>
+                    <div class="permissions-grid">
+                        <label class="permission-item">
+                            <input type="checkbox" name="permissions" value="view">
+                            <span>Visualizar</span>
+                        </label>
+                        <label class="permission-item">
+                            <input type="checkbox" name="permissions" value="create">
+                            <span>Criar</span>
+                        </label>
+                        <label class="permission-item">
+                            <input type="checkbox" name="permissions" value="edit">
+                            <span>Editar</span>
+                        </label>
+                        <label class="permission-item">
+                            <input type="checkbox" name="permissions" value="delete">
+                            <span>Excluir</span>
+                        </label>
+                        <label class="permission-item">
+                            <input type="checkbox" name="permissions" value="approve">
+                            <span>Aprovar</span>
+                        </label>
+                        <label class="permission-item">
+                            <input type="checkbox" name="permissions" value="admin">
+                            <span>Administrar</span>
+                        </label>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" id="cancelAddMember">Cancelar</button>
+            <button type="submit" class="btn-primary" form="addMemberForm" id="saveMember">Salvar</button>
+        </div>
+    </div>
+</div>
