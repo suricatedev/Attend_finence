@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistema de Gestão Financeira</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Overlay para mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Attend Finance</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="/" class="nav-link">
+                            <i class="fas fa-th-large"></i>
+                            <span>Solicitações</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a href="/relatorios" class="nav-link">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Relatórios</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item active">
+                        <a href="/dashboard" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboards</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="/servicos" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Serviços</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-help">
+                <ul class="help-list">
+                    <li class="help-item">
+                        <a href="#" class="help-link">
+                            <i class="fas fa-question-circle"></i>
+                            <span>Faça uma pergunta</span>
+                        </a>
+                    </li>
+                    <li class="help-item">
+                        <a href="#" class="help-link">
+                            <i class="fas fa-question"></i>
+                            <span>Ajuda</span>
+                        </a>
+                    </li>
+                    <li class="help-item">
+                        <a href="#" class="help-link">
+                            <i class="fas fa-comment"></i>
+                            <span>Chat</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <div class="logo-section">
+                    </div>
+                </div>
+                
+                <div class="header-center">
+                    <div class="view-tabs">
+                        <a href="/" class="tab-btn">
+                            <i class="fas fa-th"></i>
+                            Cards
+                        </a>
+                        <a href="/relatorios" class="tab-btn">
+                            <i class="fas fa-chart-bar"></i>
+                            Relatórios
+                        </a>
+                        <a href="/dashboard" class="tab-btn active">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Dashboards
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="header-right">
+                    <div class="user-actions">
+                        <button class="action-btn" title="Notificações">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                        <div class="settings-dropdown">
+                            <button class="action-btn" title="Configurações" id="settingsBtn">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <div class="settings-menu" id="settingsMenu">
+                                <a href="#" class="settings-item">
+                                    <i class="fas fa-user-plus"></i>
+                                    <span>Gerenciar membros</span>
+                                </a>
+                                <a href="#" class="settings-item">
+                                    <i class="fas fa-users"></i>
+                                    <span>Equipe</span>
+                                </a>
+                                <a href="#" class="settings-item">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Permissões</span>
+                                </a>
+                                <a href="#" class="settings-item">
+                                    <i class="fas fa-cog"></i>
+                                    <span>Configurações gerais</span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="user-avatar">
+                            <img src="https://via.placeholder.com/32" alt="Usuário">
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard View -->
+            <div class="dashboard-view" id="dashboardView">
+                <div class="dashboard-container">
+                    <!-- Métricas Principais -->
+                    <div class="metrics-row">
+                        <div class="metric-card metric-card-primary">
+                            <div class="metric-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="metric-content">
+                                <h3>Tempo Médio de Aprovação</h3>
+                                <div class="metric-value">2d 14h</div>
+                                <div class="metric-change positive">-15%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card metric-card-secondary">
+                            <div class="metric-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="metric-content">
+                                <h3>Tempo Médio de Resolução</h3>
+                                <div class="metric-value">1d 8h</div>
+                                <div class="metric-change positive">-22%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card metric-card-warning">
+                            <div class="metric-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="metric-content">
+                                <h3>Solicitações Pendentes</h3>
+                                <div class="metric-value">47</div>
+                                <div class="metric-change negative">+12%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card metric-card-success">
+                            <div class="metric-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="metric-content">
+                                <h3>Valor Total Processado</h3>
+                                <div class="metric-value">R$ 2.4M</div>
+                                <div class="metric-change positive">+8%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Gráfico Principal -->
+                    <div class="chart-section">
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <div class="chart-title-section">
+                                    <h2>Fluxo de Solicitações por Mês</h2>
+                                    <div class="chart-stats">
+                                        <div class="stat-item">
+                                            <span class="stat-label">Total Criadas:</span>
+                                            <span class="stat-value" id="totalCreated">342</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-label">Total Aprovadas:</span>
+                                            <span class="stat-value" id="totalApproved">298</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-label">Taxa de Aprovação:</span>
+                                            <span class="stat-value success" id="approvalRate">87.1%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="chart-controls">
+                                    <div class="period-selector">
+                                        <select id="periodSelect" class="period-dropdown">
+                                            <option value="yearly">Anual</option>
+                                            <option value="monthly" selected>Mensal</option>
+                                            <option value="weekly">Semanal</option>
+                                        </select>
+                                    </div>
+                                    <div class="chart-legend">
+                                        <span class="legend-item">
+                                            <div class="legend-color pending"></div>
+                                            <span class="legend-text">Solicitações Criadas</span>
+                                            <span class="legend-value">342</span>
+                                        </span>
+                                        <span class="legend-item">
+                                            <div class="legend-color completed"></div>
+                                            <span class="legend-text">Solicitações Aprovadas</span>
+                                            <span class="legend-value">298</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chart-content">
+                                <canvas id="mainChart" width="800" height="300"></canvas>
+                                <div class="chart-tooltip" id="chartTooltip">
+                                    <div class="tooltip-header"></div>
+                                    <div class="tooltip-content"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Gráficos Secundários -->
+                    <div class="secondary-charts">
+                        <div class="chart-card">
+                            <div class="chart-header-small">
+                                <h3>Solicitações por Status</h3>
+                                <div class="chart-controls">
+                                    <button class="period-button">Últimos 30 dias</button>
+                                    <button class="menu-button">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="donut-chart-layout">
+                                <div class="donut-legend-left">
+                                    <div class="legend-item">
+                                        <span class="legend-dot pending"></span>
+                                        <span class="legend-text">Pendente</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-dot approved"></span>
+                                        <span class="legend-text">Aprovado</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-dot completed"></span>
+                                        <span class="legend-text">Concluído</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-dot rejected"></span>
+                                        <span class="legend-text">Rejeitado</span>
+                                    </div>
+                                </div>
+                                <div class="donut-chart-center">
+                                    <div class="donut-chart">
+                                        <div class="donut-center">
+                                            <span class="donut-label">Total</span>
+                                            <span class="donut-value">65%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <div class="chart-header-small">
+                                <h3>Valor por Departamento</h3>
+                                <div class="chart-period">
+                                    <span class="period-label">Ano atual</span>
+                                </div>
+                            </div>
+                            <div class="bar-chart">
+                                <div class="bar-item">
+                                    <div class="bar-label-section">
+                                        <span class="bar-label">TI</span>
+                                        <span class="bar-percentage">35%</span>
+                                    </div>
+                                    <div class="bar-container">
+                                        <div class="bar-fill" style="width: 85%"></div>
+                                        <div class="bar-progress-text">85%</div>
+                                    </div>
+                                    <div class="bar-value-section">
+                                        <span class="bar-value">R$ 1.2M</span>
+                                        <span class="bar-change positive">+12%</span>
+                                    </div>
+                                </div>
+                                <div class="bar-item">
+                                    <div class="bar-label-section">
+                                        <span class="bar-label">Financeiro</span>
+                                        <span class="bar-percentage">28%</span>
+                                    </div>
+                                    <div class="bar-container">
+                                        <div class="bar-fill" style="width: 70%"></div>
+                                        <div class="bar-progress-text">70%</div>
+                                    </div>
+                                    <div class="bar-value-section">
+                                        <span class="bar-value">R$ 980K</span>
+                                        <span class="bar-change positive">+8%</span>
+                                    </div>
+                                </div>
+                                <div class="bar-item">
+                                    <div class="bar-label-section">
+                                        <span class="bar-label">RH</span>
+                                        <span class="bar-percentage">19%</span>
+                                    </div>
+                                    <div class="bar-container">
+                                        <div class="bar-fill" style="width: 45%"></div>
+                                        <div class="bar-progress-text">45%</div>
+                                    </div>
+                                    <div class="bar-value-section">
+                                        <span class="bar-value">R$ 650K</span>
+                                        <span class="bar-change negative">-3%</span>
+                                    </div>
+                                </div>
+                                <div class="bar-item">
+                                    <div class="bar-label-section">
+                                        <span class="bar-label">Marketing</span>
+                                        <span class="bar-percentage">12%</span>
+                                    </div>
+                                    <div class="bar-container">
+                                        <div class="bar-fill" style="width: 30%"></div>
+                                        <div class="bar-progress-text">30%</div>
+                                    </div>
+                                    <div class="bar-value-section">
+                                        <span class="bar-value">R$ 420K</span>
+                                        <span class="bar-change positive">+15%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bar-chart-summary">
+                                <div class="summary-item">
+                                    <span class="summary-label">Total Processado:</span>
+                                    <span class="summary-value">R$ 3.25M</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Crescimento:</span>
+                                    <span class="summary-value positive">+8.5%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <div class="chart-header-small">
+                                <h3>Solicitações por Dia da Semana</h3>
+                                <div class="chart-period">
+                                    <span class="period-label">Últimas 4 semanas</span>
+                                </div>
+                            </div>
+                            <div class="weekly-chart">
+                                <div class="week-bar">
+                                    <div class="week-day">Seg</div>
+                                    <div class="week-value" style="height: 60%"></div>
+                                    <div class="week-count">12</div>
+                                    <div class="week-trend positive">+2</div>
+                                </div>
+                                <div class="week-bar">
+                                    <div class="week-day">Ter</div>
+                                    <div class="week-value" style="height: 80%"></div>
+                                    <div class="week-count">16</div>
+                                    <div class="week-trend positive">+4</div>
+                                </div>
+                                <div class="week-bar">
+                                    <div class="week-day">Qua</div>
+                                    <div class="week-value" style="height: 70%"></div>
+                                    <div class="week-count">14</div>
+                                    <div class="week-trend negative">-1</div>
+                                </div>
+                                <div class="week-bar">
+                                    <div class="week-day">Qui</div>
+                                    <div class="week-value" style="height: 90%"></div>
+                                    <div class="week-count">18</div>
+                                    <div class="week-trend positive">+3</div>
+                                </div>
+                                <div class="week-bar">
+                                    <div class="week-day">Sex</div>
+                                    <div class="week-value" style="height: 100%"></div>
+                                    <div class="week-count">20</div>
+                                    <div class="week-trend positive">+5</div>
+                                </div>
+                                <div class="week-bar">
+                                    <div class="week-day">Sáb</div>
+                                    <div class="week-value" style="height: 20%"></div>
+                                    <div class="week-count">4</div>
+                                    <div class="week-trend neutral">0</div>
+                                </div>
+                                <div class="week-bar">
+                                    <div class="week-day">Dom</div>
+                                    <div class="week-value" style="height: 10%"></div>
+                                    <div class="week-count">2</div>
+                                    <div class="week-trend negative">-1</div>
+                                </div>
+                            </div>
+                            <div class="weekly-summary">
+                                <div class="summary-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">Média Diária:</span>
+                                        <span class="stat-value">12.3</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Pico:</span>
+                                        <span class="stat-value">Sex (20)</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Baixa:</span>
+                                        <span class="stat-value">Dom (2)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/dashboard-optimized.js"></script>
+</body>
+</html>
