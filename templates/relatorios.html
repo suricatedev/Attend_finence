@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - Sistema de Gestão Financeira</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/relatorios.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Overlay para mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Attend Finance</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="/" class="nav-link">
+                            <i class="fas fa-th-large"></i>
+                            <span>Solicitações</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item active">
+                        <a href="/relatorios" class="nav-link">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Relatórios</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a href="/dashboard" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboards</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="/servicos" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Serviços</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-help">
+                <ul class="help-list">
+                    <li class="help-item">
+                        <a href="#" class="help-link">
+                            <i class="fas fa-question-circle"></i>
+                            <span>Faça uma pergunta</span>
+                        </a>
+                    </li>
+                    <li class="help-item">
+                        <a href="#" class="help-link">
+                            <i class="fas fa-question"></i>
+                            <span>Ajuda</span>
+                        </a>
+                    </li>
+                    <li class="help-item">
+                        <a href="#" class="help-link">
+                            <i class="fas fa-comment"></i>
+                            <span>Chat</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <div class="logo-section">
+                    </div>
+                </div>
+                
+                <div class="header-center">
+                    <div class="view-tabs">
+                        <a href="/" class="tab-btn">
+                            <i class="fas fa-th"></i>
+                            Cards
+                        </a>
+                        <a href="/relatorios" class="tab-btn active">
+                            <i class="fas fa-chart-bar"></i>
+                            Relatórios
+                        </a>
+                        <a href="/dashboard" class="tab-btn">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Dashboards
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="header-right">
+                    <div class="user-actions">
+                        <button class="action-btn" title="Notificações">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                        <div class="settings-dropdown">
+                            <button class="action-btn" title="Configurações" id="settingsBtn">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <div class="settings-menu" id="settingsMenu">
+                                <a href="#" class="settings-item">
+                                    <i class="fas fa-user-plus"></i>
+                                    <span>Gerenciar membros</span>
+                                </a>
+                                <a href="#" class="settings-item">
+                                    <i class="fas fa-users"></i>
+                                    <span>Equipe</span>
+                                </a>
+                                <a href="#" class="settings-item">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Permissões</span>
+                                </a>
+                                <a href="#" class="settings-item">
+                                    <i class="fas fa-cog"></i>
+                                    <span>Configurações gerais</span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="user-avatar">
+                            <img src="https://via.placeholder.com/32" alt="Usuário">
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Relatórios View -->
+            <div class="reports-view" id="reportsView">
+                <div class="reports-container">
+                    <!-- Filtros Compactos -->
+                    <div class="reports-filters-compact">
+                        <!-- Primeira linha: Status e Busca -->
+                        <div class="filters-row-1">
+                            <div class="status-filters-compact">
+                                <button class="status-filter-compact active" data-status="all">
+                                    <i class="fas fa-list"></i>
+                                    Todos
+                                </button>
+                                <button class="status-filter-compact" data-status="completed">
+                                    <i class="fas fa-check"></i>
+                                    Concluído
+                                </button>
+                                <button class="status-filter-compact" data-status="pending">
+                                    <i class="fas fa-clock"></i>
+                                    Pendente
+                                </button>
+                                <button class="status-filter-compact" data-status="approved">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    Aprovado
+                                </button>
+                                <button class="status-filter-compact" data-status="rejected">
+                                    <i class="fas fa-times"></i>
+                                    Rejeitado
+                                </button>
+                            </div>
+                            <div class="search-group">
+                                <input type="text" id="searchInput" placeholder="Buscar: ID, título, solicitante..." class="search-input-compact">
+                                <button class="btn-search" id="applySearch">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Segunda linha: Filtros de Data e Serviço -->
+                        <div class="filters-row-2">
+                            <div class="date-filters">
+                                <div class="date-group">
+                                    <label for="dateFrom">De:</label>
+                                    <input type="date" id="dateFrom" class="date-input-compact">
+                                </div>
+                                <div class="date-group">
+                                    <label for="dateTo">Até:</label>
+                                    <input type="date" id="dateTo" class="date-input-compact">
+                                </div>
+                            </div>
+                            <div class="service-filter">
+                                <select id="serviceFilter" class="service-select-compact">
+                                    <option value="">Todos os serviços</option>
+                                </select>
+                            </div>
+                            <div class="filter-actions">
+                                <button class="btn-clear-compact" id="clearFilters">
+                                    <i class="fas fa-eraser"></i>
+                                    Limpar
+                                </button>
+                                <button class="btn-filter-compact" id="applyFilters">
+                                    <i class="fas fa-filter"></i>
+                                    Filtrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabela de Relatórios -->
+                    <div class="reports-table-container">
+                        <div class="table-header-compact">
+                            <div class="table-info-compact">
+                                <span id="totalRecords">Total: 0</span>
+                                <span id="filteredRecords">Filtrados: 0</span>
+                            </div>
+                            <div class="table-actions-compact">
+                                <button class="btn-export-compact" id="exportExcel" title="Exportar Excel">
+                                    <i class="fas fa-file-excel"></i>
+                                </button>
+                                <button class="btn-export-compact" id="exportPDF" title="Exportar PDF">
+                                    <i class="fas fa-file-pdf"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-wrapper">
+                            <table class="reports-table-compact" id="reportsTable">
+                                <thead>
+                                    <tr>
+                                        <th class="sortable-compact" data-column="id">
+                                            ID <i class="fas fa-sort"></i>
+                                        </th>
+                                        <th class="sortable-compact" data-column="title">
+                                            Título <i class="fas fa-sort"></i>
+                                        </th>
+                                        <th class="sortable-compact" data-column="solicitante">
+                                            Solicitante <i class="fas fa-sort"></i>
+                                        </th>
+                                        <th class="sortable-compact" data-column="recebedor">
+                                            Recebedor <i class="fas fa-sort"></i>
+                                        </th>
+                                        <th class="sortable-compact" data-column="service">
+                                            Serviço <i class="fas fa-sort"></i>
+                                        </th>
+                                        <th class="sortable-compact" data-column="valor">
+                                            Valor <i class="fas fa-sort"></i>
+                                        </th>
+                                        <th class="sortable-compact" data-column="status">
+                                            Status <i class="fas fa-sort"></i>
+                                        </th>
+                                        <th class="sortable-compact" data-column="dataCriacao">
+                                            Criação <i class="fas fa-sort"></i>
+                                        </th>
+                                        <th class="sortable-compact" data-column="dataPagamento">
+                                            Pagamento <i class="fas fa-sort"></i>
+                                        </th>
+                                        <th class="actions-header">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reportsTableBody">
+                                    <!-- Dados serão preenchidos dinamicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

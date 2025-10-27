@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/kanban.css">
     <link rel="stylesheet" href="/static/css/forms.css">
-    <link rel="stylesheet" href="/static/css/solicitacao-minimal.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
@@ -145,7 +144,7 @@
                     </div>
                 </div>
             </header>
-            
+
             <!-- Kanban Board -->
             <div class="kanban-board" id="kanbanBoard">
                 <div class="kanban-column" data-column="planning">
@@ -165,50 +164,50 @@
                         </div>
                     </div>
                     <div class="column-content" data-column="planning">
-                    {% for solicitacao in solicitacoes_pendentes %}
-                        <div class="card card-status-pending" draggable="true" data-card-id="1">
-                            <div class="card-header">
-                                <span class="priority high">{{solicitacao.prioridade}}</span>
-                            </div>
-                            <div class="card-body">
-                                <h3 class="card-title">{{solicitacao.titulo}}</h3>
-                                <div class="card-info">
-                                    <div class="info-item">
-                                        <i class="fas fa-user"></i>
-                                        <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">{{solicitacao.nome_solicitante}}</span>
+                        {% for solicitacao in solicitacoes_pendentes %}
+                            <div class="card card-status-pending" draggable="true" data-card-id="1">
+                                <div class="card-header">
+                                    <span class="priority high">{{solicitacao.prioridade}}</span>
+                                </div>
+                                <div class="card-body">
+                                    <h3 class="card-title">{{solicitacao.titulo}}</h3>
+                                    <div class="card-info">
+                                        <div class="info-item">
+                                            <i class="fas fa-user"></i>
+                                            <span class="info-label">SOLICITANTE</span>
+                                            <span class="info-value">{{solicitacao.nome_solicitante}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-user-check"></i>
+                                            <span class="info-label">RECEBEDOR</span>
+                                            <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-dollar-sign"></i>
+                                            <span class="info-label">VALOR</span>
+                                            <span class="info-value">{{solicitacao.valor}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-calendar-plus"></i>
+                                            <span class="info-label">CRIAÇÃO</span>
+                                            <span class="info-value">{{solicitacao.data_de_criacao}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-calendar-check"></i>
+                                            <span class="info-label">PAGAMENTO</span>
+                                            <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
+                                        </div>
                                     </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-user-check"></i>
-                                        <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-dollar-sign"></i>
-                                        <span class="info-label">VALOR</span>
-                                        <span class="info-value">{{solicitacao.valor}}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-plus"></i>
-                                        <span class="info-label">CRIAÇÃO</span>
-                                        <span class="info-value">{{solicitacao.data_de_criacao}}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-check"></i>
-                                        <span class="info-label">PAGAMENTO</span>
-                                        <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
+                                    <div class="card-time">
+                                        <i class="fas fa-clock"></i>
+                                        <span>0min</span>
                                     </div>
                                 </div>
-                                <div class="card-time">
-                                    <i class="fas fa-clock"></i>
-                                    <span>0min</span>
+                                <div class="card-footer">
+                                    <span class="card-stage">Solicitação pendente de análise</span>
                                 </div>
                             </div>
-                            <div class="card-footer">
-                                <span class="card-stage">Solicitação pendente de análise</span>
-                            </div>
-                        </div>
-                    {% endfor %}
+                        {% endfor %}
                     </div>
                 </div>
 
@@ -229,50 +228,50 @@
                         </div>
                     </div>
                     <div class="column-content" data-column="test">
-                    {% for solicitacao in solicitacoes_recusados%}
-                        <div class="card card-status-rejected" draggable="true" data-card-id="2">
-                            <div class="card-header">
-                                <span class="priority low">{{solicitacao.prioridade}}</span>
-                            </div>
-                            <div class="card-body">
-                                <h3 class="card-title">{{solicitacao.titulo}}</h3>
-                                <div class="card-info">
-                                    <div class="info-item">
-                                        <i class="fas fa-user"></i>
-                                        <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">{{solicitacao.nome_do_solicitante}}</span>
+                        {% for solicitacao in solicitacoes_recusados%}
+                            <div class="card card-status-rejected" draggable="true" data-card-id="2">
+                                <div class="card-header">
+                                    <span class="priority low">{{solicitacao.prioridade}}</span>
+                                </div>
+                                <div class="card-body">
+                                    <h3 class="card-title">{{solicitacao.titulo}}</h3>
+                                    <div class="card-info">
+                                        <div class="info-item">
+                                            <i class="fas fa-user"></i>
+                                            <span class="info-label">SOLICITANTE</span>
+                                            <span class="info-value">{{solicitacao.nome_do_solicitante}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-user-check"></i>
+                                            <span class="info-label">RECEBEDOR</span>
+                                            <span class="info-value">{{solicitante.nome_do_recebedor}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-dollar-sign"></i>
+                                            <span class="info-label">VALOR</span>
+                                            <span class="info-value">{{solicitante.valor}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-calendar-plus"></i>
+                                            <span class="info-label">CRIAÇÃO</span>
+                                            <span class="info-value">{{solicitacao.data_de_criacao}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-calendar-check"></i>
+                                            <span class="info-label">PAGAMENTO</span>
+                                            <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
+                                        </div>
                                     </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-user-check"></i>
-                                        <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">{{solicitante.nome_do_recebedor}}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-dollar-sign"></i>
-                                        <span class="info-label">VALOR</span>
-                                        <span class="info-value">{{solicitante.valor}}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-plus"></i>
-                                        <span class="info-label">CRIAÇÃO</span>
-                                        <span class="info-value">{{solicitacao.data_de_criacao}}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-calendar-check"></i>
-                                        <span class="info-label">PAGAMENTO</span>
-                                        <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
+                                    <div class="card-time">
+                                        <i class="fas fa-clock"></i>
+                                        <span>0min</span>
                                     </div>
                                 </div>
-                                <div class="card-time">
-                                    <i class="fas fa-clock"></i>
-                                    <span>0min</span>
+                                <div class="card-footer">
+                                    <span class="card-stage">Solicitação recusada - orçamento insuficiente</span>
                                 </div>
                             </div>
-                            <div class="card-footer">
-                                <span class="card-stage">Solicitação recusada - orçamento insuficiente</span>
-                            </div>
-                        </div>
-                    {% endfor %}
+                        {% endfor %}
                     </div>
                 </div>
 
@@ -415,6 +414,8 @@
     {% include 'forms/form-solicitacao.html' %}
     {% include 'forms/form-usuario.html' %}
 
-    <script src="/static/js/app.js"></script>
+    <script src="/static/js/base.js"></script>
+    <script src="/static/js/kanban.js"></script>
+    <script src="/static/js/forms.js"></script>
 </body>
 </html>

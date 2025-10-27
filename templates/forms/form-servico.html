@@ -1,0 +1,96 @@
+<!-- Modal para adicionar/editar serviço -->
+<div class="modal" id="addServiceModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="addServiceTitle">Adicionar Serviço</h2>
+            <button class="close-btn" id="closeAddServiceModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="service-form-container">
+                <div class="service-form-header">
+                    <h3>
+                        <i class="fas fa-plus-circle"></i>
+                        Cadastrar Novo Serviço
+                    </h3>
+                    <p>Preencha os dados do serviço que será oferecido pela empresa</p>
+                </div>
+                <form id="addServiceForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="serviceName">
+                                <i class="fas fa-tag"></i>
+                                Nome do Serviço
+                            </label>
+                            <input type="text" id="serviceName" name="name" required placeholder="Ex: Consultoria em TI">
+                            <small class="form-help">Digite um nome claro e descritivo para o serviço</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="serviceCategory">
+                                <i class="fas fa-folder"></i>
+                                Categoria
+                            </label>
+                            <select id="serviceCategory" name="category" required>
+                                <option value="">Selecione uma categoria</option>
+                                <option value="consultoria">Consultoria</option>
+                                <option value="desenvolvimento">Desenvolvimento</option>
+                                <option value="manutencao">Manutenção</option>
+                                <option value="treinamento">Treinamento</option>
+                                <option value="suporte">Suporte</option>
+                                <option value="infraestrutura">Infraestrutura</option>
+                                <option value="marketing">Marketing</option>
+                                <option value="outros">Outros</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label for="serviceDescription">
+                            <i class="fas fa-align-left"></i>
+                            Descrição do Serviço
+                        </label>
+                        <textarea id="serviceDescription" name="description" rows="4" placeholder="Descreva detalhadamente o que este serviço oferece, suas características e benefícios"></textarea>
+                        <small class="form-help">Uma descrição clara ajuda os solicitantes a entenderem o serviço</small>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="serviceIcon">
+                                <i class="fas fa-palette"></i>
+                                Ícone do Serviço
+                            </label>
+                            <select id="serviceIcon" name="icon" required>
+                                <option value="">Selecione um ícone</option>
+                                <option value="fas fa-user-tie">👔 Consultoria</option>
+                                <option value="fas fa-code">💻 Desenvolvimento</option>
+                                <option value="fas fa-tools">🔧 Manutenção</option>
+                                <option value="fas fa-graduation-cap">🎓 Treinamento</option>
+                                <option value="fas fa-headset">🎧 Suporte</option>
+                                <option value="fas fa-server">🖥️ Infraestrutura</option>
+                                <option value="fas fa-bullhorn">📢 Marketing</option>
+                                <option value="fas fa-ellipsis-h">➕ Outros</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="serviceActive">
+                                <i class="fas fa-toggle-on"></i>
+                                Status do Serviço
+                            </label>
+                            <select id="serviceActive" name="active" required>
+                                <option value="true">Ativo - Disponível para seleção</option>
+                                <option value="false">Inativo - Não disponível</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" id="cancelAddService">Cancelar</button>
+            <button type="submit" class="btn-primary" form="addServiceForm" id="saveService">Salvar</button>
+        </div>
+    </div>
+</div>

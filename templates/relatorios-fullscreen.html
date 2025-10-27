@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - Sistema de Gestão Financeira</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/relatorios-compact.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Página de Relatórios em Tela Cheia -->
+    <div class="reports-fullscreen">
+        <!-- Header com Botão Voltar -->
+        <header class="reports-header">
+            <div class="header-left">
+                <button class="btn-back" onclick="window.history.back()">
+                    <i class="fas fa-arrow-left"></i>
+                    Voltar
+                </button>
+                <div class="page-title">
+                    <h1>Relatórios Financeiros</h1>
+                    <p>Análise completa das solicitações financeiras</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="export-actions">
+                    <button class="btn-export" id="exportExcel">
+                        <i class="fas fa-file-excel"></i>
+                        Excel
+                    </button>
+                    <button class="btn-export" id="exportPDF">
+                        <i class="fas fa-file-pdf"></i>
+                        PDF
+                    </button>
+                    <button class="btn-export" id="exportCSV">
+                        <i class="fas fa-file-csv"></i>
+                        CSV
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Filtros Avançados -->
+        <section class="filters-section">
+            <div class="filters-container">
+                <!-- Toggle para colapsar filtros -->
+                <div class="filters-toggle" id="filtersToggle">
+                    <h3>Filtros Avançados</h3>
+                    <i class="fas fa-chevron-up"></i>
+                </div>
+                
+                <!-- Conteúdo dos filtros -->
+                <div class="filters-content" id="filtersContent">
+                    <!-- Filtros Principais -->
+                    <div class="filters-main">
+                    <div class="filter-group">
+                        <label>Status</label>
+                        <div class="status-filters">
+                            <button class="status-btn active" data-status="all">
+                                <i class="fas fa-list"></i>
+                                Todos
+                            </button>
+                            <button class="status-btn" data-status="pendente">
+                                <i class="fas fa-clock"></i>
+                                Pendente
+                            </button>
+                            <button class="status-btn" data-status="aprovado">
+                                <i class="fas fa-check"></i>
+                                Aprovado
+                            </button>
+                            <button class="status-btn" data-status="recusado">
+                                <i class="fas fa-times"></i>
+                                Recusado
+                            </button>
+                            <button class="status-btn" data-status="concluido">
+                                <i class="fas fa-check-circle"></i>
+                                Concluído
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Período</label>
+                        <div class="date-range">
+                            <input type="date" id="dateFrom" class="date-input">
+                            <span>até</span>
+                            <input type="date" id="dateTo" class="date-input">
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Serviço</label>
+                        <select id="serviceFilter" class="select-input">
+                            <option value="">Todos os serviços</option>
+                            <option value="consultoria_TI">Consultoria em TI</option>
+                            <option value="desenvolvimento">Desenvolvimento de Software</option>
+                            <option value="manutencao_equipamentos">Manutenção de Equipamentos</option>
+                            <option value="treinamento_corporativo">Treinamento Corporativo</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Prioridade</label>
+                        <select id="priorityFilter" class="select-input">
+                            <option value="">Todas as prioridades</option>
+                            <option value="baixa">Baixa</option>
+                            <option value="media">Média</option>
+                            <option value="alta">Alta</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Busca e Ações -->
+                <div class="filters-actions">
+                    <div class="search-group">
+                        <input type="text" id="searchInput" placeholder="Buscar por ID, título, solicitante..." class="search-input">
+                        <button class="btn-search" id="applySearch">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-secondary" id="clearFilters">
+                            <i class="fas fa-eraser"></i>
+                            Limpar
+                        </button>
+                        <button class="btn-primary" id="applyFilters">
+                            <i class="fas fa-filter"></i>
+                            Aplicar Filtros
+                        </button>
+                    </div>
+                </div>
+                </div> <!-- Fechar filters-content -->
+            </div>
+        </section>
+
+        <!-- Estatísticas Resumidas -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalSolicitacoes">0</h3>
+                        <p>Total de Solicitações</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="valorTotal">R$ 0,00</h3>
+                        <p>Valor Total</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="aprovadas">0</h3>
+                        <p>Aprovadas</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="pendentes">0</h3>
+                        <p>Pendentes</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tabela de Dados -->
+        <section class="table-section">
+            <div class="table-header">
+                <div class="table-info">
+                    <h3>Dados Detalhados</h3>
+                    <div class="table-stats">
+                        <span id="totalRecords">Total: 0</span>
+                        <span id="filteredRecords">Filtrados: 0</span>
+                    </div>
+                </div>
+                <div class="table-controls">
+                    <div class="view-options">
+                        <button class="view-btn active" data-view="table">
+                            <i class="fas fa-table"></i>
+                        </button>
+                        <button class="view-btn" data-view="cards">
+                            <i class="fas fa-th-large"></i>
+                        </button>
+                    </div>
+                    <div class="pagination-info">
+                        <span id="paginationInfo">Página 1 de 1</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="reportsTable">
+                    <thead>
+                        <tr>
+                            <th class="sortable" data-column="id">
+                                ID <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="title">
+                                Título <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="solicitante">
+                                Solicitante <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="recebedor">
+                                Recebedor <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="service">
+                                Serviço <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="valor">
+                                Valor <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="status">
+                                Status <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="priority">
+                                Prioridade <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="dataCriacao">
+                                Criação <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="dataPagamento">
+                                Pagamento <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="actions-header">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsTableBody">
+                        <!-- Dados serão preenchidos dinamicamente -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginação -->
+            <div class="pagination">
+                <button class="pagination-btn" id="prevPage" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                    Anterior
+                </button>
+                <div class="pagination-numbers" id="paginationNumbers">
+                    <!-- Números de página serão gerados dinamicamente -->
+                </div>
+                <button class="pagination-btn" id="nextPage" disabled>
+                    Próximo
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal de Detalhes -->
+    <div class="modal" id="detailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Detalhes da Solicitação</h2>
+                <button class="close-btn" id="closeDetailsModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="detailsContent">
+                <!-- Conteúdo será preenchido dinamicamente -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/relatorios-optimized.js"></script>
+</body>
+</html>
