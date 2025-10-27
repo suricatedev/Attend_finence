@@ -470,9 +470,20 @@ class KanbanManager {
         // Limpar cards existentes
         document.querySelectorAll('.card').forEach(card => card.remove());
 
+        // Carregar estado de expansão salvo
+        const expandedCards = JSON.parse(localStorage.getItem('expandedCards') || '[]');
+
         // Renderizar cards
         this.cards.forEach(card => {
-            this.addCardToColumn(card.status, card);
+            const cardElement = this.createCardElement(card);
+            
+            // Restaurar estado de expansão se estava expandido
+            if (expandedCards.includes(card.id.toString())) {
+                cardElement.classList.add('expanded');
+                cardElement.style.maxHeight = '500px';
+            }
+            
+            this.addCardToColumn(card.status, cardElement);
         });
     }
 
@@ -483,8 +494,17 @@ class KanbanManager {
         const cardsContainer = columnElement.querySelector('.cards-container');
         if (!cardsContainer) return;
 
-        const card = cardData || this.createDefaultCard();
-        const cardElement = this.createCardElement(card);
+        let cardElement;
+        
+        if (cardData && cardData.nodeType) {
+            // Se é um elemento DOM já criado
+            cardElement = cardData;
+        } else {
+            // Se são dados de card, criar elemento
+            const card = cardData || this.createDefaultCard();
+            cardElement = this.createCardElement(card);
+        }
+        
         cardsContainer.appendChild(cardElement);
     }
 
@@ -511,26 +531,129 @@ class KanbanManager {
 
         cardElement.innerHTML = `
             <div class="card-header">
-                <h3>${card.title}</h3>
-                <span class="priority ${card.priority}">${card.priority}</span>
+                <div class="card-id">${card.ticket || 'INC' + card.id}</div>
+                <div class="card-priority ${card.priority}">${card.priority}</div>
             </div>
-            <div class="card-body">
-                <p><strong>Solicitante:</strong> ${card.solicitante}</p>
-                <p><strong>Recebedor:</strong> ${card.recebedor}</p>
-                <p><strong>Valor:</strong> ${card.valor}</p>
-                <p><strong>Data:</strong> ${Utils.formatDate(card.dataCriacao)}</p>
+            <div class="card-content">
+                <div class="card-basic-info">
+                    <div class="card-description">${card.description || card.title}</div>
+                    <div class="card-solicitante">
+                        <i class="fas fa-user"></i>
+                        ${card.solicitante || 'Usuário'}
+                    </div>
+                    <div class="card-valor">
+                        <i class="fas fa-dollar-sign"></i>
+                        ${card.valor || 'R$ 0,00'}
+                    </div>
+                    <div class="card-tempo-fila">
+                        <i class="fas fa-clock"></i>
+                        ${card.tempoFila || '00:00'}
+                    </div>
+                </div>
+                
+                <div class="card-expanded-info">
+                    <div class="info-section">
+                        <div class="section-title">
+                            <i class="fas fa-info-circle"></i>
+                            Informações Básicas
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Recebedor</div>
+                                <div class="info-value">${card.recebedor || 'Financeiro'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Serviço</div>
+                                <div class="info-value">${card.service || 'Consultoria'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Data Criação</div>
+                                <div class="info-value">${Utils.formatDate(card.dataCriacao)}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Data Pagamento</div>
+                                <div class="info-value">${Utils.formatDate(card.dataPagamento)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-section">
+                        <div class="section-title">
+                            <i class="fas fa-clock"></i>
+                            Tempos
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Tempo Criação</div>
+                                <div class="info-value">${card.tempoCriacao || '00:00'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Tempo Fila</div>
+                                <div class="info-value">${card.tempoFila || '00:00'}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="card-footer">
-                <button class="btn-edit" onclick="kanbanManager.editCard(${card.id})">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn-delete" onclick="kanbanManager.deleteCard(${card.id})">
-                    <i class="fas fa-trash"></i>
-                </button>
+                <div class="card-actions">
+                    <button class="card-action-btn edit" onclick="kanbanManager.editCard(${card.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="card-action-btn delete" onclick="kanbanManager.deleteCard(${card.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="card-status ${card.status}">${card.status}</div>
+            </div>
+            <div class="expand-indicator">
+                <i class="fas fa-chevron-down"></i>
             </div>
         `;
 
+        // Adicionar evento de clique para expandir/contrair
+        cardElement.addEventListener('click', (e) => {
+            // Não expandir se clicar nos botões de ação
+            if (e.target.closest('.card-action-btn')) {
+                return;
+            }
+            this.toggleCardExpansion(cardElement);
+        });
+
         return cardElement;
+    }
+
+    toggleCardExpansion(cardElement) {
+        const isExpanded = cardElement.classList.contains('expanded');
+        
+        if (isExpanded) {
+            // Contrair o card
+            cardElement.classList.remove('expanded');
+            cardElement.style.maxHeight = '120px';
+        } else {
+            // Expandir o card
+            cardElement.classList.add('expanded');
+            cardElement.style.maxHeight = '500px';
+        }
+        
+        // Salvar estado de expansão no localStorage
+        const cardId = cardElement.dataset.cardId;
+        const expandedCards = JSON.parse(localStorage.getItem('expandedCards') || '[]');
+        
+        if (isExpanded) {
+            // Remover da lista de expandidos
+            const index = expandedCards.indexOf(cardId);
+            if (index > -1) {
+                expandedCards.splice(index, 1);
+            }
+        } else {
+            // Adicionar à lista de expandidos
+            if (!expandedCards.includes(cardId)) {
+                expandedCards.push(cardId);
+            }
+        }
+        
+        localStorage.setItem('expandedCards', JSON.stringify(expandedCards));
     }
 
     updateCardStatus(cardElement, newStatus) {
