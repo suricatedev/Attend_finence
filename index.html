@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão Financeira - Frontend Only</title>
+    <link rel="stylesheet" href="static/css/base.css">
+    <link rel="stylesheet" href="static/css/kanban.css">
+    <link rel="stylesheet" href="static/css/forms.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Overlay para mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Attend Finance</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item active">
+                        <a href="#" class="nav-link" data-page="kanban">
+                            <i class="fas fa-th-large"></i>
+                            <span>Solicitações</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="relatorios">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Relatórios</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="dashboard">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboards</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="servicos">
+                            <i class="fas fa-cog"></i>
+                            <span>Serviços</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-help">
+                <ul class="help-list">
+                    <li class="help-item">
+                        <a href="#" class="help-link">
+                            <i class="fas fa-question-circle"></i>
+                            <span>Faça uma pergunta</span>
+                        </a>
+                    </li>
+                    <li class="help-item">
+                        <a href="#" class="help-link">
+                            <i class="fas fa-question"></i>
+                            <span>Ajuda</span>
+                        </a>
+                    </li>
+                    <li class="help-item">
+                        <a href="#" class="help-link">
+                            <i class="fas fa-comment"></i>
+                            <span>Chat</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <div class="logo-section">
+                    </div>
+                </div>
+                
+                <div class="header-center">
+                    <button class="btn-primary" id="createCampaignBtn">
+                        <i class="fas fa-plus"></i>
+                        Nova Solicitação Financeira
+                    </button>
+                    
+                    <div class="view-tabs">
+                        <a href="#" class="tab-btn active" data-page="kanban">
+                            <i class="fas fa-th"></i>
+                            Cards
+                        </a>
+                        <a href="#" class="tab-btn" data-page="relatorios">
+                            <i class="fas fa-chart-bar"></i>
+                            Relatórios
+                        </a>
+                        <a href="#" class="tab-btn" data-page="dashboard">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Dashboards
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="header-right">
+                    <div class="user-actions">
+                        <button class="action-btn" title="Notificações">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                        <div class="settings-dropdown">
+                            <button class="action-btn" title="Configurações" id="settingsBtn">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <div class="settings-menu" id="settingsMenu">
+                                <a href="#" class="settings-item">
+                                    <i class="fas fa-user-plus"></i>
+                                    <span>Gerenciar membros</span>
+                                </a>
+                                <a href="#" class="settings-item">
+                                    <i class="fas fa-users"></i>
+                                    <span>Equipe</span>
+                                </a>
+                                <a href="#" class="settings-item">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Permissões</span>
+                                </a>
+                                <a href="#" class="settings-item">
+                                    <i class="fas fa-cog"></i>
+                                    <span>Configurações gerais</span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="user-avatar">
+                            <img src="https://via.placeholder.com/32" alt="Usuário">
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Conteúdo Dinâmico -->
+            <div id="content-area">
+                <!-- Kanban Board -->
+                <div class="kanban-board" id="kanbanBoard">
+                    <div class="kanban-column" data-column="planning">
+                        <div class="column-header">
+                            <div class="column-title">
+                                <i class="fas fa-clock"></i>
+                                <span>Pendente</span>
+                                <span class="card-count">0</span>
+                            </div>
+                            <div class="column-actions">
+                                <button class="add-card-btn" title="Adicionar card">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <button class="column-menu-btn" title="Menu da coluna">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="column-content" data-column="planning">
+                            <!-- Cards serão adicionados dinamicamente -->
+                        </div>
+                    </div>
+
+                    <div class="kanban-column" data-column="test">
+                        <div class="column-header">
+                            <div class="column-title">
+                                <i class="fas fa-times-circle"></i>
+                                <span>Recusado</span>
+                                <span class="card-count">0</span>
+                            </div>
+                            <div class="column-actions">
+                                <button class="add-card-btn" title="Adicionar card">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <button class="column-menu-btn" title="Menu da coluna">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="column-content" data-column="test">
+                            <!-- Cards serão adicionados dinamicamente -->
+                        </div>
+                    </div>
+
+                    <div class="kanban-column" data-column="launch">
+                        <div class="column-header">
+                            <div class="column-title">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Aprovado</span>
+                                <span class="card-count">0</span>
+                            </div>
+                            <div class="column-actions">
+                                <button class="add-card-btn" title="Adicionar card">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <button class="column-menu-btn" title="Menu da coluna">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="column-content" data-column="launch">
+                            <!-- Cards serão adicionados dinamicamente -->
+                        </div>
+                    </div>
+
+                    <div class="kanban-column" data-column="success">
+                        <div class="column-header">
+                            <div class="column-title">
+                                <i class="fas fa-flag-checkered"></i>
+                                <span>Concluído</span>
+                                <span class="card-count">0</span>
+                            </div>
+                            <div class="column-actions">
+                                <button class="add-card-btn" title="Adicionar card">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <button class="column-menu-btn" title="Menu da coluna">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="column-content" data-column="success">
+                            <!-- Cards serão adicionados dinamicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal para criar nova solicitação financeira -->
+    <div class="modal" id="createCampaignModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Nova Solicitação Financeira</h2>
+                <button class="close-btn" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="createCampaignForm" method="POST" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="campaignId">ID</label>
+                        <input type="text" id="campaignId" name="id" placeholder="Digite o ID padrão do sistema externo">
+                        <small class="form-help">Exemplo: ORD-2024-001, REQ-12345, SOL-20240115-001</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="campaignStatus">Status</label>
+                        <select id="campaignStatus" name="status">
+                            <option value="pendente">Pendente</option>
+                            <option value="aprovado">Aprovado</option>
+                            <option value="recusado">Recusado</option>
+                            <option value="concluido">Concluído</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="campaignTitle">Título</label>
+                        <input type="text" id="campaignTitle" name="title" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="campaignSolicitante">Nome do Solicitante</label>
+                            <input type="text" id="campaignSolicitante" name="solicitante" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="campaignRecebedor">Nome do Recebedor</label>
+                            <input type="text" id="campaignRecebedor" name="recebedor" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="campaignValor">Valor</label>
+                        <input type="text" id="campaignValor" name="valor" placeholder="R$ 0,00" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="campaignService">Serviço</label>
+                        <select id="campaignService" name="service" required>
+                            <option value="">Selecione o tipo de serviço</option>
+                            <option value="desenvolvimento">Desenvolvimento</option>
+                            <option value="design">Design</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="suporte">Suporte</option>
+                            <option value="infraestrutura">Infraestrutura</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="campaignDescription">Descrição</label>
+                        <textarea id="campaignDescription" name="description" rows="4" placeholder="Descreva os detalhes da solicitação..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="campaignPriority">Prioridade</label>
+                            <select id="campaignPriority" name="priority" required>
+                                <option value="baixa">Baixa</option>
+                                <option value="media" selected>Média</option>
+                                <option value="alta">Alta</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="campaignDataCriacao">Data de Criação</label>
+                            <input type="date" id="campaignDataCriacao" name="dataCriacao" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="campaignDataPagamento">Data de Pagamento</label>
+                        <input type="date" id="campaignDataPagamento" name="dataPagamento" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="campaignAnexos">Anexos</label>
+                        <input type="file" id="campaignAnexos" name="anexos" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+                        <small class="form-help">Formatos aceitos: PDF, DOC, DOCX, XLS, XLSX, JPG, JPEG, PNG (máx. 5MB por arquivo)</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-cancel" id="cancelCreate">Cancelar</button>
+                        <button type="submit" class="btn-register">Criar Solicitação</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="static/js/app.js"></script>
+</body>
+</html>

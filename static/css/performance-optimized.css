@@ -1,0 +1,611 @@
+/* CSS Otimizado para Performance - Carregamento Rápido */
+
+/* ========================================
+   OTIMIZAÇÕES DE PERFORMANCE
+   ======================================== */
+
+/* Preload de fontes críticas */
+@font-face {
+    font-family: 'Segoe UI';
+    font-display: swap; /* Melhora a performance de carregamento */
+}
+
+/* Reset otimizado */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Indicador de carregamento otimizado */
+.loading-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.3s ease;
+    will-change: opacity; /* Otimização para animações */
+}
+
+.loading-indicator.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #FFCB57;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ========================================
+   LAYOUT PRINCIPAL OTIMIZADO
+   ======================================== */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #ffffff;
+    color: #1C1C1C;
+    line-height: 1.6;
+    /* Otimizações de performance */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+.app-container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    contain: layout; /* Otimização de layout */
+}
+
+/* ========================================
+   SIDEBAR OTIMIZADA
+   ======================================== */
+
+.sidebar {
+    width: 220px;
+    background: linear-gradient(135deg, #1C1C1C 0%, #544350 100%);
+    color: #F4F7F5;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* Otimizações de performance */
+    will-change: transform;
+    contain: layout style;
+}
+
+/* Scrollbar otimizada */
+.sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 203, 87, 0.5);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 203, 87, 0.8);
+}
+
+/* Firefox scrollbar */
+.sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 203, 87, 0.5) rgba(255, 255, 255, 0.1);
+}
+
+.sidebar.collapsed {
+    transform: translateX(-100%);
+}
+
+/* Overlay para mobile otimizado */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    will-change: opacity, visibility;
+}
+
+.sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Header da sidebar otimizado */
+.sidebar-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    contain: layout;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.logo i {
+    color: #FFCB57;
+}
+
+/* Navegação otimizada */
+.sidebar-nav {
+    flex: 1;
+    padding: 12px 0;
+    contain: layout;
+}
+
+.nav-list {
+    list-style: none;
+}
+
+.nav-item {
+    margin-bottom: 2px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    color: #F4F7F5;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+    font-size: 0.85rem;
+    /* Otimizações de performance */
+    will-change: background-color, border-left-color;
+}
+
+.nav-link:hover,
+.nav-item.active .nav-link {
+    background-color: rgba(255, 203, 87, 0.2);
+    border-left-color: #FFCB57;
+}
+
+.nav-link i {
+    width: 16px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+/* Seção de ajuda otimizada */
+.sidebar-help {
+    padding: 12px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    contain: layout;
+}
+
+.help-list {
+    list-style: none;
+}
+
+.help-item {
+    margin-bottom: 2px;
+}
+
+.help-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 16px;
+    color: rgba(244, 247, 245, 0.8);
+    text-decoration: none;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+    will-change: color, background-color;
+}
+
+.help-link:hover {
+    color: #F4F7F5;
+    background-color: rgba(255, 203, 87, 0.1);
+}
+
+.help-link i {
+    width: 16px;
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+/* ========================================
+   CONTEÚDO PRINCIPAL OTIMIZADO
+   ======================================== */
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin-left: 220px;
+    overflow: hidden;
+    background: #F4F7F5;
+    contain: layout;
+}
+
+/* Header otimizado */
+.header {
+    background: #F4F7F5;
+    padding: 15px 30px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    z-index: 100;
+    contain: layout;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.header-center {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Tabs otimizados */
+.view-tabs {
+    display: flex;
+    gap: 5px;
+    background: #e2e8f0;
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: #544350;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    will-change: background-color, color;
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.tab-btn.active {
+    background: #FFCB57;
+    color: #1C1C1C;
+    font-weight: 600;
+}
+
+.tab-btn i {
+    font-size: 0.9rem;
+}
+
+/* Ações do usuário otimizadas */
+.user-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.action-btn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #544350;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    will-change: background-color, transform;
+}
+
+.action-btn:hover {
+    background: #e2e8f0;
+    transform: translateY(-1px);
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #e2e8f0;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ========================================
+   OTIMIZAÇÕES DE PERFORMANCE GERAIS
+   ======================================== */
+
+/* Containment para melhor performance */
+.kanban-board,
+.dashboard-view,
+.reports-view {
+    contain: layout style;
+}
+
+/* Otimizações para animações */
+* {
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+/* Otimizações para scroll */
+.scroll-container {
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Otimizações para imagens */
+img {
+    max-width: 100%;
+    height: auto;
+    loading: lazy; /* Carregamento preguiçoso */
+}
+
+/* Otimizações para tabelas */
+table {
+    border-collapse: collapse;
+    contain: layout;
+}
+
+/* Otimizações para modais */
+.modal {
+    contain: layout style;
+    will-change: opacity;
+}
+
+/* ========================================
+   RESPONSIVIDADE OTIMIZADA
+   ======================================== */
+
+@media (max-width: 1200px) {
+    .main-content {
+        margin-left: 0;
+    }
+    
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        padding: 10px 15px;
+    }
+    
+    .header-center {
+        gap: 15px;
+    }
+    
+    .view-tabs {
+        gap: 3px;
+        padding: 3px;
+    }
+    
+    .tab-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .user-actions {
+        gap: 8px;
+    }
+    
+    .action-btn {
+        padding: 6px 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: 8px 12px;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .header-left,
+    .header-center,
+    .header-right {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .view-tabs {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .tab-btn {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+/* ========================================
+   ANIMAÇÕES OTIMIZADAS
+   ======================================== */
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+/* ========================================
+   UTILITÁRIOS DE PERFORMANCE
+   ======================================== */
+
+.no-scroll {
+    overflow: hidden;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.invisible {
+    visibility: hidden;
+}
+
+.opacity-0 {
+    opacity: 0;
+}
+
+.opacity-100 {
+    opacity: 1;
+}
+
+/* ========================================
+   OTIMIZAÇÕES ESPECÍFICAS PARA CARREGAMENTO
+   ======================================== */
+
+/* Preload de recursos críticos */
+.preload-resources {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+    visibility: hidden;
+}
+
+/* Otimizações para fontes */
+.font-display-swap {
+    font-display: swap;
+}
+
+/* Otimizações para CSS crítico */
+.critical-css {
+    display: block;
+}
+
+.non-critical-css {
+    display: none;
+}
+
+/* Media queries otimizadas */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    /* Suporte para modo escuro se necessário */
+}
+
+/* ========================================
+   DEBUGGING DE PERFORMANCE
+   ======================================== */
+
+/* Descomente para debug de performance */
+/*
+.debug-performance * {
+    outline: 1px solid red;
+}
+
+.debug-performance .slow-element {
+    background: rgba(255, 0, 0, 0.1) !important;
+}
+*/
