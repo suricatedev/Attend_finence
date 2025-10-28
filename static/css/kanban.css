@@ -174,7 +174,7 @@
     position: relative;
     overflow-y: auto;
     overflow-x: hidden;
-    min-height: 200px;
+    min-height: 280px;
     max-height: 450px;
     display: flex;
     flex-direction: column;
@@ -259,28 +259,34 @@
 }
 
 .card-body {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    min-height: 80px;
+    min-height: 180px;
+    padding: 4px;
 }
 
 .card-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 700;
     color: #1C1C1C;
     margin-bottom: 8px;
-    line-height: 1.3;
+    line-height: 1.2;
     letter-spacing: -0.2px;
     flex-shrink: 0;
     min-height: 20px;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    padding: 6px 10px;
+    background: linear-gradient(135deg, rgba(255, 203, 87, 0.15) 0%, rgba(255, 215, 0, 0.08) 100%);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 203, 87, 0.3);
 }
 
 .card-assignee {
