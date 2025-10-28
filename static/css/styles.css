@@ -2004,26 +2004,29 @@ body {
 
 /* Estilos para card-info (solicitante, recebedor, valor) */
 .card-info {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 12px;
-    padding: 12px;
-    background: rgba(255, 203, 87, 0.05);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: rgba(255, 203, 87, 0.08);
     border-radius: 8px;
-    border: 1px solid rgba(255, 203, 87, 0.2);
+    border: 1px solid rgba(255, 203, 87, 0.25);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .info-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 8px;
+    gap: 5px;
+    padding: 8px 10px;
     background: #ffffff;
     border-radius: 6px;
-    border: 1px solid rgba(84, 67, 80, 0.1);
+    border: 1px solid rgba(84, 67, 80, 0.15);
     transition: all 0.2s ease;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
+    min-height: 32px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .info-item:hover {
@@ -2034,38 +2037,58 @@ body {
 
 .info-item i {
     color: #544350;
-    width: 16px;
+    width: 12px;
     text-align: center;
     flex-shrink: 0;
-    font-size: 0.9rem;
+    font-size: 0.7rem;
 }
 
 .info-label {
     font-weight: 600;
     color: #544350;
-    font-size: 0.7rem;
+    font-size: 0.6rem;
     text-transform: uppercase;
     letter-spacing: 0.3px;
-    margin-right: 6px;
+    margin-right: 3px;
     flex-shrink: 0;
+    min-width: 45px;
 }
 
 .info-value {
     color: #1C1C1C;
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-size: 0.7rem;
+    font-weight: 600;
     flex: 1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.1;
 }
 
 /* Estilo especial para valor */
 .info-item:has(.info-label:contains("VALOR")) .info-value,
 .info-value:contains("R$") {
-    font-weight: 700;
+    font-weight: 800;
     color: #27ae60;
     font-size: 0.9rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilo especial para ID */
+.info-item:has(.info-label:contains("ID")) {
+    border-left: 3px solid #FFCB57;
+    background: rgba(255, 203, 87, 0.08);
+    font-weight: 700;
+}
+
+.info-item:has(.info-label:contains("ID")) .info-value {
+    color: #1C1C1C;
+    font-weight: 800;
+    font-size: 0.85rem;
+}
+
+.info-item:has(.info-label:contains("ID")) i {
+    color: #FFCB57;
 }
 
 /* Estilo especial para solicitante */
@@ -2208,10 +2231,10 @@ body {
 
 .info-item i {
     color: #544350;
-    width: 16px;
+    width: 12px;
     text-align: center;
     flex-shrink: 0;
-    font-size: 0.9rem;
+    font-size: 0.7rem;
 }
 
 .info-content {
@@ -2374,24 +2397,27 @@ body {
     }
     
     .card {
-        min-height: 180px;
+        min-height: 250px;
         max-height: 400px;
     }
     
     /* Responsividade para card-info */
     .card-info {
+        grid-template-columns: 1fr;
         padding: 8px;
         gap: 6px;
     }
     
     .info-item {
-        padding: 4px 6px;
-        font-size: 0.75rem;
+        padding: 7px 9px;
+        font-size: 0.7rem;
+        min-height: 30px;
     }
     
     .info-label {
         font-size: 0.6rem;
         margin-right: 4px;
+        min-width: 50px;
     }
     
     .info-value {
@@ -2401,6 +2427,11 @@ body {
     .info-item i {
         font-size: 0.8rem;
         width: 14px;
+    }
+    
+    .card-title {
+        font-size: 1.1rem;
+        padding: 6px 10px;
     }
     
     /* Responsividade para campos de data */

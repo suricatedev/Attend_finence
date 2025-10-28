@@ -72,6 +72,10 @@ function openCardDetailModal(card) {
     // Extrair dados do card
     const cardData = extractCardData(card);
     
+    // Adicionar ID do card ao modal para referência
+    const cardId = card.getAttribute('data-card-id') || Math.random().toString(36).substr(2, 9);
+    modal.setAttribute('data-card-id', cardId);
+    
     // Preencher conteúdo do modal
     content.innerHTML = generateCardDetailHTML(cardData);
     
@@ -222,6 +226,27 @@ function generateCardDetailHTML(data) {
                 </div>
             </div>
         </div>
+        
+        <div class="card-detail-actions">
+            <div class="detail-section fila-selector">
+                <div class="section-title">
+                    <i class="fas fa-exchange-alt"></i>
+                    Mover para Fila
+                </div>
+                <div class="fila-selector-container">
+                    <select id="filaSelect" class="fila-select">
+                        <option value="planning">Pendente</option>
+                        <option value="test">Recusado</option>
+                        <option value="approval">Aprovado</option>
+                        <option value="completed">Concluído</option>
+                    </select>
+                    <button id="moverFilaBtn" class="btn-mover-fila">
+                        <i class="fas fa-arrow-right"></i>
+                        Mover
+                    </button>
+                </div>
+            </div>
+        </div>
     `;
 }
 
@@ -247,6 +272,92 @@ function setupModalEventListeners() {
             closeCardDetailModal();
         }
     });
+    
+    // Event listener para mover card entre filas
+    const moverFilaBtn = document.getElementById('moverFilaBtn');
+    if (moverFilaBtn) {
+        moverFilaBtn.addEventListener('click', function() {
+            const filaSelect = document.getElementById('filaSelect');
+            const selectedFila = filaSelect.value;
+            const currentCard = modal.getAttribute('data-card-id');
+            
+            if (currentCard && selectedFila) {
+                moveCardToFila(currentCard, selectedFila);
+            }
+        });
+    }
+}
+
+// Função para mover card entre filas
+function moveCardToFila(cardId, targetFila) {
+    const card = document.querySelector(`[data-card-id="${cardId}"]`);
+    if (!card) return;
+    
+    // Encontrar a coluna de destino
+    const targetColumn = document.querySelector(`[data-column="${targetFila}"] .column-content`);
+    if (!targetColumn) return;
+    
+    // Remover card da coluna atual
+    card.remove();
+    
+    // Adicionar card na nova coluna
+    targetColumn.appendChild(card);
+    
+    // Atualizar contadores das colunas
+    updateColumnCounters();
+    
+    // Fechar modal
+    closeCardDetailModal();
+    
+    // Mostrar notificação de sucesso
+    showNotification(`Card movido para ${getFilaName(targetFila)}`, 'success');
+}
+
+// Função para obter nome da fila
+function getFilaName(filaValue) {
+    const filas = {
+        'planning': 'Pendente',
+        'test': 'Recusado',
+        'approval': 'Aprovado',
+        'completed': 'Concluído'
+    };
+    return filas[filaValue] || filaValue;
+}
+
+// Função para atualizar contadores das colunas
+function updateColumnCounters() {
+    const columns = document.querySelectorAll('.kanban-column');
+    columns.forEach(column => {
+        const content = column.querySelector('.column-content');
+        const counter = column.querySelector('.card-count');
+        if (content && counter) {
+            const cardCount = content.children.length;
+            counter.textContent = cardCount;
+        }
+    });
+}
+
+// Função para mostrar notificação
+function showNotification(message, type = 'info') {
+    // Criar elemento de notificação
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    
+    // Adicionar ao body
+    document.body.appendChild(notification);
+    
+    // Mostrar notificação
+    setTimeout(() => notification.classList.add('show'), 100);
+    
+    // Remover após 3 segundos
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
 }
 
 // Função para fechar modal de detalhes

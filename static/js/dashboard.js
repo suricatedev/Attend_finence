@@ -714,6 +714,23 @@ const chartData = {
             pointHoverBackgroundColor: '#22c55e',
             pointHoverBorderColor: '#1C1C1C',
             pointHoverBorderWidth: 2,
+        },
+        {
+            label: 'Solicitações Recusadas',
+            data: [25, 35, 45, 30, 35, 50, 40, 45, 50, 40, 45, 35],
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(190, 67, 67, 0.1)',
+            borderWidth: 3,
+            borderDash: [10, 5],
+            fill: false,
+            tension: 0.4,
+            pointBackgroundColor: '#ef4444',
+            pointBorderColor: '#1C1C1C',
+            pointRadius: 6,
+            pointHoverRadius: 10,
+            pointHoverBackgroundColor: '#dc2626',
+            pointHoverBorderColor: '#1C1C1C',
+            pointHoverBorderWidth: 2,
         }
     ]
 };
@@ -843,14 +860,16 @@ function changePeriod(period) {
             labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho'], 
             data: { 
                 created: [180, 220, 280, 195, 240, 310], 
-                approved: [150, 180, 220, 160, 200, 250] 
+                approved: [150, 180, 220, 160, 200, 250],
+                rejected: [25, 35, 45, 30, 35, 50]
             } 
         },
         '12months': { 
             labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'], 
             data: { 
                 created: [180, 220, 280, 195, 240, 310, 275, 290, 320, 265, 285, 240], 
-                approved: [150, 180, 220, 160, 200, 250, 220, 230, 260, 210, 230, 190] 
+                approved: [150, 180, 220, 160, 200, 250, 220, 230, 260, 210, 230, 190],
+                rejected: [25, 35, 45, 30, 35, 50, 40, 45, 50, 40, 45, 35]
             } 
         }
     };
@@ -860,6 +879,7 @@ function changePeriod(period) {
     lineChart.data.labels = selected.labels;
     lineChart.data.datasets[0].data = selected.data.created;
     lineChart.data.datasets[1].data = selected.data.approved;
+    lineChart.data.datasets[2].data = selected.data.rejected;
     lineChart.update('active');
 }
 

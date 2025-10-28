@@ -389,3 +389,138 @@
         justify-content: center;
     }
 }
+
+/* Seletor de Fila */
+.card-detail-actions {
+    margin-top: 20px;
+    padding: 20px;
+    background: rgba(255, 203, 87, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 203, 87, 0.2);
+}
+
+.fila-selector-container {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.fila-select {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #544350;
+    border-radius: 8px;
+    background: #F4F7F5;
+    color: #1C1C1C;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.fila-select:focus {
+    outline: none;
+    border-color: #FFCB57;
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2);
+}
+
+.fila-select option {
+    padding: 8px;
+    background: #F4F7F5;
+    color: #1C1C1C;
+}
+
+.btn-mover-fila {
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #FFCB57 0%, #FFD700 100%);
+    color: #1C1C1C;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(255, 203, 87, 0.3);
+}
+
+.btn-mover-fila:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 203, 87, 0.4);
+}
+
+.btn-mover-fila:active {
+    transform: translateY(0);
+}
+
+.btn-mover-fila i {
+    font-size: 0.8rem;
+}
+
+/* Notificações */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #1C1C1C;
+    color: #F4F7F5;
+    padding: 16px 20px;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    z-index: 10000;
+    transform: translateX(400px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    border-left: 4px solid #FFCB57;
+}
+
+.notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.notification-success {
+    border-left-color: #4ade80;
+}
+
+.notification-success i {
+    color: #4ade80;
+}
+
+.notification i {
+    font-size: 1.1rem;
+}
+
+/* Responsividade para seletor de fila */
+@media (max-width: 768px) {
+    .fila-selector-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .fila-select {
+        width: 100%;
+    }
+    
+    .btn-mover-fila {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .notification {
+        right: 10px;
+        left: 10px;
+        transform: translateY(-100px);
+    }
+    
+    .notification.show {
+        transform: translateY(0);
+    }
+}
