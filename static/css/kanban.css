@@ -162,6 +162,115 @@
     }
 }
 
+/* Filtros das Colunas */
+.column-filter {
+    padding: 12px 16px;
+    background: rgba(255, 203, 87, 0.05);
+    border-bottom: 1px solid rgba(255, 203, 87, 0.2);
+    position: relative;
+}
+
+.filter-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #F4F7F5;
+    border: 2px solid rgba(84, 67, 80, 0.2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    transition: all 0.3s ease;
+}
+
+.filter-container:focus-within {
+    border-color: #FFCB57;
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2);
+}
+
+.filter-icon {
+    color: #544350;
+    font-size: 0.9rem;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.filter-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #1C1C1C;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0;
+}
+
+.filter-input::placeholder {
+    color: #544350;
+    font-weight: 400;
+}
+
+.filter-clear-btn {
+    background: none;
+    border: none;
+    color: #544350;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    opacity: 0;
+    visibility: hidden;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.filter-clear-btn:hover {
+    background: rgba(84, 67, 80, 0.1);
+    color: #1C1C1C;
+}
+
+.filter-clear-btn.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.filter-clear-btn i {
+    font-size: 0.8rem;
+}
+
+/* Cards filtrados */
+.card.filtered-out {
+    display: none !important;
+}
+
+.card.filtered-in {
+    display: flex !important;
+    animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Contador de filtros */
+.filter-results {
+    font-size: 0.75rem;
+    color: #544350;
+    margin-top: 4px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.filter-results.hidden {
+    display: none;
+}
+
 /* Cards */
 .card {
     background: #F4F7F5;
@@ -795,5 +904,32 @@
     
     .card:hover::before {
         height: 4px;
+    }
+    
+    /* Responsividade para filtros */
+    .column-filter {
+        padding: 8px 12px;
+    }
+    
+    .filter-container {
+        padding: 6px 10px;
+    }
+    
+    .filter-input {
+        font-size: 0.8rem;
+    }
+    
+    .filter-icon {
+        font-size: 0.8rem;
+        margin-right: 6px;
+    }
+    
+    .filter-clear-btn {
+        padding: 3px;
+        margin-left: 6px;
+    }
+    
+    .filter-clear-btn i {
+        font-size: 0.7rem;
     }
 }
