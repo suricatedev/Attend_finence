@@ -147,100 +147,119 @@
                             <i class="fas fa-cogs"></i>
                             Gerenciar Serviços da Empresa
                         </h2>
-                        <button class="btn-primary" id="addServiceBtn">
-                            <i class="fas fa-plus"></i>
-                            Adicionar Serviço
+                        <div class="header-actions">
+                            <div class="services-stats">
+                                <div class="stat-item">
+                                    <span class="stat-number" id="totalServices">0</span>
+                                    <span class="stat-label">Total</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number" id="activeServices">0</span>
+                                    <span class="stat-label">Ativos</span>
+                                </div>
+                            </div>
+                            <button class="btn-primary" id="addServiceBtn">
+                                <i class="fas fa-plus"></i>
+                                Adicionar Serviço
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filtros -->
+                    <div class="services-filters">
+                        <div class="filter-group">
+                            <label for="categoryFilter">
+                                <i class="fas fa-filter"></i>
+                                Categoria
+                            </label>
+                            <select id="categoryFilter">
+                                <option value="all">Todas as categorias</option>
+                                <option value="consultoria">Consultoria</option>
+                                <option value="desenvolvimento">Desenvolvimento</option>
+                                <option value="manutencao">Manutenção</option>
+                                <option value="treinamento">Treinamento</option>
+                                <option value="suporte">Suporte</option>
+                                <option value="infraestrutura">Infraestrutura</option>
+                                <option value="marketing">Marketing</option>
+                                <option value="outros">Outros</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="statusFilter">
+                                <i class="fas fa-toggle-on"></i>
+                                Status
+                            </label>
+                            <select id="statusFilter">
+                                <option value="all">Todos os status</option>
+                                <option value="active">Ativos</option>
+                                <option value="inactive">Inativos</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="searchFilter">
+                                <i class="fas fa-search"></i>
+                                Buscar
+                            </label>
+                            <input type="text" id="searchFilter" placeholder="Nome ou descrição...">
+                        </div>
+                        
+                        <button class="filter-btn" id="applyFilters">
+                            <i class="fas fa-search"></i>
+                            Filtrar
+                        </button>
+                        
+                        <button class="filter-btn" id="clearFilters">
+                            <i class="fas fa-times"></i>
+                            Limpar
                         </button>
                     </div>
                     
-                    <div class="services-grid" id="servicesGrid">
-                        <!-- Lista de serviços será preenchida dinamicamente -->
-                        <div class="service-card">
-                            <div class="service-icon">
-                                <i class="fas fa-user-tie"></i>
-                            </div>
-                            <div class="service-info">
-                                <h3>Consultoria em TI</h3>
-                                <p>Serviços de consultoria especializada em tecnologia da informação</p>
-                                <div class="service-meta">
-                                    <span class="service-category">Consultoria</span>
-                                    <span class="service-status active">Ativo</span>
-                                </div>
-                            </div>
-                            <div class="service-actions">
-                                <button class="btn-edit" title="Editar">
-                                    <i class="fas fa-edit"></i>
+                    <!-- Lista de Serviços -->
+                    <div class="services-list-container">
+                        <div class="list-header">
+                            <div class="view-toggle">
+                                <button class="view-btn active" id="listViewBtn" title="Visualização em lista">
+                                    <i class="fas fa-list"></i>
                                 </button>
-                                <button class="btn-delete" title="Excluir">
-                                    <i class="fas fa-trash"></i>
+                                <button class="view-btn" id="gridViewBtn" title="Visualização em grid">
+                                    <i class="fas fa-th"></i>
                                 </button>
                             </div>
-                        </div>
-                        
-                        <div class="service-card">
-                            <div class="service-icon">
-                                <i class="fas fa-code"></i>
-                            </div>
-                            <div class="service-info">
-                                <h3>Desenvolvimento de Software</h3>
-                                <p>Criação e manutenção de aplicações e sistemas</p>
-                                <div class="service-meta">
-                                    <span class="service-category">Desenvolvimento</span>
-                                    <span class="service-status active">Ativo</span>
-                                </div>
-                            </div>
-                            <div class="service-actions">
-                                <button class="btn-edit" title="Editar">
-                                    <i class="fas fa-edit"></i>
+                            <div class="list-actions">
+                                <button class="btn-secondary" id="exportBtn">
+                                    <i class="fas fa-download"></i>
+                                    Exportar
                                 </button>
-                                <button class="btn-delete" title="Excluir">
-                                    <i class="fas fa-trash"></i>
+                                <button class="btn-secondary" id="refreshBtn">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Atualizar
                                 </button>
                             </div>
                         </div>
                         
-                        <div class="service-card">
-                            <div class="service-icon">
-                                <i class="fas fa-tools"></i>
-                            </div>
-                            <div class="service-info">
-                                <h3>Manutenção de Equipamentos</h3>
-                                <p>Serviços de manutenção preventiva e corretiva</p>
-                                <div class="service-meta">
-                                    <span class="service-category">Manutenção</span>
-                                    <span class="service-status active">Ativo</span>
+                        <div class="services-list" id="servicesList">
+                            <!-- Cabeçalho das colunas (apenas em modo lista) -->
+                            <div class="list-columns-header" id="listColumnsHeader">
+                                <div class="column-header">
+                                    <i class="fas fa-tag"></i>
+                                    <span>Serviço</span>
+                                </div>
+                                <div class="column-header">
+                                    <i class="fas fa-folder"></i>
+                                    <span>Categoria</span>
+                                </div>
+                                <div class="column-header">
+                                    <i class="fas fa-toggle-on"></i>
+                                    <span>Status</span>
+                                </div>
+                                <div class="column-header">
+                                    <i class="fas fa-cogs"></i>
+                                    <span>Ações</span>
                                 </div>
                             </div>
-                            <div class="service-actions">
-                                <button class="btn-edit" title="Editar">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-delete" title="Excluir">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="service-card">
-                            <div class="service-icon">
-                                <i class="fas fa-graduation-cap"></i>
-                            </div>
-                            <div class="service-info">
-                                <h3>Treinamento Corporativo</h3>
-                                <p>Programas de capacitação e desenvolvimento profissional</p>
-                                <div class="service-meta">
-                                    <span class="service-category">Treinamento</span>
-                                    <span class="service-status active">Ativo</span>
-                                </div>
-                            </div>
-                            <div class="service-actions">
-                                <button class="btn-edit" title="Editar">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-delete" title="Excluir">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
+                            <!-- Lista de serviços será preenchida dinamicamente -->
                         </div>
                     </div>
                 </div>
@@ -346,5 +365,6 @@
     </div>
 
     <script src="/static/js/app.js"></script>
+    <script src="/static/js/servicos.js"></script>
 </body>
 </html>

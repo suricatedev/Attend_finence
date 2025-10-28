@@ -237,8 +237,8 @@ function generateCardDetailHTML(data) {
                     <select id="filaSelect" class="fila-select">
                         <option value="planning">Pendente</option>
                         <option value="test">Recusado</option>
-                        <option value="approval">Aprovado</option>
-                        <option value="completed">Concluído</option>
+                        <option value="launch">Aprovado</option>
+                        <option value="success">Concluído</option>
                     </select>
                     <button id="moverFilaBtn" class="btn-mover-fila">
                         <i class="fas fa-arrow-right"></i>
@@ -297,6 +297,21 @@ function moveCardToFila(cardId, targetFila) {
     const targetColumn = document.querySelector(`[data-column="${targetFila}"] .column-content`);
     if (!targetColumn) return;
     
+    // Remover classes de status antigas
+    card.classList.remove('card-status-pending', 'card-status-rejected', 'card-status-approved', 'card-status-completed');
+    
+    // Adicionar nova classe de status baseada na fila de destino
+    const statusClasses = {
+        'planning': 'card-status-pending',
+        'test': 'card-status-rejected', 
+        'launch': 'card-status-approved',
+        'success': 'card-status-completed'
+    };
+    
+    if (statusClasses[targetFila]) {
+        card.classList.add(statusClasses[targetFila]);
+    }
+    
     // Remover card da coluna atual
     card.remove();
     
@@ -318,8 +333,8 @@ function getFilaName(filaValue) {
     const filas = {
         'planning': 'Pendente',
         'test': 'Recusado',
-        'approval': 'Aprovado',
-        'completed': 'Concluído'
+        'launch': 'Aprovado',
+        'success': 'Concluído'
     };
     return filas[filaValue] || filaValue;
 }
@@ -376,4 +391,116 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Inicializar expansão dos cards do Django
     initializeCardExpansion();
+    
+    // Inicializar filtros das colunas
+    initializeColumnFilters();
 });
+
+// ========================================
+// SISTEMA DE FILTROS DAS COLUNAS
+// ========================================
+
+// Função para inicializar filtros das colunas
+function initializeColumnFilters() {
+    const filterInputs = document.querySelectorAll('.filter-input');
+    
+    filterInputs.forEach(input => {
+        const column = input.getAttribute('data-column');
+        const clearBtn = input.parentElement.querySelector('.filter-clear-btn');
+        
+        // Event listener para digitação
+        input.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            filterCardsInColumn(column, searchTerm);
+            updateClearButton(clearBtn, searchTerm);
+        });
+        
+        // Event listener para botão limpar
+        clearBtn.addEventListener('click', function() {
+            input.value = '';
+            filterCardsInColumn(column, '');
+            updateClearButton(clearBtn, '');
+            input.focus();
+        });
+        
+        // Event listener para Enter
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                this.value = '';
+                filterCardsInColumn(column, '');
+                updateClearButton(clearBtn, '');
+            }
+        });
+    });
+}
+
+// Função para filtrar cards em uma coluna específica
+function filterCardsInColumn(column, searchTerm) {
+    const columnContent = document.querySelector(`[data-column="${column}"].column-content`);
+    if (!columnContent) return;
+    
+    const cards = columnContent.querySelectorAll('.card');
+    let visibleCount = 0;
+    
+    cards.forEach(card => {
+        const cardText = getCardSearchableText(card).toLowerCase();
+        const isMatch = searchTerm === '' || cardText.includes(searchTerm);
+        
+        if (isMatch) {
+            card.classList.remove('filtered-out');
+            card.classList.add('filtered-in');
+            visibleCount++;
+        } else {
+            card.classList.remove('filtered-in');
+            card.classList.add('filtered-out');
+        }
+    });
+    
+    // Atualizar contador da coluna
+    updateColumnCounter(column, visibleCount);
+}
+
+// Função para extrair texto pesquisável do card
+function getCardSearchableText(card) {
+    const title = card.querySelector('.card-title')?.textContent || '';
+    const id = card.querySelector('.info-value')?.textContent || '';
+    const solicitante = card.querySelectorAll('.info-value')[1]?.textContent || '';
+    const recebedor = card.querySelectorAll('.info-value')[2]?.textContent || '';
+    const valor = card.querySelectorAll('.info-value')[3]?.textContent || '';
+    const prioridade = card.querySelector('.priority')?.textContent || '';
+    const status = card.querySelector('.card-stage')?.textContent || '';
+    
+    return `${title} ${id} ${solicitante} ${recebedor} ${valor} ${prioridade} ${status}`;
+}
+
+// Função para atualizar botão limpar
+function updateClearButton(clearBtn, searchTerm) {
+    if (searchTerm.length > 0) {
+        clearBtn.classList.add('show');
+    } else {
+        clearBtn.classList.remove('show');
+    }
+}
+
+// Função para atualizar contador da coluna
+function updateColumnCounter(column, visibleCount) {
+    const columnElement = document.querySelector(`[data-column="${column}"].kanban-column`);
+    if (!columnElement) return;
+    
+    const counter = columnElement.querySelector('.card-count');
+    if (counter) {
+        counter.textContent = visibleCount;
+    }
+}
+
+// Função para limpar todos os filtros
+function clearAllFilters() {
+    const filterInputs = document.querySelectorAll('.filter-input');
+    filterInputs.forEach(input => {
+        input.value = '';
+        const column = input.getAttribute('data-column');
+        const clearBtn = input.parentElement.querySelector('.filter-clear-btn');
+        filterCardsInColumn(column, '');
+        updateClearButton(clearBtn, '');
+    });
+}

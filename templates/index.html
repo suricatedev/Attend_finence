@@ -166,6 +166,15 @@
                             </button>
                         </div>
                     </div>
+                    <div class="column-filter">
+                        <div class="filter-container">
+                            <i class="fas fa-search filter-icon"></i>
+                            <input type="text" class="filter-input" placeholder="Filtrar cards..." data-column="planning">
+                            <button class="filter-clear-btn" title="Limpar filtro">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div class="column-content" data-column="planning">
                     {% for solicitacao in solicitacoes_pendentes %}
                         <div class="card card-status-pending" draggable="true" data-card-id="1">
@@ -176,8 +185,6 @@
                                 <h3 class="card-title">{{solicitacao.titulo}}</h3>
                                 <div class="card-info">
                                     <div class="info-item">
-                                        <i class="fas fa-hashtag"></i>
-                                        <span class="info-label">ID</span>
                                         <span class="info-value">#{{solicitacao.ticket}}</span>
                                     </div>
                                     <div class="info-item">
@@ -235,6 +242,15 @@
                             </button>
                         </div>
                     </div>
+                    <div class="column-filter">
+                        <div class="filter-container">
+                            <i class="fas fa-search filter-icon"></i>
+                            <input type="text" class="filter-input" placeholder="Filtrar cards..." data-column="test">
+                            <button class="filter-clear-btn" title="Limpar filtro">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div class="column-content" data-column="test">
                     {% for solicitacao in solicitacoes_recusados%}
                         <div class="card card-status-rejected" draggable="true" data-card-id="2">
@@ -245,8 +261,6 @@
                                 <h3 class="card-title">{{solicitacao.titulo}}</h3>
                                 <div class="card-info">
                                     <div class="info-item">
-                                        <i class="fas fa-hashtag"></i>
-                                        <span class="info-label">ID</span>
                                         <span class="info-value">#{{solicitacao.ticket}}</span>
                                     </div>
                                     <div class="info-item">
@@ -304,6 +318,15 @@
                             </button>
                         </div>
                     </div>
+                    <div class="column-filter">
+                        <div class="filter-container">
+                            <i class="fas fa-search filter-icon"></i>
+                            <input type="text" class="filter-input" placeholder="Filtrar cards..." data-column="launch">
+                            <button class="filter-clear-btn" title="Limpar filtro">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div class="column-content" data-column="launch">
                         {% for solicitacao in solicitacoes_aprovado %}
                             <div class="card card-status-approved" draggable="true" data-card-id="3">
@@ -314,8 +337,6 @@
                                     <h3 class="card-title">{{solicitacao.titulo}}</h3>
                                     <div class="card-info">
                                         <div class="info-item">
-                                            <i class="fas fa-hashtag"></i>
-                                            <span class="info-label">ID</span>
                                             <span class="info-value">#{{solicitacao.ticket}}</span>
                                         </div>
                                         <div class="info-item">
@@ -377,6 +398,15 @@
                             </button>
                         </div>
                     </div>
+                    <div class="column-filter">
+                        <div class="filter-container">
+                            <i class="fas fa-search filter-icon"></i>
+                            <input type="text" class="filter-input" placeholder="Filtrar cards..." data-column="success">
+                            <button class="filter-clear-btn" title="Limpar filtro">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div class="column-content" data-column="success">
                         {% for solicitacao in solicitacoes_concluido %}
                             <div class="card card-status-completed" draggable="true" data-card-id="5">
@@ -387,8 +417,6 @@
                                     <h3 class="card-title">{{solicitacao.titulo}}</h3>
                                     <div class="card-info">
                                         <div class="info-item">
-                                            <i class="fas fa-hashtag"></i>
-                                            <span class="info-label">ID</span>
                                             <span class="info-value">#{{solicitacao.ticket}}</span>
                                         </div>
                                         <div class="info-item">
