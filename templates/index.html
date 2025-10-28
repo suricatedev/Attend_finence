@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/static/css/cards-expandiveis.css">
     <link rel="stylesheet" href="/static/css/forms.css">
     <link rel="stylesheet" href="/static/css/solicitacao-minimal.css">
+    <link rel="stylesheet" href="/static/css/card-modal.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
@@ -175,6 +176,11 @@
                                 <h3 class="card-title">{{solicitacao.titulo}}</h3>
                                 <div class="card-info">
                                     <div class="info-item">
+                                        <i class="fas fa-hashtag"></i>
+                                        <span class="info-label">ID</span>
+                                        <span class="info-value">#{{solicitacao.ticket}}</span>
+                                    </div>
+                                    <div class="info-item">
                                         <i class="fas fa-user"></i>
                                         <span class="info-label">SOLICITANTE</span>
                                         <span class="info-value">{{solicitacao.nome_solicitante}}</span>
@@ -187,7 +193,7 @@
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
-                                        <span class="info-value">{{solicitacao.valor}}</span>
+                                        <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
@@ -200,9 +206,9 @@
                                         <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
                                     </div>
                                 </div>
-                                <div class="card-time">
+                                <div class="card-time" data-creation-time="{{solicitacao.data_de_criacao|date:'Y-m-d'}} {{solicitacao.tempo_criacao|time:'H:i:s'}}">
                                     <i class="fas fa-clock"></i>
-                                    <span>0min</span>
+                                    <span class="queue-time">Calculando...</span>
                                 </div>
                             </div>
                             <div class="card-footer">
@@ -239,19 +245,24 @@
                                 <h3 class="card-title">{{solicitacao.titulo}}</h3>
                                 <div class="card-info">
                                     <div class="info-item">
+                                        <i class="fas fa-hashtag"></i>
+                                        <span class="info-label">ID</span>
+                                        <span class="info-value">#{{solicitacao.ticket}}</span>
+                                    </div>
+                                    <div class="info-item">
                                         <i class="fas fa-user"></i>
                                         <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">{{solicitacao.nome_do_solicitante}}</span>
+                                        <span class="info-value">{{solicitacao.nome_solicitante}}</span>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-user-check"></i>
                                         <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">{{solicitante.nome_do_recebedor}}</span>
+                                        <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
-                                        <span class="info-value">{{solicitante.valor}}</span>
+                                        <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
@@ -264,9 +275,9 @@
                                         <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
                                     </div>
                                 </div>
-                                <div class="card-time">
+                                <div class="card-time" data-creation-time="{{solicitacao.data_de_criacao|date:'Y-m-d'}} {{solicitacao.tempo_criacao|time:'H:i:s'}}">
                                     <i class="fas fa-clock"></i>
-                                    <span>0min</span>
+                                    <span class="queue-time">Calculando...</span>
                                 </div>
                             </div>
                             <div class="card-footer">
@@ -303,9 +314,14 @@
                                     <h3 class="card-title">{{solicitacao.titulo}}</h3>
                                     <div class="card-info">
                                         <div class="info-item">
+                                            <i class="fas fa-hashtag"></i>
+                                            <span class="info-label">ID</span>
+                                            <span class="info-value">#{{solicitacao.ticket}}</span>
+                                        </div>
+                                        <div class="info-item">
                                             <i class="fas fa-user"></i>
                                             <span class="info-label">SOLICITANTE</span>
-                                            <span class="info-value">{{solicitacao.nome_do_solicitante}}</span>
+                                            <span class="info-value">{{solicitacao.nome_solicitante}}</span>
                                         </div>
                                         <div class="info-item">
                                             <i class="fas fa-user-check"></i>
@@ -315,7 +331,7 @@
                                         <div class="info-item">
                                             <i class="fas fa-dollar-sign"></i>
                                             <span class="info-label">VALOR</span>
-                                            <span class="info-value">{{solicitacao.valor}}</span>
+                                            <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
                                         </div>
                                         <div class="info-item">
                                             <i class="fas fa-calendar-plus"></i>
@@ -332,9 +348,9 @@
                                         <i class="fas fa-calendar-times"></i>
                                         <span>Abr, 4 • 2 anos atrás</span>
                                     </div>
-                                    <div class="card-time">
+                                    <div class="card-time" data-creation-time="{{solicitacao.data_de_criacao|date:'Y-m-d'}} {{solicitacao.tempo_criacao|time:'H:i:s'}}">
                                         <i class="fas fa-clock"></i>
-                                        <span>0min</span>
+                                        <span class="queue-time">Calculando...</span>
                                     </div>
                                 </div>
                                 <div class="card-footer">
@@ -371,19 +387,24 @@
                                     <h3 class="card-title">{{solicitacao.titulo}}</h3>
                                     <div class="card-info">
                                         <div class="info-item">
+                                            <i class="fas fa-hashtag"></i>
+                                            <span class="info-label">ID</span>
+                                            <span class="info-value">#{{solicitacao.ticket}}</span>
+                                        </div>
+                                        <div class="info-item">
                                             <i class="fas fa-user"></i>
                                             <span class="info-label">SOLICITANTE</span>
-                                            <span class="info-value">{{solicitacao.nome_do_solicitante}}</span>
+                                            <span class="info-value">{{solicitacao.nome_solicitante}}</span>
                                         </div>
                                         <div class="info-item">
                                             <i class="fas fa-user-check"></i>
                                             <span class="info-label">RECEBEDOR</span>
-                                            <span class="info-value">{{solicitante.nome_do_recebedor}}</span>
+                                            <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
                                         </div>
                                         <div class="info-item">
                                             <i class="fas fa-dollar-sign"></i>
                                             <span class="info-label">VALOR</span>
-                                            <span class="info-value">{{solicitante.valor}}</span>
+                                            <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
                                         </div>
                                         <div class="info-item">
                                             <i class="fas fa-calendar-plus"></i>
@@ -416,6 +437,39 @@
     {% include 'forms/form-solicitacao.html' %}
     {% include 'forms/form-usuario.html' %}
 
+
+
+ <!--########################################################################################################
+  ###################################   Card expandido  ###################################
+ ########################################################################################################-->
+    <!-- Modal de Detalhes do Card -->
+    <div class="card-detail-modal" id="cardDetailModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Detalhes da Solicitação</h2>
+                <button class="close-modal-btn" id="closeCardModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="cardDetailContent">
+                <!-- Conteúdo será preenchido dinamicamente -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="editCardBtn">
+                    <i class="fas fa-edit"></i>
+                    Editar
+                </button>
+                <button class="btn-primary" id="closeModalBtn">
+                    <i class="fas fa-arrow-left"></i>
+                    Voltar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="/static/js/app.js"></script>
+    <script src="/static/js/card-modal.js"></script>
+
 </body>
 </html>

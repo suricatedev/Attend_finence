@@ -1,4 +1,6 @@
-// Dashboard JavaScript - Sistema Financeiro
+// ========================================
+// DASHBOARD JAVASCRIPT CONSOLIDADO - SISTEMA FINANCEIRO
+// ========================================
 
 document.addEventListener('DOMContentLoaded', function() {
     // Elementos da interface
@@ -672,6 +674,219 @@ function exportDashboardData(format) {
     }
 }
 
+// ========================================
+// GRÁFICO DE LINHA PRINCIPAL - SOLICITAÇÕES AO LONGO DO TEMPO
+// ========================================
+let lineChart = null;
+
+const chartData = {
+    labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+    datasets: [
+        {
+            label: 'Solicitações Criadas',
+            data: [180, 220, 280, 195, 240, 310, 275, 290, 320, 265, 285, 240],
+            borderColor: '#FFCB57',
+            backgroundColor: 'rgba(255, 203, 87, 0.15)',
+            borderWidth: 4,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#FFCB57',
+            pointBorderColor: '#1C1C1C',
+            pointRadius: 8,
+            pointHoverRadius: 12,
+            pointHoverBackgroundColor: '#FFD700',
+            pointHoverBorderColor: '#1C1C1C',
+            pointHoverBorderWidth: 3,
+        },
+        {
+            label: 'Solicitações Aprovadas',
+            data: [150, 180, 220, 160, 200, 250, 220, 230, 260, 210, 230, 190],
+            borderColor: '#4ade80',
+            backgroundColor: 'rgba(74, 222, 128, 0.1)',
+            borderWidth: 3,
+            borderDash: [5, 5],
+            fill: false,
+            tension: 0.4,
+            pointBackgroundColor: '#4ade80',
+            pointBorderColor: '#1C1C1C',
+            pointRadius: 6,
+            pointHoverRadius: 10,
+            pointHoverBackgroundColor: '#22c55e',
+            pointHoverBorderColor: '#1C1C1C',
+            pointHoverBorderWidth: 2,
+        }
+    ]
+};
+
+const chartConfig = {
+    type: 'line',
+    data: chartData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                    color: '#F4F7F5',
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    padding: 20,
+                    usePointStyle: true,
+                    pointStyle: 'circle'
+                }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(28, 28, 28, 0.95)',
+                titleColor: '#FFCB57',
+                bodyColor: '#F4F7F5',
+                borderColor: '#FFCB57',
+                borderWidth: 2,
+                cornerRadius: 12,
+                displayColors: true,
+                titleFont: {
+                    size: 16,
+                    weight: 'bold'
+                },
+                bodyFont: {
+                    size: 14,
+                    weight: '600'
+                },
+                padding: 12,
+                callbacks: {
+                    title: function(context) {
+                        return context[0].label;
+                    },
+                    label: function(context) {
+                        return context.dataset.label + ': ' + context.parsed.y + ' solicitações';
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                grid: {
+                    color: 'rgba(255, 203, 87, 0.2)',
+                    drawBorder: false,
+                    lineWidth: 1
+                },
+                ticks: {
+                    color: '#F4F7F5',
+                    font: {
+                        size: 13,
+                        weight: 'bold'
+                    },
+                    maxRotation: 45,
+                    minRotation: 0
+                },
+                title: {
+                    display: true,
+                    text: 'Meses',
+                    color: '#FFCB57',
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    }
+                }
+            },
+            y: {
+                grid: {
+                    color: 'rgba(255, 203, 87, 0.2)',
+                    drawBorder: false,
+                    lineWidth: 1
+                },
+                ticks: {
+                    color: '#F4F7F5',
+                    font: {
+                        size: 13,
+                        weight: 'bold'
+                    },
+                    callback: function(value) {
+                        return value + ' solicitações';
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Número de Solicitações',
+                    color: '#FFCB57',
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    }
+                }
+            }
+        },
+        interaction: {
+            intersect: false,
+            mode: 'index'
+        },
+        animation: {
+            duration: 2000,
+            easing: 'easeInOutQuart'
+        }
+    }
+};
+
+function initializeLineChart() {
+    const ctx = document.getElementById('lineChart');
+    if (!ctx) return;
+    if (lineChart) lineChart.destroy();
+    lineChart = new Chart(ctx, chartConfig);
+}
+
+function changePeriod(period) {
+    const periods = {
+        '6months': { 
+            labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho'], 
+            data: { 
+                created: [180, 220, 280, 195, 240, 310], 
+                approved: [150, 180, 220, 160, 200, 250] 
+            } 
+        },
+        '12months': { 
+            labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'], 
+            data: { 
+                created: [180, 220, 280, 195, 240, 310, 275, 290, 320, 265, 285, 240], 
+                approved: [150, 180, 220, 160, 200, 250, 220, 230, 260, 210, 230, 190] 
+            } 
+        }
+    };
+    if (!lineChart) return;
+    const selected = periods[period];
+    if (!selected) return;
+    lineChart.data.labels = selected.labels;
+    lineChart.data.datasets[0].data = selected.data.created;
+    lineChart.data.datasets[1].data = selected.data.approved;
+    lineChart.update('active');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    initializeLineChart();
+    initializeSecondaryCharts();
+    setTimeout(() => {
+        if (lineChart) lineChart.update('show');
+        if (flowChart) flowChart.update('show');
+        if (preferencesChart) preferencesChart.update('show');
+        if (statusAnalysisChart) statusAnalysisChart.update('show');
+        if (departmentChart) departmentChart.update('show');
+    }, 500);
+    document.querySelectorAll('.period-button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.period-button').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            changePeriod(this.getAttribute('data-period'));
+        });
+    });
+});
+
+
+
+
+
+
 // Função para filtrar dados do dashboard
 function filterDashboardData(filter) {
     console.log('Filtrando dashboard com:', filter);
@@ -683,3 +898,244 @@ function updateDashboardPeriod(period) {
     console.log('Atualizando período do dashboard para:', period);
     // Implementar lógica de atualização de período
 }
+
+// ========================================
+// GRÁFICOS SECUNDÁRIOS - 4 GRÁFICOS EM GRID
+// ========================================
+
+// Gráfico 1: Fluxo de Solicitações por Período (Barras + Linha)
+let flowChart = null;
+const flowChartData = {
+    labels: ['0-3h', '3-6h', '6-9h', '9-12h', '12-15h', '15-18h', '18-21h', '21-24h'],
+    datasets: [
+        {
+            label: 'Solicitações Criadas',
+            data: [45, 52, 38, 65, 55, 48, 42, 35],
+            backgroundColor: '#3b82f6',
+            borderColor: '#3b82f6',
+            borderWidth: 0,
+            type: 'bar'
+        },
+        {
+            label: 'Solicitações Aprovadas',
+            data: [28, 35, 22, 45, 38, 32, 28, 25],
+            backgroundColor: '#ef4444',
+            borderColor: '#ef4444',
+            borderWidth: 0,
+            type: 'bar'
+        },
+        {
+            label: 'Taxa de Aprovação (%)',
+            data: [62, 67, 58, 69, 69, 67, 67, 71],
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderColor: '#60a5fa',
+            borderWidth: 3,
+            fill: false,
+            type: 'line',
+            tension: 0.4,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            yAxisID: 'y1'
+        }
+    ]
+};
+
+const flowChartConfig = {
+    type: 'bar',
+    data: flowChartData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                    color: '#F4F7F5',
+                    font: { size: 11, weight: 'bold' },
+                    usePointStyle: true
+                }
+            }
+        },
+        scales: {
+            x: {
+                grid: { color: 'rgba(255, 203, 87, 0.2)', drawBorder: false },
+                ticks: { color: '#F4F7F5', font: { size: 10, weight: 'bold' } }
+            },
+            y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                grid: { color: 'rgba(255, 203, 87, 0.2)', drawBorder: false },
+                ticks: { color: '#F4F7F5', font: { size: 10, weight: 'bold' } }
+            },
+            y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                grid: { drawOnChartArea: false },
+                ticks: { color: '#F4F7F5', font: { size: 10, weight: 'bold' }, callback: v => v + '%' }
+            }
+        }
+    }
+};
+
+// Gráfico 2: Preferências por Dia da Semana
+let preferencesChart = null;
+const preferencesChartData = {
+    labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+    datasets: [{
+        label: 'Solicitações',
+        data: [320, 380, 447, 420, 580, 650, 720],
+        backgroundColor: '#3b82f6',
+        borderColor: '#3b82f6',
+        borderWidth: 0,
+        borderRadius: 4
+    }]
+};
+
+const preferencesChartConfig = {
+    type: 'bar',
+    data: preferencesChartData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            x: {
+                grid: { color: 'rgba(255, 203, 87, 0.2)', drawBorder: false },
+                ticks: { color: '#F4F7F5', font: { size: 10, weight: 'bold' } }
+            },
+            y: {
+                grid: { color: 'rgba(255, 203, 87, 0.2)', drawBorder: false },
+                ticks: { color: '#F4F7F5', font: { size: 10, weight: 'bold' } }
+            }
+        }
+    }
+};
+
+// Gráfico 3: Análise de Status das Solicitações (Barras Horizontais Empilhadas)
+let statusAnalysisChart = null;
+const statusAnalysisData = {
+    labels: ['TI', 'Financeiro', 'RH', 'Marketing', 'Operações'],
+    datasets: [
+        {
+            label: 'Processadas',
+            data: [45, 38, 42, 28, 35],
+            backgroundColor: '#3b82f6',
+            borderColor: '#3b82f6',
+            borderWidth: 0
+        },
+        {
+            label: 'Pendentes',
+            data: [8, 12, 6, 15, 9],
+            backgroundColor: '#ef4444',
+            borderColor: '#ef4444',
+            borderWidth: 0
+        }
+    ]
+};
+
+const statusAnalysisConfig = {
+    type: 'bar',
+    data: statusAnalysisData,
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                    color: '#F4F7F5',
+                    font: { size: 11, weight: 'bold' },
+                    usePointStyle: true
+                }
+            }
+        },
+        scales: {
+            x: {
+                grid: { color: 'rgba(255, 203, 87, 0.2)', drawBorder: false },
+                ticks: { color: '#F4F7F5', font: { size: 10, weight: 'bold' } }
+            },
+            y: {
+                grid: { display: false },
+                ticks: { color: '#F4F7F5', font: { size: 10, weight: 'bold' } }
+            }
+        }
+    }
+};
+
+// Gráfico 4: Análise por Departamento (Rosca)
+let departmentChart = null;
+const departmentData = {
+    labels: ['TI', 'Financeiro', 'RH', 'Marketing'],
+    datasets: [{
+        data: [35, 25, 20, 20],
+        backgroundColor: ['#3b82f6', '#10b981', '#ef4444', '#f59e0b'],
+        borderColor: '#1C1C1C',
+        borderWidth: 2,
+        cutout: '60%'
+    }]
+};
+
+const departmentConfig = {
+    type: 'doughnut',
+    data: departmentData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                    color: '#F4F7F5',
+                    font: { size: 11, weight: 'bold' },
+                    usePointStyle: true,
+                    padding: 15
+                }
+            }
+        }
+    }
+};
+
+// Funções de inicialização
+function initializeFlowChart() {
+    const ctx = document.getElementById('flowChart');
+    if (!ctx) return;
+    if (flowChart) flowChart.destroy();
+    flowChart = new Chart(ctx, flowChartConfig);
+}
+
+function initializePreferencesChart() {
+    const ctx = document.getElementById('preferencesChart');
+    if (!ctx) return;
+    if (preferencesChart) preferencesChart.destroy();
+    preferencesChart = new Chart(ctx, preferencesChartConfig);
+}
+
+function initializeStatusAnalysisChart() {
+    const ctx = document.getElementById('statusAnalysisChart');
+    if (!ctx) return;
+    if (statusAnalysisChart) statusAnalysisChart.destroy();
+    statusAnalysisChart = new Chart(ctx, statusAnalysisConfig);
+}
+
+function initializeDepartmentChart() {
+    const ctx = document.getElementById('departmentChart');
+    if (!ctx) return;
+    if (departmentChart) departmentChart.destroy();
+    departmentChart = new Chart(ctx, departmentConfig);
+}
+
+function initializeSecondaryCharts() {
+    initializeFlowChart();
+    initializePreferencesChart();
+    initializeStatusAnalysisChart();
+    initializeDepartmentChart();
+}
+
