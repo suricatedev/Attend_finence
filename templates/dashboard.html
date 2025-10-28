@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/dashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -189,253 +190,109 @@
                         </div>
                     </div>
                     
-                    <!-- Gráfico Principal -->
+                    <!-- ========================================
+         GRÁFICO DE LINHA PRINCIPAL - SOLICITAÇÕES AO LONGO DO TEMPO
+         ======================================== -->
                     <div class="chart-section">
                         <div class="chart-container">
                             <div class="chart-header">
                                 <div class="chart-title-section">
-                                    <h2>Fluxo de Solicitações por Mês</h2>
-                                    <div class="chart-stats">
-                                        <div class="stat-item">
-                                            <span class="stat-label">Total Criadas:</span>
-                                            <span class="stat-value" id="totalCreated">342</span>
-                                        </div>
-                                        <div class="stat-item">
-                                            <span class="stat-label">Total Aprovadas:</span>
-                                            <span class="stat-value" id="totalApproved">298</span>
-                                        </div>
-                                        <div class="stat-item">
-                                            <span class="stat-label">Taxa de Aprovação:</span>
-                                            <span class="stat-value success" id="approvalRate">87.1%</span>
-                                        </div>
-                                    </div>
+                                    <h2>Solicitações ao Longo do Tempo</h2>
                                 </div>
                                 <div class="chart-controls">
                                     <div class="period-selector">
-                                        <select id="periodSelect" class="period-dropdown">
-                                            <option value="yearly">Anual</option>
-                                            <option value="monthly" selected>Mensal</option>
-                                            <option value="weekly">Semanal</option>
-                                        </select>
-                                    </div>
-                                    <div class="chart-legend">
-                                        <span class="legend-item">
-                                            <div class="legend-color pending"></div>
-                                            <span class="legend-text">Solicitações Criadas</span>
-                                            <span class="legend-value">342</span>
-                                        </span>
-                                        <span class="legend-item">
-                                            <div class="legend-color completed"></div>
-                                            <span class="legend-text">Solicitações Aprovadas</span>
-                                            <span class="legend-value">298</span>
-                                        </span>
+                                        <button class="period-button active" data-period="6months">
+                                            <i class="fas fa-calendar"></i>
+                                            Jan - Jun
+                                        </button>
+                                        <button class="period-button" data-period="12months">
+                                            <i class="fas fa-calendar-alt"></i>
+                                            Ano Completo
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                             <div class="chart-content">
-                                <canvas id="mainChart" width="800" height="300"></canvas>
-                                <div class="chart-tooltip" id="chartTooltip">
-                                    <div class="tooltip-header"></div>
-                                    <div class="tooltip-content"></div>
+                                <canvas id="lineChart" width="100%" height="400"></canvas>
+                            </div>
+                            <div class="chart-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">Total de Solicitações</span>
+                                    <span class="stat-value">2,847</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Crescimento</span>
+                                    <span class="stat-value positive">+12.5%</span>
+                                </div>
+                                    <div class="stat-item">
+                                    <span class="stat-label">Média Mensal</span>
+                                    <span class="stat-value">237</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Gráficos Secundários -->
-                    <div class="secondary-charts">
+                    <!-- ========================================
+         GRÁFICOS SECUNDÁRIOS - 4 GRÁFICOS EM GRID 2x2
+         ======================================== -->
+                    <div class="secondary-charts-grid">
+                        <!-- Gráfico 1: Fluxo de Solicitações por Período (Barras + Linha) -->
                         <div class="chart-card">
                             <div class="chart-header-small">
-                                <h3>Solicitações por Status</h3>
-                                <div class="chart-controls">
-                                    <button class="period-button">Últimos 30 dias</button>
-                                    <button class="menu-button">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </button>
-                                </div>
+                                <h3>Fluxo de Solicitações por Período</h3>
                             </div>
-                            <div class="donut-chart-layout">
-                                <div class="donut-legend-left">
-                                    <div class="legend-item">
-                                        <span class="legend-dot pending"></span>
-                                        <span class="legend-text">Pendente</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <span class="legend-dot approved"></span>
-                                        <span class="legend-text">Aprovado</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <span class="legend-dot completed"></span>
-                                        <span class="legend-text">Concluído</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <span class="legend-dot rejected"></span>
-                                        <span class="legend-text">Rejeitado</span>
-                                    </div>
+                            <div class="chart-container-small">
+                                <canvas id="flowChart" height="200"></canvas>
+                            </div>
+                            <div class="chart-info">
+                                <div class="info-item">
+                                    <span class="info-label">Solicitações Processadas</span>
+                                    <span class="info-value">426</span>
                                 </div>
-                                <div class="donut-chart-center">
-                                    <div class="donut-chart">
-                                        <div class="donut-center">
-                                            <span class="donut-label">Total</span>
-                                            <span class="donut-value">65%</span>
-                                        </div>
-                                    </div>
+                                <div class="info-item">
+                                    <span class="info-label">Taxa de Aprovação</span>
+                                    <span class="info-value">94.8%</span>
                                 </div>
                             </div>
                         </div>
-                        
+
+                        <!-- Gráfico 2: Preferências por Dia da Semana (Barras Verticais) -->
                         <div class="chart-card">
                             <div class="chart-header-small">
-                                <h3>Valor por Departamento</h3>
-                                <div class="chart-period">
-                                    <span class="period-label">Ano atual</span>
-                                </div>
+                                <h3>Preferências por Dia da Semana</h3>
                             </div>
-                            <div class="bar-chart">
-                                <div class="bar-item">
-                                    <div class="bar-label-section">
-                                        <span class="bar-label">TI</span>
-                                        <span class="bar-percentage">35%</span>
-                                    </div>
-                                    <div class="bar-container">
-                                        <div class="bar-fill" style="width: 85%"></div>
-                                        <div class="bar-progress-text">85%</div>
-                                    </div>
-                                    <div class="bar-value-section">
-                                        <span class="bar-value">R$ 1.2M</span>
-                                        <span class="bar-change positive">+12%</span>
-                                    </div>
-                                </div>
-                                <div class="bar-item">
-                                    <div class="bar-label-section">
-                                        <span class="bar-label">Financeiro</span>
-                                        <span class="bar-percentage">28%</span>
-                                    </div>
-                                    <div class="bar-container">
-                                        <div class="bar-fill" style="width: 70%"></div>
-                                        <div class="bar-progress-text">70%</div>
-                                    </div>
-                                    <div class="bar-value-section">
-                                        <span class="bar-value">R$ 980K</span>
-                                        <span class="bar-change positive">+8%</span>
-                                    </div>
-                                </div>
-                                <div class="bar-item">
-                                    <div class="bar-label-section">
-                                        <span class="bar-label">RH</span>
-                                        <span class="bar-percentage">19%</span>
-                                    </div>
-                                    <div class="bar-container">
-                                        <div class="bar-fill" style="width: 45%"></div>
-                                        <div class="bar-progress-text">45%</div>
-                                    </div>
-                                    <div class="bar-value-section">
-                                        <span class="bar-value">R$ 650K</span>
-                                        <span class="bar-change negative">-3%</span>
-                                    </div>
-                                </div>
-                                <div class="bar-item">
-                                    <div class="bar-label-section">
-                                        <span class="bar-label">Marketing</span>
-                                        <span class="bar-percentage">12%</span>
-                                    </div>
-                                    <div class="bar-container">
-                                        <div class="bar-fill" style="width: 30%"></div>
-                                        <div class="bar-progress-text">30%</div>
-                                    </div>
-                                    <div class="bar-value-section">
-                                        <span class="bar-value">R$ 420K</span>
-                                        <span class="bar-change positive">+15%</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bar-chart-summary">
-                                <div class="summary-item">
-                                    <span class="summary-label">Total Processado:</span>
-                                    <span class="summary-value">R$ 3.25M</span>
-                                </div>
-                                <div class="summary-item">
-                                    <span class="summary-label">Crescimento:</span>
-                                    <span class="summary-value positive">+8.5%</span>
-                                </div>
+                            <div class="chart-container-small">
+                                <canvas id="preferencesChart" height="200"></canvas>
                             </div>
                         </div>
-                        
+
+                        <!-- Gráfico 3: Análise de Status das Solicitações (Barras Horizontais Empilhadas) -->
                         <div class="chart-card">
                             <div class="chart-header-small">
-                                <h3>Solicitações por Dia da Semana</h3>
-                                <div class="chart-period">
-                                    <span class="period-label">Últimas 4 semanas</span>
-                                </div>
+                                <h3>Análise de Status das Solicitações</h3>
                             </div>
-                            <div class="weekly-chart">
-                                <div class="week-bar">
-                                    <div class="week-day">Seg</div>
-                                    <div class="week-value" style="height: 60%"></div>
-                                    <div class="week-count">12</div>
-                                    <div class="week-trend positive">+2</div>
-                                </div>
-                                <div class="week-bar">
-                                    <div class="week-day">Ter</div>
-                                    <div class="week-value" style="height: 80%"></div>
-                                    <div class="week-count">16</div>
-                                    <div class="week-trend positive">+4</div>
-                                </div>
-                                <div class="week-bar">
-                                    <div class="week-day">Qua</div>
-                                    <div class="week-value" style="height: 70%"></div>
-                                    <div class="week-count">14</div>
-                                    <div class="week-trend negative">-1</div>
-                                </div>
-                                <div class="week-bar">
-                                    <div class="week-day">Qui</div>
-                                    <div class="week-value" style="height: 90%"></div>
-                                    <div class="week-count">18</div>
-                                    <div class="week-trend positive">+3</div>
-                                </div>
-                                <div class="week-bar">
-                                    <div class="week-day">Sex</div>
-                                    <div class="week-value" style="height: 100%"></div>
-                                    <div class="week-count">20</div>
-                                    <div class="week-trend positive">+5</div>
-                                </div>
-                                <div class="week-bar">
-                                    <div class="week-day">Sáb</div>
-                                    <div class="week-value" style="height: 20%"></div>
-                                    <div class="week-count">4</div>
-                                    <div class="week-trend neutral">0</div>
-                                </div>
-                                <div class="week-bar">
-                                    <div class="week-day">Dom</div>
-                                    <div class="week-value" style="height: 10%"></div>
-                                    <div class="week-count">2</div>
-                                    <div class="week-trend negative">-1</div>
-                                </div>
+                            <div class="chart-container-small">
+                                <canvas id="statusAnalysisChart" height="200"></canvas>
                             </div>
-                            <div class="weekly-summary">
-                                <div class="summary-stats">
-                                    <div class="stat-item">
-                                        <span class="stat-label">Média Diária:</span>
-                                        <span class="stat-value">12.3</span>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span class="stat-label">Pico:</span>
-                                        <span class="stat-value">Sex (20)</span>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span class="stat-label">Baixa:</span>
-                                        <span class="stat-value">Dom (2)</span>
-                                    </div>
-                                </div>
+                        </div>
+
+                        <!-- Gráfico 4: Análise por Departamento (Rosca) -->
+                        <div class="chart-card">
+                            <div class="chart-header-small">
+                                <h3>Análise por Departamento</h3>
+                            </div>
+                            <div class="chart-container-small">
+                                <canvas id="departmentChart" height="200"></canvas>
                             </div>
                         </div>
                     </div>
+                    
                 </div>
             </div>
         </main>
     </div>
 
     <script src="/static/js/app.js"></script>
-    <script src="/static/js/dashboard-optimized.js"></script>
+    <script src="/static/js/dashboard.js"></script>
 </body>
 </html>
