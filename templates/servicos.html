@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="stylesheet" href="/static/css/servicos.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
+
 <body>
     <div class="app-container">
         <!-- Overlay para mobile -->
@@ -54,28 +56,6 @@
                 </ul>
             </nav>
             
-            <div class="sidebar-help">
-                <ul class="help-list">
-                    <li class="help-item">
-                        <a href="#" class="help-link">
-                            <i class="fas fa-question-circle"></i>
-                            <span>Faça uma pergunta</span>
-                        </a>
-                    </li>
-                    <li class="help-item">
-                        <a href="#" class="help-link">
-                            <i class="fas fa-question"></i>
-                            <span>Ajuda</span>
-                        </a>
-                    </li>
-                    <li class="help-item">
-                        <a href="#" class="help-link">
-                            <i class="fas fa-comment"></i>
-                            <span>Chat</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
         </aside>
 
         <!-- Main Content -->
@@ -259,7 +239,87 @@
                                     <span>Ações</span>
                                 </div>
                             </div>
-                            <!-- Lista de serviços será preenchida dinamicamente -->
+                            
+                            <!-- Lista de serviços em modo lista -->
+                            <div class="services-list-view" id="servicesListView">
+                                {% for service in services %}
+                                <div class="service-item" data-service-id="{{ service.id }}">
+                                    <div class="service-icon">
+                                        <i class="{{ service.icon }}"></i>
+                                    </div>
+                                    <div class="service-info">
+                                        <div class="service-main-info">
+                                            <div class="service-name" title="{{ service.name }}">{{ service.name }}</div>
+                                            <div class="service-description" title="{{ service.description }}">
+                                                {% if service.description|length > 60 %}
+                                                    {{ service.description|slice:":60" }}...
+                                                {% else %}
+                                                    {{ service.description }}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="service-category" title="{{ service.category|title }}">{{ service.category|title }}</div>
+                                        <div class="service-status {% if service.active %}active{% else %}inactive{% endif %}" 
+                                             title="{% if service.active %}Serviço ativo{% else %}Serviço inativo{% endif %}">
+                                            {% if service.active %}Ativo{% else %}Inativo{% endif %}
+                                        </div>
+                                        <div class="service-actions">
+                                            <button class="btn-edit" onclick="editService({{ service.id }})" title="Editar serviço">
+                                                <i class="fas fa-edit"></i>
+                                                Editar
+                                            </button>
+                                            <button class="btn-delete" onclick="deleteService({{ service.id }})" title="Excluir serviço">
+                                                <i class="fas fa-trash"></i>
+                                                Excluir
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="no-results">
+                                    <i class="fas fa-search"></i>
+                                    <h3>Nenhum serviço encontrado</h3>
+                                    <p>Adicione um novo serviço para começar.</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Grid de serviços em modo grid -->
+                            <div class="services-grid-view" id="servicesGridView" style="display: none;">
+                                {% for service in services %}
+                                <div class="service-card" data-service-id="{{ service.id }}">
+                                    <div class="service-icon">
+                                        <i class="{{ service.icon }}"></i>
+                                    </div>
+                                    <div class="service-info">
+                                        <h3>{{ service.name }}</h3>
+                                        <p>{{ service.description }}</p>
+                                        <div class="service-meta">
+                                            <span class="service-category">{{ service.category|title }}</span>
+                                            <span class="service-status {% if service.active %}active{% else %}inactive{% endif %}">
+                                                {% if service.active %}Ativo{% else %}Inativo{% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="service-actions">
+                                        <button class="btn-edit" onclick="editService({{ service.id }})" title="Editar serviço">
+                                            <i class="fas fa-edit"></i>
+                                            Editar
+                                        </button>
+                                        <button class="btn-delete" onclick="deleteService({{ service.id }})" title="Excluir serviço">
+                                            <i class="fas fa-trash"></i>
+                                            Excluir
+                                        </button>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="no-results">
+                                    <i class="fas fa-search"></i>
+                                    <h3>Nenhum serviço encontrado</h3>
+                                    <p>Adicione um novo serviço para começar.</p>
+                                </div>
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -267,7 +327,8 @@
         </main>
     </div>
 
-    <!-- Modal para adicionar/editar serviço -->
+
+    <!-- Modal para adicionar serviço -->
     <div class="modal" id="addServiceModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -292,16 +353,85 @@
                                     <i class="fas fa-tag"></i>
                                     Nome do Serviço
                                 </label>
-                                <input type="text" id="serviceName" name="name" required placeholder="Ex: Consultoria em TI">
+                                <input type="text" id="serviceName" name="name" required
+                                    placeholder="Ex: Consultoria em TI">
+                                <small class="form-help">Digite um nome claro e descritivo para o serviço</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="serviceDescription">
+                                <i class="fas fa-align-left"></i>
+                                Descrição do Serviço
+                            </label>
+                            <textarea id="serviceDescription" name="description" rows="4"
+                                placeholder="Descreva detalhadamente o que este serviço oferece, suas características e benefícios"></textarea>
+                            <small class="form-help">Uma descrição clara ajuda os solicitantes a entenderem o
+                                serviço</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="serviceActive">
+                                <i class="fas fa-toggle-on"></i>
+                                Status do Serviço
+                            </label>
+                            <select id="serviceActive" name="active" required>
+                                <option value="true">Ativo - Disponível para seleção</option>
+                                <option value="false">Inativo - Não disponível</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelAddService">Cancelar</button>
+                <button type="submit" class="btn-primary" form="addServiceForm" id="saveService">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar serviço -->
+    <div class="modal" id="editServiceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="editServiceTitle">Editar Serviço</h2>
+                <button class="close-btn" id="closeEditServiceModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="service-form-container">
+                    <div class="service-form-header">
+                        <h3>
+                            <i class="fas fa-edit"></i>
+                            Editar Serviço Existente
+                        </h3>
+                        <p>Modifique os dados do serviço conforme necessário</p>
+                    </div>
+
+
+
+                    <form id="editServiceForm" method="POST" action="/servicos/editar/">
+                        
+                        <input type="hidden" id="editServiceId" name="id">
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="editServiceName">
+                                    <i class="fas fa-tag"></i>
+                                    Nome do Serviço
+                                </label>
+                                <input type="text" id="editServiceName" name="name" required
+                                    placeholder="Ex: Consultoria em TI">
                                 <small class="form-help">Digite um nome claro e descritivo para o serviço</small>
                             </div>
                             
                             <div class="form-group">
-                                <label for="serviceCategory">
+                                <label for="editServiceCategory">
                                     <i class="fas fa-folder"></i>
                                     Categoria
                                 </label>
-                                <select id="serviceCategory" name="category" required>
+                                <select id="editServiceCategory" name="category" required>
                                     <option value="">Selecione uma categoria</option>
                                     <option value="consultoria">Consultoria</option>
                                     <option value="desenvolvimento">Desenvolvimento</option>
@@ -316,21 +446,25 @@
                         </div>
                         
                         <div class="form-group full-width">
-                            <label for="serviceDescription">
+                            <label for="editServiceDescription">
                                 <i class="fas fa-align-left"></i>
                                 Descrição do Serviço
                             </label>
-                            <textarea id="serviceDescription" name="description" rows="4" placeholder="Descreva detalhadamente o que este serviço oferece, suas características e benefícios"></textarea>
-                            <small class="form-help">Uma descrição clara ajuda os solicitantes a entenderem o serviço</small>
+                            <textarea id="editServiceDescription" name="description" rows="4"
+                                placeholder="Descreva detalhadamente o que este serviço oferece, suas características e benefícios"></textarea>
+                            <small class="form-help">Uma descrição clara ajuda os solicitantes a entenderem o
+                                serviço</small>
                         </div>
                         
                         <div class="form-row">
+
+                            <!-- 
                             <div class="form-group">
-                                <label for="serviceIcon">
+                                <label for="editServiceIcon">
                                     <i class="fas fa-palette"></i>
                                     Ícone do Serviço
                                 </label>
-                                <select id="serviceIcon" name="icon" required>
+                                <select id="editServiceIcon" name="icon" required>
                                     <option value="">Selecione um ícone</option>
                                     <option value="fas fa-user-tie">👔 Consultoria</option>
                                     <option value="fas fa-code">💻 Desenvolvimento</option>
@@ -341,30 +475,61 @@
                                     <option value="fas fa-bullhorn">📢 Marketing</option>
                                     <option value="fas fa-ellipsis-h">➕ Outros</option>
                                 </select>
-                            </div>
+                            </div> -->
                             
                             <div class="form-group">
-                                <label for="serviceActive">
+                                <label for="editServiceActive">
                                     <i class="fas fa-toggle-on"></i>
                                     Status do Serviço
                                 </label>
-                                <select id="serviceActive" name="active" required>
+                                <select id="editServiceActive" name="active" required>
                                     <option value="true">Ativo - Disponível para seleção</option>
                                     <option value="false">Inativo - Não disponível</option>
                                 </select>
+                            </div>
+                        </div>
+
+                        <!-- Informações adicionais do serviço -->
+                        <div class="service-info-section">
+                            <h4>
+                                <i class="fas fa-info-circle"></i>
+                                Informações do Serviço
+                            </h4>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">ID do Serviço:</span>
+                                    <span class="info-value" id="editServiceIdDisplay">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Data de Criação:</span>
+                                    <span class="info-value" id="editServiceCreatedAt">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Última Atualização:</span>
+                                    <span class="info-value" id="editServiceUpdatedAt">-</span>
+                                </div>
                             </div>
                         </div>
                     </form>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-secondary" id="cancelAddService">Cancelar</button>
-                <button type="submit" class="btn-primary" form="addServiceForm" id="saveService">Salvar</button>
+                <button type="button" class="btn-secondary" id="cancelEditService">Cancelar</button>
+                <button type="button" class="btn-warning" id="toggleServiceStatus">
+                    <i class="fas fa-toggle-on"></i>
+                    <span id="toggleStatusText">Alterar Status</span>
+                </button>
+                <button type="submit" class="btn-primary" form="editServiceForm" id="updateService">
+                    <i class="fas fa-save"></i>
+                    Salvar Alterações
+                </button>
             </div>
         </div>
     </div>
 
+
     <script src="/static/js/app.js"></script>
     <script src="/static/js/servicos.js"></script>
 </body>
+
 </html>

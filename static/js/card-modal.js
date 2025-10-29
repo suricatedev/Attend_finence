@@ -66,8 +66,12 @@ function initializeCardExpansion() {
 // Função para abrir modal de detalhes do card
 function openCardDetailModal(card) {
     const modal = document.getElementById('cardDetailModal');
-    const content = document.getElementById('cardDetailContent');
     const header = modal.querySelector('.modal-header');
+    
+    if (!modal) {
+        console.error('Modal não encontrado!');
+        return;
+    }
     
     // Extrair dados do card
     const cardData = extractCardData(card);
@@ -76,8 +80,8 @@ function openCardDetailModal(card) {
     const cardId = card.getAttribute('data-card-id') || Math.random().toString(36).substr(2, 9);
     modal.setAttribute('data-card-id', cardId);
     
-    // Preencher conteúdo do modal
-    content.innerHTML = generateCardDetailHTML(cardData);
+    // Preencher dados do modal
+    populateCardDetails(cardData);
     
     // Ajustar cor do header conforme status da coluna
     header.classList.remove('status-pendente','status-aprovado','status-recusado','status-concluido');
@@ -144,110 +148,53 @@ function extractCardData(card) {
     return data;
 }
 
-// Função para gerar HTML dos detalhes do card
-function generateCardDetailHTML(data) {
-    return `
-        <div class="card-detail-info">
-            <div class="detail-section info-basicas">
-                <div class="section-title">
-                    <i class="fas fa-info-circle"></i>
-                    Informações Básicas
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">ID da Solicitação</div>
-                    <div class="detail-value highlight">${data.id || 'N/A'}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Título</div>
-                    <div class="detail-value">${data.titulo}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Solicitante</div>
-                    <div class="detail-value">${data.solicitante || 'N/A'}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Recebedor</div>
-                    <div class="detail-value">${data.recebedor || 'N/A'}</div>
-                </div>
-            </div>
-            
-            <div class="detail-section valores-status">
-                <div class="section-title">
-                    <i class="fas fa-dollar-sign"></i>
-                    Valores e Status
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Valor</div>
-                    <div class="detail-value highlight">${data.valor || 'R$ 0,00'}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Prioridade</div>
-                    <div class="detail-value status-${data.prioridade?.toLowerCase() || 'media'}">${data.prioridade || 'Média'}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Status</div>
-                    <div class="detail-value status-${data.status?.toLowerCase().replace(/\s+/g, '') || 'pendente'}">${data.status || 'Pendente'}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Tempo na Fila</div>
-                    <div class="detail-value">${data.tempoFila || '0min'}</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="card-detail-info">
-            <div class="detail-section datas">
-                <div class="section-title">
-                    <i class="fas fa-calendar"></i>
-                    Datas
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Data de Criação</div>
-                    <div class="detail-value">${data.dataCriacao || 'N/A'}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Data de Pagamento</div>
-                    <div class="detail-value">${data.dataPagamento || 'N/A'}</div>
-                </div>
-            </div>
-            
-            <div class="detail-section tempos">
-                <div class="section-title">
-                    <i class="fas fa-clock"></i>
-                    Tempos
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Tempo de Criação</div>
-                    <div class="detail-value">${data.tempoCriacao || 'N/A'}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Tempo na Fila</div>
-                    <div class="detail-value">${data.tempoFila || '0min'}</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="card-detail-actions">
-            <div class="detail-section fila-selector">
-                <div class="section-title">
-                    <i class="fas fa-exchange-alt"></i>
-                    Mover para Fila
-                </div>
-                <div class="fila-selector-container">
-                    <select id="filaSelect" class="fila-select">
-                        <option value="planning">Pendente</option>
-                        <option value="test">Recusado</option>
-                        <option value="launch">Aprovado</option>
-                        <option value="success">Concluído</option>
-                    </select>
-                    <button id="moverFilaBtn" class="btn-mover-fila">
-                        <i class="fas fa-arrow-right"></i>
-                        Mover
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
+// Função para preencher os dados do card no modal
+function populateCardDetails(data) {
+    // Preencher informações básicas
+    const idElement = document.getElementById('modal-id');
+    if (idElement) idElement.textContent = data.id || 'N/A';
+    
+    const titleElement = document.getElementById('modal-titulo');
+    if (titleElement) titleElement.textContent = data.titulo || 'Sem título';
+    
+    const solicitanteElement = document.getElementById('modal-solicitante');
+    if (solicitanteElement) solicitanteElement.textContent = data.solicitante || 'N/A';
+    
+    const recebedorElement = document.getElementById('modal-recebedor');
+    if (recebedorElement) recebedorElement.textContent = data.recebedor || 'N/A';
+    
+    // Preencher valores e status
+    const valorElement = document.getElementById('modal-valor');
+    if (valorElement) valorElement.textContent = data.valor || 'R$ 0,00';
+    
+    const prioridadeElement = document.getElementById('modal-prioridade');
+    if (prioridadeElement) {
+        prioridadeElement.textContent = data.prioridade || 'Média';
+        prioridadeElement.className = `detail-value status-${(data.prioridade?.toLowerCase() || 'media')}`;
+    }
+    
+    const statusElement = document.getElementById('modal-status');
+    if (statusElement) {
+        statusElement.textContent = data.status || 'Pendente';
+        statusElement.className = `detail-value status-${(data.status?.toLowerCase().replace(/\s+/g, '') || 'pendente')}`;
+    }
+    
+    const tempoFilaElement = document.getElementById('modal-tempo-fila');
+    if (tempoFilaElement) tempoFilaElement.textContent = data.tempoFila || '0min';
+    
+    // Preencher datas
+    const dataCriacaoElement = document.getElementById('modal-data-criacao');
+    if (dataCriacaoElement) dataCriacaoElement.textContent = data.dataCriacao || 'N/A';
+    
+    const dataPagamentoElement = document.getElementById('modal-data-pagamento');
+    if (dataPagamentoElement) dataPagamentoElement.textContent = data.dataPagamento || 'N/A';
+    
+    // Preencher tempos
+    const tempoCriacaoElement = document.getElementById('modal-tempo-criacao');
+    if (tempoCriacaoElement) tempoCriacaoElement.textContent = data.tempoCriacao || 'N/A';
+    
+    const tempoFilaTemposElement = document.getElementById('modal-tempo-fila-tempos');
+    if (tempoFilaTemposElement) tempoFilaTemposElement.textContent = data.tempoFila || '0min';
 }
 
 // Função para configurar event listeners do modal
