@@ -1199,3 +1199,507 @@
 .modal-content::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, #e0bc18 0%, #FFCB57 100%);
 }
+
+/* Estilos para o modal de edição */
+#editServiceModal .modal-content {
+    max-width: 800px;
+    width: 90%;
+}
+
+#editServiceModal .service-form-container {
+    padding: 20px;
+}
+
+/* Seção de informações do serviço */
+.service-info-section {
+    margin-top: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+}
+
+.service-info-section h4 {
+    margin: 0 0 15px 0;
+    color: #1C1C1C;
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.service-info-section h4 i {
+    color: #FFCB57;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.info-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    font-size: 1rem;
+    color: #1C1C1C;
+    font-weight: 500;
+    padding: 8px 12px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+
+/* Botões do modal de edição */
+#editServiceModal .modal-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+#editServiceModal .btn-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+    color: #1C1C1C;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#editServiceModal .btn-warning:hover {
+    background: linear-gradient(135deg, #ffb300 0%, #ff8f00 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+#editServiceModal .btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#editServiceModal .btn-success:hover {
+    background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* Grid view para serviços */
+.services-grid-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+    padding: 24px 0;
+}
+
+.services-grid-view .service-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(229, 231, 235, 0.6);
+    position: relative;
+    overflow: hidden;
+}
+
+.services-grid-view .service-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #FFCB57 0%, #FFD700 50%, #FFCB57 100%);
+    border-radius: 16px 16px 0 0;
+}
+
+.services-grid-view .service-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+    border-color: #FFCB57;
+}
+
+.services-grid-view .service-card .service-icon {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, #FFCB57 0%, #FFD700 100%);
+    border-radius: 12px;
+    display: inline-block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.services-grid-view .service-card .service-icon i {
+    font-size: 2.5rem;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.services-grid-view .service-card .service-info {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.services-grid-view .service-card .service-info h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1C1C1C;
+    margin: 0 0 12px 0;
+    line-height: 1.3;
+}
+
+.services-grid-view .service-card .service-info p {
+    color: #6b7280;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0 0 16px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.services-grid-view .service-card .service-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    background: rgba(255, 203, 87, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 203, 87, 0.2);
+}
+
+.services-grid-view .service-card .service-category {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #FFCB57;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.services-grid-view .service-card .service-status {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.services-grid-view .service-card .service-status.active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.services-grid-view .service-card .service-status.inactive {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.services-grid-view .service-card .service-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.services-grid-view .service-card .btn-edit,
+.services-grid-view .service-card .btn-delete {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.services-grid-view .service-card .btn-edit {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.services-grid-view .service-card .btn-edit:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.services-grid-view .service-card .btn-delete {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.services-grid-view .service-card .btn-delete:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+/* Estilos para a lista de serviços (modo lista) */
+.services-list-view {
+    padding: 20px 0;
+}
+
+.services-list-view .service-item {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(229, 231, 235, 0.6);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.services-list-view .service-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border-color: #FFCB57;
+}
+
+.services-list-view .service-item .service-icon {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #FFCB57 0%, #FFD700 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(255, 203, 87, 0.3);
+}
+
+.services-list-view .service-item .service-icon i {
+    font-size: 1.8rem;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.services-list-view .service-item .service-info {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 20px;
+    align-items: center;
+}
+
+.services-list-view .service-item .service-main-info {
+    min-width: 0;
+}
+
+.services-list-view .service-item .service-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1C1C1C;
+    margin: 0 0 4px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.services-list-view .service-item .service-description {
+    font-size: 0.9rem;
+    color: #6b7280;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.services-list-view .service-item .service-category {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #FFCB57;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+    padding: 6px 12px;
+    background: rgba(255, 203, 87, 0.1);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 203, 87, 0.2);
+}
+
+.services-list-view .service-item .service-status {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+.services-list-view .service-item .service-status.active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.services-list-view .service-item .service-status.inactive {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.services-list-view .service-item .service-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.services-list-view .service-item .btn-edit,
+.services-list-view .service-item .btn-delete {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.services-list-view .service-item .btn-edit {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.services-list-view .service-item .btn-edit:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.services-list-view .service-item .btn-delete {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.services-list-view .service-item .btn-delete:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* Responsividade para o modal de edição */
+@media (max-width: 768px) {
+    #editServiceModal .modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    #editServiceModal .modal-footer {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    #editServiceModal .modal-footer button {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .services-grid-view {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .services-list-view .service-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 16px;
+    }
+    
+    .services-list-view .service-item .service-info {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        text-align: center;
+    }
+    
+    .services-list-view .service-item .service-actions {
+        justify-content: center;
+    }
+}
+
+/* Estilos para "nenhum resultado" */
+.no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 80px 20px;
+    color: #6b7280;
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    border-radius: 16px;
+    border: 2px dashed #e5e7eb;
+    margin: 20px 0;
+}
+
+.no-results i {
+    font-size: 4rem;
+    color: #FFCB57;
+    margin-bottom: 24px;
+    opacity: 0.8;
+    text-shadow: 0 2px 4px rgba(255, 203, 87, 0.3);
+}
+
+.no-results h3 {
+    font-size: 1.5rem;
+    margin: 0 0 12px 0;
+    color: #1C1C1C;
+    font-weight: 600;
+}
+
+.no-results p {
+    font-size: 1rem;
+    margin: 0;
+    opacity: 0.8;
+    line-height: 1.5;
+}
