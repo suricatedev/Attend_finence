@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,11 +13,12 @@
     <link rel="stylesheet" href="/static/css/card-modal.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
+
 <body>
     <div class="app-container">
         <!-- Overlay para mobile -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
-        
+
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
@@ -25,7 +27,7 @@
                     <span>Attend Finance</span>
                 </div>
             </div>
-            
+
             <nav class="sidebar-nav">
                 <ul class="nav-list">
                     <li class="nav-item active">
@@ -34,14 +36,14 @@
                             <span>Solicitações</span>
                         </a>
                     </li>
-                    
+
                     <li class="nav-item">
                         <a href="/relatorios" class="nav-link">
                             <i class="fas fa-chart-bar"></i>
                             <span>Relatórios</span>
                         </a>
                     </li>
-                    
+
                     <li class="nav-item">
                         <a href="/dashboard" class="nav-link">
                             <i class="fas fa-tachometer-alt"></i>
@@ -57,8 +59,13 @@
                     </li>
                 </ul>
             </nav>
-            
-            <div class="sidebar-help">
+
+
+           <!-- ===============================================================================================================
+            =============================================suporte e ajuda===================================================
+            =============================================================================================================== -->
+
+            <!--<div class="sidebar-help">
                 <ul class="help-list">
                     <li class="help-item">
                         <a href="#" class="help-link">
@@ -79,7 +86,12 @@
                         </a>
                     </li>
                 </ul>
-            </div>
+            </div> -->
+
+
+
+
+
         </aside>
 
         <!-- Main Content -->
@@ -90,13 +102,13 @@
                     <div class="logo-section">
                     </div>
                 </div>
-                
+
                 <div class="header-center">
                     <button class="btn-primary" id="createCampaignBtn">
                         <i class="fas fa-plus"></i>
                         Nova Solicitação Financeira
                     </button>
-                    
+
                     <div class="view-tabs">
                         <a href="/" class="tab-btn active">
                             <i class="fas fa-th"></i>
@@ -112,7 +124,7 @@
                         </a>
                     </div>
                 </div>
-                
+
                 <div class="header-right">
                     <div class="user-actions">
                         <button class="action-btn" title="Notificações">
@@ -147,7 +159,7 @@
                     </div>
                 </div>
             </header>
-            
+
             <!-- Kanban Board -->
             <div class="kanban-board" id="kanbanBoard">
                 <div class="kanban-column" data-column="planning">
@@ -169,14 +181,15 @@
                     <div class="column-filter">
                         <div class="filter-container">
                             <i class="fas fa-search filter-icon"></i>
-                            <input type="text" class="filter-input" placeholder="Filtrar cards..." data-column="planning">
+                            <input type="text" class="filter-input" placeholder="Filtrar cards..."
+                                data-column="planning">
                             <button class="filter-clear-btn" title="Limpar filtro">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
                     </div>
                     <div class="column-content" data-column="planning">
-                    {% for solicitacao in solicitacoes_pendentes %}
+                        {% for solicitacao in solicitacoes_pendentes %}
                         <div class="card card-status-pending" draggable="true" data-card-id="1">
                             <div class="card-header">
                                 <span class="priority high">{{solicitacao.prioridade}}</span>
@@ -213,7 +226,8 @@
                                         <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
                                     </div>
                                 </div>
-                                <div class="card-time" data-creation-time="{{solicitacao.data_de_criacao|date:'Y-m-d'}} {{solicitacao.tempo_criacao|time:'H:i:s'}}">
+                                <div class="card-time"
+                                    data-creation-time="{{solicitacao.data_de_criacao|date:'Y-m-d'}} {{solicitacao.tempo_criacao|time:'H:i:s'}}">
                                     <i class="fas fa-clock"></i>
                                     <span class="queue-time">Calculando...</span>
                                 </div>
@@ -222,7 +236,7 @@
                                 <span class="card-stage">Solicitação pendente de análise</span>
                             </div>
                         </div>
-                    {% endfor %}
+                        {% endfor %}
                     </div>
                 </div>
 
@@ -252,7 +266,7 @@
                         </div>
                     </div>
                     <div class="column-content" data-column="test">
-                    {% for solicitacao in solicitacoes_recusados%}
+                        {% for solicitacao in solicitacoes_recusados%}
                         <div class="card card-status-rejected" draggable="true" data-card-id="2">
                             <div class="card-header">
                                 <span class="priority low">{{solicitacao.prioridade}}</span>
@@ -289,7 +303,8 @@
                                         <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
                                     </div>
                                 </div>
-                                <div class="card-time" data-creation-time="{{solicitacao.data_de_criacao|date:'Y-m-d'}} {{solicitacao.tempo_criacao|time:'H:i:s'}}">
+                                <div class="card-time"
+                                    data-creation-time="{{solicitacao.data_de_criacao|date:'Y-m-d'}} {{solicitacao.tempo_criacao|time:'H:i:s'}}">
                                     <i class="fas fa-clock"></i>
                                     <span class="queue-time">Calculando...</span>
                                 </div>
@@ -298,7 +313,7 @@
                                 <span class="card-stage">Solicitação recusada - orçamento insuficiente</span>
                             </div>
                         </div>
-                    {% endfor %}
+                        {% endfor %}
                     </div>
                 </div>
 
@@ -329,55 +344,56 @@
                     </div>
                     <div class="column-content" data-column="launch">
                         {% for solicitacao in solicitacoes_aprovado %}
-                            <div class="card card-status-approved" draggable="true" data-card-id="3">
-                                <div class="card-header">
-                                    <span class="priority medium">{{solicitacao.prioridade}}</span>
-                                </div>
-                                <div class="card-body">
-                                    <h3 class="card-title">{{solicitacao.titulo}}</h3>
-                                    <div class="card-info">
-                                        <div class="info-item">
-                                            <span class="info-value">#{{solicitacao.ticket}}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <i class="fas fa-user"></i>
-                                            <span class="info-label">SOLICITANTE</span>
-                                            <span class="info-value">{{solicitacao.nome_solicitante}}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <i class="fas fa-user-check"></i>
-                                            <span class="info-label">RECEBEDOR</span>
-                                            <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <i class="fas fa-dollar-sign"></i>
-                                            <span class="info-label">VALOR</span>
-                                            <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <i class="fas fa-calendar-plus"></i>
-                                            <span class="info-label">CRIAÇÃO</span>
-                                            <span class="info-value">{{solicitacao.data_de_criacao}}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <i class="fas fa-calendar-check"></i>
-                                            <span class="info-label">PAGAMENTO</span>
-                                            <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
-                                        </div>
+                        <div class="card card-status-approved" draggable="true" data-card-id="3">
+                            <div class="card-header">
+                                <span class="priority medium">{{solicitacao.prioridade}}</span>
+                            </div>
+                            <div class="card-body">
+                                <h3 class="card-title">{{solicitacao.titulo}}</h3>
+                                <div class="card-info">
+                                    <div class="info-item">
+                                        <span class="info-value">#{{solicitacao.ticket}}</span>
                                     </div>
-                                    <div class="card-due-date overdue">
-                                        <i class="fas fa-calendar-times"></i>
-                                        <span>Abr, 4 • 2 anos atrás</span>
+                                    <div class="info-item">
+                                        <i class="fas fa-user"></i>
+                                        <span class="info-label">SOLICITANTE</span>
+                                        <span class="info-value">{{solicitacao.nome_solicitante}}</span>
                                     </div>
-                                    <div class="card-time" data-creation-time="{{solicitacao.data_de_criacao|date:'Y-m-d'}} {{solicitacao.tempo_criacao|time:'H:i:s'}}">
-                                        <i class="fas fa-clock"></i>
-                                        <span class="queue-time">Calculando...</span>
+                                    <div class="info-item">
+                                        <i class="fas fa-user-check"></i>
+                                        <span class="info-label">RECEBEDOR</span>
+                                        <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-dollar-sign"></i>
+                                        <span class="info-label">VALOR</span>
+                                        <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-calendar-plus"></i>
+                                        <span class="info-label">CRIAÇÃO</span>
+                                        <span class="info-value">{{solicitacao.data_de_criacao}}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-calendar-check"></i>
+                                        <span class="info-label">PAGAMENTO</span>
+                                        <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
                                     </div>
                                 </div>
-                                <div class="card-footer">
-                                    <span class="card-stage">Aprovado e em processamento</span>
+                                <div class="card-due-date overdue">
+                                    <i class="fas fa-calendar-times"></i>
+                                    <span>Abr, 4 • 2 anos atrás</span>
+                                </div>
+                                <div class="card-time"
+                                    data-creation-time="{{solicitacao.data_de_criacao|date:'Y-m-d'}} {{solicitacao.tempo_criacao|time:'H:i:s'}}">
+                                    <i class="fas fa-clock"></i>
+                                    <span class="queue-time">Calculando...</span>
                                 </div>
                             </div>
+                            <div class="card-footer">
+                                <span class="card-stage">Aprovado e em processamento</span>
+                            </div>
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
@@ -401,7 +417,8 @@
                     <div class="column-filter">
                         <div class="filter-container">
                             <i class="fas fa-search filter-icon"></i>
-                            <input type="text" class="filter-input" placeholder="Filtrar cards..." data-column="success">
+                            <input type="text" class="filter-input" placeholder="Filtrar cards..."
+                                data-column="success">
                             <button class="filter-clear-btn" title="Limpar filtro">
                                 <i class="fas fa-times"></i>
                             </button>
@@ -409,51 +426,51 @@
                     </div>
                     <div class="column-content" data-column="success">
                         {% for solicitacao in solicitacoes_concluido %}
-                            <div class="card card-status-completed" draggable="true" data-card-id="5">
-                                <div class="card-header">
-                                    <span class="priority medium">{{solicitacao.prioridade}}</span>
-                                </div>
-                                <div class="card-body">
-                                    <h3 class="card-title">{{solicitacao.titulo}}</h3>
-                                    <div class="card-info">
-                                        <div class="info-item">
-                                            <span class="info-value">#{{solicitacao.ticket}}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <i class="fas fa-user"></i>
-                                            <span class="info-label">SOLICITANTE</span>
-                                            <span class="info-value">{{solicitacao.nome_solicitante}}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <i class="fas fa-user-check"></i>
-                                            <span class="info-label">RECEBEDOR</span>
-                                            <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <i class="fas fa-dollar-sign"></i>
-                                            <span class="info-label">VALOR</span>
-                                            <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <i class="fas fa-calendar-plus"></i>
-                                            <span class="info-label">CRIAÇÃO</span>
-                                            <span class="info-value">{{solicitacao.data_de_criacao}}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <i class="fas fa-calendar-check"></i>
-                                            <span class="info-label">PAGAMENTO</span>
-                                            <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
-                                        </div>
+                        <div class="card card-status-completed" draggable="true" data-card-id="5">
+                            <div class="card-header">
+                                <span class="priority medium">{{solicitacao.prioridade}}</span>
+                            </div>
+                            <div class="card-body">
+                                <h3 class="card-title">{{solicitacao.titulo}}</h3>
+                                <div class="card-info">
+                                    <div class="info-item">
+                                        <span class="info-value">#{{solicitacao.ticket}}</span>
                                     </div>
-                                    <div class="card-time completed">
-                                        <i class="fas fa-check"></i>
-                                        <span>Concluído</span>
+                                    <div class="info-item">
+                                        <i class="fas fa-user"></i>
+                                        <span class="info-label">SOLICITANTE</span>
+                                        <span class="info-value">{{solicitacao.nome_solicitante}}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-user-check"></i>
+                                        <span class="info-label">RECEBEDOR</span>
+                                        <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-dollar-sign"></i>
+                                        <span class="info-label">VALOR</span>
+                                        <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-calendar-plus"></i>
+                                        <span class="info-label">CRIAÇÃO</span>
+                                        <span class="info-value">{{solicitacao.data_de_criacao}}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-calendar-check"></i>
+                                        <span class="info-label">PAGAMENTO</span>
+                                        <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
                                     </div>
                                 </div>
-                                <div class="card-footer">
-                                    <span class="card-stage">Solicitação concluída com sucesso</span>
+                                <div class="card-time completed">
+                                    <i class="fas fa-check"></i>
+                                    <span>Concluído</span>
                                 </div>
                             </div>
+                            <div class="card-footer">
+                                <span class="card-stage">Solicitação concluída com sucesso</span>
+                            </div>
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
@@ -467,7 +484,7 @@
 
 
 
- <!--########################################################################################################
+    <!--########################################################################################################
   ###################################   Card expandido  ###################################
  ########################################################################################################-->
     <!-- Modal de Detalhes do Card -->
@@ -481,7 +498,107 @@
                 </button>
             </div>
             <div class="modal-body" id="cardDetailContent">
-                <!-- Conteúdo será preenchido dinamicamente -->
+                <div class="card-detail-info">
+                    <div class="detail-section info-basicas">
+                        <div class="section-title">
+                            <i class="fas fa-info-circle"></i>
+                            Informações Básicas
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">ID da Solicitação</div>
+                            <div class="detail-value highlight" id="modal-id">N/A</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Título</div>
+                            <div class="detail-value" id="modal-titulo">Sem título</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Solicitante</div>
+                            <div class="detail-value" id="modal-solicitante">N/A</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Recebedor</div>
+                            <div class="detail-value" id="modal-recebedor">N/A</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section valores-status">
+                        <div class="section-title">
+                            <i class="fas fa-dollar-sign"></i>
+                            Valores e Status
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Valor</div>
+                            <div class="detail-value highlight" id="modal-valor">R$ 0,00</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Prioridade</div>
+                            <div class="detail-value" id="modal-prioridade">Média</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value" id="modal-status">Pendente</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Tempo na Fila</div>
+                            <div class="detail-value" id="modal-tempo-fila">0min</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-detail-info">
+                    <div class="detail-section datas">
+                        <div class="section-title">
+                            <i class="fas fa-calendar"></i>
+                            Datas
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Data de Criação</div>
+                            <div class="detail-value" id="modal-data-criacao">N/A</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Data de Pagamento</div>
+                            <div class="detail-value" id="modal-data-pagamento">N/A</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section tempos">
+                        <div class="section-title">
+                            <i class="fas fa-clock"></i>
+                            Tempos
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Tempo de Criação</div>
+                            <div class="detail-value" id="modal-tempo-criacao">N/A</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Tempo na Fila</div>
+                            <div class="detail-value" id="modal-tempo-fila-tempos">0min</div>
+                        </div>
+                    </div>
+                </div>
+                <form action="">
+                    <div class="card-detail-actions">
+                        <div class="detail-section fila-selector">
+                            <div class="section-title">
+                                <i class="fas fa-exchange-alt"></i>
+                                Mover para Fila
+                            </div>
+                            <div class="fila-selector-container">
+                                <select id="filaSelect" class="fila-select">
+                                    <option value="planning">Pendente</option>
+                                    <option value="test">Recusado</option>
+                                    <option value="launch">Aprovado</option>
+                                    <option value="success">Concluído</option>
+                                </select>
+                                <button id="moverFilaBtn" class="btn-mover-fila">
+                                    <i class="fas fa-arrow-right"></i>
+                                    Mover
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" id="editCardBtn">
@@ -500,4 +617,5 @@
     <script src="/static/js/card-modal.js"></script>
 
 </body>
+
 </html>
