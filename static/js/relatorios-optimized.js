@@ -9,6 +9,7 @@ class RelatoriosOptimized {
         this.sortDirection = 'asc';
         this.currentFilters = {
             status: 'all',
+            tipo: 'all',
             dateFrom: '',
             dateTo: '',
             service: '',
@@ -82,7 +83,7 @@ class RelatoriosOptimized {
         rows.forEach(row => {
             const cells = row.querySelectorAll('td');
             if (cells.length > 0) {
-                // Extrair status do badge ou dataset
+                // Extrair dados usando data attributes (mais confiável)
                 let status = row.dataset.status || '';
                 const statusBadge = cells[6]?.querySelector('.status-badge');
                 if (!status && statusBadge) {
@@ -93,33 +94,32 @@ class RelatoriosOptimized {
                     }
                 }
                 
-                // Extrair prioridade do badge
-                let priority = '';
+                // Extrair prioridade do data attribute
+                let priority = row.dataset.priority || '';
                 const priorityBadge = cells[7]?.querySelector('.priority-badge');
-                if (priorityBadge) {
+                if (!priority && priorityBadge) {
                     const priorityClass = priorityBadge.className.match(/priority-(\w+)/);
                     if (priorityClass) {
                         priority = priorityClass[1].toLowerCase();
-                    } else {
-                        // Fallback: pegar do texto
-                        priority = priorityBadge.textContent.trim().toLowerCase();
-                        // Mapear texto para chave
-                        if (priority.includes('baixa')) priority = 'baixa';
-                        else if (priority.includes('média')) priority = 'media';
-                        else if (priority.includes('alta')) priority = 'alta';
                     }
                 }
                 
-                // Extrair serviço
-                let service = cells[4]?.textContent.trim() || '';
-                // Mapear nome do serviço para chave
-                const serviceMap = {
-                    'Consultoria em TI': 'consultoria_TI',
-                    'Desenvolvimento de Software': 'desenvolvimento',
-                    'Manutenção de Equipamentos': 'manutencao_equipamentos',
-                    'Treinamento Corporativo': 'treinamento_corporativo'
-                };
-                service = serviceMap[service] || service.toLowerCase().replace(/\s+/g, '_');
+                // Extrair serviço do data attribute (usa ID do serviço)
+                let service = row.dataset.service || '';
+                if (!service) {
+                    // Fallback: tentar extrair do texto e mapear
+                    const serviceText = cells[4]?.textContent.trim() || '';
+                    const serviceMap = {
+                        'Consultoria em TI': 'consultoria_TI',
+                        'Desenvolvimento de Software': 'desenvolvimento',
+                        'Manutenção de Equipamentos': 'manutencao_equipamentos',
+                        'Treinamento Corporativo': 'treinamento_corporativo'
+                    };
+                    service = serviceMap[serviceText] || serviceText.toLowerCase().replace(/\s+/g, '_');
+                }
+                
+                // Extrair tipo do data attribute
+                const tipo = row.dataset.tipo || '';
                 
                 // Converter data de dd/mm/yyyy para yyyy-mm-dd
                 const parseDate = (dateStr) => {
@@ -141,6 +141,7 @@ class RelatoriosOptimized {
                     status: status.toLowerCase(),
                     statusDisplay: cells[6]?.textContent.trim() || '',
                     priority: priority,
+                    tipo: tipo.toLowerCase(),
                     dataCriacao: parseDate(cells[8]?.textContent.trim() || ''),
                     dataPagamento: parseDate(cells[9]?.textContent.trim() || ''),
                 });
@@ -207,6 +208,16 @@ class RelatoriosOptimized {
                 document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
                 this.currentFilters.status = e.target.dataset.status;
+                this.debouncedApplyFilters();
+            });
+        });
+
+        // Filtros de tipo com debounce
+        document.querySelectorAll('.type-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                this.currentFilters.tipo = e.target.dataset.type;
                 this.debouncedApplyFilters();
             });
         });
@@ -353,6 +364,15 @@ class RelatoriosOptimized {
                 }
             }
 
+            // Filtro de tipo
+            if (this.currentFilters.tipo !== 'all') {
+                const itemTipo = (item.tipo || '').toLowerCase();
+                const filterTipo = (this.currentFilters.tipo || '').toLowerCase();
+                if (itemTipo !== filterTipo) {
+                    return false;
+                }
+            }
+
             // Filtro de data
             if (this.currentFilters.dateFrom && item.dataCriacao) {
                 const itemDate = new Date(item.dataCriacao);
@@ -412,6 +432,7 @@ class RelatoriosOptimized {
     clearFilters() {
         this.currentFilters = {
             status: 'all',
+            tipo: 'all',
             dateFrom: '',
             dateTo: '',
             service: '',
@@ -422,6 +443,9 @@ class RelatoriosOptimized {
         // Resetar UI
         document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelector('[data-status="all"]')?.classList.add('active');
+        
+        document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector('[data-type="all"]')?.classList.add('active');
         
         const dateFrom = document.getElementById('dateFrom');
         const dateTo = document.getElementById('dateTo');
@@ -483,13 +507,34 @@ class RelatoriosOptimized {
         
         pageData.forEach(item => {
             const row = document.createElement('tr');
+            // Adicionar data attributes para filtros
+            row.setAttribute('data-status', item.status || '');
+            row.setAttribute('data-priority', item.priority || '');
+            row.setAttribute('data-service', item.service || '');
+            row.setAttribute('data-tipo', item.tipo || '');
+            row.setAttribute('data-id', item.id || '');
             row.innerHTML = this.getRowHTML(item);
             fragment.appendChild(row);
         });
 
         // Limpar e adicionar todas as linhas de uma vez
         tbody.innerHTML = '';
-        tbody.appendChild(fragment);
+        
+        // Se não houver dados filtrados, mostrar mensagem de estado vazio
+        if (pageData.length === 0) {
+            const emptyRow = document.createElement('tr');
+            emptyRow.className = 'empty-state';
+            emptyRow.innerHTML = `
+                <td colspan="10" style="text-align: center; padding: 3rem;">
+                    <i class="fas fa-inbox" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+                    <p style="color: #999; font-size: 1.1rem;">Nenhuma solicitação encontrada com os filtros aplicados</p>
+                    <p style="color: #ccc; font-size: 0.9rem;">Tente ajustar os filtros para ver mais resultados</p>
+                </td>
+            `;
+            tbody.appendChild(emptyRow);
+        } else {
+            tbody.appendChild(fragment);
+        }
 
         this.updatePagination();
         this.updateTableInfo();
@@ -515,9 +560,6 @@ class RelatoriosOptimized {
             <td class="actions-cell">
                 <button class="btn-action btn-view" onclick="relatoriosOptimized.showDetails('${item.id}')" title="Ver detalhes">
                     <i class="fas fa-eye"></i>
-                </button>
-                <button class="btn-action btn-edit" onclick="relatoriosOptimized.editItem('${item.id}')" title="Editar">
-                    <i class="fas fa-edit"></i>
                 </button>
             </td>
         `;
@@ -867,7 +909,164 @@ class RelatoriosOptimized {
     }
 
     exportToPDF() {
-        console.log('Exportar para PDF');
+        try {
+            // Verificar se jsPDF está disponível
+            if (typeof window.jspdf === 'undefined') {
+                alert('Biblioteca jsPDF não carregada. Por favor, recarregue a página.');
+                console.error('jsPDF não encontrado');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape', 'mm', 'a4');
+
+            // Cores e estilos
+            const primaryColor = [255, 203, 87]; // #FFCB57
+            const darkColor = [84, 67, 80]; // #544350
+            const lightGray = [245, 245, 245];
+            
+            // Título do relatório
+            doc.setFillColor(...primaryColor);
+            doc.rect(10, 10, 277, 15, 'F');
+            doc.setTextColor(28, 28, 28);
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Relatórios Financeiros', 148.5, 20, { align: 'center' });
+            
+            // Data de geração
+            doc.setFontSize(10);
+            doc.setTextColor(84, 67, 80);
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('pt-BR', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            doc.text(`Gerado em: ${dateStr}`, 148.5, 32, { align: 'center' });
+
+            // Headers da tabela
+            const headers = ['ID', 'Título', 'Solicitante', 'Recebedor', 'Serviço', 'Valor', 'Status', 'Prioridade', 'Criação', 'Pagamento'];
+            const colWidths = [20, 40, 30, 30, 30, 25, 20, 20, 25, 25];
+            
+            let startY = 40;
+            let currentY = startY;
+            
+            // Definir altura da linha
+            const lineHeight = 8;
+            
+            // Adicionar cabeçalhos
+            doc.setFillColor(...primaryColor);
+            doc.rect(10, currentY, 277, lineHeight, 'F');
+            doc.setTextColor(28, 28, 28);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            
+            let currentX = 10;
+            headers.forEach((header, index) => {
+                doc.text(header, currentX + 2, currentY + 5);
+                currentX += colWidths[index];
+            });
+            
+            currentY += lineHeight;
+            
+            // Adicionar linhas de dados
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            
+            // Pegar dados da tabela HTML
+            const table = document.getElementById('reportsTable');
+            const rows = table.querySelectorAll('tbody tr:not(.empty-state)');
+            
+            rows.forEach((row, rowIndex) => {
+                // Verificar se precisa de nova página
+                if (currentY > 180) {
+                    doc.addPage('landscape', 'a4');
+                    currentY = 10;
+                    
+                    // Re-impressão do cabeçalho
+                    doc.setFillColor(...primaryColor);
+                    doc.rect(10, currentY, 277, lineHeight, 'F');
+                    doc.setTextColor(28, 28, 28);
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'bold');
+                    
+                    let headerX = 10;
+                    headers.forEach((header, index) => {
+                        doc.text(header, headerX + 2, currentY + 5);
+                        headerX += colWidths[index];
+                    });
+                    
+                    currentY += lineHeight;
+                    doc.setFontSize(7);
+                    doc.setFont('helvetica', 'normal');
+                }
+                
+                // Cor de fundo alternada
+                if (rowIndex % 2 === 0) {
+                    doc.setFillColor(...lightGray);
+                    doc.rect(10, currentY, 277, lineHeight, 'F');
+                }
+                
+                // Dados da linha
+                const cells = row.querySelectorAll('td');
+                let cellX = 10;
+                
+                cells.forEach((cell, cellIndex) => {
+                    if (cell.classList.contains('actions-cell')) {
+                        return; // Pular célula de ações
+                    }
+                    
+                    let cellValue = cell.textContent.trim();
+                    
+                    // Extrair texto dos badges
+                    const statusBadge = cell.querySelector('.status-badge');
+                    const priorityBadge = cell.querySelector('.priority-badge');
+                    if (statusBadge) {
+                        cellValue = statusBadge.textContent.trim();
+                    } else if (priorityBadge) {
+                        cellValue = priorityBadge.textContent.trim();
+                    }
+                    
+                    // Truncar texto muito longo
+                    const maxLength = headers[cellIndex].length * 2;
+                    if (cellValue.length > maxLength) {
+                        cellValue = cellValue.substring(0, maxLength - 3) + '...';
+                    }
+                    
+                    doc.setTextColor(84, 67, 80);
+                    doc.text(cellValue, cellX + 2, currentY + 5);
+                    cellX += colWidths[cellIndex];
+                });
+                
+                currentY += lineHeight;
+            });
+            
+            // Rodapé
+            const finalY = currentY + 5;
+            doc.setDrawColor(...darkColor);
+            doc.setLineWidth(0.5);
+            doc.line(10, finalY, 287, finalY);
+            
+            doc.setTextColor(84, 67, 80);
+            doc.setFontSize(8);
+            doc.text(`Total de solicitações: ${rows.length}`, 10, finalY + 8);
+            doc.text('Sistema de Gestão Financeira - Attend Finance', 148.5, finalY + 8, { align: 'center' });
+            doc.text('Página ' + doc.internal.getCurrentPageInfo().pageNumber, 280, finalY + 8, { align: 'right' });
+            
+            // Salvar PDF
+            const dateStrFile = now.toISOString().split('T')[0];
+            const fileName = `relatorios_financeiros_${dateStrFile}.pdf`;
+            doc.save(fileName);
+            
+            // Mostrar mensagem de sucesso
+            this.showNotification('Arquivo PDF exportado com sucesso!', 'success');
+            
+        } catch (error) {
+            console.error('Erro ao exportar para PDF:', error);
+            alert('Erro ao exportar para PDF: ' + error.message);
+        }
     }
 
     exportToCSV() {

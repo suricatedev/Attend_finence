@@ -1,10 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attend Finance - Login</title>
-    <link rel="stylesheet" href="../../static/css/login.css">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 
@@ -21,7 +22,7 @@
                 <form class="form" method="POST" action="{% url 'login'%}">
                     {% csrf_token %}
                     <div class="logo">
-                        <img src="/static/img/logo.png" alt="Logo" class="logo-img">
+                        <img src="{% static 'img/logo.png' %}" alt="Logo" class="logo-img">
                     </div>
                     <h1 class="header">Bem-vindo de volta</h1>
                     <p class="subtitle">Por favor, insira seus dados.</p>
@@ -68,7 +69,6 @@
             var isVideo = /\.(mp4|webm|ogg)$/i.test(chosen);
             var videoEl = document.getElementById('bgVideo');
             if (isVideo) {
-                document.body.style.background = '';
                 if (videoEl) {
                     videoEl.src = '/static/img/' + chosen;
                     videoEl.style.display = 'block';
@@ -82,7 +82,7 @@
                     videoEl.load();
                     videoEl.style.display = 'none';
                 }
-                document.body.style.background = "url('/static/img/" + chosen + "') center/cover no-repeat";
+                document.body.style.background = "url('/static/img/" + chosen + "') center/cover no-repeat !important";
             }
         });
         try { localStorage.setItem('loginBgIndex', String(nextIndex)); } catch (e) {}

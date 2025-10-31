@@ -80,6 +80,24 @@
                 </div>
 
                 <div class="filter-group">
+                    <label>Tipo</label>
+                    <div class="status-filters">
+                        <button class="type-btn active" data-type="all">
+                            <i class="fas fa-list"></i>
+                            Todos
+                        </button>
+                        <button class="type-btn" data-type="casual">
+                            <i class="fas fa-file-invoice"></i>
+                            Casual
+                        </button>
+                        <button class="type-btn" data-type="em_rota">
+                            <i class="fas fa-route"></i>
+                            Em Rota
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filter-group">
                     <label>Período</label>
                     <div class="date-range">
                         <input type="date" id="dateFrom" class="date-input">
@@ -92,10 +110,11 @@
                     <label>Serviço</label>
                     <select id="serviceFilter" class="select-input">
                         <option value="">Todos os serviços</option>
-                        <option value="consultoria_TI">Consultoria em TI</option>
-                        <option value="desenvolvimento">Desenvolvimento de Software</option>
-                        <option value="manutencao_equipamentos">Manutenção de Equipamentos</option>
-                        <option value="treinamento_corporativo">Treinamento Corporativo</option>
+                        {% for servico in servicos_disponiveis %}
+                        <option value="{{ servico.id }}">{{ servico.nome }}</option>
+                        {% empty %}
+                        <option value="" disabled>Nenhum serviço disponível</option>
+                        {% endfor %}
                     </select>
                 </div>
 
@@ -234,13 +253,12 @@
                         <th class="sortable" data-column="dataPagamento">
                             Pagamento <i class="fas fa-sort"></i>
                         </th>
-                        <th class="actions-header">Ações</th>
                     </tr>
                 </thead>
                 <tbody id="reportsTableBody">
                     {% for solicitacao in solicitacoes %}
-                    <tr data-id="{{ solicitacao.id }}" data-status="{{ solicitacao.status }}">
-                        <td>{{ solicitacao.id }}</td>
+                    <tr data-id="{{ solicitacao.id }}" data-status="{{ solicitacao.status }}" data-priority="{{ solicitacao.prioridade }}" data-service="{% if solicitacao.servico %}{{ solicitacao.servico.id }}{% endif %}" data-tipo="{{ solicitacao.tipo }}">
+                        <td>{{ solicitacao.ticket }}</td>
                         <td title="{{ solicitacao.titulo }}">{{ solicitacao.titulo }}</td>
                         <td>{{ solicitacao.nome_solicitante }}</td>
                         <td>{{ solicitacao.nome_do_recebedor }}</td>
@@ -258,18 +276,10 @@
                         </td>
                         <td>{{ solicitacao.data_de_criacao|date:"d/m/Y" }}</td>
                         <td>{{ solicitacao.data_de_pagamento|date:"d/m/Y" }}</td>
-                        <td class="actions-cell">
-                            <button class="btn-action btn-view" data-solicitacao-id="{{ solicitacao.id }}" data-action="view" title="Ver detalhes">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn-action btn-edit" data-solicitacao-id="{{ solicitacao.id }}" data-action="edit" title="Editar">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </td>
                     </tr>
                     {% empty %}
                     <tr class="empty-state">
-                        <td colspan="11" style="text-align: center; padding: 3rem;">
+                        <td colspan="10" style="text-align: center; padding: 3rem;">
                             <i class="fas fa-inbox" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
                             <p style="color: #999; font-size: 1.1rem;">Nenhuma solicitação encontrada</p>
                             <p style="color: #ccc; font-size: 0.9rem;">Crie uma nova solicitação para começar</p>
@@ -314,5 +324,6 @@
 {% endblock %}
 
 {% block extra_js %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="{% static 'js/relatorios-optimized.js' %}" defer></script>
 {% endblock %}

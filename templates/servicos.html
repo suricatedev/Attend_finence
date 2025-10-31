@@ -36,24 +36,6 @@
                     <!-- Filtros -->
                     <div class="services-filters">
                         <div class="filter-group">
-                            <label for="categoryFilter">
-                                <i class="fas fa-filter"></i>
-                                Categoria
-                            </label>
-                            <select id="categoryFilter">
-                                <option value="all">Todas as categorias</option>
-                                <option value="consultoria">Consultoria</option>
-                                <option value="desenvolvimento">Desenvolvimento</option>
-                                <option value="manutencao">Manutenção</option>
-                                <option value="treinamento">Treinamento</option>
-                                <option value="suporte">Suporte</option>
-                                <option value="infraestrutura">Infraestrutura</option>
-                                <option value="marketing">Marketing</option>
-                                <option value="outros">Outros</option>
-                            </select>
-                        </div>
-                        
-                        <div class="filter-group">
                             <label for="statusFilter">
                                 <i class="fas fa-toggle-on"></i>
                                 Status
@@ -108,26 +90,6 @@
                         </div>
                         
                         <div class="services-list" id="servicesList">
-                            <!-- Cabeçalho das colunas (apenas em modo lista) -->
-                            <div class="list-columns-header" id="listColumnsHeader">
-                                <div class="column-header">
-                                    <i class="fas fa-tag"></i>
-                                    <span>Serviço</span>
-                                </div>
-                                <div class="column-header">
-                                    <i class="fas fa-folder"></i>
-                                    <span>Categoria</span>
-                                </div>
-                                <div class="column-header">
-                                    <i class="fas fa-toggle-on"></i>
-                                    <span>Status</span>
-                                </div>
-                                <div class="column-header">
-                                    <i class="fas fa-cogs"></i>
-                                    <span>Ações</span>
-                                </div>
-                            </div>
-                            
                             <!-- Lista de serviços em modo lista -->
                             <div class="services-list-view" id="servicesListView">
                                 {% if servicos %}

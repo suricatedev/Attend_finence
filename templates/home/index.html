@@ -49,7 +49,7 @@
             {% for solicitacao in solicitacoes_pendentes %}
             <div class="card card-status-pending" draggable="true" data-card-id="{{ solicitacao.id }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}">
                 <div class="card-header">
-                    <span class="priority {{ solicitacao.prioridade|lower }}">{{ solicitacao.prioridade|title }}</span>
+                    <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                 </div>
                 <div class="card-body">
                     <h3 class="card-title">{{ solicitacao.titulo }}</h3>
@@ -131,7 +131,7 @@
             {% for solicitacao in solicitacoes_recusados %}
             <div class="card card-status-rejected" draggable="true" data-card-id="{{ solicitacao.id }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}">
                 <div class="card-header">
-                    <span class="priority {{ solicitacao.prioridade|lower }}">{{ solicitacao.prioridade|title }}</span>
+                    <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                 </div>
                 <div class="card-body">
                     <h3 class="card-title">{{ solicitacao.titulo }}</h3>
@@ -213,7 +213,7 @@
             {% for solicitacao in solicitacoes_aprovado %}
             <div class="card card-status-approved" draggable="true" data-card-id="{{ solicitacao.id }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}">
                 <div class="card-header">
-                    <span class="priority {{ solicitacao.prioridade|lower }}">{{ solicitacao.prioridade|title }}</span>
+                    <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                 </div>
                 <div class="card-body">
                     <h3 class="card-title">{{ solicitacao.titulo }}</h3>
@@ -295,7 +295,7 @@
             {% for solicitacao in solicitacoes_concluido %}
             <div class="card card-status-completed" draggable="true" data-card-id="{{ solicitacao.id }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}">
                 <div class="card-header">
-                    <span class="priority {{ solicitacao.prioridade|lower }}">{{ solicitacao.prioridade|title }}</span>
+                    <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                 </div>
                 <div class="card-body">
                     <h3 class="card-title">{{ solicitacao.titulo }}</h3>

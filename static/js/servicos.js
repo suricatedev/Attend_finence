@@ -55,23 +55,30 @@ function switchView(view) {
     // Mostrar/ocultar as visualizações apropriadas
     const listView = document.getElementById('servicesListView');
     const gridView = document.getElementById('servicesGridView');
-    const listColumnsHeader = document.getElementById('listColumnsHeader');
     
     if (listView && gridView) {
         if (view === 'list') {
             listView.style.display = 'block';
             gridView.style.display = 'none';
-            if (listColumnsHeader) {
-                listColumnsHeader.style.display = 'grid';
-            }
         } else {
             listView.style.display = 'none';
             gridView.style.display = 'grid';
-            if (listColumnsHeader) {
-                listColumnsHeader.style.display = 'none';
-            }
         }
     }
+    
+    // Reaplicar filtros quando mudar de visualização
+    // Isso garante que os filtros sejam mantidos ao alternar entre lista e grid
+    setTimeout(() => {
+        if (typeof applyServiceFilters === 'function') {
+            const statusFilter = document.getElementById('statusFilter');
+            const searchInput = document.getElementById('searchFilter');
+            // Reaplicar filtros se houver algum ativo
+            if ((statusFilter && statusFilter.value !== 'all') || 
+                (searchInput && searchInput.value.trim() !== '')) {
+                applyServiceFilters();
+            }
+        }
+    }, 100);
     
     // Salvar preferência no localStorage
     localStorage.setItem('servicesView', view);
@@ -662,42 +669,218 @@ function updateStats() {
     const totalServicesEl = document.getElementById('totalServices');
     const activeServicesEl = document.getElementById('activeServices');
     
-    // Contar serviços do HTML
-    const serviceItems = document.querySelectorAll('.service-item, .service-card');
-    const activeItems = document.querySelectorAll('.service-status.active');
+    // Contar serviços visíveis do HTML (não ocultos por filtros)
+    const allServiceItems = document.querySelectorAll('.service-item, .service-card');
+    const visibleServiceItems = Array.from(allServiceItems).filter(item => {
+        return item.style.display !== 'none' && window.getComputedStyle(item).display !== 'none';
+    });
+    
+    // Contar apenas os ativos visíveis
+    const visibleActiveItems = Array.from(visibleServiceItems).filter(item => {
+        const statusEl = item.querySelector('.service-status');
+        return statusEl && statusEl.classList.contains('active');
+    });
     
     if (totalServicesEl) {
-        totalServicesEl.textContent = serviceItems.length;
+        totalServicesEl.textContent = visibleServiceItems.length;
     }
     
     if (activeServicesEl) {
-        activeServicesEl.textContent = activeItems.length;
+        activeServicesEl.textContent = visibleActiveItems.length;
+    }
+}
+
+// Variável global para a função de aplicar filtros
+let applyFiltersFunction = null;
+
+// Função para aplicar filtros (tornada global para ser chamada de outros lugares)
+function applyServiceFilters() {
+    const statusFilter = document.getElementById('statusFilter');
+    const searchInput = document.getElementById('searchFilter');
+    const statusValue = statusFilter ? statusFilter.value : 'all';
+    const searchValue = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    
+    // Buscar todos os itens de serviço (tanto em modo lista quanto grid)
+    const listItems = document.querySelectorAll('#servicesListView .service-item');
+    const gridItems = document.querySelectorAll('#servicesGridView .service-card');
+    const allItems = [...listItems, ...gridItems];
+    
+    let visibleCount = 0;
+    
+    allItems.forEach(item => {
+        let shouldShow = true;
+        
+        // Filtro por status
+        if (statusValue !== 'all') {
+            const statusEl = item.querySelector('.service-status');
+            const isActive = statusEl ? statusEl.classList.contains('active') : false;
+            
+            if (statusValue === 'active' && !isActive) {
+                shouldShow = false;
+            } else if (statusValue === 'inactive' && isActive) {
+                shouldShow = false;
+            }
+        }
+        
+        // Filtro por busca (nome ou descrição)
+        if (shouldShow && searchValue) {
+            const nameEl = item.querySelector('.service-name, h3');
+            const descEl = item.querySelector('.service-description, p');
+            
+            const name = nameEl ? nameEl.textContent.toLowerCase() : '';
+            const description = descEl ? descEl.textContent.toLowerCase() : '';
+            
+            if (!name.includes(searchValue) && !description.includes(searchValue)) {
+                shouldShow = false;
+            }
+        }
+        
+        // Mostrar ou ocultar item baseado na visualização atual
+        if (shouldShow) {
+            // Verificar se o item pertence à visualização atual
+            const isInListView = item.closest('#servicesListView');
+            const isInGridView = item.closest('#servicesGridView');
+            
+            if (currentView === 'list' && isInListView) {
+                item.style.display = '';
+                visibleCount++;
+            } else if (currentView === 'grid' && isInGridView) {
+                item.style.display = '';
+                visibleCount++;
+            } else {
+                // Se não está na visualização atual, ocultar
+                item.style.display = 'none';
+            }
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    // Mostrar mensagem se não houver resultados
+    showFilterResults(visibleCount, allItems.length);
+    
+    // Atualizar estatísticas
+    updateStats();
+}
+
+// Função para mostrar resultado dos filtros
+function showFilterResults(visible, total) {
+    // Remover mensagem anterior se existir
+    const existingMessage = document.getElementById('filterResultsMessage');
+    if (existingMessage) {
+        existingMessage.remove();
+    }
+    
+    // Se houver itens filtrados, mostrar mensagem
+    if (visible === 0 && total > 0) {
+        const message = document.createElement('div');
+        message.id = 'filterResultsMessage';
+        message.className = 'no-results';
+        message.innerHTML = `
+            <i class="fas fa-search"></i>
+            <h3>Nenhum serviço encontrado</h3>
+            <p>Nenhum serviço corresponde aos filtros aplicados. Tente ajustar os critérios de busca.</p>
+        `;
+        
+        // Adicionar mensagem ao container apropriado
+        const listView = document.getElementById('servicesListView');
+        const gridView = document.getElementById('servicesGridView');
+        
+        if (currentView === 'list' && listView) {
+            listView.appendChild(message);
+        } else if (currentView === 'grid' && gridView) {
+            gridView.appendChild(message);
+        }
     }
 }
 
 // Função para configurar filtros
 function setupFilters() {
-    // Filtros serão implementados no backend
     const applyFiltersBtn = document.getElementById('applyFilters');
     const clearFiltersBtn = document.getElementById('clearFilters');
     const searchInput = document.getElementById('searchFilter');
+    const statusFilter = document.getElementById('statusFilter');
     
-    if (applyFiltersBtn) {
-        applyFiltersBtn.addEventListener('click', () => {
-            showNotification('Filtros serão implementados no backend', 'info');
+    // Salvar referência da função globalmente
+    applyFiltersFunction = applyServiceFilters;
+    
+    // Função para aplicar filtros
+    function applyFilters() {
+        applyServiceFilters();
+    }
+    
+    // Função para limpar filtros
+    function clearFilters() {
+        if (statusFilter) {
+            statusFilter.value = 'all';
+        }
+        if (searchInput) {
+            searchInput.value = '';
+        }
+        
+        // Mostrar todos os itens novamente
+        const listItems = document.querySelectorAll('#servicesListView .service-item');
+        const gridItems = document.querySelectorAll('#servicesGridView .service-card');
+        const allItems = [...listItems, ...gridItems];
+        
+        allItems.forEach(item => {
+            item.style.display = '';
         });
+        
+        // Remover mensagem de resultados
+        const existingMessage = document.getElementById('filterResultsMessage');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+        
+        // Remover mensagem de "nenhum resultado" se existir
+        const noResults = document.querySelectorAll('.no-results');
+        noResults.forEach(el => {
+            // Não remover se for o no-results original da lista vazia
+            if (el.id !== 'filterResultsMessage' && !el.closest('.services-list-view, .services-grid-view')) {
+                // Este é o no-results original, manter
+            } else if (el.id === 'filterResultsMessage') {
+                el.remove();
+            }
+        });
+        
+        // Atualizar estatísticas
+        updateStats();
+        
+        showNotification('Filtros limpos!', 'success');
+    }
+    
+    // Event listeners
+    if (applyFiltersBtn) {
+        applyFiltersBtn.addEventListener('click', applyFilters);
     }
     
     if (clearFiltersBtn) {
-        clearFiltersBtn.addEventListener('click', () => {
-            showNotification('Filtros serão implementados no backend', 'info');
+        clearFiltersBtn.addEventListener('click', clearFilters);
+    }
+    
+    // Busca em tempo real com debounce
+    if (searchInput) {
+        let searchTimeout;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                applyFilters();
+            }, 300); // Aguardar 300ms após parar de digitar
+        });
+        
+        // Aplicar filtro ao pressionar Enter
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyFilters();
+            }
         });
     }
     
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            showNotification('Busca será implementada no backend', 'info');
-        });
+    // Aplicar filtro quando o status mudar
+    if (statusFilter) {
+        statusFilter.addEventListener('change', applyFilters);
     }
 }
 
@@ -735,5 +918,4 @@ function addNoResultsStyles() {
 }
 
 // Adicionar estilos quando a página carregar
-document.addEventListener('DOMContentLoaded', addNoResultsStyles);
 document.addEventListener('DOMContentLoaded', addNoResultsStyles);

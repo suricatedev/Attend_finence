@@ -1,745 +1,873 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Cadastro de Usuário - Sistema Financeiro{% endblock %}
+{% block title %}Gerenciar Usuários - Sistema Financeiro{% endblock %}
 
 {% block extra_css %}
-    {% load static %}
-    <style>
-        /* Estilos modernos e profissionais para gerenciar usuários */
-        .main-content {
-            padding: 2rem;
-            overflow-y: auto;
-            min-height: calc(100vh - 80px);
-            background: 
-                linear-gradient(135deg, #f8fafc 0%, #e8edf0 50%, #f1f5f9 100%),
-                radial-gradient(circle at 20% 50%, rgba(255, 203, 87, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(84, 67, 80, 0.06) 0%, transparent 50%),
-                repeating-linear-gradient(
-                    45deg,
-                    transparent,
-                    transparent 35px,
-                    rgba(255, 255, 255, 0.03) 35px,
-                    rgba(255, 255, 255, 0.03) 70px
-                );
-            background-size: 100% 100%, 100% 100%, 100% 100%, 100px 100px;
-            position: relative;
+<style>
+    /* Estilos modernos para gerenciamento de usuários */
+    .main-content {
+        padding: 2rem;
+        overflow-y: auto;
+        min-height: calc(100vh - 80px);
+        background: linear-gradient(135deg, #f8fafc 0%, #e8edf0 100%);
+    }
+    
+    .users-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+        overflow: hidden;
+    }
+    
+    .users-header {
+        background: linear-gradient(135deg, #FFCB57 0%, #FFC21C 100%);
+        color: #1C1C1C;
+        padding: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .header-title h1 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .header-stats {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+    }
+    
+    .stat-item {
+        text-align: center;
+    }
+    
+    .stat-number {
+        display: block;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1C1C1C;
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        color: rgba(28, 28, 28, 0.7);
+        font-weight: 600;
+    }
+    
+    .btn-add-user {
+        background: #1C1C1C;
+        color: white;
+        border: none;
+        padding: 0.875rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-add-user:hover {
+        background: #2d2d2d;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .users-content {
+        padding: 2rem;
+    }
+    
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+    }
+    
+    .users-table thead {
+        background: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .users-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #1C1C1C;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .users-table td {
+        padding: 1.25rem 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        color: #475569;
+    }
+    
+    .users-table tbody tr:hover {
+        background: #f8fafc;
+    }
+    
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #FFCB57 0%, #FFC21C 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #1C1C1C;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+    
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .user-details {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .user-name {
+        font-weight: 600;
+        color: #1C1C1C;
+        margin-bottom: 0.25rem;
+    }
+    
+    .user-email {
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+    
+    .group-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .group-badge {
+        background: linear-gradient(135deg, #FFCB57 0%, #FFC21C 100%);
+        color: #1C1C1C;
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .group-badge.administrador {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+    }
+    
+    .group-badge.financeiro {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+    
+    .group-badge.solicitante {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+    }
+    
+    .user-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-action {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-edit {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .btn-edit:hover {
+        background: #2563eb;
+        transform: translateY(-2px);
+    }
+    
+    .btn-delete {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .btn-delete:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+    }
+    
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+    }
+    
+    .modal.show {
+        display: flex;
+    }
+    
+    .modal-content {
+        background: white;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
         }
-        
-        .main-content::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FFCB57' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-            opacity: 0.4;
-            pointer-events: none;
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
-        
-        .registration-container {
-            max-width: 750px;
-            margin: 2rem auto;
-            background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
-            border-radius: 20px;
-            box-shadow: 
-                0 20px 60px rgba(0, 0, 0, 0.12),
-                0 8px 24px rgba(0, 0, 0, 0.08),
-                inset 0 1px 0 rgba(255, 255, 255, 0.9);
-            overflow: hidden;
-            animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            border: 1px solid rgba(255, 255, 255, 0.8);
-        }
-        
-        .registration-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at top left, rgba(255, 203, 87, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at bottom right, rgba(84, 67, 80, 0.03) 0%, transparent 50%),
-                repeating-linear-gradient(
-                    0deg,
-                    transparent,
-                    transparent 2px,
-                    rgba(255, 203, 87, 0.01) 2px,
-                    rgba(255, 203, 87, 0.01) 4px
-                );
-            pointer-events: none;
-            z-index: 0;
-        }
-        
-        .registration-container > * {
-            position: relative;
-            z-index: 1;
-        }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px) scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-        
-        .registration-header {
-            background: linear-gradient(135deg, #FFCB57 0%, #FFC21C 100%);
-            color: #1C1C1C;
-            padding: 2.5rem 2rem;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .registration-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-            animation: pulse 8s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.3; }
-            50% { transform: scale(1.1); opacity: 0.5; }
-        }
-        
-        .header-content {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .header-title {
-            flex: 1;
-        }
-        
-        .registration-header h1 {
-            margin: 0 0 0.5rem 0;
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1C1C1C;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        
-        .registration-header h1 i {
-            font-size: 1.8rem;
-            color: #1C1C1C;
-        }
-        
-        .registration-header p {
-            margin: 0;
-            color: rgba(28, 28, 28, 0.7);
-            font-size: 0.95rem;
-            font-weight: 500;
-        }
-        
-        .header-icon {
-            width: 80px;
-            height: 80px;
-            background: rgba(255, 255, 255, 0.25);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            color: #1C1C1C;
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        .user-form {
-            padding: 2.5rem;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, #ffffff 100%);
-            position: relative;
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #FFCB57 0%, #FFC21C 100%);
+        padding: 1.5rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 20px 20px 0 0;
+    }
+    
+    .modal-header h2 {
+        margin: 0;
+        color: #1C1C1C;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #1C1C1C;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .close-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .modal-body {
+        padding: 2rem;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 0;
+    }
+    
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+    
+    .form-group label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+        color: #1C1C1C;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .form-group label i {
+        color: #FFCB57;
+    }
+    
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 0.875rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: #f8fafc;
+        color: #1C1C1C;
+        box-sizing: border-box;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #FFCB57;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(255, 203, 87, 0.15);
+    }
+    
+    .permissions-section {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 2px solid #f1f5f9;
+    }
+    
+    .permissions-section h3 {
+        margin: 0 0 1rem 0;
+        color: #1C1C1C;
+        font-size: 1.1rem;
+    }
+    
+    .permissions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .permission-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .permission-item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    
+    .permission-item label {
+        cursor: pointer;
+        font-weight: 500;
+        text-transform: none;
+        letter-spacing: 0;
+        margin: 0;
+    }
+    
+    .modal-footer {
+        padding: 1.5rem 2rem;
+        border-top: 2px solid #f1f5f9;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #FFCB57 0%, #FFC21C 100%);
+        color: #1C1C1C;
+        border: none;
+        padding: 0.875rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 203, 87, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #e2e8f0;
+        color: #475569;
+        border: none;
+        padding: 0.875rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-secondary:hover {
+        background: #cbd5e1;
+    }
+    
+    .messages-container {
+        padding: 1rem 2rem;
+        background: white;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .message {
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .message.success {
+        background: #f0fdf4;
+        color: #065f46;
+        border-left: 4px solid #10b981;
+    }
+    
+    .message.error {
+        background: #fef2f2;
+        color: #991b1b;
+        border-left: 4px solid #ef4444;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #64748b;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .users-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
         }
         
         .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
+            grid-template-columns: 1fr;
         }
         
-        .form-group {
-            margin-bottom: 0;
-            position: relative;
-        }
-        
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
-        
-        .form-group label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.75rem;
-            font-weight: 600;
-            color: #1C1C1C;
+        .users-table {
             font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
         
-        .form-group label i {
-            font-size: 0.9rem;
-            color: #FFCB57;
+        .user-actions {
+            flex-direction: column;
         }
-        
-        .input-wrapper {
-            position: relative;
-        }
-        
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 1rem 1rem 1rem 2.75rem;
-            border: 2px solid #e8edf0;
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: #f8fafc;
-            color: #1C1C1C;
-            box-sizing: border-box;
-            font-weight: 500;
-        }
-        
-        .form-group input::placeholder {
-            color: #94a3b8;
-            font-weight: 400;
-        }
-        
-        .form-group select {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23544350' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            padding-right: 2.5rem;
-        }
-        
-        .form-group select option {
-            background: white;
-            color: #1C1C1C;
-            padding: 0.75rem;
-        }
-        
-        .input-icon {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
-            font-size: 1rem;
-            pointer-events: none;
-            transition: color 0.3s ease;
-            z-index: 1;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #FFCB57;
-            background: #ffffff;
-            box-shadow: 0 0 0 4px rgba(255, 203, 87, 0.15), 0 4px 12px rgba(255, 203, 87, 0.1);
-            transform: translateY(-2px);
-        }
-        
-        .form-group input:focus + .input-icon,
-        .form-group:focus-within .input-icon {
-            color: #FFCB57;
-        }
-        
-        .form-group input:hover:not(:focus),
-        .form-group select:hover:not(:focus) {
-            border-color: #cbd5e1;
-            background: #ffffff;
-        }
-        
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-            margin-top: 2.5rem;
-            padding-top: 2rem;
-            border-top: 2px solid #f1f5f9;
-        }
-        
-        .btn-register {
-            background: linear-gradient(135deg, #FFCB57 0%, #FFC21C 100%);
-            color: #1C1C1C;
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            min-width: 160px;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(255, 203, 87, 0.3);
-        }
-        
-        .btn-register:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(255, 203, 87, 0.4);
-            background: linear-gradient(135deg, #FFC21C 0%, #FFCB57 100%);
-        }
-        
-        .btn-register:active {
-            transform: translateY(-1px);
-        }
-        
-        .btn-cancel {
-            background: #ffffff;
-            color: #64748b;
-            border: 2px solid #e2e8f0;
-            padding: 1rem 2rem;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            min-width: 160px;
-            justify-content: center;
-        }
-        
-        .btn-cancel:hover {
-            background: #f8fafc;
-            border-color: #cbd5e1;
-            color: #475569;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-        
-        .form-group input.error,
-        .form-group select.error {
-            border-color: #ef4444;
-            background: #fef2f2;
-            animation: shake 0.5s ease;
-        }
-        
-        .form-group input.success,
-        .form-group select.success {
-            border-color: #10b981;
-            background: #f0fdf4;
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-            20%, 40%, 60%, 80% { transform: translateX(4px); }
-        }
-        
-        .messages-container {
-            padding: 1.5rem 2.5rem;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%);
-            border-bottom: 1px solid rgba(241, 245, 249, 0.8);
-            position: relative;
-        }
-        
-        .message {
-            padding: 1rem 1.25rem;
-            margin-bottom: 0.75rem;
-            border-radius: 12px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            animation: slideDown 0.3s ease;
-            border-left: 4px solid;
-        }
-        
-        .message.error {
-            background: #fef2f2;
-            color: #991b1b;
-            border-left-color: #ef4444;
-        }
-        
-        .message.success {
-            background: #f0fdf4;
-            color: #065f46;
-            border-left-color: #10b981;
-        }
-        
-        .message.warning {
-            background: #fffbeb;
-            color: #92400e;
-            border-left-color: #f59e0b;
-        }
-        
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 1rem;
-            }
-            
-            .registration-container {
-                margin: 1rem auto;
-                border-radius: 16px;
-            }
-            
-            .registration-header {
-                padding: 1.5rem;
-            }
-            
-            .header-content {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-            
-            .header-icon {
-                width: 60px;
-                height: 60px;
-                font-size: 2rem;
-            }
-            
-            .registration-header h1 {
-                font-size: 1.5rem;
-            }
-            
-            .user-form {
-                padding: 1.5rem;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 1.25rem;
-            }
-            
-            .form-actions {
-                flex-direction: column;
-                gap: 0.75rem;
-            }
-            
-            .btn-register,
-            .btn-cancel {
-                width: 100%;
-                min-width: auto;
-            }
-        }
-    </style>
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="registration-container">
-    <div class="registration-header">
-        <div class="header-content">
-            <div class="header-title">
-                <h1>
-                    <i class="fas fa-user-plus"></i>
-                    Sistema de Cadastro
-                </h1>
-                <p>Formulário de registro de usuários</p>
-            </div>
-            <div class="header-icon">
+<div class="users-container">
+    <div class="users-header">
+        <div class="header-title">
+            <h1>
                 <i class="fas fa-users"></i>
+                Gerenciar Usuários
+            </h1>
+        </div>
+        <div class="header-stats">
+            <div class="stat-item">
+                <span class="stat-number">{{ total_usuarios }}</span>
+                <span class="stat-label">Total</span>
             </div>
+            <button class="btn-add-user" id="addUserBtn">
+                <i class="fas fa-plus"></i>
+                Novo Usuário
+            </button>
         </div>
     </div>
     
-    <!-- Mensagens de sucesso/erro -->
+    <!-- Mensagens -->
     {% if messages %}
         <div class="messages-container">
             {% for message in messages %}
                 <div class="message {{ message.tags }}">
-                    <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-check-circle{% endif %}"></i>
+                    <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %}"></i>
                     <span>{{ message }}</span>
                 </div>
             {% endfor %}
         </div>
     {% endif %}
     
-    <div class="user-form">
-        <form id="userRegistrationForm" method="POST" action="{% url 'cadastrar_usuario' %}">
-            {% csrf_token %}
-            
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="name_user">
-                        <i class="fas fa-user"></i>
-                        Nome de usuário
-                    </label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-user input-icon"></i>
-                        <input type="text" id="name_user" name="name_user" placeholder="Digite o nome de usuário" required>
-                    </div>
-                </div>
+    <div class="users-content">
+        {% if usuarios_data %}
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Usuário</th>
+                        <th>E-mail</th>
+                        <th>Grupos / Permissões</th>
+                        <th>Data de Cadastro</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in usuarios_data %}
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar">
+                                    {{ item.usuario.first_name|first|upper }}{{ item.usuario.last_name|first|upper }}
+                                </div>
+                                <div class="user-details">
+                                    <div class="user-name">
+                                        {{ item.usuario.first_name }} {{ item.usuario.last_name }}
+                                    </div>
+                                    <div class="user-email">{{ item.usuario.username }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ item.usuario.email|default:"-" }}</td>
+                        <td>
+                            <div class="group-badges">
+                                {% for grupo in item.grupos %}
+                                    <span class="group-badge {{ grupo.name|lower }}">{{ grupo.name }}</span>
+                                {% empty %}
+                                    <span style="color: #94a3b8;">Sem grupo</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td>{{ item.usuario.date_joined|date:"d/m/Y" }}</td>
+                        <td>
+                            <div class="user-actions">
+                                <button class="btn-action btn-edit" onclick="editUser({{ item.usuario.id }})">
+                                    <i class="fas fa-edit"></i>
+                                    Editar
+                                </button>
+                                {% if item.usuario.id != user.id %}
+                                <button class="btn-action btn-delete" onclick="deleteUser({{ item.usuario.id }}, '{{ item.usuario.username }}')">
+                                    <i class="fas fa-trash"></i>
+                                    Excluir
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-users"></i>
+                <h3>Nenhum usuário cadastrado</h3>
+                <p>Clique em "Novo Usuário" para começar.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal para Criar/Editar Usuário -->
+<div class="modal" id="userModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">
+                <i class="fas fa-user-plus"></i>
+                Novo Usuário
+            </h2>
+            <button class="close-btn" id="closeModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="userForm" method="POST">
+                {% csrf_token %}
+                <input type="hidden" id="userId" name="user_id">
                 
-                <div class="form-group">
-                    <label for="password">
-                        <i class="fas fa-lock"></i>
-                        Senha
-                    </label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-lock input-icon"></i>
-                        <input type="password" id="password" name="password" placeholder="Digite a senha" required>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="username">
+                            <i class="fas fa-user"></i>
+                            Nome de usuário
+                        </label>
+                        <input type="text" id="username" name="name_user" required placeholder="Digite o nome de usuário">
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="first_name">
-                        <i class="fas fa-signature"></i>
-                        Primeiro nome
-                    </label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-user input-icon"></i>
-                        <input type="text" id="first_name" name="first_name" placeholder="Digite o primeiro nome" required>
+                    
+                    <div class="form-group" id="passwordGroup">
+                        <label for="password">
+                            <i class="fas fa-lock"></i>
+                            Senha
+                        </label>
+                        <input type="password" id="password" name="password" placeholder="Digite a senha (mínimo 6 caracteres)">
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="last_name">
-                        <i class="fas fa-signature"></i>
-                        Último nome
-                    </label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-user input-icon"></i>
-                        <input type="text" id="last_name" name="last_name" placeholder="Digite o último nome" required>
+                    
+                    <div class="form-group">
+                        <label for="first_name">
+                            <i class="fas fa-signature"></i>
+                            Primeiro nome
+                        </label>
+                        <input type="text" id="first_name" name="first_name" required placeholder="Digite o primeiro nome">
                     </div>
-                </div>
-                
-                <div class="form-group full-width">
-                    <label for="email">
-                        <i class="fas fa-envelope"></i>
-                        E-mail
-                    </label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-envelope input-icon"></i>
-                        <input type="email" id="email" name="email" placeholder="Digite o e-mail (exemplo@email.com)" required>
+                    
+                    <div class="form-group">
+                        <label for="last_name">
+                            <i class="fas fa-signature"></i>
+                            Último nome
+                        </label>
+                        <input type="text" id="last_name" name="last_name" required placeholder="Digite o último nome">
                     </div>
-                </div>
-                
-                <div class="form-group full-width">
-                    <label for="funcao">
-                        <i class="fas fa-briefcase"></i>
-                        Função
-                    </label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-briefcase input-icon"></i>
-                        <select id="funcao" name="funcao" required>
-                            <option value="">Selecione uma função</option>
+                    
+                    <div class="form-group full-width">
+                        <label for="email">
+                            <i class="fas fa-envelope"></i>
+                            E-mail
+                        </label>
+                        <input type="email" id="email" name="email" required placeholder="Digite o e-mail">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label for="grupos">
+                            <i class="fas fa-users-cog"></i>
+                            Grupos / Permissões
+                        </label>
+                        <select id="grupos" name="grupos" multiple style="min-height: 100px; padding: 0.5rem;">
                             {% for grupo in grupos %}
                                 <option value="{{ grupo.name }}">{{ grupo.name }}</option>
                             {% empty %}
-                                <option value="financeiro">Financeiro</option>
-                                <option value="solicitante">Solicitante</option>
+                                <option value="" disabled>Nenhum grupo disponível</option>
                             {% endfor %}
                         </select>
+                        <small style="display: block; margin-top: 0.5rem; color: #64748b; font-size: 0.875rem;">
+                            <i class="fas fa-info-circle"></i> Mantenha Ctrl (ou Cmd no Mac) pressionado para selecionar múltiplos grupos
+                        </small>
                     </div>
                 </div>
-            </div>
-            
-            <div class="form-actions">
-                <button type="button" class="btn-cancel" id="cancelUserRegistration">
-                    <i class="fas fa-times"></i>
-                    Cancelar
-                </button>
-                <button type="submit" class="btn-register">
-                    <i class="fas fa-user-plus"></i>
-                    Cadastrar Usuário
-                </button>
-            </div>
-        </form>
+                
+                <div class="permissions-section">
+                    <h3>
+                        <i class="fas fa-shield-alt"></i>
+                        Informações sobre Permissões
+                    </h3>
+                    <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                        <p style="margin: 0; color: #64748b; font-size: 0.875rem; line-height: 1.6;">
+                            <strong style="color: #1C1C1C;">Como funcionam as permissões:</strong><br>
+                            As permissões são definidas através dos <strong>Grupos</strong>. Cada grupo tem permissões específicas:
+                        </p>
+                        <ul style="margin: 0.75rem 0 0 1.5rem; color: #64748b; font-size: 0.875rem; line-height: 1.8;">
+                            <li><strong>Administrador:</strong> Acesso total ao sistema</li>
+                            <li><strong>Financeiro:</strong> Ver dashboard, relatórios, gerenciar serviços, alterar status de solicitações</li>
+                            <li><strong>Solicitante:</strong> Criar solicitações, ver relatórios próprios</li>
+                        </ul>
+                        <p style="margin: 0.75rem 0 0 0; color: #64748b; font-size: 0.875rem; line-height: 1.6;">
+                            <i class="fas fa-info-circle" style="color: #FFCB57;"></i> 
+                            Um usuário pode pertencer a múltiplos grupos, acumulando todas as permissões desses grupos.
+                        </p>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" id="cancelBtn">
+                <i class="fas fa-times"></i>
+                Cancelar
+            </button>
+            <button type="submit" form="userForm" class="btn-primary" id="saveBtn">
+                <i class="fas fa-save"></i>
+                Salvar
+            </button>
+        </div>
     </div>
 </div>
+
+<!-- Formulário oculto para deletar -->
+<form id="deleteForm" method="POST" style="display: none;">
+    {% csrf_token %}
+</form>
 {% endblock %}
 
 {% block extra_js %}
-    <script>
-        // Funcionalidades específicas para a página de cadastro
-        document.addEventListener('DOMContentLoaded', function() {
-            // Adicionar animação aos campos
-            const inputs = document.querySelectorAll('input, select');
-            inputs.forEach((input, index) => {
-                input.style.animationDelay = `${index * 0.1}s`;
-                input.style.animation = 'fadeInUp 0.6s ease forwards';
+<script>
+    const modal = document.getElementById('userModal');
+    const closeBtn = document.getElementById('closeModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const addUserBtn = document.getElementById('addUserBtn');
+    const userForm = document.getElementById('userForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const passwordGroup = document.getElementById('passwordGroup');
+    const passwordInput = document.getElementById('password');
+    
+    // Abrir modal para criar usuário
+    addUserBtn.addEventListener('click', () => {
+        openModal('create');
+    });
+    
+    // Fechar modal
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    
+    // Fechar ao clicar fora
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+    
+    function openModal(mode, userId = null) {
+        userForm.reset();
+        userForm.removeAttribute('action');
+        
+        if (mode === 'create') {
+            modalTitle.innerHTML = '<i class="fas fa-user-plus"></i> Novo Usuário';
+            userForm.action = '{% url "cadastrar_usuario" %}';
+            document.getElementById('userId').value = '';
+            document.getElementById('username').readOnly = false;
+            document.getElementById('username').required = true;
+            passwordInput.required = true;
+            passwordInput.placeholder = 'Digite a senha (mínimo 6 caracteres)';
+            passwordGroup.style.display = 'block';
+            
+            // Limpar seleção de grupos
+            const gruposSelect = document.getElementById('grupos');
+            Array.from(gruposSelect.options).forEach(option => {
+                option.selected = false;
             });
+        } else if (mode === 'edit') {
+            modalTitle.innerHTML = '<i class="fas fa-user-edit"></i> Editar Usuário';
+            passwordInput.required = false;
+            passwordInput.value = '';
+            passwordInput.placeholder = 'Deixe em branco para manter a senha atual';
+            passwordGroup.style.display = 'block';
             
-            // Validação em tempo real
-            const form = document.getElementById('userRegistrationForm');
-            const inputs2 = form.querySelectorAll('input, select');
-            
-            inputs2.forEach(input => {
-                input.addEventListener('blur', function() {
-                    validateField(this);
-                });
-                
-                input.addEventListener('input', function() {
-                    if (this.classList.contains('error')) {
-                        validateField(this);
+            // Carregar dados do usuário
+            fetch(`/usuarios/get-user/${userId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('userId').value = data.user.id;
+                        document.getElementById('username').value = data.user.username;
+                        document.getElementById('username').readOnly = true;
+                        document.getElementById('username').required = false;
+                        document.getElementById('first_name').value = data.user.first_name || '';
+                        document.getElementById('last_name').value = data.user.last_name || '';
+                        document.getElementById('email').value = data.user.email || '';
+                        
+                        // Selecionar grupos
+                        const gruposSelect = document.getElementById('grupos');
+                        // Limpar todas as seleções primeiro
+                        Array.from(gruposSelect.options).forEach(option => {
+                            option.selected = false;
+                        });
+                        // Selecionar grupos do usuário
+                        data.user.grupos.forEach(grupo => {
+                            Array.from(gruposSelect.options).forEach(option => {
+                                if (option.value === grupo) {
+                                    option.selected = true;
+                                }
+                            });
+                        });
+                        
+                        userForm.action = `/usuarios/editar-usuario/${userId}/`;
+                    } else {
+                        alert('Erro ao carregar dados do usuário: ' + (data.error || 'Erro desconhecido'));
                     }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar usuário:', error);
+                    alert('Erro ao carregar dados do usuário. Tente novamente.');
                 });
-            });
-            
-            // Validação do formulário
-            form.addEventListener('submit', function(e) {
-                let isValid = true;
-                inputs2.forEach(input => {
-                    if (!validateField(input)) {
-                        isValid = false;
-                    }
-                });
-                
-                // Se não estiver válido, impedir envio
-                if (!isValid) {
-                    e.preventDefault();
-                    return false;
-                }
-                
-                // Se estiver válido, permitir envio normal ao servidor
-                // Não chamar showSuccessMessage() aqui, pois o servidor vai redirecionar
-            });
+        }
+        
+        modal.classList.add('show');
+    }
+    
+    function closeModal() {
+        modal.classList.remove('show');
+        userForm.reset();
+        document.getElementById('username').readOnly = false;
+        document.getElementById('username').required = true;
+        passwordInput.required = true;
+        passwordInput.placeholder = 'Digite a senha';
+        
+        // Limpar seleção de grupos
+        const gruposSelect = document.getElementById('grupos');
+        Array.from(gruposSelect.options).forEach(option => {
+            option.selected = false;
         });
+    }
+    
+    function editUser(userId) {
+        openModal('edit', userId);
+    }
+    
+    function deleteUser(userId, username) {
+        if (confirm(`Tem certeza que deseja deletar o usuário "${username}"? Esta ação não pode ser desfeita.`)) {
+            const form = document.getElementById('deleteForm');
+            form.action = `/usuarios/deletar-usuario/${userId}/`;
+            form.submit();
+        }
+    }
+    
+    // Validação do formulário
+    userForm.addEventListener('submit', function(e) {
+        const userId = document.getElementById('userId').value;
+        const password = passwordInput.value.trim();
+        const isCreate = !userId;
         
-        function validateField(field) {
-            const value = field.value.trim();
-            const fieldName = field.name;
-            let isValid = true;
-            let errorMessage = '';
-            
-            // Remover classes de erro anteriores
-            field.classList.remove('error', 'success');
-            
-            if (!value) {
-                errorMessage = 'Este campo é obrigatório';
-                isValid = false;
-            } else {
-                switch(fieldName) {
-                    case 'email':
-                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                        if (!emailRegex.test(value)) {
-                            errorMessage = 'E-mail inválido';
-                            isValid = false;
-                        }
-                        break;
-                    case 'password':
-                        if (value.length < 6) {
-                            errorMessage = 'Senha deve ter pelo menos 6 caracteres';
-                            isValid = false;
-                        }
-                        break;
-                    case 'name_user':
-                        if (value.length < 3) {
-                            errorMessage = 'Nome de usuário deve ter pelo menos 3 caracteres';
-                            isValid = false;
-                        }
-                        break;
-                }
-            }
-            
-            if (!isValid) {
-                field.classList.add('error');
-                showFieldError(field, errorMessage);
-            } else {
-                field.classList.add('success');
-                hideFieldError(field);
-            }
-            
-            return isValid;
+        // Validar senha na criação
+        if (isCreate && (!password || password.length < 6)) {
+            e.preventDefault();
+            alert('A senha é obrigatória na criação e deve ter pelo menos 6 caracteres.');
+            passwordInput.focus();
+            return false;
         }
         
-        function showFieldError(field, message) {
-            hideFieldError(field);
-            
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'field-error';
-            errorDiv.textContent = message;
-            errorDiv.style.cssText = `
-                color: #ff4757;
-                font-size: 0.85rem;
-                margin-top: 0.5rem;
-                animation: slideDown 0.3s ease;
-                font-weight: 500;
-                background: rgba(255, 71, 87, 0.1);
-                padding: 0.5rem 0.75rem;
-                border-radius: 6px;
-                border-left: 3px solid #ff4757;
-                backdrop-filter: blur(10px);
-                box-shadow: 0 2px 4px rgba(255, 71, 87, 0.1);
-            `;
-            
-            field.parentNode.appendChild(errorDiv);
+        // Validar senha na edição (se fornecida)
+        if (!isCreate && password && password.length < 6) {
+            e.preventDefault();
+            alert('A senha deve ter pelo menos 6 caracteres.');
+            passwordInput.focus();
+            return false;
         }
         
-        function hideFieldError(field) {
-            const existingError = field.parentNode.querySelector('.field-error');
-            if (existingError) {
-                existingError.remove();
-            }
+        // Validar que pelo menos um grupo foi selecionado
+        const gruposSelect = document.getElementById('grupos');
+        const gruposSelecionados = Array.from(gruposSelect.selectedOptions);
+        if (gruposSelecionados.length === 0) {
+            e.preventDefault();
+            alert('Selecione pelo menos um grupo/permissão para o usuário.');
+            gruposSelect.focus();
+            return false;
         }
-        
-        function showSuccessMessage() {
-            const successDiv = document.createElement('div');
-            successDiv.className = 'success-message';
-            successDiv.innerHTML = `
-                <div style="
-                    background: rgba(76, 175, 80, 0.2);
-                    backdrop-filter: blur(10px);
-                    border: 1px solid rgba(76, 175, 80, 0.3);
-                    color: #4CAF50;
-                    padding: 1rem 2rem;
-                    border-radius: 12px;
-                    text-align: center;
-                    margin: 1rem 0;
-                    animation: slideUp 0.6s ease;
-                    box-shadow: 0 10px 25px rgba(76, 175, 80, 0.2);
-                ">
-                    <i class="fas fa-check-circle" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block; color: #4CAF50;"></i>
-                    <h3 style="margin: 0 0 0.5rem 0; color: #4CAF50;">Usuário Cadastrado com Sucesso!</h3>
-                    <p style="margin: 0; opacity: 0.9; color: rgba(255, 255, 255, 0.8);">Todos os dados foram validados e estão prontos para envio.</p>
-                </div>
-            `;
-            
-            const form = document.getElementById('userRegistrationForm');
-            form.parentNode.insertBefore(successDiv, form);
-            
-            // Scroll para a mensagem
-            successDiv.scrollIntoView({ behavior: 'smooth' });
-            
-            // Limpar formulário após 3 segundos
-            setTimeout(() => {
-                form.reset();
-                successDiv.remove();
-                // Remover classes de validação
-                const inputs = form.querySelectorAll('input, select');
-                inputs.forEach(input => {
-                    input.classList.remove('error', 'success');
-                });
-            }, 3000);
-        }
-    </script>
+    });
+    
+    // Atualizar permissões baseado nos grupos selecionados (opcional)
+    document.getElementById('grupos').addEventListener('change', function() {
+        // Esta função pode ser expandida para mostrar automaticamente
+        // quais permissões estão ativas baseado nos grupos selecionados
+        const gruposSelecionados = Array.from(this.selectedOptions).map(opt => opt.value.toLowerCase());
+        console.log('Grupos selecionados:', gruposSelecionados);
+    });
+</script>
 {% endblock %}

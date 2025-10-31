@@ -357,19 +357,41 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.priority-alta {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+}
+
+.priority-media {
+    background: #fef3c7;
+    color: #d97706;
+    border: 1px solid #fde68a;
+}
+
+.priority-baixa {
+    background: #d1fae5;
+    color: #059669;
+    border: 1px solid #6ee7b7;
+}
+
+/* Compatibilidade com nomes antigos */
 .priority.high {
-    background: #FFCB57;
-    color: #1C1C1C;
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
 }
 
 .priority.medium {
-    background: #544350;
-    color: #F4F7F5;
+    background: #fef3c7;
+    color: #d97706;
+    border: 1px solid #fde68a;
 }
 
 .priority.low {
-    background: rgba(255, 203, 87, 0.3);
-    color: #1C1C1C;
+    background: #d1fae5;
+    color: #059669;
+    border: 1px solid #6ee7b7;
 }
 
 .card-body {
