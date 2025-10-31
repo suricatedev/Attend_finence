@@ -1,125 +1,13 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+{% extends 'base.html' %}
+{% load static %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Serviços - Sistema de Gestão Financeira</title>
-    <link rel="stylesheet" href="/static/css/base.css">
-    <link rel="stylesheet" href="/static/css/servicos.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-</head>
+{% block title %}Serviços - Sistema de Gestão Financeira{% endblock %}
 
-<body>
-    <div class="app-container">
-        <!-- Overlay para mobile -->
-        <div class="sidebar-overlay" id="sidebarOverlay"></div>
-        
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Attend Finance</span>
-                </div>
-            </div>
-            
-            <nav class="sidebar-nav">
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a href="/" class="nav-link">
-                            <i class="fas fa-th-large"></i>
-                            <span>Solicitações</span>
-                        </a>
-                    </li>
-                    
-                    <li class="nav-item">
-                        <a href="/relatorios" class="nav-link">
-                            <i class="fas fa-chart-bar"></i>
-                            <span>Relatórios</span>
-                        </a>
-                    </li>
-                    
-                    <li class="nav-item">
-                        <a href="/dashboard" class="nav-link">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboards</span>
-                        </a>
-                    </li>
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/servicos.css' %}">
+{% endblock %}
 
-                    <li class="nav-item active">
-                        <a href="/servicos" class="nav-link">
-                            <i class="fas fa-cog"></i>
-                            <span>Serviços</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-            
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Header -->
-            <header class="header">
-                <div class="header-left">
-                    <div class="logo-section">
-                    </div>
-                </div>
-                
-                <div class="header-center">
-                    <div class="view-tabs">
-                        <a href="/" class="tab-btn">
-                            <i class="fas fa-th"></i>
-                            Cards
-                        </a>
-                        <a href="/relatorios" class="tab-btn">
-                            <i class="fas fa-chart-bar"></i>
-                            Relatórios
-                        </a>
-                        <a href="/dashboard" class="tab-btn">
-                            <i class="fas fa-tachometer-alt"></i>
-                            Dashboards
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="header-right">
-                    <div class="user-actions">
-                        <button class="action-btn" title="Notificações">
-                            <i class="fas fa-bell"></i>
-                        </button>
-                        <div class="settings-dropdown">
-                            <button class="action-btn" title="Configurações" id="settingsBtn">
-                                <i class="fas fa-cog"></i>
-                            </button>
-                            <div class="settings-menu" id="settingsMenu">
-                                <a href="#" class="settings-item">
-                                    <i class="fas fa-user-plus"></i>
-                                    <span>Gerenciar membros</span>
-                                </a>
-                                <a href="#" class="settings-item">
-                                    <i class="fas fa-users"></i>
-                                    <span>Equipe</span>
-                                </a>
-                                <a href="#" class="settings-item">
-                                    <i class="fas fa-shield-alt"></i>
-                                    <span>Permissões</span>
-                                </a>
-                                <a href="#" class="settings-item">
-                                    <i class="fas fa-cog"></i>
-                                    <span>Configurações gerais</span>
-                                </a>
-                            </div>
-                        </div>
-                        <div class="user-avatar">
-                            <img src="https://via.placeholder.com/32" alt="Usuário">
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Serviços View -->
+{% block content %}   
             <div class="services-view" id="servicesView">
                 <div class="services-container">
                     <div class="services-header">
@@ -130,11 +18,11 @@
                         <div class="header-actions">
                             <div class="services-stats">
                                 <div class="stat-item">
-                                    <span class="stat-number" id="totalServices">0</span>
+                                    <span class="stat-number" id="totalServices">{{ total_servicos }}</span>
                                     <span class="stat-label">Total</span>
                                 </div>
                                 <div class="stat-item">
-                                    <span class="stat-number" id="activeServices">0</span>
+                                    <span class="stat-number" id="activeServices">{{ servicos_ativos }}</span>
                                     <span class="stat-label">Ativos</span>
                                 </div>
                             </div>
@@ -242,90 +130,94 @@
                             
                             <!-- Lista de serviços em modo lista -->
                             <div class="services-list-view" id="servicesListView">
-                                {% for service in services %}
-                                <div class="service-item" data-service-id="{{ service.id }}">
-                                    <div class="service-icon">
-                                        <i class="{{ service.icon }}"></i>
-                                    </div>
-                                    <div class="service-info">
-                                        <div class="service-main-info">
-                                            <div class="service-name" title="{{ service.name }}">{{ service.name }}</div>
-                                            <div class="service-description" title="{{ service.description }}">
-                                                {% if service.description|length > 60 %}
-                                                    {{ service.description|slice:":60" }}...
-                                                {% else %}
-                                                    {{ service.description }}
-                                                {% endif %}
+                                {% if servicos %}
+                                    {% for servico in servicos %}
+                                    <div class="service-item" data-service-id="{{ servico.id }}">
+                                        <div class="service-icon">
+                                            <i class="fas fa-cog"></i>
+                                        </div>
+                                        <div class="service-info">
+                                            <div class="service-main-info">
+                                                <div class="service-name" title="{{ servico.nome }}">{{ servico.nome }}</div>
+                                                <div class="service-description" title="{{ servico.descricao|default:'' }}">
+                                                    {% if servico.descricao %}
+                                                        {% if servico.descricao|length > 60 %}
+                                                            {{ servico.descricao|slice:":60" }}...
+                                                        {% else %}
+                                                            {{ servico.descricao }}
+                                                        {% endif %}
+                                                    {% else %}
+                                                        Sem descrição
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="service-status {% if servico.ativo %}active{% else %}inactive{% endif %}" 
+                                                 title="{% if servico.ativo %}Serviço ativo{% else %}Serviço inativo{% endif %}">
+                                                {% if servico.ativo %}Ativo{% else %}Inativo{% endif %}
+                                            </div>
+                                            <div class="service-actions">
+                                                <button class="btn-edit" onclick="editService({{ servico.id }})" title="Editar serviço">
+                                                    <i class="fas fa-edit"></i>
+                                                    Editar
+                                                </button>
+                                                <button class="btn-delete" onclick="deleteService({{ servico.id }})" title="Excluir serviço">
+                                                    <i class="fas fa-trash"></i>
+                                                    Excluir
+                                                </button>
                                             </div>
                                         </div>
-                                        <div class="service-category" title="{{ service.category|title }}">{{ service.category|title }}</div>
-                                        <div class="service-status {% if service.active %}active{% else %}inactive{% endif %}" 
-                                             title="{% if service.active %}Serviço ativo{% else %}Serviço inativo{% endif %}">
-                                            {% if service.active %}Ativo{% else %}Inativo{% endif %}
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="no-results">
+                                        <i class="fas fa-search"></i>
+                                        <h3>Nenhum serviço encontrado</h3>
+                                        <p>Adicione um novo serviço para começar.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Grid de serviços em modo grid -->
+                            <div class="services-grid-view" id="servicesGridView" style="display: none;">
+                                {% if servicos %}
+                                    {% for servico in servicos %}
+                                    <div class="service-card" data-service-id="{{ servico.id }}">
+                                        <div class="service-icon">
+                                            <i class="fas fa-cog"></i>
+                                        </div>
+                                        <div class="service-info">
+                                            <h3>{{ servico.nome }}</h3>
+                                            <p>{{ servico.descricao|default:"Sem descrição" }}</p>
+                                            <div class="service-meta">
+                                                <span class="service-status {% if servico.ativo %}active{% else %}inactive{% endif %}">
+                                                    {% if servico.ativo %}Ativo{% else %}Inativo{% endif %}
+                                                </span>
+                                            </div>
                                         </div>
                                         <div class="service-actions">
-                                            <button class="btn-edit" onclick="editService({{ service.id }})" title="Editar serviço">
+                                            <button class="btn-edit" onclick="editService({{ servico.id }})" title="Editar serviço">
                                                 <i class="fas fa-edit"></i>
                                                 Editar
                                             </button>
-                                            <button class="btn-delete" onclick="deleteService({{ service.id }})" title="Excluir serviço">
+                                            <button class="btn-delete" onclick="deleteService({{ servico.id }})" title="Excluir serviço">
                                                 <i class="fas fa-trash"></i>
                                                 Excluir
                                             </button>
                                         </div>
                                     </div>
-                                </div>
-                                {% empty %}
-                                <div class="no-results">
-                                    <i class="fas fa-search"></i>
-                                    <h3>Nenhum serviço encontrado</h3>
-                                    <p>Adicione um novo serviço para começar.</p>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            
-                            <!-- Grid de serviços em modo grid -->
-                            <div class="services-grid-view" id="servicesGridView" style="display: none;">
-                                {% for service in services %}
-                                <div class="service-card" data-service-id="{{ service.id }}">
-                                    <div class="service-icon">
-                                        <i class="{{ service.icon }}"></i>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="no-results">
+                                        <i class="fas fa-search"></i>
+                                        <h3>Nenhum serviço encontrado</h3>
+                                        <p>Adicione um novo serviço para começar.</p>
                                     </div>
-                                    <div class="service-info">
-                                        <h3>{{ service.name }}</h3>
-                                        <p>{{ service.description }}</p>
-                                        <div class="service-meta">
-                                            <span class="service-category">{{ service.category|title }}</span>
-                                            <span class="service-status {% if service.active %}active{% else %}inactive{% endif %}">
-                                                {% if service.active %}Ativo{% else %}Inativo{% endif %}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="service-actions">
-                                        <button class="btn-edit" onclick="editService({{ service.id }})" title="Editar serviço">
-                                            <i class="fas fa-edit"></i>
-                                            Editar
-                                        </button>
-                                        <button class="btn-delete" onclick="deleteService({{ service.id }})" title="Excluir serviço">
-                                            <i class="fas fa-trash"></i>
-                                            Excluir
-                                        </button>
-                                    </div>
-                                </div>
-                                {% empty %}
-                                <div class="no-results">
-                                    <i class="fas fa-search"></i>
-                                    <h3>Nenhum serviço encontrado</h3>
-                                    <p>Adicione um novo serviço para começar.</p>
-                                </div>
-                                {% endfor %}
+                                {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
 
 
     <!-- Modal para adicionar serviço -->
@@ -346,7 +238,8 @@
                         </h3>
                         <p>Preencha os dados do serviço que será oferecido pela empresa</p>
                     </div>
-                    <form id="addServiceForm">
+                    <form id="addServiceForm" method="POST" action="{% url 'criar_servico' %}">
+                        {% csrf_token %}
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="serviceName">
@@ -411,7 +304,7 @@
 
 
 
-                    <form id="editServiceForm" method="POST" action="/servicos/editar/">
+                    <form id="editServiceForm">
                         
                         <input type="hidden" id="editServiceId" name="id">
 
@@ -424,24 +317,6 @@
                                 <input type="text" id="editServiceName" name="name" required
                                     placeholder="Ex: Consultoria em TI">
                                 <small class="form-help">Digite um nome claro e descritivo para o serviço</small>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="editServiceCategory">
-                                    <i class="fas fa-folder"></i>
-                                    Categoria
-                                </label>
-                                <select id="editServiceCategory" name="category" required>
-                                    <option value="">Selecione uma categoria</option>
-                                    <option value="consultoria">Consultoria</option>
-                                    <option value="desenvolvimento">Desenvolvimento</option>
-                                    <option value="manutencao">Manutenção</option>
-                                    <option value="treinamento">Treinamento</option>
-                                    <option value="suporte">Suporte</option>
-                                    <option value="infraestrutura">Infraestrutura</option>
-                                    <option value="marketing">Marketing</option>
-                                    <option value="outros">Outros</option>
-                                </select>
                             </div>
                         </div>
                         
@@ -457,26 +332,6 @@
                         </div>
                         
                         <div class="form-row">
-
-                            <!-- 
-                            <div class="form-group">
-                                <label for="editServiceIcon">
-                                    <i class="fas fa-palette"></i>
-                                    Ícone do Serviço
-                                </label>
-                                <select id="editServiceIcon" name="icon" required>
-                                    <option value="">Selecione um ícone</option>
-                                    <option value="fas fa-user-tie">👔 Consultoria</option>
-                                    <option value="fas fa-code">💻 Desenvolvimento</option>
-                                    <option value="fas fa-tools">🔧 Manutenção</option>
-                                    <option value="fas fa-graduation-cap">🎓 Treinamento</option>
-                                    <option value="fas fa-headset">🎧 Suporte</option>
-                                    <option value="fas fa-server">🖥️ Infraestrutura</option>
-                                    <option value="fas fa-bullhorn">📢 Marketing</option>
-                                    <option value="fas fa-ellipsis-h">➕ Outros</option>
-                                </select>
-                            </div> -->
-                            
                             <div class="form-group">
                                 <label for="editServiceActive">
                                     <i class="fas fa-toggle-on"></i>
@@ -526,10 +381,8 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
-
-    <script src="/static/js/app.js"></script>
-    <script src="/static/js/servicos.js"></script>
-</body>
-
-</html>
+{% block extra_js %}
+    <script src="{% static 'js/servicos.js' %}" defer></script>
+{% endblock %}
