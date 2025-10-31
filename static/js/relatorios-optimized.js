@@ -32,16 +32,19 @@ class RelatoriosOptimized {
         this.setupEventListeners();
         this.setDefaultDates();
         
-        // Colapsar filtros por padrão para dar mais espaço à tabela
+        // Filtros visíveis por padrão
         const filtersToggle = document.getElementById('filtersToggle');
         const filtersContent = document.getElementById('filtersContent');
         if (filtersToggle && filtersContent) {
-            filtersToggle.classList.add('collapsed');
-            filtersContent.classList.add('collapsed');
+            // Não colapsar por padrão - deixar visível
+            filtersToggle.classList.remove('collapsed');
+            filtersContent.classList.remove('collapsed');
         }
         
-        this.renderTableOptimized();
-        this.updateStats();
+        // ✅ NÃO renderizar inicialmente - usar dados do Django
+        // Apenas atualizar estatísticas e info
+        this.updateTableInfo();
+        // this.updateStats(); // Deixar as estatísticas do Django
     }
 
     async loadDataAsync() {
@@ -52,23 +55,101 @@ class RelatoriosOptimized {
             // Simular carregamento assíncrono
             await new Promise(resolve => setTimeout(resolve, 100));
             
-            // Carregar dados do localStorage ou gerar dados
-            const savedData = localStorage.getItem('kanbanCards');
-            if (savedData) {
-                this.data = JSON.parse(savedData);
-            } else {
-                this.data = this.generateSampleDataOptimized();
+            // ✅ USAR DADOS REAIS DO DJANGO (da tabela HTML)
+            this.data = this.loadRealDataFromTable();
+            
+            // Se não houver dados na tabela, não gerar mockados
+            if (this.data.length === 0) {
+                console.log('📊 Nenhuma solicitação no banco de dados');
             }
             
             this.filteredData = [...this.data];
             
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
-            this.data = this.generateSampleDataOptimized();
-            this.filteredData = [...this.data];
+            this.data = [];
+            this.filteredData = [];
         } finally {
             this.hideLoadingIndicator();
         }
+    }
+    
+    loadRealDataFromTable() {
+        // Ler dados reais da tabela HTML renderizada pelo Django
+        const rows = document.querySelectorAll('#reportsTableBody tr:not(.empty-state)');
+        const data = [];
+        
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length > 0) {
+                // Extrair status do badge ou dataset
+                let status = row.dataset.status || '';
+                const statusBadge = cells[6]?.querySelector('.status-badge');
+                if (!status && statusBadge) {
+                    // Tentar extrair do class do badge
+                    const statusClass = statusBadge.className.match(/status-(\w+)/);
+                    if (statusClass) {
+                        status = statusClass[1];
+                    }
+                }
+                
+                // Extrair prioridade do badge
+                let priority = '';
+                const priorityBadge = cells[7]?.querySelector('.priority-badge');
+                if (priorityBadge) {
+                    const priorityClass = priorityBadge.className.match(/priority-(\w+)/);
+                    if (priorityClass) {
+                        priority = priorityClass[1].toLowerCase();
+                    } else {
+                        // Fallback: pegar do texto
+                        priority = priorityBadge.textContent.trim().toLowerCase();
+                        // Mapear texto para chave
+                        if (priority.includes('baixa')) priority = 'baixa';
+                        else if (priority.includes('média')) priority = 'media';
+                        else if (priority.includes('alta')) priority = 'alta';
+                    }
+                }
+                
+                // Extrair serviço
+                let service = cells[4]?.textContent.trim() || '';
+                // Mapear nome do serviço para chave
+                const serviceMap = {
+                    'Consultoria em TI': 'consultoria_TI',
+                    'Desenvolvimento de Software': 'desenvolvimento',
+                    'Manutenção de Equipamentos': 'manutencao_equipamentos',
+                    'Treinamento Corporativo': 'treinamento_corporativo'
+                };
+                service = serviceMap[service] || service.toLowerCase().replace(/\s+/g, '_');
+                
+                // Converter data de dd/mm/yyyy para yyyy-mm-dd
+                const parseDate = (dateStr) => {
+                    if (!dateStr) return '';
+                    const parts = dateStr.split('/');
+                    if (parts.length === 3) {
+                        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+                    }
+                    return dateStr;
+                };
+                
+                data.push({
+                    id: cells[0]?.textContent.trim() || '',
+                    title: cells[1]?.textContent.trim() || '',
+                    solicitante: cells[2]?.textContent.trim() || '',
+                    recebedor: cells[3]?.textContent.trim() || '',
+                    service: service,
+                    valor: cells[5]?.textContent.trim() || '',
+                    status: status.toLowerCase(),
+                    statusDisplay: cells[6]?.textContent.trim() || '',
+                    priority: priority,
+                    dataCriacao: parseDate(cells[8]?.textContent.trim() || ''),
+                    dataPagamento: parseDate(cells[9]?.textContent.trim() || ''),
+                });
+            }
+        });
+        
+        console.log(`✅ Carregadas ${data.length} solicitações reais do banco de dados`);
+        console.log('📊 Dados carregados:', data);
+        return data;
     }
 
     generateSampleDataOptimized() {
@@ -236,26 +317,48 @@ class RelatoriosOptimized {
         
         this.filteredData = this.data.filter(item => {
             // Filtro de status
-            if (this.currentFilters.status !== 'all' && item.status !== this.currentFilters.status) {
-                return false;
+            if (this.currentFilters.status !== 'all') {
+                const itemStatus = (item.status || '').toLowerCase();
+                const filterStatus = (this.currentFilters.status || '').toLowerCase();
+                if (itemStatus !== filterStatus) {
+                    return false;
+                }
             }
 
             // Filtro de data
-            if (this.currentFilters.dateFrom && item.dataCriacao < this.currentFilters.dateFrom) {
-                return false;
+            if (this.currentFilters.dateFrom && item.dataCriacao) {
+                const itemDate = new Date(item.dataCriacao);
+                const filterDateFrom = new Date(this.currentFilters.dateFrom);
+                if (isNaN(itemDate.getTime()) || itemDate < filterDateFrom) {
+                    return false;
+                }
             }
-            if (this.currentFilters.dateTo && item.dataCriacao > this.currentFilters.dateTo) {
-                return false;
+            if (this.currentFilters.dateTo && item.dataCriacao) {
+                const itemDate = new Date(item.dataCriacao);
+                const filterDateTo = new Date(this.currentFilters.dateTo);
+                // Adicionar 1 dia para incluir o dia final completo
+                filterDateTo.setHours(23, 59, 59, 999);
+                if (isNaN(itemDate.getTime()) || itemDate > filterDateTo) {
+                    return false;
+                }
             }
 
             // Filtro de serviço
-            if (this.currentFilters.service && item.service !== this.currentFilters.service) {
-                return false;
+            if (this.currentFilters.service && item.service) {
+                const itemService = (item.service || '').toLowerCase().trim();
+                const filterService = (this.currentFilters.service || '').toLowerCase().trim();
+                if (itemService !== filterService) {
+                    return false;
+                }
             }
 
             // Filtro de prioridade
-            if (this.currentFilters.priority && item.priority !== this.currentFilters.priority) {
-                return false;
+            if (this.currentFilters.priority && item.priority) {
+                const itemPriority = (item.priority || '').toLowerCase().trim();
+                const filterPriority = (this.currentFilters.priority || '').toLowerCase().trim();
+                if (itemPriority !== filterPriority) {
+                    return false;
+                }
             }
 
             // Filtro de busca
@@ -375,21 +478,18 @@ class RelatoriosOptimized {
             <td>${item.title}</td>
             <td>${item.solicitante}</td>
             <td>${item.recebedor}</td>
-            <td>${this.getServiceName(item.service)}</td>
+            <td>${item.service}</td>
             <td>${item.valor}</td>
-            <td><span class="status-badge status-${item.status}">${this.getStatusName(item.status)}</span></td>
-            <td><span class="priority-badge priority-${item.priority}">${this.getPriorityName(item.priority)}</span></td>
-            <td>${this.formatDate(item.dataCriacao)}</td>
-            <td>${this.formatDate(item.dataPagamento)}</td>
-            <td>
-                <button class="action-btn view" onclick="relatoriosOptimized.showDetails('${item.id}')" title="Ver detalhes">
+            <td><span class="status-badge status-${item.status}">${item.statusDisplay}</span></td>
+            <td><span class="priority-badge priority-${item.priority}">${item.priority}</span></td>
+            <td>${item.dataCriacao}</td>
+            <td>${item.dataPagamento}</td>
+            <td class="actions-cell">
+                <button class="btn-action btn-view" onclick="relatoriosOptimized.showDetails('${item.id}')" title="Ver detalhes">
                     <i class="fas fa-eye"></i>
                 </button>
-                <button class="action-btn edit" onclick="relatoriosOptimized.editItem('${item.id}')" title="Editar">
+                <button class="btn-action btn-edit" onclick="relatoriosOptimized.editItem('${item.id}')" title="Editar">
                     <i class="fas fa-edit"></i>
-                </button>
-                <button class="action-btn delete" onclick="relatoriosOptimized.deleteItem('${item.id}')" title="Excluir">
-                    <i class="fas fa-trash"></i>
                 </button>
             </td>
         `;
@@ -446,12 +546,16 @@ class RelatoriosOptimized {
     }
 
     updateStats() {
+        // ✅ Atualizar estatísticas baseado nos dados filtrados
+        // Apenas quando filtros são aplicados, não na carga inicial
         const total = this.filteredData.length;
         const aprovadas = this.filteredData.filter(item => item.status === 'aprovado').length;
         const pendentes = this.filteredData.filter(item => item.status === 'pendente').length;
         
         const valorTotal = this.filteredData.reduce((sum, item) => {
-            const valor = parseFloat(item.valor.replace('R$ ', '').replace(',', '.'));
+            // Extrair valor numérico
+            const valorStr = item.valor.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+            const valor = parseFloat(valorStr) || 0;
             return sum + valor;
         }, 0);
 
@@ -460,8 +564,9 @@ class RelatoriosOptimized {
         const aprovadasEl = document.getElementById('aprovadas');
         const pendentesEl = document.getElementById('pendentes');
 
+        // Atualizar apenas se houver filtros aplicados
         if (totalSolicitacoes) totalSolicitacoes.textContent = total;
-        if (valorTotalEl) valorTotalEl.textContent = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
+        if (valorTotalEl) valorTotalEl.textContent = `R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         if (aprovadasEl) aprovadasEl.textContent = aprovadas;
         if (pendentesEl) pendentesEl.textContent = pendentes;
     }
@@ -628,7 +733,109 @@ class RelatoriosOptimized {
     }
 
     exportToExcel() {
-        console.log('Exportar para Excel');
+        try {
+            // Pegar dados diretamente da tabela HTML
+            const table = document.getElementById('reportsTable');
+            if (!table) {
+                alert('Tabela não encontrada!');
+                return;
+            }
+
+            let csvContent = '\uFEFF'; // UTF-8 BOM para Excel
+            const delimiter = ';'; // Usar ponto e vírgula para Excel brasileiro
+            
+            // Pegar cabeçalhos (excluindo coluna de ações)
+            const headers = [];
+            table.querySelectorAll('thead th').forEach(th => {
+                // Pular coluna de ações
+                if (th.classList.contains('actions-header')) {
+                    return;
+                }
+                
+                let text = th.textContent.replace(/\s+/g, ' ').trim();
+                
+                // Remover ícones de ordenação (setas)
+                text = text.replace(/↑|↓/g, '').trim();
+                
+                // Remover espaços extras e quebras de linha
+                text = text.replace(/\s+/g, ' ').trim();
+                
+                // Se contém delimitador, vírgula ou aspas, envolver em aspas
+                if (text.includes(delimiter) || text.includes(',') || text.includes('"') || text.includes('\n')) {
+                    text = '"' + text.replace(/"/g, '""') + '"';
+                }
+                
+                if (text && text.length > 0) {
+                    headers.push(text);
+                }
+            });
+            csvContent += headers.join(delimiter) + '\n';
+
+            // Pegar dados das linhas
+            table.querySelectorAll('tbody tr:not(.empty-state)').forEach(tr => {
+                const row = [];
+                tr.querySelectorAll('td').forEach((td, index) => {
+                    // Se for a coluna de ações, pular
+                    if (td.classList.contains('actions-cell')) {
+                        return;
+                    }
+                    
+                    let cellValue = td.textContent.trim();
+                    
+                    // Remover espaços extras e quebras de linha
+                    cellValue = cellValue.replace(/\s+/g, ' ').trim();
+                    
+                    // Limpar valores de status e prioridade (remover badges)
+                    if (td.querySelector('.status-badge')) {
+                        cellValue = td.querySelector('.status-badge').textContent.trim();
+                    } else if (td.querySelector('.priority-badge')) {
+                        cellValue = td.querySelector('.priority-badge').textContent.trim();
+                    }
+                    
+                    // Para valores monetários, manter formato original
+                    // Não precisa envolver em aspas se não contiver delimitador
+                    
+                    // Se contém delimitador, vírgula, aspas ou quebra de linha, envolver em aspas e escapar aspas
+                    if (cellValue.includes(delimiter) || cellValue.includes(',') || cellValue.includes('"') || cellValue.includes('\n')) {
+                        cellValue = '"' + cellValue.replace(/"/g, '""') + '"';
+                    }
+                    
+                    row.push(cellValue || ''); // Garantir que sempre tenha um valor
+                });
+                
+                // Só adicionar linha se tiver dados (não vazia)
+                if (row.length > 0) {
+                    csvContent += row.join(delimiter) + '\n';
+                }
+            });
+
+            // Criar blob e download
+            // Usar CSV com encoding UTF-8 BOM e ponto e vírgula como delimitador
+            const blob = new Blob([csvContent], { 
+                type: 'text/csv;charset=utf-8;' 
+            });
+            const link = document.createElement('a');
+            const dateStr = new Date().toISOString().split('T')[0];
+            const fileName = `relatorios_financeiros_${dateStr}.csv`;
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            
+            // Limpar após um tempo
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+            }, 100);
+            
+            // Mostrar mensagem de sucesso
+            this.showNotification('Arquivo Excel exportado com sucesso!', 'success');
+            
+        } catch (error) {
+            console.error('Erro ao exportar para Excel:', error);
+            alert('Erro ao exportar para Excel: ' + error.message);
+        }
     }
 
     exportToPDF() {
@@ -695,6 +902,67 @@ class RelatoriosOptimized {
     formatDate(dateString) {
         const date = new Date(dateString);
         return date.toLocaleDateString('pt-BR');
+    }
+
+    showNotification(message, type = 'info') {
+        // Criar elemento de notificação
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10000;
+            font-weight: 500;
+            animation: slideInRight 0.3s ease;
+        `;
+        notification.textContent = message;
+        
+        // Adicionar ao body
+        document.body.appendChild(notification);
+        
+        // Remover após 3 segundos
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 3000);
+        
+        // Adicionar animações CSS se não existirem
+        if (!document.getElementById('notificationStyles')) {
+            const style = document.createElement('style');
+            style.id = 'notificationStyles';
+            style.textContent = `
+                @keyframes slideInRight {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                @keyframes slideOutRight {
+                    from {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
     }
 }
 

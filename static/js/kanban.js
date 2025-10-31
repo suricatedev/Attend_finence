@@ -15,7 +15,22 @@ class KanbanManager {
     }
 
     setupEventListeners() {
-        // Create campaign button
+        // ✅ NÃO controlar o modal se já está sendo controlado pelo base-minimal.js
+        if (window.MODAL_CONTROLLED_BY_BASE) {
+            console.log('🔒 Modal já controlado pelo base.html - pulando configuração do kanban.js');
+            
+            // Apenas configurar o formulário, não os botões de abrir/fechar
+            const createCampaignForm = document.getElementById('createCampaignForm');
+            if (createCampaignForm) {
+                createCampaignForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.createCampaign();
+                });
+            }
+            return;
+        }
+        
+        // Create campaign button (APENAS se não estiver controlado pelo base)
         const createCampaignBtn = document.getElementById('createCampaignBtn');
         if (createCampaignBtn) {
             createCampaignBtn.addEventListener('click', () => {
@@ -23,7 +38,7 @@ class KanbanManager {
             });
         }
 
-        // Close modal buttons
+        // Close modal buttons (APENAS se não estiver controlado pelo base)
         const closeModal = document.getElementById('closeModal');
         const cancelCreate = document.getElementById('cancelCreate');
         
@@ -38,8 +53,12 @@ class KanbanManager {
                 this.hideModal();
             });
         }
-
+        
         // Create campaign form
+        this.setupFormSubmit();
+    }
+    
+    setupFormSubmit() {
         const createCampaignForm = document.getElementById('createCampaignForm');
         if (createCampaignForm) {
             createCampaignForm.addEventListener('submit', (e) => {
@@ -75,8 +94,14 @@ class KanbanManager {
 
     setupDragAndDrop() {
         // Configurar drag and drop para os cards
+        // Apenas Financeiro e Admin podem arrastar cards para mudar status
         document.addEventListener('dragstart', (e) => {
             if (e.target.classList.contains('card')) {
+                // Verificar se o usuário tem permissão para mudar status
+                if (typeof window.USER_CAN_CHANGE_STATUS !== 'undefined' && !window.USER_CAN_CHANGE_STATUS) {
+                    e.preventDefault();
+                    return false;
+                }
                 e.target.classList.add('dragging');
                 e.dataTransfer.effectAllowed = 'move';
                 e.dataTransfer.setData('text/html', e.target.outerHTML);
@@ -111,6 +136,12 @@ class KanbanManager {
 
         document.addEventListener('drop', (e) => {
             e.preventDefault();
+            
+            // Verificar se o usuário tem permissão para mudar status
+            if (typeof window.USER_CAN_CHANGE_STATUS !== 'undefined' && !window.USER_CAN_CHANGE_STATUS) {
+                return false;
+            }
+            
             const columnContent = e.target.closest('.column-content');
             if (columnContent) {
                 columnContent.classList.remove('drag-over');
@@ -127,6 +158,12 @@ class KanbanManager {
     }
 
     setupModal() {
+        // ✅ NÃO configurar se já está sendo controlado pelo base-minimal.js
+        if (window.MODAL_CONTROLLED_BY_BASE) {
+            console.log('🔒 Modal setup pulado - controlado pelo base.html');
+            return;
+        }
+        
         // Configurar modal de criação de solicitação
         const modal = document.getElementById('createCampaignModal');
         if (modal) {
@@ -179,60 +216,54 @@ class KanbanManager {
         if (!form) return;
 
         const formData = new FormData(form);
-        const campaignData = {
-            id: formData.get('id') || `SOL-${Date.now()}`,
-            title: formData.get('title'),
-            solicitante: formData.get('solicitante'),
-            recebedor: formData.get('recebedor'),
-            valor: formData.get('valor'),
-            service: formData.get('service'),
-            description: formData.get('description'),
-            status: formData.get('status') || 'pendente',
-            priority: formData.get('priority'),
-            dataCriacao: formData.get('dataCriacao'),
-            dataPagamento: formData.get('dataPagamento'),
-            tempoCriacao: formData.get('tempoCriacao'),
-            tempoFila: formData.get('tempoFila'),
-            anexos: formData.get('anexos')
-        };
 
         // Validação básica
-        if (!campaignData.title || !campaignData.solicitante || !campaignData.recebedor) {
-            Utils.showNotification('Por favor, preencha todos os campos obrigatórios', 'error');
+        if (!formData.get('title') || !formData.get('solicitante') || !formData.get('recebedor')) {
+            alert('Por favor, preencha todos os campos obrigatórios');
             return;
         }
 
         try {
-            // Simular envio para o servidor
-            const submitBtn = form.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
+            // Botão está FORA do form, buscar no modal-footer
+            const submitBtn = document.querySelector('button[form="createCampaignForm"]');
             
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Criando...';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Criando...';
+            }
 
-            // Em uma implementação real, isso seria uma chamada para a API
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // ✅ ENVIAR DE VERDADE PARA O DJANGO
+            const response = await fetch('/solicitacoes/home/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
 
-            // Adicionar card ao kanban
-            const newCard = {
-                id: this.currentCardId++,
-                ...campaignData,
-                createdAt: new Date()
-            };
-
-            this.cards.push(newCard);
-            this.renderCards();
-            this.saveCards();
-            this.hideModal();
-            Utils.showNotification('Solicitação criada com sucesso!', 'success');
+            if (response.ok) {
+                // Recarregar a página para mostrar a nova solicitação
+                window.location.reload();
+            } else {
+                const error = await response.text();
+                console.error('Erro do servidor:', error);
+                alert('Erro ao criar solicitação. Verifique os dados e tente novamente.');
+                
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Criar Solicitação';
+                }
+            }
 
         } catch (error) {
             console.error('Erro ao criar solicitação:', error);
-            Utils.showNotification('Erro ao criar solicitação', 'error');
-        } finally {
-            const submitBtn = form.querySelector('button[type="submit"]');
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Criar Solicitação';
+            alert('Erro ao criar solicitação');
+            
+            const submitBtn = document.querySelector('button[form="createCampaignForm"]');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Criar Solicitação';
+            }
         }
     }
 
@@ -269,7 +300,8 @@ class KanbanManager {
     createCardElement(card) {
         const cardDiv = document.createElement('div');
         cardDiv.className = `card card-status-${card.status}`;
-        cardDiv.draggable = true;
+        // Permitir drag apenas se o usuário tem permissão
+        cardDiv.draggable = (typeof window.USER_CAN_CHANGE_STATUS !== 'undefined' && window.USER_CAN_CHANGE_STATUS);
         cardDiv.dataset.cardId = card.id;
 
         const priorityClass = this.getPriorityClass(card.priority);
@@ -344,14 +376,58 @@ class KanbanManager {
         const card = this.cards.find(c => c.id == cardId);
         if (card) {
             const newStatus = this.getStatusByColumn(newColumn);
-            card.status = newStatus;
-            card.updatedAt = new Date();
             
-            this.renderCards();
-            this.saveCards();
-            
-            Utils.showNotification('Card movido com sucesso!', 'success');
+            // Enviar requisição para o backend
+            fetch('/solicitacoes/atualizar-status/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    card_id: cardId,
+                    status: newColumn
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    card.status = newStatus;
+                    card.updatedAt = new Date();
+                    
+                    this.renderCards();
+                    this.saveCards();
+                    
+                    // Atualizar contadores após mover
+                    if (typeof updateColumnCounters === 'function') {
+                        updateColumnCounters();
+                    }
+                    
+                    Utils.showNotification('✅ Card movido e salvo com sucesso!', 'success');
+                } else {
+                    Utils.showNotification(`❌ Erro: ${data.message}`, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao atualizar status:', error);
+                Utils.showNotification('❌ Erro ao salvar. Tente novamente.', 'error');
+            });
         }
+    }
+    
+    getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 
     getStatusByColumn(column) {

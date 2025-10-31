@@ -11,10 +11,15 @@ function calculateQueueTime() {
         if (creationTime) {
             const creationDate = new Date(creationTime);
             const now = new Date();
-            const diffMs = now - creationDate;
+            let diffMs = now - creationDate;
+            
+            // ✅ GARANTIR QUE NUNCA SEJA NEGATIVO
+            if (diffMs < 0) {
+                diffMs = 0; // Se a data de criação está no futuro, usar 0
+            }
             
             // Converter para minutos
-            const diffMinutes = Math.floor(diffMs / (1000 * 60));
+            let diffMinutes = Math.floor(diffMs / (1000 * 60));
             const diffHours = Math.floor(diffMinutes / 60);
             const diffDays = Math.floor(diffHours / 24);
             
@@ -93,6 +98,9 @@ function openCardDetailModal(card) {
     else if (statusText.includes('recusado')) header.classList.add('status-recusado');
     else if (statusText.includes('concluído') || statusText.includes('concluido')) header.classList.add('status-concluido');
 
+    // A seção "Mover para Fila" já está controlada pelo template Django (permissões)
+    // Se o usuário não tem permissão, a seção não será renderizada
+    
     // Mostrar modal
     modal.classList.add('show');
     document.body.style.overflow = 'hidden';
@@ -109,6 +117,25 @@ function extractCardData(card) {
     const title = card.querySelector('.card-title');
     data.titulo = title ? title.textContent : 'Sem título';
     
+    // ✅ Extrair ID (primeiro info-item que não tem label - é o ticket)
+    const firstInfoItem = card.querySelector('.info-item');
+    if (firstInfoItem) {
+        const firstValue = firstInfoItem.querySelector('.info-value');
+        const firstLabel = firstInfoItem.querySelector('.info-label');
+        if (firstValue && !firstLabel) {
+            // Remove o # do início se existir
+            data.id = firstValue.textContent.replace(/^#/, '').trim();
+        }
+    }
+    
+    // ✅ Backup: se não encontrou ID no primeiro item, tenta pegar do data-card-id
+    if (!data.id || data.id === '') {
+        const cardId = card.getAttribute('data-card-id');
+        if (cardId) {
+            data.id = cardId;
+        }
+    }
+    
     // Extrair informações dos campos
     const infoItems = card.querySelectorAll('.info-item');
     infoItems.forEach(item => {
@@ -117,9 +144,7 @@ function extractCardData(card) {
         
         if (label && value) {
             const labelText = label.textContent.toLowerCase();
-            if (labelText.includes('id')) {
-                data.id = value.textContent;
-            } else if (labelText.includes('solicitante')) {
+            if (labelText.includes('solicitante')) {
                 data.solicitante = value.textContent;
             } else if (labelText.includes('recebedor')) {
                 data.recebedor = value.textContent;
@@ -140,10 +165,6 @@ function extractCardData(card) {
     // Extrair status
     const status = card.querySelector('.card-stage');
     data.status = status ? status.textContent : 'Pendente';
-    
-    // Extrair tempo na fila
-    const timeElement = card.querySelector('.queue-time');
-    data.tempoFila = timeElement ? timeElement.textContent : '0min';
     
     return data;
 }
@@ -179,22 +200,12 @@ function populateCardDetails(data) {
         statusElement.className = `detail-value status-${(data.status?.toLowerCase().replace(/\s+/g, '') || 'pendente')}`;
     }
     
-    const tempoFilaElement = document.getElementById('modal-tempo-fila');
-    if (tempoFilaElement) tempoFilaElement.textContent = data.tempoFila || '0min';
-    
     // Preencher datas
     const dataCriacaoElement = document.getElementById('modal-data-criacao');
     if (dataCriacaoElement) dataCriacaoElement.textContent = data.dataCriacao || 'N/A';
     
     const dataPagamentoElement = document.getElementById('modal-data-pagamento');
     if (dataPagamentoElement) dataPagamentoElement.textContent = data.dataPagamento || 'N/A';
-    
-    // Preencher tempos
-    const tempoCriacaoElement = document.getElementById('modal-tempo-criacao');
-    if (tempoCriacaoElement) tempoCriacaoElement.textContent = data.tempoCriacao || 'N/A';
-    
-    const tempoFilaTemposElement = document.getElementById('modal-tempo-fila-tempos');
-    if (tempoFilaTemposElement) tempoFilaTemposElement.textContent = data.tempoFila || '0min';
 }
 
 // Função para configurar event listeners do modal
@@ -244,35 +255,77 @@ function moveCardToFila(cardId, targetFila) {
     const targetColumn = document.querySelector(`[data-column="${targetFila}"] .column-content`);
     if (!targetColumn) return;
     
-    // Remover classes de status antigas
-    card.classList.remove('card-status-pending', 'card-status-rejected', 'card-status-approved', 'card-status-completed');
+    // Mostrar loading
+    showNotification('Salvando...', 'info');
     
-    // Adicionar nova classe de status baseada na fila de destino
-    const statusClasses = {
-        'planning': 'card-status-pending',
-        'test': 'card-status-rejected', 
-        'launch': 'card-status-approved',
-        'success': 'card-status-completed'
-    };
-    
-    if (statusClasses[targetFila]) {
-        card.classList.add(statusClasses[targetFila]);
+    // Enviar requisição para o backend
+    fetch('/solicitacoes/atualizar-status/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            card_id: cardId,
+            status: targetFila
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remover classes de status antigas
+            card.classList.remove('card-status-pending', 'card-status-rejected', 'card-status-approved', 'card-status-completed');
+            
+            // Adicionar nova classe de status baseada na fila de destino
+            const statusClasses = {
+                'planning': 'card-status-pending',
+                'test': 'card-status-rejected', 
+                'launch': 'card-status-approved',
+                'success': 'card-status-completed'
+            };
+            
+            if (statusClasses[targetFila]) {
+                card.classList.add(statusClasses[targetFila]);
+            }
+            
+            // Remover card da coluna atual
+            card.remove();
+            
+            // Adicionar card na nova coluna
+            targetColumn.appendChild(card);
+            
+            // Atualizar contadores das colunas
+            updateColumnCounters();
+            
+            // Fechar modal
+            closeCardDetailModal();
+            
+            // Mostrar notificação de sucesso
+            showNotification(`✅ Status atualizado para ${getFilaName(targetFila)}!`, 'success');
+        } else {
+            showNotification(`❌ Erro: ${data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao atualizar status:', error);
+        showNotification('❌ Erro ao salvar. Tente novamente.', 'error');
+    });
+}
+
+// Função para pegar o CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
     }
-    
-    // Remover card da coluna atual
-    card.remove();
-    
-    // Adicionar card na nova coluna
-    targetColumn.appendChild(card);
-    
-    // Atualizar contadores das colunas
-    updateColumnCounters();
-    
-    // Fechar modal
-    closeCardDetailModal();
-    
-    // Mostrar notificação de sucesso
-    showNotification(`Card movido para ${getFilaName(targetFila)}`, 'success');
+    return cookieValue;
 }
 
 // Função para obter nome da fila
@@ -293,8 +346,26 @@ function updateColumnCounters() {
         const content = column.querySelector('.column-content');
         const counter = column.querySelector('.card-count');
         if (content && counter) {
-            const cardCount = content.children.length;
+            // Contar apenas elementos com classe 'card', ignorando 'empty-column' e outros
+            const cards = content.querySelectorAll('.card:not(.empty-column)');
+            const cardCount = cards.length;
             counter.textContent = cardCount;
+            
+            // Mostrar/ocultar mensagem de coluna vazia
+            const emptyMessage = content.querySelector('.empty-column');
+            if (cardCount === 0 && !emptyMessage) {
+                // Adicionar mensagem se não tiver cards
+                const empty = document.createElement('div');
+                empty.className = 'empty-column';
+                empty.innerHTML = `
+                    <i class="fas fa-inbox"></i>
+                    <p>Nenhuma solicitação</p>
+                `;
+                content.appendChild(empty);
+            } else if (cardCount > 0 && emptyMessage) {
+                // Remover mensagem se tiver cards
+                emptyMessage.remove();
+            }
         }
     });
 }

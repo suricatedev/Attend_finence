@@ -1,50 +1,28 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro de Usuário - Sistema Financeiro</title>
-    <link rel="stylesheet" href="static/css/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% extends 'base.html' %}
+
+{% block title %}Cadastro de Usuário - Sistema Financeiro{% endblock %}
+
+{% block extra_css %}
     <style>
-        body {
-            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #2d2d2d 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 10px;
-            position: relative;
-        }
-        
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(255, 203, 87, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 203, 87, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
-            z-index: -1;
+        /* Estilos específicos para a página de cadastro de usuário */
+        .main-content {
+            padding: 2rem;
+            overflow-y: auto;
+            height: calc(100vh - 80px);
         }
         
         .test-container {
             width: 100%;
-            max-width: 450px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            box-shadow: 
-                0 8px 32px rgba(0, 0, 0, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            overflow: hidden;
+            max-width: 600px;
+            background: #F4F7F5;
+            border: 1px solid #544350;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: visible;
             animation: slideUp 0.6s ease;
+            margin: 2rem auto;
+            position: relative;
+            z-index: 1;
         }
         
         @keyframes slideUp {
@@ -59,25 +37,26 @@
         }
         
         .test-header {
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            color: #FFCB57;
+            background: #FFCB57;
+            color: #1C1C1C;
             padding: 1.5rem;
             text-align: center;
             position: relative;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid #544350;
         }
         
         .test-header h1 {
             margin: 0;
             font-size: 1.5rem;
             font-weight: 700;
+            color: #1C1C1C;
         }
         
         .test-header p {
             margin: 0.3rem 0 0 0;
-            opacity: 0.8;
+            color: #1C1C1C;
             font-size: 0.8rem;
+            opacity: 0.8;
         }
         
         .test-icon {
@@ -88,73 +67,16 @@
             opacity: 0.3;
         }
         
-        .modal {
-            position: relative;
-            display: block;
-            background: transparent;
-            z-index: 1;
-        }
-        
-        .modal-content {
-            background: rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 0;
-            box-shadow: none;
-            margin: 0;
-            max-width: none;
-            width: 100%;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .modal-header {
-            background: rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
-            color: #FFCB57;
-            padding: 1rem;
-            border-radius: 0;
-            position: relative;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .modal-header h2 {
-            margin: 0;
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-        
-        .close-btn {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #FFCB57;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(10px);
-        }
-        
-        .close-btn:hover {
-            background: rgba(255, 203, 87, 0.2);
-            transform: scale(1.1);
-            border-color: #FFCB57;
-        }
-        
         .user-form {
-            padding: 1.5rem;
-            background: rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            padding-bottom: 3rem;
+            background: #F4F7F5;
+            min-height: auto;
+            overflow: visible;
         }
         
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
             position: relative;
         }
         
@@ -162,7 +84,7 @@
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 600;
-            color: rgba(255, 255, 255, 0.9);
+            color: #1C1C1C;
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -171,28 +93,23 @@
         .form-group input,
         .form-group select {
             width: 100%;
-            padding: 1rem;
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 1rem;
             transition: all 0.3s ease;
-            background: rgba(30, 30, 30, 0.8);
-            backdrop-filter: blur(10px);
-            color: white;
+            background: white;
+            color: #1C1C1C;
             box-sizing: border-box;
-            box-shadow: 
-                0 4px 6px rgba(0, 0, 0, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
         
-        .form-group input::placeholder,
-        .form-group select::placeholder {
-            color: rgba(255, 255, 255, 0.6);
+        .form-group input::placeholder {
+            color: #999;
         }
         
         .form-group select option {
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
+            background: white;
+            color: #1C1C1C;
             padding: 0.5rem;
         }
         
@@ -200,29 +117,23 @@
         .form-group select:focus {
             outline: none;
             border-color: #FFCB57;
-            background: rgba(40, 40, 40, 0.9);
-            box-shadow: 
-                0 0 0 3px rgba(255, 203, 87, 0.3),
-                0 6px 12px rgba(0, 0, 0, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
+            box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2);
         }
         
         .form-group input:hover,
         .form-group select:hover {
-            border-color: rgba(255, 203, 87, 0.4);
-            background: rgba(35, 35, 35, 0.9);
-            box-shadow: 
-                0 6px 12px rgba(0, 0, 0, 0.15),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border-color: #FFCB57;
         }
         
         .form-actions {
             display: flex;
             gap: 0.75rem;
             justify-content: center;
-            margin-top: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
             flex-wrap: wrap;
+            position: relative;
+            z-index: 10;
         }
         
         .btn-register {
@@ -249,9 +160,9 @@
         }
         
         .btn-cancel {
-            background: rgba(108, 117, 125, 0.3);
-            color: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: #e0e0e0;
+            color: #1C1C1C;
+            border: 1px solid #ccc;
             padding: 0.75rem 1.5rem;
             border-radius: 8px;
             font-weight: 600;
@@ -263,21 +174,64 @@
             font-size: 0.9rem;
             min-width: 120px;
             justify-content: center;
-            backdrop-filter: blur(10px);
         }
         
         .btn-cancel:hover {
-            background: rgba(90, 98, 104, 0.4);
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            background: #d0d0d0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .form-group input.error,
+        .form-group select.error {
+            border-color: #ff4757;
+            background: rgba(255, 71, 87, 0.1);
+            box-shadow: 
+                0 0 0 3px rgba(255, 71, 87, 0.3),
+                0 6px 12px rgba(255, 71, 87, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            animation: shake 0.5s ease;
+        }
+        
+        .form-group input.success,
+        .form-group select.success {
+            border-color: #2ed573;
+            background: rgba(46, 213, 115, 0.1);
+            box-shadow: 
+                0 0 0 3px rgba(46, 213, 115, 0.3),
+                0 6px 12px rgba(46, 213, 115, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
         
         @media (max-width: 600px) {
-            body {
-                padding: 5px;
-            }
-            
             .test-container {
                 margin: 5px;
                 border-radius: 10px;
@@ -299,28 +253,51 @@
             }
         }
     </style>
-</head>
-<body>
-    <div class="test-container">
-        <div class="test-header">
-            <h1><i class="fas fa-user-plus"></i> Sistema de Cadastro</h1>
-            <p>Formulário de registro de usuários</p>
-            <i class="fas fa-users test-icon"></i>
+{% endblock %}
+
+{% block content %}
+<div class="test-container">
+    <div class="test-header">
+        <h1><i class="fas fa-user-plus"></i> Sistema de Cadastro</h1>
+        <p>Formulário de registro de usuários</p>
+        <i class="fas fa-users test-icon"></i>
+    </div>
+    
+    <!-- Mensagens de sucesso/erro -->
+    {% if messages %}
+        <div style="padding: 1rem 2rem; margin: 1rem;">
+            {% for message in messages %}
+                <div style="
+                    padding: 1rem;
+                    margin-bottom: 0.5rem;
+                    border-radius: 8px;
+                    {% if message.tags == 'error' %}
+                        background: #fee;
+                        color: #c00;
+                        border: 1px solid #fcc;
+                    {% elif message.tags == 'warning' %}
+                        background: #ffc;
+                        color: #880;
+                        border: 1px solid #ff8;
+                    {% else %}
+                        background: #efe;
+                        color: #060;
+                        border: 1px solid #cfc;
+                    {% endif %}
+                ">
+                    <strong>{% if message.tags == 'error' %}❌{% elif message.tags == 'warning' %}⚠️{% else %}✅{% endif %}</strong>
+                    {{ message }}
+                </div>
+            {% endfor %}
         </div>
-    <!-- Modal para gerenciar membros -->
-    <div class="modal show" id="manageMembersModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-user-plus"></i> Cadastro de Usuário</h2>
-                <button class="close-btn" id="closeMembersModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="userRegistrationForm" class="user-form">
+    {% endif %}
+    
+    <div class="user-form">
+        <form id="userRegistrationForm" method="POST" action="{% url 'cadastrar_usuario' %}">
+            {% csrf_token %}
                     <div class="form-group">
-                        <label for="username">Nome de usuário:</label>
-                        <input type="text" id="username" name="username" required>
+                        <label for="name_user">Nome de usuário:</label>
+                        <input type="text" id="name_user" name="name_user" required>
                     </div>
                     
                     <div class="form-group">
@@ -344,11 +321,15 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="role">Função:</label>
-                        <select id="role" name="role" required>
+                        <label for="funcao">Função:</label>
+                        <select id="funcao" name="funcao" required>
                             <option value="">Selecione uma função</option>
-                            <option value="financeiro">Financeiro</option>
-                            <option value="solicitante">Solicitante</option>
+                            {% for grupo in grupos %}
+                                <option value="{{ grupo.name }}">{{ grupo.name }}</option>
+                            {% empty %}
+                                <option value="financeiro">Financeiro</option>
+                                <option value="solicitante">Solicitante</option>
+                            {% endfor %}
                         </select>
                     </div>
                     
@@ -363,13 +344,13 @@
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
     </div>
+</div>
+{% endblock %}
 
-    <script src="static/js/script-light.js"></script>
+{% block extra_js %}
     <script>
-        // Funcionalidades específicas para a página de teste
+        // Funcionalidades específicas para a página de cadastro
         document.addEventListener('DOMContentLoaded', function() {
             // Adicionar animação aos campos
             const inputs = document.querySelectorAll('input, select');
@@ -396,8 +377,6 @@
             
             // Validação do formulário
             form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
                 let isValid = true;
                 inputs2.forEach(input => {
                     if (!validateField(input)) {
@@ -405,9 +384,14 @@
                     }
                 });
                 
-                if (isValid) {
-                    showSuccessMessage();
+                // Se não estiver válido, impedir envio
+                if (!isValid) {
+                    e.preventDefault();
+                    return false;
                 }
+                
+                // Se estiver válido, permitir envio normal ao servidor
+                // Não chamar showSuccessMessage() aqui, pois o servidor vai redirecionar
             });
         });
         
@@ -438,7 +422,7 @@
                             isValid = false;
                         }
                         break;
-                    case 'username':
+                    case 'name_user':
                         if (value.length < 3) {
                             errorMessage = 'Nome de usuário deve ter pelo menos 3 caracteres';
                             isValid = false;
@@ -527,60 +511,5 @@
                 });
             }, 3000);
         }
-        
-        // Adicionar estilos CSS para animações
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes fadeInUp {
-                from {
-                    opacity: 0;
-                    transform: translateY(20px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-            
-            @keyframes slideDown {
-                from {
-                    opacity: 0;
-                    transform: translateY(-10px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-            
-            .form-group input.error,
-            .form-group select.error {
-                border-color: #ff4757;
-                background: rgba(255, 71, 87, 0.1);
-                box-shadow: 
-                    0 0 0 3px rgba(255, 71, 87, 0.3),
-                    0 6px 12px rgba(255, 71, 87, 0.1),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-                animation: shake 0.5s ease;
-            }
-            
-            .form-group input.success,
-            .form-group select.success {
-                border-color: #2ed573;
-                background: rgba(46, 213, 115, 0.1);
-                box-shadow: 
-                    0 0 0 3px rgba(46, 213, 115, 0.3),
-                    0 6px 12px rgba(46, 213, 115, 0.1),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            }
-            
-            @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                25% { transform: translateX(-5px); }
-                75% { transform: translateX(5px); }
-            }
-        `;
-        document.head.appendChild(style);
     </script>
-</body>
-</html>
+{% endblock %}
