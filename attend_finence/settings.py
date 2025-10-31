@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'solicitacoes',
     'usuarios',
     'dashborads',
+    'servicos',
 ]
 
 MIDDLEWARE = [
@@ -55,6 +56,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'servicos.context_processors.servicos_context',
             ],
         },
     },
