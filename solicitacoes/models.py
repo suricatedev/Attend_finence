@@ -16,6 +16,11 @@ PRIORIDADE_CHOICES = [
 
 # Create your models here.
 class Solicitacoes(models.Model):
+    TIPO_CHOICES = [
+        ('casual', 'Casual'),
+        ('em_rota', 'Em Rota'),
+    ]
+    
     ticket = models.CharField(max_length=25, default=0)
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='pendente')
     titulo = models.CharField(max_length = 70) 
@@ -30,6 +35,23 @@ class Solicitacoes(models.Model):
     tempo_fila =  models.TimeField()
     prioridade = models.CharField(max_length=20, choices=PRIORIDADE_CHOICES, default='baixa')
     servico = models.ForeignKey('servicos.Servico', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Serviço")
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='casual', verbose_name="Tipo de Solicitação")
 
     def __str__(self):
         return f"{self.titulo} - {self.status}"
+
+class SolicitacaoRotaItem(models.Model):
+    """Modelo para armazenar os itens de uma solicitação Em Rota"""
+    solicitacao = models.ForeignKey(Solicitacoes, on_delete=models.CASCADE, related_name='itens_rota')
+    ticket_item = models.CharField(max_length=25, verbose_name="ID da Solicitação")
+    valor = models.FloatField(verbose_name="Valor")
+    servico = models.ForeignKey('servicos.Servico', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Serviço")
+    ordem = models.IntegerField(default=1, verbose_name="Ordem")
+
+    class Meta:
+        ordering = ['ordem']
+        verbose_name = "Item da Rota"
+        verbose_name_plural = "Itens da Rota"
+
+    def __str__(self):
+        return f"{self.solicitacao.titulo} - Item {self.ordem}: {self.ticket_item}"

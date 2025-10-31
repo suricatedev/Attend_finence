@@ -156,11 +156,11 @@
                                                 {% if servico.ativo %}Ativo{% else %}Inativo{% endif %}
                                             </div>
                                             <div class="service-actions">
-                                                <button class="btn-edit" onclick="editService({{ servico.id }})" title="Editar serviço">
+                                                <button class="btn-edit" data-service-id="{{ servico.id }}" title="Editar serviço">
                                                     <i class="fas fa-edit"></i>
                                                     Editar
                                                 </button>
-                                                <button class="btn-delete" onclick="deleteService({{ servico.id }})" title="Excluir serviço">
+                                                <button class="btn-delete" data-service-id="{{ servico.id }}" title="Excluir serviço">
                                                     <i class="fas fa-trash"></i>
                                                     Excluir
                                                 </button>
@@ -195,11 +195,11 @@
                                             </div>
                                         </div>
                                         <div class="service-actions">
-                                            <button class="btn-edit" onclick="editService({{ servico.id }})" title="Editar serviço">
+                                            <button class="btn-edit" data-service-id="{{ servico.id }}" title="Editar serviço">
                                                 <i class="fas fa-edit"></i>
                                                 Editar
                                             </button>
-                                            <button class="btn-delete" onclick="deleteService({{ servico.id }})" title="Excluir serviço">
+                                            <button class="btn-delete" data-service-id="{{ servico.id }}" title="Excluir serviço">
                                                 <i class="fas fa-trash"></i>
                                                 Excluir
                                             </button>

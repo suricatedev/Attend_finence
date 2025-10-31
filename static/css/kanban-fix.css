@@ -4,18 +4,20 @@
     display: flex !important;
     flex-direction: row !important;
     gap: 20px !important;
-    overflow-x: auto !important;
+    overflow-x: hidden !important; /* Sem scroll - sempre mostrar os 4 cards */
     background: #F4F7F5 !important;
     height: calc(100vh - 80px) !important;
     overflow-y: hidden !important;
     align-items: flex-start !important;
+    justify-content: center !important; /* Centralizar as colunas */
     padding: 30px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 .kanban-column {
-    min-width: 320px !important;
-    max-width: 320px !important;
-    flex-shrink: 0 !important;
+    flex: 1 1 0 !important; /* Distribuir espaço igualmente */
+    min-width: 280px !important;
     display: flex !important;
     flex-direction: column !important;
     background: #F4F7F5 !important;
@@ -157,6 +159,60 @@
     color: #1e7e34 !important;
 }
 
+/* Responsividade para telas grandes */
+@media (min-width: 1920px) {
+    .kanban-board {
+        max-width: 1800px !important;
+        margin: 0 auto !important;
+        gap: 24px !important;
+        padding: 30px 40px !important;
+    }
+    
+    .kanban-column {
+        min-width: 300px !important;
+        max-width: 420px !important;
+    }
+}
+
+@media (min-width: 1600px) and (max-width: 1919px) {
+    .kanban-board {
+        max-width: 1600px !important;
+        margin: 0 auto !important;
+        gap: 22px !important;
+    }
+    
+    .kanban-column {
+        min-width: 290px !important;
+        max-width: 380px !important;
+    }
+}
+
+@media (min-width: 1400px) and (max-width: 1599px) {
+    .kanban-column {
+        min-width: 280px !important;
+        max-width: 350px !important;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1399px) {
+    .kanban-column {
+        min-width: 270px !important;
+        max-width: 320px !important;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 991px) {
+    .kanban-board {
+        overflow-x: auto !important; /* Permitir scroll em tablets */
+    }
+    
+    .kanban-column {
+        flex: 0 0 auto !important;
+        min-width: 300px !important;
+        max-width: 350px !important;
+    }
+}
+
 /* Garantir que não há interferência de outros CSS */
 @media (max-width: 768px) {
     .kanban-board {
@@ -164,6 +220,7 @@
         gap: 15px !important;
         height: auto !important;
         overflow-y: auto !important;
+        overflow-x: hidden !important;
     }
     
     .kanban-column {
@@ -171,5 +228,6 @@
         max-width: 100% !important;
         height: auto !important;
         max-height: 400px !important;
+        flex: 1 1 auto !important;
     }
 }

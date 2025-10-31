@@ -200,6 +200,7 @@ def dashboard(request):
     
 def relatorio(request):
     if request.method == "GET":
+        print("ok")
         if not request.user.is_authenticated:
             return redirect('login')
         

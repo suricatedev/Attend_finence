@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistema de Gestão Financeira</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Overlay para mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Attend Finance</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="/" class="nav-link">
+                            <i class="fas fa-th-large"></i>
+                            <span>Solicitações</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a href="/relatorios" class="nav-link">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Relatórios</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item active">
+                        <a href="/dashboard" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboards</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="/servicos" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Serviços</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-help">
+                <ul class="help-list">
+                    <li class="help-item">
+                        <a href="#" class="help-link">
+                            <i class="fas fa-question-circle"></i>
+                            <span>Faça uma pergunta</span>
+                        </a>
+                    </li>
+                    <li class="help-item">
+                        <a href="#" class="help-link">
+                            <i class="fas fa-question"></i>
+                            <span>Ajuda</span>
+                        </a>
+                    </li>
+                    <li class="help-item">
+                        <a href="#" class="help-link">
+                            <i class="fas fa-comment"></i>
+                            <span>Chat</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <div class="logo-section">
+                    </div>
+                </div>
+                
+                <div class="header-center">
+                    <div class="view-tabs">
+                        <a href="/" class="tab-btn">
+                            <i class="fas fa-th"></i>
+                            Cards
+                        </a>
+                        <a href="/relatorios" class="tab-btn">
+                            <i class="fas fa-chart-bar"></i>
+                            Relatórios
+                        </a>
+                        <a href="/dashboard" class="tab-btn active">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Dashboards
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="header-right">
+                    <div class="user-actions">
+                        <button class="action-btn" title="Notificações">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                        <div class="settings-dropdown">
+                            <button class="action-btn" title="Configurações" id="settingsBtn">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <div class="settings-menu" id="settingsMenu">
+                                <a href="#" class="settings-item">
+                                    <i class="fas fa-user-plus"></i>
+                                    <span>Gerenciar membros</span>
+                                </a>
+                                <a href="#" class="settings-item">
+                                    <i class="fas fa-users"></i>
+                                    <span>Equipe</span>
+                                </a>
+                                <a href="#" class="settings-item">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Permissões</span>
+                                </a>
+                                <a href="#" class="settings-item">
+                                    <i class="fas fa-cog"></i>
+                                    <span>Configurações gerais</span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="user-avatar">
+                            <img src="https://via.placeholder.com/32" alt="Usuário">
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard View -->
+            <div class="dashboard-view" id="dashboardView">
+                <div class="dashboard-container">
+                    <!-- Métricas Principais -->
+                    <div class="metrics-row">
+                        <div class="metric-card metric-card-primary">
+                            <div class="metric-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="metric-content">
+                                <h3>Tempo Médio de Aprovação</h3>
+                                <div class="metric-value">2d 14h</div>
+                                <div class="metric-change positive">-15%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card metric-card-secondary">
+                            <div class="metric-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="metric-content">
+                                <h3>Tempo Médio de Resolução</h3>
+                                <div class="metric-value">1d 8h</div>
+                                <div class="metric-change positive">-22%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card metric-card-warning">
+                            <div class="metric-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="metric-content">
+                                <h3>Solicitações Pendentes</h3>
+                                <div class="metric-value">47</div>
+                                <div class="metric-change negative">+12%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card metric-card-success">
+                            <div class="metric-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="metric-content">
+                                <h3>Valor Total Processado</h3>
+                                <div class="metric-value">R$ 2.4M</div>
+                                <div class="metric-change positive">+8%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ========================================
+         GRÁFICO DE LINHA PRINCIPAL - SOLICITAÇÕES AO LONGO DO TEMPO
+         ======================================== -->
+                    <div class="chart-section">
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <div class="chart-title-section">
+                                    <h2>Solicitações ao Longo do Tempo</h2>
+                                </div>
+                                <div class="chart-controls">
+                                    <div class="period-selector">
+                                        <button class="period-button active" data-period="6months">
+                                            <i class="fas fa-calendar"></i>
+                                            Jan - Jun
+                                        </button>
+                                        <button class="period-button" data-period="12months">
+                                            <i class="fas fa-calendar-alt"></i>
+                                            Ano Completo
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chart-content">
+                                <canvas id="lineChart" width="100%" height="400"></canvas>
+                            </div>
+                            <div class="chart-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">Total de Solicitações</span>
+                                    <span class="stat-value">2,847</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Crescimento</span>
+                                    <span class="stat-value positive">+12.5%</span>
+                                </div>
+                                    <div class="stat-item">
+                                    <span class="stat-label">Média Mensal</span>
+                                    <span class="stat-value">237</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ========================================
+         GRÁFICOS SECUNDÁRIOS - 4 GRÁFICOS EM GRID 2x2
+         ======================================== -->
+                    <div class="secondary-charts-grid">
+                        <!-- Gráfico 1: Fluxo de Solicitações por Período (Barras + Linha) -->
+                        <div class="chart-card">
+                            <div class="chart-header-small">
+                                <h3>Fluxo de Solicitações por Período</h3>
+                            </div>
+                            <div class="chart-container-small">
+                                <canvas id="flowChart" height="200"></canvas>
+                            </div>
+                            <div class="chart-info">
+                                <div class="info-item">
+                                    <span class="info-label">Solicitações Processadas</span>
+                                    <span class="info-value">426</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Taxa de Aprovação</span>
+                                    <span class="info-value">94.8%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gráfico 2: Preferências por Dia da Semana (Barras Verticais) -->
+                        <div class="chart-card">
+                            <div class="chart-header-small">
+                                <h3>Preferências por Dia da Semana</h3>
+                            </div>
+                            <div class="chart-container-small">
+                                <canvas id="preferencesChart" height="200"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Gráfico 3: Análise de Status das Solicitações (Barras Horizontais Empilhadas) -->
+                        <div class="chart-card">
+                            <div class="chart-header-small">
+                                <h3>Análise de Status das Solicitações</h3>
+                            </div>
+                            <div class="chart-container-small">
+                                <canvas id="statusAnalysisChart" height="200"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Gráfico 4: Análise por Departamento (Rosca) -->
+                        <div class="chart-card">
+                            <div class="chart-header-small">
+                                <h3>Análise por Departamento</h3>
+                            </div>
+                            <div class="chart-container-small">
+                                <canvas id="departmentChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

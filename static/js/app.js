@@ -73,13 +73,6 @@ class ModalManager {
     }
 
     init() {
-        // Fechar modal ao clicar no overlay
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal')) {
-                this.closeModal();
-            }
-        });
-
         // Fechar modal com ESC
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.activeModal) {
@@ -90,62 +83,36 @@ class ModalManager {
 
     showModal(modalId) {
         const modal = document.getElementById(modalId);
+        console.log('MODALMANAGER: showModal chamado, modalId:', modalId, 'modal encontrado:', !!modal);
         if (modal) {
             this.activeModal = modal;
-            modal.style.display = 'flex';
+            
+            console.log('MODALMANAGER: Antes de exibir - display:', window.getComputedStyle(modal).display, 'classes:', modal.className);
             modal.classList.add('show');
             document.body.style.overflow = 'hidden';
+            console.log('MODALMANAGER: Depois de exibir - display:', window.getComputedStyle(modal).display, 'classes:', modal.className);
             
-            // Limpar campos de tempo com valores inválidos
-            this.clearInvalidTimeFields();
+            // Verificar se o modal ainda está visível após 100ms
+            setTimeout(() => {
+                console.log('MODALMANAGER: Verificação após 100ms - display:', window.getComputedStyle(modal).display, 'classes:', modal.className);
+            }, 100);
             
-            // Preencher datas padrão quando abrir o modal
-            this.setDefaultDates();
+            console.log('MODALMANAGER: Modal exibido com sucesso');
+        } else {
+            console.error('MODALMANAGER: Modal não encontrado:', modalId);
         }
+    }
+    
+    clearCreateCampaignForm() {
+        // Não fazer nada aqui - deixar o script inline do formulário gerenciar
+        // Evitar conflitos com toggleForms() que pode causar problemas visuais
     }
 
     closeModal() {
         if (this.activeModal) {
-            this.activeModal.style.display = 'none';
             this.activeModal.classList.remove('show');
             document.body.style.overflow = '';
             this.activeModal = null;
-        }
-    }
-
-    clearInvalidTimeFields() {
-        // Limpar campos de tempo que possam ter valores inválidos
-        const timeFields = document.querySelectorAll('input[type="time"]');
-        timeFields.forEach(field => {
-            const value = field.value;
-            // Se o valor contém segundos (formato HH:MM:SS), limpar
-            if (value && value.includes(':') && value.split(':').length > 2) {
-                field.value = '';
-            }
-        });
-    }
-
-    setDefaultDates() {
-        const today = new Date().toISOString().split('T')[0];
-        const now = new Date();
-        const timeString = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-        
-        // Definir data de criação como hoje
-        const dataCriacaoField = document.getElementById('campaignDataCriacao');
-        if (dataCriacaoField && !dataCriacaoField.value) {
-            dataCriacaoField.value = today;
-        }
-        
-        // Definir tempo de criação como agora (apenas HH:MM)
-        const tempoCriacaoField = document.getElementById('campaignTempoCriacao');
-        if (tempoCriacaoField && !tempoCriacaoField.value) {
-            tempoCriacaoField.value = timeString;
-        }
-        
-        // Definir tempo na fila como 00:00
-        const tempoFilaField = document.getElementById('campaignTempoFila');
-        if (tempoFilaField && !tempoFilaField.value) {
-            tempoFilaField.value = '00:00';
         }
     }
 }
@@ -197,11 +164,143 @@ class FormManager {
         });
 
         // Submit de formulários
+        // ⚠️ CRÍTICO: Usar CAPTURE PHASE (true) para executar ANTES da validação nativa do navegador
+        // Isso permite remover 'required' e desabilitar campos do formulário inativo
         document.addEventListener('submit', (e) => {
+            if (e.target.tagName === 'FORM' && e.target.id === 'createCampaignForm') {
+                console.log('🔍 FormManager interceptando submit (CAPTURE PHASE) - ANTES DE TUDO');
+                
+                const form = e.target;
+                const formEmRota = form.querySelector('#formEmRota');
+                const formCasual = form.querySelector('#formCasual');
+                const routeEmRota = form.querySelector('#routeEmRota');
+                const routeCasual = form.querySelector('#routeCasual');
+                
+                // Determinar qual formulário está ativo baseado no radio button
+                const isEmRotaActive = routeEmRota && routeEmRota.checked;
+                const isCasualActive = routeCasual && routeCasual.checked;
+                
+                console.log('📋 CAPTURE PHASE - Estado dos formulários:', {
+                    isEmRotaActive,
+                    isCasualActive,
+                    formEmRotaExists: !!formEmRota,
+                    formCasualExists: !!formCasual
+                });
+                
+                if (formEmRota && formCasual) {
+                    // ⚠️ ESTRATÉGIA DEFINITIVA: 
+                    // 1. DESABILITAR TODOS os campos do formulário inativo
+                    // 2. REMOVER 'required' de TODOS os campos do formulário inativo
+                    // 3. Campos desabilitados NÃO são validados pelo navegador
+                    
+                    if (isEmRotaActive) {
+                        // Em Rota está ativo
+                        console.log('🔍 CAPTURE: Em Rota está ativo - Desabilitando TODOS os campos Casual');
+                        
+                        // DESABILITAR TODOS os campos Casual
+                        const casualFields = formCasual.querySelectorAll('input, select, textarea, button');
+                        casualFields.forEach(field => {
+                            if (field.type !== 'file' && field.type !== 'hidden' && field.type !== 'radio') {
+                                field.disabled = true;
+                                field.removeAttribute('required');
+                                // Também remover do dataset para garantir
+                                if (field.dataset) {
+                                    delete field.dataset.required;
+                                }
+                            }
+                        });
+                        
+                        // Garantir que campos Em Rota estão HABILITADOS
+                        const emRotaFields = formEmRota.querySelectorAll('input, select, textarea');
+                        emRotaFields.forEach(field => {
+                            if (field.type !== 'file' && !field.readOnly && field.type !== 'radio') {
+                                field.disabled = false;
+                            }
+                        });
+                        
+                        console.log(`✅ CAPTURE: ${casualFields.length} campos Casual desabilitados, campos Em Rota habilitados`);
+                    } else {
+                        // Casual está ativo
+                        console.log('🔍 CAPTURE: Casual está ativo - Desabilitando TODOS os campos Em Rota');
+                        
+                        // DESABILITAR TODOS os campos Em Rota
+                        const emRotaFields = formEmRota.querySelectorAll('input, select, textarea, button');
+                        emRotaFields.forEach(field => {
+                            if (field.type !== 'file' && field.type !== 'hidden' && field.type !== 'radio') {
+                                field.disabled = true;
+                                field.removeAttribute('required');
+                                // Também remover do dataset para garantir
+                                if (field.dataset) {
+                                    delete field.dataset.required;
+                                }
+                            }
+                        });
+                        
+                        // Garantir que campos Casual estão HABILITADOS
+                        const casualFields = formCasual.querySelectorAll('input, select, textarea');
+                        casualFields.forEach(field => {
+                            if (field.type !== 'file' && !field.readOnly && field.type !== 'radio') {
+                                field.disabled = false;
+                            }
+                        });
+                        
+                        console.log(`✅ CAPTURE: ${emRotaFields.length} campos Em Rota desabilitados, campos Casual habilitados`);
+                    }
+                    
+                    // Verificação final: garantir que NENHUM campo desabilitado tenha 'required'
+                    const allDisabledFields = form.querySelectorAll('input[disabled], select[disabled], textarea[disabled]');
+                    allDisabledFields.forEach(field => {
+                        if (field.hasAttribute('required')) {
+                            field.removeAttribute('required');
+                            console.log(`✅ CAPTURE (final): Removido 'required' de campo desabilitado: ${field.name || field.id}`);
+                        }
+                    });
+                }
+            }
+        }, true); // CAPTURE PHASE - executa ANTES da validação nativa do navegador
+        
+        // Submit de formulários (BUBBLE PHASE) - para validação e processamento
+        document.addEventListener('submit', (e) => {
+            // IMPORTANTE: Verificar se o evento já foi cancelado por outro listener
+            if (e.defaultPrevented) {
+                console.warn('⚠️ Submit já foi cancelado por outro listener');
+                return;
+            }
+            
             if (e.target.tagName === 'FORM') {
+                // Verificar se é o formulário de criação
+                if (e.target.id === 'createCampaignForm') {
+                    console.log('🔍 FormManager interceptando submit de createCampaignForm');
+                    console.log('📋 Form action:', e.target.action);
+                    console.log('📋 Form method:', e.target.method);
+                    
+                    // Chamar handleSubmit mas não bloquear se retornar undefined
+                    const result = this.handleSubmit(e);
+                    console.log('📋 Resultado do handleSubmit:', result, 'tipo:', typeof result);
+                    
+                    // Se handleSubmit retornar false explicitamente, a validação falhou
+                    if (result === false) {
+                        // Validação falhou - já foi bloqueado dentro do handleSubmit
+                        console.log('❌ Validação falhou - bloqueando submit');
+                        // Não precisa fazer preventDefault aqui, já foi feito no handleSubmit
+                        return false;
+                    }
+                    
+                    // Se chegou aqui, a validação passou (result é undefined ou qualquer outro valor)
+                    // NÃO fazer preventDefault - deixar o submit continuar para Django
+                    console.log('✅ Validação passou - Permitindo submit do formulário para Django');
+                    console.log('📤 Formulário será submetido normalmente para:', e.target.action);
+                    console.log('📤 O evento submit continuará normalmente (sem preventDefault)');
+                    
+                    // IMPORTANTE: Não retornar false e não fazer preventDefault
+                    // Deixar o evento continuar normalmente para o Django processar
+                    return;
+                } else {
+                    // Para outros formulários, também processar
                 this.handleSubmit(e);
             }
-        });
+            }
+        }, false); // BUBBLE PHASE - para validação e processamento
     }
     
     formatCurrencyField(field) {
@@ -252,60 +351,484 @@ class FormManager {
     handleSubmit(e) {
         const form = e.target;
         
-        // Se o formulário tem action para Django, não interceptar
-        if (form.action && form.action.includes('/Solicitacoes/')) {
-            console.log('Formulário sendo enviado para Django:', form.action);
-            return; // Deixar o Django processar
+        // Preparar formulário para submissão
+        this.prepareFormForSubmission(form);
+        
+        // ⚠️ VERIFICAÇÃO CRÍTICA: Determinar qual formulário está ativo e DESABILITAR o outro
+        const routeEmRota = form.querySelector('#routeEmRota');
+        const routeCasual = form.querySelector('#routeCasual');
+        const formEmRota = form.querySelector('#formEmRota');
+        const formCasual = form.querySelector('#formCasual');
+        
+        let isEmRotaActive = routeEmRota && routeEmRota.checked;
+        const isCasualActive = routeCasual && routeCasual.checked;
+        
+        console.log('🔍 handleSubmit - Estado inicial:', {
+            isEmRotaActive,
+            isCasualActive,
+            formEmRotaExists: !!formEmRota,
+            formCasualExists: !!formCasual
+        });
+        
+        // ⚠️ DESABILITAR completamente o formulário que NÃO está ativo
+        if (isEmRotaActive) {
+            // Em Rota ativo - DESABILITAR TODOS os campos Casual
+            if (formCasual) {
+                const casualFields = formCasual.querySelectorAll('input, select, textarea');
+                console.log(`🔍 Desabilitando ${casualFields.length} campos Casual`);
+                casualFields.forEach(field => {
+                    if (field.type !== 'file' && field.type !== 'hidden') {
+                        field.disabled = true;
+                        field.removeAttribute('required');
+                        // Limpar valor também
+                        if (!field.readOnly) {
+                            field.value = '';
+                        }
+                    }
+                });
+            }
+        } else {
+            // Casual ativo - DESABILITAR TODOS os campos Em Rota
+            if (formEmRota) {
+                const emRotaFields = formEmRota.querySelectorAll('input, select, textarea');
+                console.log(`🔍 Desabilitando ${emRotaFields.length} campos Em Rota`);
+                emRotaFields.forEach(field => {
+                    if (field.type !== 'file' && field.type !== 'hidden') {
+                        field.disabled = true;
+                        field.removeAttribute('required');
+                        // Limpar valor também
+                        if (!field.readOnly) {
+                            field.value = '';
+                        }
+                    }
+                });
+            }
         }
-        
-        e.preventDefault();
-        const formData = new FormData(form);
-        
-        console.log('Formulário submetido:', form.id);
         
         // Limpar erros anteriores
         form.querySelectorAll('.error-message').forEach(error => error.remove());
         form.querySelectorAll('.form-group').forEach(group => group.classList.remove('error'));
         
-        // Validar todos os campos obrigatórios
-        const requiredFields = form.querySelectorAll('[required]');
+        // Função auxiliar para verificar se um elemento está visível
+        const isElementVisible = (element) => {
+            if (!element) return false;
+            
+            // Verificar estilo computado
+            const style = window.getComputedStyle(element);
+            if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+                return false;
+            }
+            
+            // Verificar atributo style inline
+            if (element.hasAttribute('style')) {
+                const inlineStyle = element.style.display;
+                if (inlineStyle === 'none') {
+                    return false;
+                }
+            }
+            
+            return true;
+        };
+        
+        // Função auxiliar para verificar se um campo está dentro de um container oculto
+        const isFieldInHiddenContainer = (field) => {
+            let parent = field.parentElement;
+            while (parent && parent !== form && parent !== document.body) {
+                if (!isElementVisible(parent)) {
+                    return true;
+                }
+                parent = parent.parentElement;
+            }
+            return false;
+        };
+        
+        // Verificar qual tipo de formulário está ativo
+        const formEmRotaElement = form.querySelector('#formEmRota');
+        const formCasualElement = form.querySelector('#formCasual');
+        const routeEmRotaRadio = form.querySelector('#routeEmRota');
+        const routeCasualRadio = form.querySelector('#routeCasual');
+        
+        // Determinar qual formulário está ativo baseado no radio button (já foi declarado acima, apenas reatribuir)
+        isEmRotaActive = false;
+        if (routeEmRotaRadio && routeEmRotaRadio.checked) {
+            isEmRotaActive = true;
+        } else if (routeCasualRadio && routeCasualRadio.checked) {
+            isEmRotaActive = false;
+        } else {
+            // Fallback: verificar display style
+            if (formEmRotaElement) {
+                const formEmRotaStyle = window.getComputedStyle(formEmRotaElement);
+                isEmRotaActive = formEmRotaStyle.display !== 'none';
+            }
+        }
+        
+        // ⚠️ CRUCIAL: Remover 'required' de TODOS os campos do formulário OCULTO
+        // Isso evita o erro "not focusable" do navegador
+        if (isEmRotaActive) {
+            // Em Rota está ativo - remover required de todos os campos Casual
+            if (formCasualElement) {
+                formCasualElement.querySelectorAll('[required]').forEach(field => {
+                    field.removeAttribute('required');
+                    console.log(`✅ Removido 'required' de campo Casual: ${field.name || field.id}`);
+                });
+            }
+        } else {
+            // Casual está ativo - remover required de todos os campos Em Rota
+            if (formEmRotaElement) {
+                formEmRotaElement.querySelectorAll('[required]').forEach(field => {
+                    // Exceto campos obrigatórios do Em Rota (IDs 1 e 2 sempre obrigatórios)
+                    const fieldName = field.name || '';
+                    if (!fieldName.includes('route_id_1') && !fieldName.includes('route_valor_1') && 
+                        !fieldName.includes('route_servico_1') && !fieldName.includes('route_id_2') && 
+                        !fieldName.includes('route_valor_2') && !fieldName.includes('route_servico_2') &&
+                        !fieldName.includes('route_solicitante') && !fieldName.includes('route_recebedor') &&
+                        !fieldName.includes('route_description') && !fieldName.includes('route_dataPagamento') &&
+                        !fieldName.includes('route_priority')) {
+                        field.removeAttribute('required');
+                        console.log(`✅ Removido 'required' de campo Em Rota: ${field.name || field.id}`);
+                    }
+                });
+            }
+        }
+        
+        console.log('🔍 Debug Validação:', {
+            routeEmRotaChecked: routeEmRotaRadio?.checked,
+            routeCasualChecked: routeCasualRadio?.checked,
+            formEmRotaDisplay: formEmRotaElement ? window.getComputedStyle(formEmRotaElement).display : 'não encontrado',
+            formCasualDisplay: formCasualElement ? window.getComputedStyle(formCasualElement).display : 'não encontrado',
+            isEmRotaActive
+        });
+        
+        // ⚠️ BUSCAR APENAS CAMPOS DO FORMULÁRIO ATIVO QUE ESTÃO HABILITADOS E NÃO DESABILITADOS
+        // Campos desabilitados não devem ser validados e não causam erro "not focusable"
+        const activeForm = isEmRotaActive ? formEmRotaElement : formCasualElement;
+        const inactiveForm = isEmRotaActive ? formCasualElement : formEmRotaElement;
+        
+        // Garantir que campos do formulário inativo estão desabilitados
+        if (inactiveForm) {
+            const inactiveFields = inactiveForm.querySelectorAll('input, select, textarea');
+            inactiveFields.forEach(field => {
+                if (field.type !== 'file' && field.type !== 'hidden' && field.type !== 'radio') {
+                    field.disabled = true;
+                    field.removeAttribute('required');
+                }
+            });
+        }
+        
+        // Buscar apenas campos do formulário ativo que estão habilitados
+        const requiredFields = activeForm ? 
+            Array.from(activeForm.querySelectorAll('[required]')).filter(field => 
+                !field.disabled && 
+                field.type !== 'hidden' &&
+                field.type !== 'radio' &&
+                isElementVisible(field) && 
+                !isFieldInHiddenContainer(field) &&
+                field.offsetParent !== null // Verificação adicional de visibilidade
+            ) : [];
+        
         let isValid = true;
         let errorCount = 0;
+        const errors = [];
+        
+        console.log(`🔍 Formulário ativo: ${isEmRotaActive ? 'Em Rota' : 'Casual'}`);
+        console.log(`🔍 Total de campos required no formulário ativo (habilitados): ${requiredFields.length}`);
+        console.log(`🔍 Campos required encontrados:`, requiredFields.map(f => ({
+            name: f.name || f.id,
+            disabled: f.disabled,
+            visible: isElementVisible(f)
+        })));
 
         requiredFields.forEach(field => {
-            const value = field.value.trim();
+            // Verificar se o campo está realmente visível
+            if (!isElementVisible(field)) {
+                return; // Campo não visível, pular
+            }
+            
+            // Verificar se está em container oculto
+            if (isFieldInHiddenContainer(field)) {
+                return; // Campo em container oculto, pular
+            }
+            
+            const fieldName = field.name || field.id || '';
             const formGroup = field.closest('.form-group');
             
-            if (!value) {
+            // ===== VALIDAÇÃO ESPECÍFICA PARA "EM ROTA" =====
+            if (isEmRotaActive) {
+                // Ignorar TODOS os campos do formulário Casual (têm prefixo 'casual_')
+                if (fieldName.startsWith('casual_')) {
+                    return;
+                }
+                
+                // Ignorar campos específicos do Casual por ID
+                if (field.id === 'campaignId' || field.id === 'campaignSolicitante' || 
+                    field.id === 'campaignRecebedor' || field.id === 'campaignValor' || 
+                    field.id === 'campaignService' || field.id === 'campaignDescription' ||
+                    field.id === 'campaignDataPagamento' || field.id === 'campaignDataCriacao' ||
+                    field.id === 'campaignAnexos' || field.id === 'campaignPriority') {
+                    field.removeAttribute('required');
+                    return;
+                }
+                
+                // Para campos opcionais (IDs 3 e 4), verificar se o grupo inteiro está vazio
+                if (fieldName.includes('route_id_3') || fieldName.includes('route_valor_3') || fieldName.includes('route_servico_3') ||
+                    fieldName.includes('route_id_4') || fieldName.includes('route_valor_4') || fieldName.includes('route_servico_4')) {
+                    
+                    // Extrair número do grupo
+                    const match = fieldName.match(/route_(id|valor|servico)_(\d)/);
+                    if (match) {
+                        const groupNum = match[2];
+                        const routeId = form.querySelector(`[name="route_id_${groupNum}"]`);
+                        const routeValor = form.querySelector(`[name="route_valor_${groupNum}"]`);
+                        const routeServico = form.querySelector(`[name="route_servico_${groupNum}"]`);
+                        
+                        // Se TODOS os 3 campos do grupo opcional estão vazios, não validar
+                        const idEmpty = !routeId || !routeId.value.trim();
+                        const valorEmpty = !routeValor || !routeValor.value.trim();
+                        const servicoEmpty = !routeServico || !routeServico.value || routeServico.value === '';
+                        
+                        if (idEmpty && valorEmpty && servicoEmpty) {
+                            // Grupo opcional completamente vazio, remover required e pular
+                            field.removeAttribute('required');
+                            return;
+                        }
+                    }
+                }
+            } 
+            // ===== VALIDAÇÃO ESPECÍFICA PARA "CASUAL" =====
+            else {
+                // Ignorar TODOS os campos do formulário Em Rota (têm prefixo 'route_')
+                if (fieldName.startsWith('route_')) {
+                    return;
+                }
+                
+                // Ignorar campos específicos do Em Rota por ID
+                if (field.id && (field.id.startsWith('route') || field.id === 'routeSolicitante' ||
+                    field.id === 'routeRecebedor' || field.id === 'routeDescription' ||
+                    field.id === 'routeDataPagamento' || field.id === 'routeDataCriacao' ||
+                    field.id === 'routeAnexos' || field.id === 'routePriority')) {
+                    return;
+                }
+                
+                // Em Casual, ID não é obrigatório (pode não ter)
+                if (fieldName === 'casual_id' || field.id === 'campaignId') {
+                    // Remover required se tiver
+                    field.removeAttribute('required');
+                    return;
+                }
+            }
+            
+            // ===== VALIDAÇÃO DO VALOR DO CAMPO =====
+            let value = '';
+            if (field.tagName === 'SELECT') {
+                value = field.value || '';
+                // Para SELECT, verificar se tem uma opção selecionada (não pode ser vazio)
+                if (field.selectedIndex === 0 && field.options[0] && !field.options[0].value) {
+                    value = ''; // Primeira opção vazia e selecionada = campo vazio
+                }
+            } else if (field.type === 'file') {
+                value = field.files && field.files.length > 0 ? 'has-file' : '';
+            } else {
+                value = (field.value || '').trim();
+            }
+            
+            // Log apenas para campos SELECT para debug detalhado
+            if (field.tagName === 'SELECT') {
+                console.log(`🔍 SELECT - campo: ${fieldName || field.id}, selectedIndex: ${field.selectedIndex}, value: '${value}', option[0].value: '${field.options[0]?.value || 'N/A'}'`);
+            }
+            
+            // Verificar se campo está vazio
+            if (!value || value === '' || value === '0') {
+                console.log(`❌ Campo vazio detectado: ${fieldName || field.id}, valor: '${value}', tipo: ${field.type || field.tagName}`);
+                if (formGroup) {
                 formGroup.classList.add('error');
                 this.showFieldError(formGroup, 'Este campo é obrigatório');
+                }
                 isValid = false;
                 errorCount++;
+                errors.push(fieldName || 'Campo sem nome');
             } else {
                 // Validação específica para campos de tempo
-                if (field.type === 'time') {
-                    // Verificar se o formato está correto (HH:MM)
+                if (field.type === 'time' && value) {
                     const timePattern = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
                     if (!timePattern.test(value)) {
+                        if (formGroup) {
                         formGroup.classList.add('error');
                         this.showFieldError(formGroup, 'Formato de tempo inválido. Use HH:MM (ex: 14:30)');
+                        }
                         isValid = false;
                         errorCount++;
                         return;
                     }
                 }
                 
+                if (formGroup) {
                 formGroup.classList.remove('error');
+                }
             }
         });
 
         console.log(`Validação: ${isValid ? 'Válido' : 'Inválido'} (${errorCount} erros)`);
+        console.log(`Tipo de formulário ativo: ${isEmRotaActive ? 'Em Rota' : 'Casual'}`);
+        if (errors.length > 0) {
+            console.log('Campos com erro:', errors);
+            console.log('Todos os campos required encontrados:', Array.from(requiredFields).map(f => ({
+                name: f.name,
+                id: f.id,
+                value: f.value,
+                visible: isElementVisible(f),
+                inHiddenContainer: isFieldInHiddenContainer(f)
+            })));
+        }
 
+        // Se o formulário tem action para Django
+        if (form.action && (form.action.includes('/solicitacoes/') || form.action.includes('/Solicitacoes/') || form.action.includes('/home/'))) {
+            if (!isValid) {
+                e.preventDefault();
+                
+                // Log detalhado para debug
+                console.error('❌ VALIDAÇÃO FALHOU:', {
+                    errorCount,
+                    errors,
+                    formType: isEmRotaActive ? 'Em Rota' : 'Casual',
+                    allRequiredFields: Array.from(requiredFields).map(f => ({
+                        name: f.name || f.id,
+                        value: f.value || f.selectedIndex,
+                        visible: isElementVisible(f),
+                        inHidden: isFieldInHiddenContainer(f),
+                        display: window.getComputedStyle(f).display
+                    }))
+                });
+                
+                // Listar todos os campos que falharam
+                const failedFields = errors.map(err => {
+                    const field = Array.from(requiredFields).find(f => (f.name || f.id) === err);
+                    if (field) {
+                        return {
+                            name: field.name || field.id || 'sem nome',
+                            label: field.closest('.form-group')?.querySelector('label')?.textContent || field.placeholder || 'Campo',
+                            value: field.value || '(vazio)',
+                            visible: isElementVisible(field),
+                            display: window.getComputedStyle(field).display
+                        };
+                    }
+                    return { name: err };
+                });
+                
+                console.error('❌ Campos que falharam na validação:', failedFields);
+                
+                const message = errorCount === 1 
+                    ? 'Por favor, preencha o campo obrigatório' 
+                    : `Por favor, preencha todos os campos obrigatórios (${errorCount} campos faltando)`;
+                
+                // Mostrar notificação usando Utils (não usar alert para não bloquear)
+                if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                    Utils.showNotification(message + ' Verifique o console (F12) para detalhes.', 'error');
+                } else {
+                    // Fallback apenas se Utils não existir
+                    console.error('⚠️ Utils.showNotification não está disponível, usando alert como fallback');
+                    alert(message + '\n\nVerifique o console do navegador (F12) para detalhes dos campos.');
+                }
+                
+                return false;
+            }
+            
+            // Se válido, garantir que o formulário pode ser submetido
+            console.log('✅ VALIDAÇÃO PASSOU - Permitindo submit para Django');
+            console.log('═══════════════════════════════════════════════════');
+            
+            // ⚠️ VERIFICAÇÃO FINAL: Garantir que campos desabilitados não interferem
+            const allDisabledFields = form.querySelectorAll('input[disabled], select[disabled], textarea[disabled]');
+            allDisabledFields.forEach(field => {
+                // Remover required de campos desabilitados como segurança extra
+                if (field.hasAttribute('required')) {
+                    field.removeAttribute('required');
+                    console.log(`✅ Removido 'required' final de campo desabilitado: ${field.name || field.id}`);
+                }
+            });
+            
+            const routeRadioChecked = form.querySelector('[name="route"]:checked');
+            const routeValue = routeRadioChecked ? routeRadioChecked.value : 'não encontrado';
+            
+            console.log('📋 Dados do formulário antes do submit:', {
+                action: form.action,
+                method: form.method,
+                route: routeValue,
+                tipo: isEmRotaActive ? 'Em Rota' : 'Casual',
+                routeRadioFound: !!routeRadioChecked,
+                formId: form.id,
+                formName: form.name
+            });
+            
+            // Garantir que o campo 'route' está presente no formulário antes de submeter
+            if (!routeRadioChecked) {
+                console.warn('⚠️ Campo "route" (radio button) não encontrado - criando dinamicamente');
+                // Criar input hidden se não existir
+                const hiddenRoute = document.createElement('input');
+                hiddenRoute.type = 'hidden';
+                hiddenRoute.name = 'route';
+                hiddenRoute.value = isEmRotaActive ? 'Em Rota' : 'Casual';
+                form.appendChild(hiddenRoute);
+                console.log('✅ Campo "route" criado dinamicamente:', hiddenRoute.value);
+            }
+            
+            // ⚠️ ÚLTIMA VERIFICAÇÃO: Garantir que campos ocultos não têm 'required'
+            // Fazer isso ANTES de permitir o submit para evitar erro "not focusable"
+            // Usar as variáveis definidas anteriormente no escopo
+            const formCasualCheck = form.querySelector('#formCasual');
+            const formEmRotaCheck = form.querySelector('#formEmRota');
+            
+            if (formCasualCheck && formEmRotaCheck) {
+                const casualStyle = window.getComputedStyle(formCasualCheck);
+                const rotaStyle = window.getComputedStyle(formEmRotaCheck);
+                
+                if (casualStyle.display === 'none') {
+                    // Casual oculto - remover required de TODOS os campos
+                    formCasualCheck.querySelectorAll('[required]').forEach(field => {
+                        field.removeAttribute('required');
+                        console.log(`✅ Última verificação: Removido 'required' de campo Casual oculto: ${field.name || field.id}`);
+                    });
+                }
+                
+                if (rotaStyle.display === 'none') {
+                    // Em Rota oculto - remover required de TODOS os campos
+                    // Se Em Rota está oculto, significa que Casual está ativo, então remover tudo
+                    formEmRotaCheck.querySelectorAll('[required]').forEach(field => {
+                        field.removeAttribute('required');
+                        console.log(`✅ Última verificação: Removido 'required' de campo Em Rota oculto: ${field.name || field.id}`);
+                    });
+                }
+            }
+            
+            // Log final antes de permitir o submit
+            console.log('✅ NÃO fazendo preventDefault() - formulário será submetido normalmente');
+            console.log('📤 O navegador submeterá o formulário para:', form.action);
+            console.log('═══════════════════════════════════════════════════');
+            
+            // IMPORTANTE: NÃO fazer preventDefault aqui
+            // Deixar o navegador submeter normalmente para Django
+            // O Django processará e fará redirect, recarregando a página com o novo card
+            // Retornar undefined permite o submit continuar normalmente
+            // Não retornar false aqui!
+            return undefined;
+        }
+        
+        // Para outros formulários (não Django), usar submitForm personalizado
         if (isValid) {
+            e.preventDefault();
+            const formData = new FormData(form);
             this.submitForm(form, formData);
         } else {
-            Utils.showNotification(`Por favor, preencha os ${errorCount} campo(s) obrigatório(s)`, 'error');
+            e.preventDefault();
+            const message = errorCount === 1 
+                ? 'Por favor, preencha o campo obrigatório' 
+                : `Por favor, preencha os ${errorCount} campos obrigatórios`;
+            Utils.showNotification(message, 'error');
         }
+    }
+
+    prepareFormForSubmission(form) {
+        // Preparação adicional do formulário antes do submit (se necessário)
+        // O título será gerado automaticamente no backend
     }
 
     async submitForm(form, formData) {
@@ -349,7 +872,9 @@ class FormManager {
             
             Utils.showNotification('Solicitação criada com sucesso!', 'success');
             form.reset();
-            modalManager.closeModal();
+            if (window.modalManager) {
+                window.modalManager.closeModal();
+            }
             
         } catch (error) {
             console.error('Erro ao criar solicitação:', error);
@@ -378,36 +903,41 @@ class KanbanManager {
     }
 
     setupEventListeners() {
+        console.log('KANBANMANAGER: setupEventListeners chamado');
         // Create campaign button
         const createCampaignBtn = document.getElementById('createCampaignBtn');
+        console.log('KANBANMANAGER: Botão encontrado:', !!createCampaignBtn);
         if (createCampaignBtn) {
-            createCampaignBtn.addEventListener('click', () => {
-                console.log('Botão Nova Solicitação clicado!');
+            console.log('KANBANMANAGER: Adicionando listener ao botão');
+            createCampaignBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('KANBANMANAGER: Botão clicado!');
                 this.showCreateModal();
             });
         }
-
+        
         // Close modal buttons
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('close-btn') || e.target.closest('.close-btn')) {
-                modalManager.closeModal();
+                console.log('KANBANMANAGER: Botão fechar clicado');
+                if (window.modalManager) {
+                    window.modalManager.closeModal();
+                }
             }
             
             // Cancel button
             if (e.target.id === 'cancelCreate') {
-                modalManager.closeModal();
+                console.log('KANBANMANAGER: Botão cancelar clicado');
+                if (window.modalManager) {
+                    window.modalManager.closeModal();
+                }
             }
         });
 
-        // Create campaign form
-        const createCampaignForm = document.getElementById('createCampaignForm');
-        if (createCampaignForm) {
-            createCampaignForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                console.log('Formulário de criação submetido!');
-                this.createCampaign();
-            });
-        }
+        // REMOVIDO: O FormManager já gerencia o submit do formulário
+        // Não precisa adicionar outro listener aqui que bloqueia o submit
+        // O formulário será processado pelo handleSubmit do FormManager
 
         // Add card buttons
         document.querySelectorAll('.add-card-btn').forEach(btn => {
@@ -420,7 +950,12 @@ class KanbanManager {
 
     showCreateModal() {
         console.log('Abrindo modal de criação...');
-        modalManager.showModal('createCampaignModal');
+        console.log('KANBANMANAGER: window.modalManager existe?', !!window.modalManager);
+        if (window.modalManager) {
+            window.modalManager.showModal('createCampaignModal');
+        } else {
+            console.error('KANBANMANAGER: modalManager não está disponível!');
+        }
     }
 
     loadInitialData() {
@@ -959,18 +1494,38 @@ class SettingsManager {
 
 // Inicialização quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Inicializando sistema...');
+    console.log('APP.JS: DOMContentLoaded disparado. Inicializando sistema...');
     
-    // Inicializar gerenciadores
-    window.modalManager = new ModalManager();
-    window.sidebarManager = new SidebarManager();
-    window.formManager = new FormManager();
-    window.navigationManager = new NavigationManager();
-    window.settingsManager = new SettingsManager();
-    
-    // Inicializar KanbanManager apenas se estivermos na página do Kanban
-    if (document.querySelector('.kanban-board')) {
-        window.kanbanManager = new KanbanManager();
+    try {
+        // Inicializar gerenciadores
+        window.modalManager = new ModalManager();
+        console.log('APP.JS: ModalManager inicializado');
+        
+        window.sidebarManager = new SidebarManager();
+        console.log('APP.JS: SidebarManager inicializado');
+        
+        window.formManager = new FormManager();
+        console.log('APP.JS: FormManager inicializado');
+        
+        // NÃO inicializar NavigationManager aqui - ele interfere na navegação normal
+        // window.navigationManager = new NavigationManager();
+        console.log('APP.JS: NavigationManager desabilitado (usa navegação normal)');
+        
+        window.settingsManager = new SettingsManager();
+        console.log('APP.JS: SettingsManager inicializado');
+        
+        // Inicializar KanbanManager apenas se estivermos na página do Kanban
+        const kanbanBoard = document.querySelector('.kanban-board');
+        console.log('APP.JS: Kanban board encontrado:', !!kanbanBoard);
+        if (kanbanBoard) {
+            console.log('APP.JS: Inicializando KanbanManager...');
+            window.kanbanManager = new KanbanManager();
+            console.log('APP.JS: KanbanManager inicializado:', !!window.kanbanManager);
+        } else {
+            console.log('APP.JS: Kanban board não encontrado');
+        }
+    } catch (error) {
+        console.error('APP.JS: Erro ao inicializar sistema:', error);
     }
 
     // Adicionar estilos para animações

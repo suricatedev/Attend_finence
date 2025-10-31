@@ -259,10 +259,10 @@
                         <td>{{ solicitacao.data_de_criacao|date:"d/m/Y" }}</td>
                         <td>{{ solicitacao.data_de_pagamento|date:"d/m/Y" }}</td>
                         <td class="actions-cell">
-                            <button class="btn-action btn-view" onclick="viewDetails({{ solicitacao.id }})" title="Ver detalhes">
+                            <button class="btn-action btn-view" data-solicitacao-id="{{ solicitacao.id }}" data-action="view" title="Ver detalhes">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="btn-action btn-edit" onclick="editSolicitacao({{ solicitacao.id }})" title="Editar">
+                            <button class="btn-action btn-edit" data-solicitacao-id="{{ solicitacao.id }}" data-action="edit" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
                         </td>

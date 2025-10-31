@@ -342,9 +342,9 @@ body {
 
 /* Estado ativo com gradiente suave */
 .tab-btn.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    background: linear-gradient(135deg, #FFCB57 0%, #FFC21C 100%);
+    color: #1C1C1C;
+    box-shadow: 0 4px 12px rgba(255, 203, 87, 0.4);
     font-weight: 600;
 }
 

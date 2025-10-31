@@ -8,42 +8,214 @@
             </button>
         </div>
         <div class="modal-body">
-            <form id="createCampaignForm" method="POST" enctype="multipart/form-data" action="/Solicitacoes/home/">
+            <form id="createCampaignForm" method="POST" enctype="multipart/form-data" action="/solicitacoes/home/" novalidate>
                 {% csrf_token %}
+                
+                <!-- Seletor de Tipo de Solicitação -->
+                <div class="route-classic">
+                    <label for="campaignRoute">Tipo de Solicitação</label>
+                    <div class="route-options">
+                        <label class="route-option">
+                            <input type="radio" id="routeEmRota" name="route" value="Em Rota">
+                            <span class="route-label">
+                                <i class="fas fa-route"></i>
+                                Em Rota
+                            </span>
+                        </label>
+                        <label class="route-option">
+                            <input type="radio" id="routeCasual" name="route" value="Casual" checked>
+                            <span class="route-label">
+                                <i class="fas fa-user"></i>
+                                Casual
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Formulário para "Em Rota" -->
+                <div id="formEmRota" class="form-route" style="display: none;">
+                    <div class="route-section-header">
+                        <h3><i class="fas fa-route"></i> Solicitações em Rota</h3>
+                        <p>Preencha até 4 IDs de solicitação (mínimo 2 obrigatórios)</p>
+                    </div>
+                    
+                    <!-- ID 1 - Obrigatório -->
+                    <div class="route-id-group">
+                        <div class="route-id-header">
+                            <label for="routeId1">ID da Solicitação 1 <span class="required">*</span></label>
+                        </div>
+                        <div class="route-id-inputs">
+                            <div class="form-group route-id-field">
+                                <input type="text" id="routeId1" name="route_id_1" placeholder="Ex: INCXXXXX" required>
+                                <small class="form-help">ID obrigatório</small>
+                            </div>
+                            <div class="form-group route-valor-field">
+                                <label for="routeValor1">Valor <span class="required">*</span></label>
+                                <input type="text" id="routeValor1" name="route_valor_1" placeholder="Ex: 1500" required>
+                            </div>
+                            <div class="form-group route-servico-field">
+                                <label for="routeServico1">Serviço <span class="required">*</span></label>
+                                <select id="routeServico1" name="route_servico_1" required>
+                                    <option value="">Selecione o serviço</option>
+                                    {% for servico in servicos_disponiveis %}
+                                    <option value="{{ servico.id }}">{{ servico.nome }}</option>
+                                    {% empty %}
+                                    <option value="" disabled>Nenhum serviço disponível</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ID 2 - Obrigatório -->
+                    <div class="route-id-group">
+                        <div class="route-id-header">
+                            <label for="routeId2">ID da Solicitação 2 <span class="required">*</span></label>
+                        </div>
+                        <div class="route-id-inputs">
+                            <div class="form-group route-id-field">
+                                <input type="text" id="routeId2" name="route_id_2" placeholder="Ex: INCXXXXX" required>
+                                <small class="form-help">ID obrigatório</small>
+                            </div>
+                            <div class="form-group route-valor-field">
+                                <label for="routeValor2">Valor <span class="required">*</span></label>
+                                <input type="text" id="routeValor2" name="route_valor_2" placeholder="Ex: 1500" required>
+                            </div>
+                            <div class="form-group route-servico-field">
+                                <label for="routeServico2">Serviço <span class="required">*</span></label>
+                                <select id="routeServico2" name="route_servico_2" required>
+                                    <option value="">Selecione o serviço</option>
+                                    {% for servico in servicos_disponiveis %}
+                                    <option value="{{ servico.id }}">{{ servico.nome }}</option>
+                                    {% empty %}
+                                    <option value="" disabled>Nenhum serviço disponível</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ID 3 - Opcional -->
+                    <div class="route-id-group">
+                        <div class="route-id-header">
+                            <label for="routeId3">ID da Solicitação 3 <span class="optional">(Opcional)</span></label>
+                        </div>
+                        <div class="route-id-inputs">
+                            <div class="form-group route-id-field">
+                                <input type="text" id="routeId3" name="route_id_3" placeholder="Ex: INCXXXXX">
+                                <small class="form-help">ID opcional</small>
+                            </div>
+                            <div class="form-group route-valor-field">
+                                <label for="routeValor3">Valor</label>
+                                <input type="text" id="routeValor3" name="route_valor_3" placeholder="Ex: 1500">
+                            </div>
+                            <div class="form-group route-servico-field">
+                                <label for="routeServico3">Serviço</label>
+                                <select id="routeServico3" name="route_servico_3">
+                                    <option value="">Selecione o serviço</option>
+                                    {% for servico in servicos_disponiveis %}
+                                    <option value="{{ servico.id }}">{{ servico.nome }}</option>
+                                    {% empty %}
+                                    <option value="" disabled>Nenhum serviço disponível</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ID 4 - Opcional -->
+                    <div class="route-id-group">
+                        <div class="route-id-header">
+                            <label for="routeId4">ID da Solicitação 4 <span class="optional">(Opcional)</span></label>
+                        </div>
+                        <div class="route-id-inputs">
+                            <div class="form-group route-id-field">
+                                <input type="text" id="routeId4" name="route_id_4" placeholder="Ex: INCXXXXX">
+                                <small class="form-help">ID opcional</small>
+                            </div>
+                            <div class="form-group route-valor-field">
+                                <label for="routeValor4">Valor</label>
+                                <input type="text" id="routeValor4" name="route_valor_4" placeholder="Ex: 1500">
+                            </div>
+                            <div class="form-group route-servico-field">
+                                <label for="routeServico4">Serviço</label>
+                                <select id="routeServico4" name="route_servico_4">
+                                    <option value="">Selecione o serviço</option>
+                                    {% for servico in servicos_disponiveis %}
+                                    <option value="{{ servico.id }}">{{ servico.nome }}</option>
+                                    {% empty %}
+                                    <option value="" disabled>Nenhum serviço disponível</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Campos comuns para "Em Rota" -->
+                    <div class="form-row" style="margin-top: 2rem;">
+                        <div class="form-group">
+                            <label for="routeRecebedor">Nome do Recebedor</label>
+                            <input type="text" id="routeRecebedor" name="route_recebedor" placeholder="Ex: Maria Santos" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="routeDescription">Descrição</label>
+                        <textarea id="routeDescription" name="route_description" rows="4" placeholder="Descreva detalhadamente a solicitação financeira..." required></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="routeDataPagamento">Data de Pagamento</label>
+                            <input type="date" id="routeDataPagamento" name="route_dataPagamento" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="routeDataCriacao">Data de Criação</label>
+                            <input type="date" id="routeDataCriacao" name="route_dataCriacao" readonly style="background-color: #f0f0f0; cursor: not-allowed;">
+                            <small class="form-help">Data preenchida automaticamente</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="routeAnexos">Anexos</label>
+                        <input type="file" id="routeAnexos" name="route_anexos" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+                        <small class="form-help">Formatos aceitos: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="routePriority">Prioridade</label>
+                        <select id="routePriority" name="route_priority" required>
+                            <option value="baixa">Baixa</option>
+                            <option value="media">Média</option>
+                            <option value="alta">Alta</option>
+                    </select>
+                    </div>
+                </div>
+
+                <!-- Formulário para "Casual" -->
+                <div id="formCasual" class="form-casual">
                 <div class="form-group">
                     <label for="campaignId">ID da Solicitação</label>
-                    <input type="text" id="campaignId" name="id" placeholder="Ex: INCXXXXX" value="">
+                        <input type="text" id="campaignId" name="casual_id" placeholder="Ex: INCXXXXX" value="">
                     <small class="form-help">Exemplo: INCXXXXX</small>
-                </div>
-                
-                v
-                
-                <div class="form-group">
-                    <label for="campaignTitle">Título da Solicitação</label>
-                    <input type="text" id="campaignTitle" name="title" placeholder="Ex: Solicitação de pagamento para consultoria" required>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="campaignSolicitante">Nome do Solicitante</label>
-                        <input type="text" id="campaignSolicitante" name="solicitante" placeholder="Ex: João Silva" required>
-                    </div>
-
-                    <div class="form-group">
                         <label for="campaignRecebedor">Nome do Recebedor</label>
-                        <input type="text" id="campaignRecebedor" name="recebedor" placeholder="Ex: Maria Santos" required>
+                            <input type="text" id="campaignRecebedor" name="casual_recebedor" placeholder="Ex: Maria Santos" required>
                     </div>
                 </div>
                 
-                <div class="form-group">
+                    <div class="form-group" id="campaignValorGroup">
                     <label for="campaignValor">Valor</label>
-                    <input type="text" id="campaignValor" name="valor" placeholder="Digite o valor (ex: 1500)" required>
+                        <input type="text" id="campaignValor" name="casual_valor" placeholder="Digite o valor (ex: 1500)" required>
                     <small class="form-help">Digite apenas números, será formatado automaticamente</small>
                 </div>
 
-                <div class="form-group">
+                    <div class="form-group" id="campaignServiceGroup">
                     <label for="campaignService">Serviço</label>
-                    <select id="campaignService" name="service" required>
+                        <select id="campaignService" name="casual_service" required>
                         <option value="">Selecione o tipo de serviço</option>
                         {% for servico in servicos_disponiveis %}
                         <option value="{{ servico.id }}">{{ servico.nome }}</option>
@@ -55,34 +227,35 @@
                 
                 <div class="form-group">
                     <label for="campaignDescription">Descrição</label>
-                    <textarea id="campaignDescription" name="description" rows="3" placeholder="Descreva detalhadamente a solicitação financeira..." required></textarea>
+                        <textarea id="campaignDescription" name="casual_description" rows="4" placeholder="Descreva detalhadamente a solicitação financeira..." required></textarea>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label for="campaignDataPagamento">Data de Pagamento</label>
-                        <input type="date" id="campaignDataPagamento" name="dataPagamento" required>
+                            <input type="date" id="campaignDataPagamento" name="casual_dataPagamento" required>
                     </div>
                     <div class="form-group">
                         <label for="campaignDataCriacao">Data de Criação</label>
-                        <input type="date" id="campaignDataCriacao" name="dataCriacao" readonly style="background-color: #f0f0f0; cursor: not-allowed;">
+                            <input type="date" id="campaignDataCriacao" name="casual_dataCriacao" readonly style="background-color: #f0f0f0; cursor: not-allowed;">
                         <small class="form-help">Data preenchida automaticamente</small>
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label for="campaignAnexos">Anexos</label>
-                    <input type="file" id="campaignAnexos" name="anexos" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+                        <input type="file" id="campaignAnexos" name="casual_anexos" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
                     <small class="form-help">Formatos aceitos: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG</small>
                 </div>
                 
                 <div class="form-group">
                     <label for="campaignPriority">Prioridade</label>
-                    <select id="campaignPriority" name="priority" required>
+                        <select id="campaignPriority" name="casual_priority" required>
                         <option value="baixa">Baixa</option>
                         <option value="media">Média</option>
                         <option value="alta">Alta</option>
                     </select>
+                    </div>
                 </div>
             </form>
         </div>
@@ -95,18 +268,469 @@
             </button>
         </div>
     </div>
-    <script src="/static/js/forms.js"></script>
+    <style>
+        /* Estilos para route-classic */
+        .route-classic {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .route-classic > label {
+            display: block;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            color: #1C1C1C;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .route-options {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .route-option {
+            flex: 1;
+            min-width: 150px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .route-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .route-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+        }
+
+        .route-label i {
+            font-size: 1.2rem;
+            color: #94a3b8;
+        }
+
+        .route-option input[type="radio"]:checked + .route-label {
+            background: linear-gradient(135deg, #FFCB57 0%, #FFC21C 100%);
+            border-color: #FFCB57;
+            color: #1C1C1C;
+            box-shadow: 0 4px 12px rgba(255, 203, 87, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .route-option input[type="radio"]:checked + .route-label i {
+            color: #1C1C1C;
+        }
+
+        .route-label:hover {
+            border-color: #FFCB57;
+            transform: translateY(-1px);
+        }
+
+        /* Estilos para formulário Em Rota */
+        .form-route {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .route-section-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .route-section-header h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1C1C1C;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .route-section-header h3 i {
+            color: #FFCB57;
+        }
+
+        .route-section-header p {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .route-id-group {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .route-id-group:hover {
+            border-color: #FFCB57;
+            background: #ffffff;
+        }
+
+        .route-id-header {
+            margin-bottom: 0.75rem;
+        }
+
+        .route-id-header label {
+            font-weight: 600;
+            color: #1C1C1C;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .route-id-header .required {
+            color: #ef4444;
+            font-weight: 700;
+        }
+
+        .route-id-header .optional {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            font-weight: 400;
+        }
+
+        .route-id-inputs {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1.5fr;
+            gap: 1rem;
+        }
+
+        .route-id-field,
+        .route-valor-field,
+        .route-servico-field {
+            margin-bottom: 0;
+        }
+
+        .route-id-field input {
+            font-weight: 600;
+        }
+
+        .route-valor-field label,
+        .route-servico-field label {
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .route-servico-field select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: #ffffff;
+            color: #1C1C1C;
+            transition: all 0.3s ease;
+        }
+
+        .route-servico-field select:focus {
+            outline: none;
+            border-color: #FFCB57;
+            box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2);
+        }
+
+        .route-servico-field select:hover {
+            border-color: #cbd5e0;
+        }
+
+        .form-casual {
+            margin-top: 1.5rem;
+        }
+
+        /* Garantir que textarea seja interativo */
+        #campaignDescription,
+        textarea[name="description"] {
+            pointer-events: auto !important;
+            position: relative !important;
+            z-index: 10 !important;
+            cursor: text !important;
+            resize: vertical !important;
+            min-height: 100px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            background: #ffffff !important;
+            border: 1px solid #544350 !important;
+            border-radius: 6px !important;
+            padding: 12px !important;
+            font-size: 1rem !important;
+            font-family: inherit !important;
+            color: #1C1C1C !important;
+            line-height: 1.5 !important;
+        }
+
+        #campaignDescription:focus,
+        textarea[name="description"]:focus {
+            outline: none !important;
+            border-color: #FFCB57 !important;
+            box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2) !important;
+        }
+
+        .form-group textarea {
+            pointer-events: auto !important;
+            position: relative;
+            z-index: 1;
+            cursor: text;
+        }
+
+        /* Garantir que nenhum elemento esteja sobrepondo o textarea */
+        .form-group {
+            position: relative;
+            z-index: 0;
+        }
+
+        .form-group textarea {
+            position: relative;
+            z-index: 2;
+        }
+
+        @media (max-width: 1024px) {
+            .route-id-inputs {
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+
+            .route-servico-field {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .route-options {
+                flex-direction: column;
+            }
+
+            .route-option {
+                min-width: 100%;
+            }
+
+            .route-id-inputs {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+
+            .route-servico-field {
+                grid-column: 1;
+            }
+        }
+    </style>
+
     <script>
         // Preencher automaticamente a data de criação com a data de hoje
         document.addEventListener('DOMContentLoaded', function() {
-            const dataCriacaoInput = document.getElementById('campaignDataCriacao');
-            if (dataCriacaoInput) {
                 const hoje = new Date();
                 const ano = hoje.getFullYear();
                 const mes = String(hoje.getMonth() + 1).padStart(2, '0');
                 const dia = String(hoje.getDate()).padStart(2, '0');
-                dataCriacaoInput.value = `${ano}-${mes}-${dia}`;
+            const dataHoje = `${ano}-${mes}-${dia}`;
+            
+            // Preencher data de criação para formulário Casual
+            const dataCriacaoCasual = document.getElementById('campaignDataCriacao');
+            if (dataCriacaoCasual) {
+                dataCriacaoCasual.value = dataHoje;
             }
+            
+            // Preencher data de criação para formulário Em Rota
+            const dataCriacaoRota = document.getElementById('routeDataCriacao');
+            if (dataCriacaoRota) {
+                dataCriacaoRota.value = dataHoje;
+            }
+
+            // Alternar entre formulários Em Rota e Casual
+            const routeEmRota = document.getElementById('routeEmRota');
+            const routeCasual = document.getElementById('routeCasual');
+            const formEmRota = document.getElementById('formEmRota');
+            const formCasual = document.getElementById('formCasual');
+            const campaignValor = document.getElementById('campaignValor');
+
+            function toggleForms() {
+                if (routeEmRota && routeEmRota.checked) {
+                    // Mostrar formulário Em Rota
+                    if (formEmRota) {
+                        formEmRota.style.display = 'block';
+                        // Habilitar campos do Em Rota
+                        formEmRota.querySelectorAll('input, select, textarea').forEach(field => {
+                            if (field.type !== 'file' && !field.readOnly) {
+                                field.disabled = false;
+                                field.removeAttribute('readonly');
+                            }
+                        });
+                    }
+                    
+                    // Ocultar e DESABILITAR formulário Casual
+                    if (formCasual) {
+                        formCasual.style.display = 'none';
+                        // Desabilitar TODOS os campos Casual e remover required
+                        formCasual.querySelectorAll('input, select, textarea').forEach(field => {
+                            if (field.type !== 'file') {
+                                field.disabled = true;
+                                field.removeAttribute('required');
+                                field.value = '';
+                            }
+                        });
+                    }
+                } else if (routeCasual && routeCasual.checked) {
+                    // Mostrar formulário Casual
+                    if (formCasual) {
+                        formCasual.style.display = 'block';
+                        // Habilitar campos do Casual
+                        formCasual.querySelectorAll('input, select, textarea').forEach(field => {
+                            if (field.type !== 'file' && !field.readOnly) {
+                                field.disabled = false;
+                                field.removeAttribute('readonly');
+                            }
+                        });
+                    }
+                    
+                    // Ocultar e DESABILITAR formulário Em Rota
+                    if (formEmRota) {
+                        formEmRota.style.display = 'none';
+                        // Desabilitar TODOS os campos Em Rota e remover required
+                        formEmRota.querySelectorAll('input, select, textarea').forEach(field => {
+                            if (field.type !== 'file') {
+                                field.disabled = true;
+                                field.removeAttribute('required');
+                                field.value = '';
+                            }
+                        });
+                    }
+                }
+            }
+
+            if (routeEmRota) {
+                routeEmRota.addEventListener('change', toggleForms);
+            }
+            if (routeCasual) {
+                routeCasual.addEventListener('change', toggleForms);
+            }
+
+            // Inicializar estado
+            toggleForms();
+
+            // Validar campos opcionais: se ID for preenchido, valor e serviço também devem ser obrigatórios
+            function setupRouteValidation() {
+                // Função para validar grupo de campos opcionais
+                function validateOptionalGroup(idInput, valorInput, servicoInput) {
+                    if (!idInput || !valorInput || !servicoInput) return;
+
+                    // Quando ID é preenchido
+                    idInput.addEventListener('input', function() {
+                        if (this.value.trim()) {
+                            valorInput.setAttribute('required', 'required');
+                            servicoInput.setAttribute('required', 'required');
+                        } else {
+                            valorInput.removeAttribute('required');
+                            servicoInput.removeAttribute('required');
+                            valorInput.value = '';
+                            servicoInput.value = '';
+                        }
+                    });
+
+                    // Quando valor é preenchido
+                    valorInput.addEventListener('input', function() {
+                        if (this.value.trim()) {
+                            if (!idInput.value.trim()) {
+                                idInput.setAttribute('required', 'required');
+                            }
+                            if (!servicoInput.value) {
+                                servicoInput.setAttribute('required', 'required');
+                            }
+                        } else if (!idInput.value.trim() && !servicoInput.value) {
+                            idInput.removeAttribute('required');
+                            servicoInput.removeAttribute('required');
+                        }
+                    });
+
+                    // Quando serviço é selecionado
+                    servicoInput.addEventListener('change', function() {
+                        if (this.value) {
+                            if (!idInput.value.trim()) {
+                                idInput.setAttribute('required', 'required');
+                            }
+                            if (!valorInput.value.trim()) {
+                                valorInput.setAttribute('required', 'required');
+                            }
+                        } else if (!idInput.value.trim() && !valorInput.value.trim()) {
+                            idInput.removeAttribute('required');
+                            valorInput.removeAttribute('required');
+                        }
+                    });
+                }
+
+                // Validação para ID 3
+                const routeId3 = document.getElementById('routeId3');
+                const routeValor3 = document.getElementById('routeValor3');
+                const routeServico3 = document.getElementById('routeServico3');
+                validateOptionalGroup(routeId3, routeValor3, routeServico3);
+
+                // Validação para ID 4
+                const routeId4 = document.getElementById('routeId4');
+                const routeValor4 = document.getElementById('routeValor4');
+                const routeServico4 = document.getElementById('routeServico4');
+                validateOptionalGroup(routeId4, routeValor4, routeServico4);
+            }
+
+            setupRouteValidation();
+
+            // Formatação de valores monetários nos campos de rota
+            const valorInputs = document.querySelectorAll('[name^="route_valor"]');
+            valorInputs.forEach(input => {
+                input.addEventListener('input', function(e) {
+                    // Remove tudo que não é número
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value) {
+                        // Formata como moeda brasileira
+                        value = value.replace(/^0+/, ''); // Remove zeros à esquerda
+                        if (!value) value = '0';
+                        
+                        // Converte para formato decimal
+                        const numericValue = parseFloat(value) / 100;
+                        value = numericValue.toFixed(2).replace('.', ',');
+                        value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        e.target.value = 'R$ ' + value;
+                    } else {
+                        e.target.value = '';
+                    }
+                });
+
+                // Formatação ao perder foco
+                input.addEventListener('blur', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value && value !== '0') {
+                        const numericValue = parseFloat(value) / 100;
+                        value = numericValue.toFixed(2).replace('.', ',');
+                        value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        e.target.value = 'R$ ' + value;
+                    }
+                });
+            });
         });
     </script>
 </div>

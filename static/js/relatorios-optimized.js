@@ -300,6 +300,34 @@ class RelatoriosOptimized {
         document.getElementById('closeDetailsModal')?.addEventListener('click', () => {
             this.closeModal();
         });
+
+        // Event delegation para botões de ação (view e edit)
+        const reportsTable = document.querySelector('.reports-table, table');
+        if (reportsTable) {
+            reportsTable.addEventListener('click', (e) => {
+                const btn = e.target.closest('.btn-action');
+                if (btn) {
+                    const solicitacaoId = parseInt(btn.getAttribute('data-solicitacao-id'));
+                    const action = btn.getAttribute('data-action');
+                    
+                    if (solicitacaoId && action === 'view') {
+                        // Chamar função viewDetails se existir globalmente
+                        if (typeof viewDetails === 'function') {
+                            viewDetails(solicitacaoId);
+                        } else {
+                            console.log('Ver detalhes:', solicitacaoId);
+                        }
+                    } else if (solicitacaoId && action === 'edit') {
+                        // Chamar função editSolicitacao se existir globalmente
+                        if (typeof editSolicitacao === 'function') {
+                            editSolicitacao(solicitacaoId);
+                        } else {
+                            console.log('Editar solicitação:', solicitacaoId);
+                        }
+                    }
+                }
+            });
+        }
     }
 
     // Debounce otimizado para filtros

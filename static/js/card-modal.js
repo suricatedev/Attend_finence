@@ -2,6 +2,9 @@
 // MODAL DE DETALHES DO CARD
 // ========================================
 
+// Flag para evitar registrar listeners duplicados
+let modalListenersSetup = false;
+
 // Função para calcular tempo na fila
 function calculateQueueTime() {
     const timeElements = document.querySelectorAll('.card-time[data-creation-time]');
@@ -69,7 +72,7 @@ function initializeCardExpansion() {
 }
 
 // Função para abrir modal de detalhes do card
-function openCardDetailModal(card) {
+async function openCardDetailModal(card) {
     const modal = document.getElementById('cardDetailModal');
     const header = modal.querySelector('.modal-header');
     
@@ -78,12 +81,34 @@ function openCardDetailModal(card) {
         return;
     }
     
-    // Extrair dados do card
-    const cardData = extractCardData(card);
+    // Extrair dados do card (agora é async)
+    const cardData = await extractCardData(card);
     
     // Adicionar ID do card ao modal para referência
     const cardId = card.getAttribute('data-card-id') || Math.random().toString(36).substr(2, 9);
     modal.setAttribute('data-card-id', cardId);
+    
+    // Limpar seções anteriores antes de preencher
+    const routeItemsSection = document.getElementById('modal-route-items');
+    if (routeItemsSection) {
+        routeItemsSection.remove();
+    }
+    
+    // Restaurar campo "Valor" se estava oculto
+    const valorElement = document.getElementById('modal-valor');
+    const valorContainer = valorElement ? valorElement.closest('.detail-item') : null;
+    if (valorContainer) {
+        valorContainer.style.display = '';
+    }
+    
+    // Restaurar título da seção se foi alterado
+    const valoresStatusSection = document.querySelector('.detail-section.valores-status');
+    if (valoresStatusSection) {
+        const sectionTitle = valoresStatusSection.querySelector('.section-title');
+        if (sectionTitle) {
+            sectionTitle.innerHTML = '<i class="fas fa-dollar-sign"></i> Valores e Status';
+        }
+    }
     
     // Preencher dados do modal
     populateCardDetails(cardData);
@@ -109,9 +134,13 @@ function openCardDetailModal(card) {
     setupModalEventListeners();
 }
 
-// Função para extrair dados do card
-function extractCardData(card) {
+// Função para extrair dados do card (agora é async para suportar AJAX)
+async function extractCardData(card) {
     const data = {};
+    
+    // Verificar se é uma solicitação "Em Rota"
+    const tipo = card.getAttribute('data-tipo');
+    data.isEmRota = tipo === 'em_rota';
     
     // Extrair informações básicas
     const title = card.querySelector('.card-title');
@@ -148,7 +177,7 @@ function extractCardData(card) {
                 data.solicitante = value.textContent;
             } else if (labelText.includes('recebedor')) {
                 data.recebedor = value.textContent;
-            } else if (labelText.includes('valor')) {
+            } else if (labelText.includes('valor total') || labelText.includes('valor')) {
                 data.valor = value.textContent;
             } else if (labelText.includes('criação')) {
                 data.dataCriacao = value.textContent;
@@ -157,6 +186,148 @@ function extractCardData(card) {
             }
         }
     });
+    
+    // Se for "Em Rota", extrair os itens individuais da rota
+    if (data.isEmRota) {
+        console.log('🔍 Extraindo itens da rota...');
+        data.itensRota = [];
+        
+        // Buscar itens da rota (mesmo que esteja oculto com display:none)
+        const expandedSection = card.querySelector('.route-items-expanded');
+        let routeItems = [];
+        
+        console.log('🔍 Seção expandida encontrada:', !!expandedSection);
+        
+        if (expandedSection) {
+            // Buscar na seção expandida (mesmo que oculta)
+            routeItems = expandedSection.querySelectorAll('.route-item');
+            console.log(`🔍 Itens encontrados na seção expandida: ${routeItems.length}`);
+        } else {
+            // Fallback: buscar diretamente no card
+            routeItems = card.querySelectorAll('.route-item');
+            console.log(`🔍 Itens encontrados no card: ${routeItems.length}`);
+        }
+        
+        // Se ainda não encontrou, tentar buscar pelo data-solicitacao-id ou data-card-id para fazer requisição AJAX
+        if (routeItems.length === 0) {
+            // Tentar vários atributos para encontrar o ID
+            const solicitacaoId = card.getAttribute('data-solicitacao-id') || 
+                                 card.getAttribute('data-card-id') ||
+                                 card.getAttribute('id')?.replace('card-', '') ||
+                                 card.closest('.card')?.getAttribute('data-solicitacao-id');
+            console.log('⚠️ Nenhum item encontrado no HTML. Tentando buscar via AJAX. ID da solicitação:', solicitacaoId);
+            
+            // Fazer requisição AJAX para obter os itens da rota
+            if (solicitacaoId) {
+                try {
+                    // Buscar CSRF token
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                                     document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+                    
+                    const response = await fetch(`/solicitacoes/obter-itens-rota/${solicitacaoId}/`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.itens) {
+                            console.log('✅ Itens obtidos via AJAX:', result.itens);
+                            data.itensRota = result.itens.map(item => ({
+                                ordem: item.ordem,
+                                id: item.id,
+                                valor: item.valor,
+                                servico: item.servico
+                            }));
+                            // Atualizar valor total também
+                            if (result.valor_total) {
+                                data.valor = result.valor_total;
+                            }
+                        }
+                    } else {
+                        console.warn('⚠️ Erro ao buscar itens via AJAX:', response.status);
+                    }
+                } catch (error) {
+                    console.error('❌ Erro na requisição AJAX:', error);
+                }
+            }
+        }
+        
+        routeItems.forEach((item, index) => {
+            const itemNumber = item.querySelector('.route-item-number');
+            const itemId = item.querySelector('.route-item-id');
+            const itemValor = item.querySelector('.route-item-valor');
+            const itemServico = item.querySelector('.route-item-servico');
+            
+            console.log(`🔍 Item ${index + 1}:`, {
+                itemNumber: itemNumber?.textContent,
+                itemId: itemId?.textContent,
+                itemValor: itemValor?.textContent,
+                itemServico: itemServico?.textContent
+            });
+            
+            // Extrair número do item do texto (Item 1, Item 2, etc.)
+            let ordem = index + 1;
+            if (itemNumber) {
+                const ordemMatch = itemNumber.textContent.match(/\d+/);
+                if (ordemMatch) {
+                    ordem = parseInt(ordemMatch[0]);
+                }
+            }
+            
+            // Extrair valor - pode estar em route-item-valor ou route-item-value
+            let valorExtraido = 'R$ 0,00';
+            if (itemValor) {
+                valorExtraido = itemValor.textContent.trim();
+            } else {
+                // Tentar buscar todos os route-item-value
+                const valores = item.querySelectorAll('.route-item-value');
+                if (valores.length > 0) {
+                    // O primeiro route-item-value geralmente é o valor
+                    const primeiroValor = valores[0];
+                    if (primeiroValor && primeiroValor.textContent.includes('R$')) {
+                        valorExtraido = primeiroValor.textContent.trim();
+                    }
+                }
+            }
+            
+            // Extrair serviço - pode estar em route-item-servico ou segundo route-item-value
+            let servicoExtraido = 'N/A';
+            if (itemServico) {
+                servicoExtraido = itemServico.textContent.trim();
+            } else {
+                // Tentar buscar todos os route-item-value
+                const valores = item.querySelectorAll('.route-item-value');
+                if (valores.length > 1) {
+                    // O segundo route-item-value geralmente é o serviço
+                    servicoExtraido = valores[1].textContent.trim();
+                } else if (valores.length === 1 && !valores[0].textContent.includes('R$')) {
+                    // Se só tem um e não é valor, pode ser serviço
+                    servicoExtraido = valores[0].textContent.trim();
+                }
+            }
+            
+            // Se pelo menos um dos campos existe, adicionar o item
+            if (itemId || itemNumber || valorExtraido !== 'R$ 0,00' || servicoExtraido !== 'N/A') {
+                data.itensRota.push({
+                    ordem: ordem,
+                    id: itemId ? itemId.textContent.replace(/^#/, '').trim() : '',
+                    valor: valorExtraido,
+                    servico: servicoExtraido
+                });
+            }
+        });
+        
+        // Ordenar por ordem
+        data.itensRota.sort((a, b) => a.ordem - b.ordem);
+        
+        console.log('✅ Itens extraídos:', data.itensRota);
+    } else {
+        console.log('ℹ️ Não é solicitação Em Rota');
+    }
     
     // Extrair prioridade
     const priority = card.querySelector('.priority');
@@ -185,8 +356,139 @@ function populateCardDetails(data) {
     if (recebedorElement) recebedorElement.textContent = data.recebedor || 'N/A';
     
     // Preencher valores e status
+    const valoresStatusSection = document.querySelector('.detail-section.valores-status');
     const valorElement = document.getElementById('modal-valor');
-    if (valorElement) valorElement.textContent = data.valor || 'R$ 0,00';
+    const valorContainer = valorElement ? valorElement.closest('.detail-item') : null;
+    
+    console.log('🔍 populateCardDetails - isEmRota:', data.isEmRota, 'itensRota:', data.itensRota?.length);
+    
+    if (data.isEmRota && data.itensRota && data.itensRota.length > 0) {
+        console.log('✅ É Em Rota com itens. Exibindo detalhamento...');
+        
+        // Para solicitação "Em Rota", mostrar valor total E itens individuais
+        
+        // Mudar o título da seção para "Itens da Rota"
+        if (valoresStatusSection) {
+            const sectionTitle = valoresStatusSection.querySelector('.section-title');
+            if (sectionTitle) {
+                sectionTitle.innerHTML = '<i class="fas fa-route"></i> Itens da Rota';
+                console.log('✅ Título da seção alterado para "Itens da Rota"');
+            }
+        }
+        
+        // ✅ MOSTRAR o campo "Valor Total" - não ocultar
+        if (valorContainer && valorElement) {
+            valorContainer.style.display = '';
+            const valorLabel = valorContainer.querySelector('.detail-label');
+            if (valorLabel) {
+                valorLabel.textContent = 'Valor Total';
+                valorLabel.style.display = '';
+            }
+            valorElement.textContent = data.valor || 'R$ 0,00';
+            valorElement.style.display = '';
+            console.log('✅ Campo Valor Total configurado:', data.valor);
+        } else {
+            console.warn('⚠️ valorContainer ou valorElement não encontrado');
+        }
+        
+        // Remover seção anterior se existir
+        let routeItemsSection = document.getElementById('modal-route-items');
+        if (routeItemsSection) {
+            routeItemsSection.remove();
+        }
+        
+        // Criar nova seção de itens da rota dentro da seção "Valores e Status"
+        // Inserir APÓS o campo Valor Total, mas antes de Prioridade
+        routeItemsSection = document.createElement('div');
+        routeItemsSection.id = 'modal-route-items';
+        routeItemsSection.className = 'route-items-modal-section';
+        
+        if (valoresStatusSection) {
+            // Inserir após o campo Valor Total (primeiro detail-item) mas antes de Prioridade
+            const prioridadeItem = valoresStatusSection.querySelector('.detail-item:nth-of-type(2)'); // Prioridade é o segundo detail-item
+            if (prioridadeItem) {
+                valoresStatusSection.insertBefore(routeItemsSection, prioridadeItem);
+            } else {
+                // Fallback: adicionar após o valor total
+                const valorTotalItem = valorContainer;
+                if (valorTotalItem && valorTotalItem.nextSibling) {
+                    valoresStatusSection.insertBefore(routeItemsSection, valorTotalItem.nextSibling);
+                } else {
+                    valoresStatusSection.appendChild(routeItemsSection);
+                }
+            }
+        }
+        
+        // Criar header para os itens individuais
+        const itemsHeader = document.createElement('div');
+        itemsHeader.className = 'route-items-modal-header';
+        itemsHeader.innerHTML = '<i class="fas fa-list-ul"></i> <span>Detalhamento por ID</span>';
+        routeItemsSection.appendChild(itemsHeader);
+        console.log('✅ Header de detalhamento criado');
+        
+        // Criar lista de itens
+        const itemsList = document.createElement('div');
+        itemsList.className = 'route-items-modal-list';
+        
+        console.log(`🔍 Criando ${data.itensRota.length} itens na lista...`);
+        
+        data.itensRota.forEach((item, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'route-item-modal';
+            
+            console.log(`🔍 Criando item ${index + 1}:`, item);
+            
+            itemDiv.innerHTML = `
+                <div class="route-item-modal-header">
+                    <span class="route-item-modal-number">Item ${item.ordem}</span>
+                    <span class="route-item-modal-id">#${item.id || 'N/A'}</span>
+                </div>
+                <div class="route-item-modal-details">
+                    <div class="route-item-modal-info">
+                        <span class="route-item-modal-label"><i class="fas fa-dollar-sign"></i> Valor:</span>
+                        <span class="route-item-modal-value">${item.valor || 'R$ 0,00'}</span>
+                    </div>
+                    <div class="route-item-modal-info">
+                        <span class="route-item-modal-label"><i class="fas fa-cog"></i> Serviço:</span>
+                        <span class="route-item-modal-service">${item.servico || 'N/A'}</span>
+                    </div>
+                </div>
+            `;
+            
+            itemsList.appendChild(itemDiv);
+        });
+        
+        routeItemsSection.appendChild(itemsList);
+        console.log('✅ Lista de itens adicionada ao modal');
+        
+    } else {
+        // Para solicitação "Casual", restaurar seção normal
+        
+        // Restaurar título da seção
+        if (valoresStatusSection) {
+            const sectionTitle = valoresStatusSection.querySelector('.section-title');
+            if (sectionTitle) {
+                sectionTitle.innerHTML = '<i class="fas fa-dollar-sign"></i> Valores e Status';
+            }
+        }
+        
+        // Mostrar campo "Valor" normalmente
+        if (valorContainer) {
+            valorContainer.style.display = '';
+            const valorLabel = valorContainer.querySelector('.detail-label');
+            if (valorLabel) valorLabel.style.display = '';
+            if (valorElement) {
+                valorElement.textContent = data.valor || 'R$ 0,00';
+                valorElement.style.display = '';
+            }
+        }
+        
+        // Remover seção de itens da rota se existir
+        const routeItemsSection = document.getElementById('modal-route-items');
+        if (routeItemsSection) {
+            routeItemsSection.remove();
+        }
+    }
     
     const prioridadeElement = document.getElementById('modal-prioridade');
     if (prioridadeElement) {
@@ -210,23 +512,35 @@ function populateCardDetails(data) {
 
 // Função para configurar event listeners do modal
 function setupModalEventListeners() {
+    // Evitar registrar listeners duplicados
+    if (modalListenersSetup) {
+        return;
+    }
+    modalListenersSetup = true;
+    
     const modal = document.getElementById('cardDetailModal');
     const closeBtn = document.getElementById('closeCardModal');
     const closeModalBtn = document.getElementById('closeModalBtn');
-    const overlay = modal.querySelector('.modal-overlay');
+    const overlay = modal ? modal.querySelector('.modal-overlay') : null;
     
     // Fechar modal com botão X
-    closeBtn.addEventListener('click', closeCardDetailModal);
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeCardDetailModal);
+    }
     
     // Fechar modal com botão Voltar
-    closeModalBtn.addEventListener('click', closeCardDetailModal);
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeCardDetailModal);
+    }
     
     // Fechar modal clicando no overlay
-    overlay.addEventListener('click', closeCardDetailModal);
+    if (overlay) {
+        overlay.addEventListener('click', closeCardDetailModal);
+    }
     
     // Fechar modal com ESC
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && modal.classList.contains('show')) {
+        if (e.key === 'Escape' && modal && modal.classList.contains('show')) {
             closeCardDetailModal();
         }
     });

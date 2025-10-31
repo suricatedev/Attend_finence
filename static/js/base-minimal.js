@@ -16,6 +16,36 @@ window.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation(); // IMPORTANTE: Evitar propagação
             console.log('✅ Abrindo modal...');
+            
+            // Limpar formulário antes de abrir
+            const form = document.getElementById('createCampaignForm');
+            if (form) {
+                form.reset();
+                
+                // Resetar o tipo de rota para "Casual" (padrão)
+                const routeCasual = document.getElementById('routeCasual');
+                const routeEmRota = document.getElementById('routeEmRota');
+                const formEmRota = document.getElementById('formEmRota');
+                const formCasual = document.getElementById('formCasual');
+                
+                if (routeCasual) {
+                    routeCasual.checked = true;
+                }
+                if (routeEmRota) {
+                    routeEmRota.checked = false;
+                }
+                
+                // Garantir que o formulário Casual esteja visível
+                if (formCasual) {
+                    formCasual.style.display = 'block';
+                }
+                if (formEmRota) {
+                    formEmRota.style.display = 'none';
+                }
+                
+                console.log('✅ Formulário limpo e resetado para padrão (Casual)');
+            }
+            
             modal.style.display = 'flex';
             modal.classList.add('show');
         });
@@ -29,11 +59,83 @@ window.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Função para limpar formulário completamente
+    function clearFormCompletely() {
+        const form = document.getElementById('createCampaignForm');
+        if (form) {
+            form.reset();
+            
+            // Resetar o tipo de rota para "Casual" (padrão)
+            const routeCasual = document.getElementById('routeCasual');
+            const routeEmRota = document.getElementById('routeEmRota');
+            const formEmRota = document.getElementById('formEmRota');
+            const formCasual = document.getElementById('formCasual');
+            
+            if (routeCasual) {
+                routeCasual.checked = true;
+            }
+            if (routeEmRota) {
+                routeEmRota.checked = false;
+            }
+            
+            // Garantir que o formulário Casual esteja visível e habilitado
+            if (formCasual) {
+                formCasual.style.display = 'block';
+                // Habilitar todos os campos Casual
+                formCasual.querySelectorAll('input, select, textarea').forEach(field => {
+                    if (field.type !== 'file' && !field.readOnly) {
+                        field.disabled = false;
+                    }
+                });
+            }
+            if (formEmRota) {
+                formEmRota.style.display = 'none';
+                // Desabilitar todos os campos Em Rota
+                formEmRota.querySelectorAll('input, select, textarea').forEach(field => {
+                    if (field.type !== 'file') {
+                        field.disabled = true;
+                        field.removeAttribute('required');
+                    }
+                });
+            }
+            
+            // Limpar TODOS os campos de ambos os formulários manualmente
+            // Isso garante que mesmo campos ocultos sejam limpos
+            if (formCasual) {
+                formCasual.querySelectorAll('input, select, textarea').forEach(field => {
+                    if (field.type !== 'file' && !field.readOnly) {
+                        field.value = '';
+                    }
+                });
+            }
+            if (formEmRota) {
+                formEmRota.querySelectorAll('input, select, textarea').forEach(field => {
+                    if (field.type !== 'file' && !field.readOnly) {
+                        field.value = '';
+                    }
+                });
+            }
+            
+            // Remover classes de erro
+            form.querySelectorAll('.form-group').forEach(group => {
+                group.classList.remove('error');
+            });
+            
+            // Remover mensagens de erro
+            form.querySelectorAll('.error-message').forEach(error => {
+                error.remove();
+            });
+            
+            console.log('✅ Formulário completamente limpo');
+        }
+    }
+    
     // Quando clicar no X, FECHAR o modal
     if (btnFechar && modal) {
         btnFechar.addEventListener('click', function(e) {
             e.stopPropagation();
             console.log('❌ Fechando modal...');
+            clearFormCompletely();
             modal.style.display = 'none';
             modal.classList.remove('show');
         });
@@ -44,6 +146,7 @@ window.addEventListener('DOMContentLoaded', function() {
         btnCancelar.addEventListener('click', function(e) {
             e.stopPropagation();
             console.log('❌ Cancelando...');
+            clearFormCompletely();
             modal.style.display = 'none';
             modal.classList.remove('show');
         });
@@ -55,6 +158,7 @@ window.addEventListener('DOMContentLoaded', function() {
             // Só fechar se clicar diretamente no modal (não no conteúdo)
             if (e.target === modal) {
                 console.log('❌ Clicou fora - fechando...');
+                clearFormCompletely();
                 modal.style.display = 'none';
                 modal.classList.remove('show');
             }
@@ -65,6 +169,7 @@ window.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
             console.log('❌ ESC pressionado...');
+            clearFormCompletely();
             modal.style.display = 'none';
             modal.classList.remove('show');
         }

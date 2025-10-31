@@ -162,37 +162,66 @@ GRÁFICOS SECUNDÁRIOS - 4 GRÁFICOS EM GRID 2x2
 
 {% block extra_js %}
     <script src="{% static 'js/dashboard.js' %}" defer></script>
+    <!-- Dashboard Data - usando data attributes para evitar conflitos com linter -->
+    <div id="dashboard-data-json" style="display: none;" data-total="{{ total_solicitacoes|default:0 }}" 
+         data-pendentes="{{ pendentes|default:0 }}" data-aprovadas="{{ aprovadas|default:0 }}" 
+         data-recusadas="{{ recusadas|default:0 }}" data-concluidas="{{ concluidas|default:0 }}"
+         data-valor-total="{{ valor_total|default:0 }}" data-valor-aprovadas="{{ valor_aprovadas|default:0 }}"
+         data-valor-pendentes="{{ valor_pendentes|default:0 }}" data-valor-concluidas="{{ valor_concluidas|default:0 }}"
+         data-tempo-aprovacao="{{ tempo_medio_aprovacao|default:0 }}" data-tempo-resolucao="{{ tempo_medio_resolucao|default:0 }}"
+         data-taxa="{{ taxa_aprovacao|default:0|floatformat:2 }}" data-media="{{ media_mensal|default:0 }}"
+         data-por-mes='{{ solicitacoes_por_mes_json|safe|default:"[]" }}'
+         data-por-mes-detalhado='{{ solicitacoes_por_mes_detalhado_json|safe|default:"[]" }}'
+         data-por-servico='{{ solicitacoes_por_servico_json|safe|default:"[]" }}'
+         data-por-dia='{{ solicitacoes_por_dia_json|safe|default:"[]" }}'
+         data-status-pendente="{{ status_data.pendente|default:0 }}"
+         data-status-aprovado="{{ status_data.aprovado|default:0 }}"
+         data-status-recusado="{{ status_data.recusado|default:0 }}"
+         data-status-concluido="{{ status_data.concluido|default:0 }}"
+         data-prioridade-baixa="{{ prioridade_data.baixa|default:0 }}"
+         data-prioridade-media="{{ prioridade_data.media|default:0 }}"
+         data-prioridade-alta="{{ prioridade_data.alta|default:0 }}"></div>
     <script>
-        // Passar dados do Django para JavaScript
-        window.dashboardData = {
-            totalSolicitacoes: {{ total_solicitacoes }},
-            pendentes: {{ pendentes }},
-            aprovadas: {{ aprovadas }},
-            recusadas: {{ recusadas }},
-            concluidas: {{ concluidas }},
-            valorTotal: {{ valor_total }},
-            valorAprovadas: {{ valor_aprovadas }},
-            valorPendentes: {{ valor_pendentes }},
-            valorConcluidas: {{ valor_concluidas }},
-            tempoMedioAprovacao: {{ tempo_medio_aprovacao|default:0 }},
-            tempoMedioResolucao: {{ tempo_medio_resolucao|default:0 }},
-            taxaAprovacao: {{ taxa_aprovacao|floatformat:2 }},
-            solicitacoesPorMes: {{ solicitacoes_por_mes_json|safe }},
-            solicitacoesPorMesDetalhado: {{ solicitacoes_por_mes_detalhado_json|safe }},
-            statusData: {
-                pendente: {{ status_data.pendente }},
-                aprovado: {{ status_data.aprovado }},
-                recusado: {{ status_data.recusado }},
-                concluido: {{ status_data.concluido }}
-            },
-            solicitacoesPorServico: {{ solicitacoes_por_servico_json|safe }},
-            prioridadeData: {
-                baixa: {{ prioridade_data.baixa|default:0 }},
-                media: {{ prioridade_data.media|default:0 }},
-                alta: {{ prioridade_data.alta|default:0 }}
-            },
-            solicitacoesPorDia: {{ solicitacoes_por_dia_json|safe }},
-            mediaMensal: {{ media_mensal }}
-        };
+        // Parsear dados do dashboard quando o DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', function() {
+            var dataElement = document.getElementById('dashboard-data-json');
+            if (dataElement) {
+                try {
+                    window.dashboardData = {
+                        totalSolicitacoes: parseInt(dataElement.getAttribute('data-total') || '0'),
+                        pendentes: parseInt(dataElement.getAttribute('data-pendentes') || '0'),
+                        aprovadas: parseInt(dataElement.getAttribute('data-aprovadas') || '0'),
+                        recusadas: parseInt(dataElement.getAttribute('data-recusadas') || '0'),
+                        concluidas: parseInt(dataElement.getAttribute('data-concluidas') || '0'),
+                        valorTotal: parseFloat(dataElement.getAttribute('data-valor-total') || '0'),
+                        valorAprovadas: parseFloat(dataElement.getAttribute('data-valor-aprovadas') || '0'),
+                        valorPendentes: parseFloat(dataElement.getAttribute('data-valor-pendentes') || '0'),
+                        valorConcluidas: parseFloat(dataElement.getAttribute('data-valor-concluidas') || '0'),
+                        tempoMedioAprovacao: parseFloat(dataElement.getAttribute('data-tempo-aprovacao') || '0'),
+                        tempoMedioResolucao: parseFloat(dataElement.getAttribute('data-tempo-resolucao') || '0'),
+                        taxaAprovacao: parseFloat(dataElement.getAttribute('data-taxa') || '0'),
+                        mediaMensal: parseFloat(dataElement.getAttribute('data-media') || '0'),
+                        solicitacoesPorMes: JSON.parse(dataElement.getAttribute('data-por-mes') || '[]'),
+                        solicitacoesPorMesDetalhado: JSON.parse(dataElement.getAttribute('data-por-mes-detalhado') || '[]'),
+                        solicitacoesPorServico: JSON.parse(dataElement.getAttribute('data-por-servico') || '[]'),
+                        solicitacoesPorDia: JSON.parse(dataElement.getAttribute('data-por-dia') || '[]'),
+                        statusData: {
+                            pendente: parseInt(dataElement.getAttribute('data-status-pendente') || '0'),
+                            aprovado: parseInt(dataElement.getAttribute('data-status-aprovado') || '0'),
+                            recusado: parseInt(dataElement.getAttribute('data-status-recusado') || '0'),
+                            concluido: parseInt(dataElement.getAttribute('data-status-concluido') || '0')
+                        },
+                        prioridadeData: {
+                            baixa: parseInt(dataElement.getAttribute('data-prioridade-baixa') || '0'),
+                            media: parseInt(dataElement.getAttribute('data-prioridade-media') || '0'),
+                            alta: parseInt(dataElement.getAttribute('data-prioridade-alta') || '0')
+                        }
+                    };
+                } catch (e) {
+                    console.error('Erro ao parsear dados do dashboard:', e);
+                    window.dashboardData = {};
+                }
+            }
+        });
     </script>
 {% endblock %}

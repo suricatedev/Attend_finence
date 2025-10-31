@@ -528,14 +528,19 @@ body {
     padding: 30px;
     display: flex;
     gap: 20px;
-    overflow-x: auto;
+    overflow-x: hidden; /* Sem scroll horizontal - sempre mostrar os 4 cards */
+    overflow-y: hidden;
     background: #F4F7F5;
     height: calc(100vh - 80px);
-    overflow-y: hidden;
+    justify-content: center; /* Centralizar as colunas */
+    align-items: flex-start;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .kanban-column {
-    min-width: 320px;
+    flex: 1 1 0; /* Distribuir espaço igualmente entre as 4 colunas */
+    min-width: 280px; /* Largura mínima reduzida */
     background: #F4F7F5;
     border-radius: 16px;
     box-shadow: 0 6px 25px rgba(28, 28, 28, 0.08);
@@ -805,6 +810,12 @@ body {
     line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+}
+
+/* Título para cards Em Rota: permitir mais linhas para mostrar todos os IDs */
+.card-route .card-title {
+    -webkit-line-clamp: 3; /* permite até três linhas para mostrar todos os IDs */
+    line-clamp: 3;
 }
 
 .card-assignee {

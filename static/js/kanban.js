@@ -19,14 +19,9 @@ class KanbanManager {
         if (window.MODAL_CONTROLLED_BY_BASE) {
             console.log('🔒 Modal já controlado pelo base.html - pulando configuração do kanban.js');
             
-            // Apenas configurar o formulário, não os botões de abrir/fechar
-            const createCampaignForm = document.getElementById('createCampaignForm');
-            if (createCampaignForm) {
-                createCampaignForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.createCampaign();
-                });
-            }
+            // REMOVIDO: FormManager já controla o submit
+            // Não adicionar listener que bloqueia o submit
+            console.log('🔒 FormManager controla o submit - não adicionar listener duplicado');
             return;
         }
         
@@ -59,13 +54,9 @@ class KanbanManager {
     }
     
     setupFormSubmit() {
-        const createCampaignForm = document.getElementById('createCampaignForm');
-        if (createCampaignForm) {
-            createCampaignForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.createCampaign();
-            });
-        }
+        // REMOVIDO: O FormManager em app.js já gerencia o submit
+        // Não adicionar listener adicional que bloqueia o submit para Django
+        console.log('🔒 FormManager controla o submit do formulário - kanban.js não intercepta');
 
         // Add card buttons
         document.querySelectorAll('.add-card-btn').forEach(btn => {
@@ -212,59 +203,14 @@ class KanbanManager {
     }
 
     async createCampaign() {
-        const form = document.getElementById('createCampaignForm');
-        if (!form) return;
-
-        const formData = new FormData(form);
-
-        // Validação básica
-        if (!formData.get('title') || !formData.get('solicitante') || !formData.get('recebedor')) {
-            alert('Por favor, preencha todos os campos obrigatórios');
-            return;
-        }
-
-        try {
-            // Botão está FORA do form, buscar no modal-footer
-            const submitBtn = document.querySelector('button[form="createCampaignForm"]');
-            
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Criando...';
-            }
-
-            // ✅ ENVIAR DE VERDADE PARA O DJANGO
-            const response = await fetch('/solicitacoes/home/', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            });
-
-            if (response.ok) {
-                // Recarregar a página para mostrar a nova solicitação
-                window.location.reload();
-            } else {
-                const error = await response.text();
-                console.error('Erro do servidor:', error);
-                alert('Erro ao criar solicitação. Verifique os dados e tente novamente.');
-                
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Criar Solicitação';
-                }
-            }
-
-        } catch (error) {
-            console.error('Erro ao criar solicitação:', error);
-            alert('Erro ao criar solicitação');
-            
-            const submitBtn = document.querySelector('button[form="createCampaignForm"]');
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Criar Solicitação';
-            }
-        }
+        // ⚠️ ESTA FUNÇÃO FOI DESATIVADA
+        // O FormManager em app.js já gerencia o submit do formulário
+        // Esta função não deve ser chamada para evitar conflitos
+        console.warn('⚠️ createCampaign() chamada, mas FormManager já controla o submit');
+        console.warn('⚠️ Se você vê esta mensagem, há um listener duplicado em algum lugar');
+        
+        // NÃO fazer nada - deixar o FormManager processar
+        return;
     }
 
     renderCards() {

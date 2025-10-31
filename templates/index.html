@@ -190,42 +190,119 @@
                     </div>
                     <div class="column-content" data-column="planning">
                         {% for solicitacao in solicitacoes_pendentes %}
-                        <div class="card card-status-pending" draggable="true" data-card-id="1">
+                        <div class="card card-status-pending {% if solicitacao.tipo == 'em_rota' %}card-route{% endif %}" 
+                             draggable="true" 
+                             data-card-id="{{solicitacao.id}}"
+                             data-tipo="{{solicitacao.tipo}}"
+                             {% if solicitacao.tipo == 'em_rota' %}data-solicitacao-id="{{solicitacao.id}}"{% endif %}>
                             <div class="card-header">
                                 <span class="priority high">{{solicitacao.prioridade}}</span>
+                                {% if solicitacao.tipo == 'em_rota' %}
+                                <span class="route-badge">
+                                    <i class="fas fa-route"></i>
+                                    Em Rota
+                                </span>
+                                {% endif %}
                             </div>
                             <div class="card-body">
                                 <h3 class="card-title">{{solicitacao.titulo}}</h3>
-                                <div class="card-info">
-                                    <div class="info-item">
-                                        <span class="info-value">#{{solicitacao.ticket}}</span>
+                                
+                                {% if solicitacao.tipo == 'em_rota' %}
+                                    <!-- Card Em Rota - Mostrar resumo -->
+                                    <div class="card-info">
+                                        <div class="info-item">
+                                            <span class="info-value"><i class="fas fa-list-ol"></i> {{solicitacao.itens_rota.count}} Itens</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">SOLICITANTE</span>
+                                            <span class="info-value">{{solicitacao.nome_solicitante}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">RECEBEDOR</span>
+                                            <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">VALOR TOTAL</span>
+                                            <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
+                                        </div>
                                     </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">{{solicitacao.nome_solicitante}}</span>
+                                    
+                                    <!-- Itens da rota (expandido) -->
+                                    <div class="route-items-expanded" style="display: none;">
+                                        <div class="route-items-header">
+                                            <h4><i class="fas fa-route"></i> Itens da Rota</h4>
+                                        </div>
+                                        <div class="route-items-list">
+                                            {% for item in solicitacao.itens_rota.all %}
+                                            <div class="route-item">
+                                                <div class="route-item-header">
+                                                    <span class="route-item-number">Item {{item.ordem}}</span>
+                                                    <span class="route-item-id">#{{item.ticket_item}}</span>
+                                                </div>
+                                                <div class="route-item-details">
+                                                    <div class="route-item-info">
+                                                        <span class="route-item-label"><i class="fas fa-dollar-sign"></i> Valor:</span>
+                                                        <span class="route-item-value route-item-valor">R$ {{item.valor|floatformat:2}}</span>
+                                                    </div>
+                                                    <div class="route-item-info">
+                                                        <span class="route-item-label"><i class="fas fa-cog"></i> Serviço:</span>
+                                                        <span class="route-item-value route-item-servico">{% if item.servico %}{{item.servico.nome}}{% else %}N/A{% endif %}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        <!-- Resumo total na seção expandida -->
+                                        <div class="route-total-summary">
+                                            <div class="route-total-line"></div>
+                                            <div class="route-total-info">
+                                                <span class="route-total-label"><i class="fas fa-calculator"></i> Valor Total da Rota:</span>
+                                                <span class="route-total-value">R$ {{solicitacao.valor|floatformat:2}}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
+                                    
+                                    <button class="btn-expand-route">
+                                        <i class="fas fa-chevron-down"></i>
+                                        <span>Ver detalhes</span>
+                                    </button>
+                                {% else %}
+                                    <!-- Card Casual - Formato original -->
+                                    <div class="card-info">
+                                        <div class="info-item">
+                                            <span class="info-value">#{{solicitacao.ticket}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">SOLICITANTE</span>
+                                            <span class="info-value">{{solicitacao.nome_solicitante}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">RECEBEDOR</span>
+                                            <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">VALOR</span>
+                                            <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">CRIAÇÃO</span>
+                                            <span class="info-value">{{solicitacao.data_de_criacao}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">PAGAMENTO</span>
+                                            <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
+                                        </div>
                                     </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">VALOR</span>
-                                        <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">CRIAÇÃO</span>
-                                        <span class="info-value">{{solicitacao.data_de_criacao}}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">PAGAMENTO</span>
-                                        <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
-                                    </div>
-                                </div>
+                                {% endif %}
+                                
                                 <div class="card-time"
                                     data-creation-time="{{solicitacao.data_de_criacao|date:'Y-m-d'}} {{solicitacao.tempo_criacao|time:'H:i:s'}}">
                                     <i class="fas fa-clock"></i>
@@ -267,42 +344,119 @@
                     </div>
                     <div class="column-content" data-column="test">
                         {% for solicitacao in solicitacoes_recusados%}
-                        <div class="card card-status-rejected" draggable="true" data-card-id="2">
+                        <div class="card card-status-rejected {% if solicitacao.tipo == 'em_rota' %}card-route{% endif %}" 
+                             draggable="true" 
+                             data-card-id="{{solicitacao.id}}"
+                             data-tipo="{{solicitacao.tipo}}"
+                             {% if solicitacao.tipo == 'em_rota' %}data-solicitacao-id="{{solicitacao.id}}"{% endif %}>
                             <div class="card-header">
                                 <span class="priority low">{{solicitacao.prioridade}}</span>
+                                {% if solicitacao.tipo == 'em_rota' %}
+                                <span class="route-badge">
+                                    <i class="fas fa-route"></i>
+                                    Em Rota
+                                </span>
+                                {% endif %}
                             </div>
                             <div class="card-body">
                                 <h3 class="card-title">{{solicitacao.titulo}}</h3>
-                                <div class="card-info">
-                                    <div class="info-item">
-                                        <span class="info-value">#{{solicitacao.ticket}}</span>
+                                
+                                {% if solicitacao.tipo == 'em_rota' %}
+                                    <!-- Card Em Rota - Mostrar resumo -->
+                                    <div class="card-info">
+                                        <div class="info-item">
+                                            <span class="info-value"><i class="fas fa-list-ol"></i> {{solicitacao.itens_rota.count}} Itens</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">SOLICITANTE</span>
+                                            <span class="info-value">{{solicitacao.nome_solicitante}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">RECEBEDOR</span>
+                                            <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">VALOR TOTAL</span>
+                                            <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
+                                        </div>
                                     </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">{{solicitacao.nome_solicitante}}</span>
+                                    
+                                    <!-- Itens da rota (expandido) -->
+                                    <div class="route-items-expanded" style="display: none;">
+                                        <div class="route-items-header">
+                                            <h4><i class="fas fa-route"></i> Itens da Rota</h4>
+                                        </div>
+                                        <div class="route-items-list">
+                                            {% for item in solicitacao.itens_rota.all %}
+                                            <div class="route-item">
+                                                <div class="route-item-header">
+                                                    <span class="route-item-number">Item {{item.ordem}}</span>
+                                                    <span class="route-item-id">#{{item.ticket_item}}</span>
+                                                </div>
+                                                <div class="route-item-details">
+                                                    <div class="route-item-info">
+                                                        <span class="route-item-label"><i class="fas fa-dollar-sign"></i> Valor:</span>
+                                                        <span class="route-item-value route-item-valor">R$ {{item.valor|floatformat:2}}</span>
+                                                    </div>
+                                                    <div class="route-item-info">
+                                                        <span class="route-item-label"><i class="fas fa-cog"></i> Serviço:</span>
+                                                        <span class="route-item-value route-item-servico">{% if item.servico %}{{item.servico.nome}}{% else %}N/A{% endif %}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        <!-- Resumo total na seção expandida -->
+                                        <div class="route-total-summary">
+                                            <div class="route-total-line"></div>
+                                            <div class="route-total-info">
+                                                <span class="route-total-label"><i class="fas fa-calculator"></i> Valor Total da Rota:</span>
+                                                <span class="route-total-value">R$ {{solicitacao.valor|floatformat:2}}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
+                                    
+                                    <button class="btn-expand-route">
+                                        <i class="fas fa-chevron-down"></i>
+                                        <span>Ver detalhes</span>
+                                    </button>
+                                {% else %}
+                                    <!-- Card Casual - Formato original -->
+                                    <div class="card-info">
+                                        <div class="info-item">
+                                            <span class="info-value">#{{solicitacao.ticket}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">SOLICITANTE</span>
+                                            <span class="info-value">{{solicitacao.nome_solicitante}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">RECEBEDOR</span>
+                                            <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">VALOR</span>
+                                            <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">CRIAÇÃO</span>
+                                            <span class="info-value">{{solicitacao.data_de_criacao}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">PAGAMENTO</span>
+                                            <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
+                                        </div>
                                     </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">VALOR</span>
-                                        <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">CRIAÇÃO</span>
-                                        <span class="info-value">{{solicitacao.data_de_criacao}}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">PAGAMENTO</span>
-                                        <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
-                                    </div>
-                                </div>
+                                {% endif %}
+                                
                                 <div class="card-time"
                                     data-creation-time="{{solicitacao.data_de_criacao|date:'Y-m-d'}} {{solicitacao.tempo_criacao|time:'H:i:s'}}">
                                     <i class="fas fa-clock"></i>
@@ -344,42 +498,119 @@
                     </div>
                     <div class="column-content" data-column="launch">
                         {% for solicitacao in solicitacoes_aprovado %}
-                        <div class="card card-status-approved" draggable="true" data-card-id="3">
+                        <div class="card card-status-approved {% if solicitacao.tipo == 'em_rota' %}card-route{% endif %}" 
+                             draggable="true" 
+                             data-card-id="{{solicitacao.id}}"
+                             data-tipo="{{solicitacao.tipo}}"
+                             {% if solicitacao.tipo == 'em_rota' %}data-solicitacao-id="{{solicitacao.id}}"{% endif %}>
                             <div class="card-header">
                                 <span class="priority medium">{{solicitacao.prioridade}}</span>
+                                {% if solicitacao.tipo == 'em_rota' %}
+                                <span class="route-badge">
+                                    <i class="fas fa-route"></i>
+                                    Em Rota
+                                </span>
+                                {% endif %}
                             </div>
                             <div class="card-body">
                                 <h3 class="card-title">{{solicitacao.titulo}}</h3>
-                                <div class="card-info">
-                                    <div class="info-item">
-                                        <span class="info-value">#{{solicitacao.ticket}}</span>
+                                
+                                {% if solicitacao.tipo == 'em_rota' %}
+                                    <!-- Card Em Rota - Mostrar resumo -->
+                                    <div class="card-info">
+                                        <div class="info-item">
+                                            <span class="info-value"><i class="fas fa-list-ol"></i> {{solicitacao.itens_rota.count}} Itens</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">SOLICITANTE</span>
+                                            <span class="info-value">{{solicitacao.nome_solicitante}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">RECEBEDOR</span>
+                                            <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">VALOR TOTAL</span>
+                                            <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
+                                        </div>
                                     </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">{{solicitacao.nome_solicitante}}</span>
+                                    
+                                    <!-- Itens da rota (expandido) -->
+                                    <div class="route-items-expanded" style="display: none;">
+                                        <div class="route-items-header">
+                                            <h4><i class="fas fa-route"></i> Itens da Rota</h4>
+                                        </div>
+                                        <div class="route-items-list">
+                                            {% for item in solicitacao.itens_rota.all %}
+                                            <div class="route-item">
+                                                <div class="route-item-header">
+                                                    <span class="route-item-number">Item {{item.ordem}}</span>
+                                                    <span class="route-item-id">#{{item.ticket_item}}</span>
+                                                </div>
+                                                <div class="route-item-details">
+                                                    <div class="route-item-info">
+                                                        <span class="route-item-label"><i class="fas fa-dollar-sign"></i> Valor:</span>
+                                                        <span class="route-item-value route-item-valor">R$ {{item.valor|floatformat:2}}</span>
+                                                    </div>
+                                                    <div class="route-item-info">
+                                                        <span class="route-item-label"><i class="fas fa-cog"></i> Serviço:</span>
+                                                        <span class="route-item-value route-item-servico">{% if item.servico %}{{item.servico.nome}}{% else %}N/A{% endif %}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        <!-- Resumo total na seção expandida -->
+                                        <div class="route-total-summary">
+                                            <div class="route-total-line"></div>
+                                            <div class="route-total-info">
+                                                <span class="route-total-label"><i class="fas fa-calculator"></i> Valor Total da Rota:</span>
+                                                <span class="route-total-value">R$ {{solicitacao.valor|floatformat:2}}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
+                                    
+                                    <button class="btn-expand-route">
+                                        <i class="fas fa-chevron-down"></i>
+                                        <span>Ver detalhes</span>
+                                    </button>
+                                {% else %}
+                                    <!-- Card Casual - Formato original -->
+                                    <div class="card-info">
+                                        <div class="info-item">
+                                            <span class="info-value">#{{solicitacao.ticket}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">SOLICITANTE</span>
+                                            <span class="info-value">{{solicitacao.nome_solicitante}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">RECEBEDOR</span>
+                                            <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">VALOR</span>
+                                            <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">CRIAÇÃO</span>
+                                            <span class="info-value">{{solicitacao.data_de_criacao}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">PAGAMENTO</span>
+                                            <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
+                                        </div>
                                     </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">VALOR</span>
-                                        <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">CRIAÇÃO</span>
-                                        <span class="info-value">{{solicitacao.data_de_criacao}}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">PAGAMENTO</span>
-                                        <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
-                                    </div>
-                                </div>
+                                {% endif %}
+                                
                                 <div class="card-due-date overdue">
                                     <i class="fas fa-calendar-times"></i>
                                     <span>Abr, 4 • 2 anos atrás</span>
@@ -426,42 +657,119 @@
                     </div>
                     <div class="column-content" data-column="success">
                         {% for solicitacao in solicitacoes_concluido %}
-                        <div class="card card-status-completed" draggable="true" data-card-id="5">
+                        <div class="card card-status-completed {% if solicitacao.tipo == 'em_rota' %}card-route{% endif %}" 
+                             draggable="true" 
+                             data-card-id="{{solicitacao.id}}"
+                             data-tipo="{{solicitacao.tipo}}"
+                             {% if solicitacao.tipo == 'em_rota' %}data-solicitacao-id="{{solicitacao.id}}"{% endif %}>
                             <div class="card-header">
                                 <span class="priority medium">{{solicitacao.prioridade}}</span>
+                                {% if solicitacao.tipo == 'em_rota' %}
+                                <span class="route-badge">
+                                    <i class="fas fa-route"></i>
+                                    Em Rota
+                                </span>
+                                {% endif %}
                             </div>
                             <div class="card-body">
                                 <h3 class="card-title">{{solicitacao.titulo}}</h3>
-                                <div class="card-info">
-                                    <div class="info-item">
-                                        <span class="info-value">#{{solicitacao.ticket}}</span>
+                                
+                                {% if solicitacao.tipo == 'em_rota' %}
+                                    <!-- Card Em Rota - Mostrar resumo -->
+                                    <div class="card-info">
+                                        <div class="info-item">
+                                            <span class="info-value"><i class="fas fa-list-ol"></i> {{solicitacao.itens_rota.count}} Itens</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">SOLICITANTE</span>
+                                            <span class="info-value">{{solicitacao.nome_solicitante}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">RECEBEDOR</span>
+                                            <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">VALOR TOTAL</span>
+                                            <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
+                                        </div>
                                     </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">SOLICITANTE</span>
-                                        <span class="info-value">{{solicitacao.nome_solicitante}}</span>
+                                    
+                                    <!-- Itens da rota (expandido) -->
+                                    <div class="route-items-expanded" style="display: none;">
+                                        <div class="route-items-header">
+                                            <h4><i class="fas fa-route"></i> Itens da Rota</h4>
+                                        </div>
+                                        <div class="route-items-list">
+                                            {% for item in solicitacao.itens_rota.all %}
+                                            <div class="route-item">
+                                                <div class="route-item-header">
+                                                    <span class="route-item-number">Item {{item.ordem}}</span>
+                                                    <span class="route-item-id">#{{item.ticket_item}}</span>
+                                                </div>
+                                                <div class="route-item-details">
+                                                    <div class="route-item-info">
+                                                        <span class="route-item-label"><i class="fas fa-dollar-sign"></i> Valor:</span>
+                                                        <span class="route-item-value route-item-valor">R$ {{item.valor|floatformat:2}}</span>
+                                                    </div>
+                                                    <div class="route-item-info">
+                                                        <span class="route-item-label"><i class="fas fa-cog"></i> Serviço:</span>
+                                                        <span class="route-item-value route-item-servico">{% if item.servico %}{{item.servico.nome}}{% else %}N/A{% endif %}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        <!-- Resumo total na seção expandida -->
+                                        <div class="route-total-summary">
+                                            <div class="route-total-line"></div>
+                                            <div class="route-total-info">
+                                                <span class="route-total-label"><i class="fas fa-calculator"></i> Valor Total da Rota:</span>
+                                                <span class="route-total-value">R$ {{solicitacao.valor|floatformat:2}}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">RECEBEDOR</span>
-                                        <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
+                                    
+                                    <button class="btn-expand-route">
+                                        <i class="fas fa-chevron-down"></i>
+                                        <span>Ver detalhes</span>
+                                    </button>
+                                {% else %}
+                                    <!-- Card Casual - Formato original -->
+                                    <div class="card-info">
+                                        <div class="info-item">
+                                            <span class="info-value">#{{solicitacao.ticket}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">SOLICITANTE</span>
+                                            <span class="info-value">{{solicitacao.nome_solicitante}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">RECEBEDOR</span>
+                                            <span class="info-value">{{solicitacao.nome_do_recebedor}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">VALOR</span>
+                                            <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">CRIAÇÃO</span>
+                                            <span class="info-value">{{solicitacao.data_de_criacao}}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="#"></i>
+                                            <span class="info-label">PAGAMENTO</span>
+                                            <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
+                                        </div>
                                     </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">VALOR</span>
-                                        <span class="info-value">R$ {{solicitacao.valor|floatformat:2}}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">CRIAÇÃO</span>
-                                        <span class="info-value">{{solicitacao.data_de_criacao}}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="#"></i>
-                                        <span class="info-label">PAGAMENTO</span>
-                                        <span class="info-value">{{solicitacao.data_de_pagamento}}</span>
-                                    </div>
-                                </div>
+                                {% endif %}
+                                
                                 <div class="card-time completed">
                                     <i class="fas fa-check"></i>
                                     <span>Concluído</span>
@@ -615,6 +923,43 @@
 
     <script src="/static/js/app.js"></script>
     <script src="/static/js/card-modal.js"></script>
+    <script>
+        // Função para expandir/colapsar itens da rota
+        function toggleRouteItems(button) {
+            const card = button.closest('.card-route');
+            if (!card) return;
+            
+            const expandedSection = card.querySelector('.route-items-expanded');
+            const icon = button.querySelector('i');
+            const span = button.querySelector('span');
+            
+            if (expandedSection.style.display === 'none' || expandedSection.style.display === '') {
+                expandedSection.style.display = 'block';
+                button.classList.add('expanded');
+                icon.style.transform = 'rotate(180deg)';
+                span.textContent = 'Ocultar detalhes';
+            } else {
+                expandedSection.style.display = 'none';
+                button.classList.remove('expanded');
+                icon.style.transform = 'rotate(0deg)';
+                span.textContent = 'Ver detalhes';
+            }
+        }
+        
+        // Inicializar estado dos cards Em Rota - Aguardar app.js carregar
+        setTimeout(function() {
+            // Garantir que todos os botões de expandir estão funcionais
+            const expandButtons = document.querySelectorAll('.btn-expand-route');
+            expandButtons.forEach(button => {
+                // Remover onclick inline e adicionar event listener
+                button.removeAttribute('onclick');
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Evitar que o drag seja ativado
+                    toggleRouteItems(this);
+                });
+            });
+        }, 100);
+    </script>
 
 </body>
 

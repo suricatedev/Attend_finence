@@ -171,6 +171,31 @@ function setupEventListeners() {
             showNotification('Lista atualizada!', 'success');
         });
     }
+    
+    // Event delegation para botões de editar e excluir
+    const servicesList = document.getElementById('servicesList');
+    if (servicesList) {
+        servicesList.addEventListener('click', function(e) {
+            const editBtn = e.target.closest('.btn-edit');
+            const deleteBtn = e.target.closest('.btn-delete');
+            
+            if (editBtn) {
+                const serviceId = parseInt(editBtn.getAttribute('data-service-id') || 
+                                           editBtn.closest('[data-service-id]')?.getAttribute('data-service-id'));
+                if (serviceId) {
+                    editService(serviceId);
+                }
+            }
+            
+            if (deleteBtn) {
+                const serviceId = parseInt(deleteBtn.getAttribute('data-service-id') || 
+                                         deleteBtn.closest('[data-service-id]')?.getAttribute('data-service-id'));
+                if (serviceId) {
+                    deleteService(serviceId);
+                }
+            }
+        });
+    }
 }
 
 // Função para configurar o modal
