@@ -1,0 +1,246 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema de Gestão Financeira{% endblock %}</title>
+    
+    <!-- Preload recursos críticos -->
+    <link rel="preload" href="{% static 'css/base.css' %}" as="style">
+    <link rel="preload" href="{% static 'js/base-minimal.js' %}" as="script">
+    
+    <!-- Estilos críticos -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    
+    <!-- Font Awesome com preconnect para melhor performance -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" media="print" onload="this.media='all'">
+    
+    <!-- CSS do Modal de Solicitação - FIXO para todas as páginas -->
+    <link rel="stylesheet" href="{% static 'css/forms.css' %}">
+    <link rel="stylesheet" href="{% static 'css/solicitacao-minimal.css' %}">
+    
+    <!-- CSS inline para garantir que modal funcione em TODAS as páginas -->
+    <style>
+        /* Modal Base - Sempre visível quando .show */
+        #createCampaignModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(28, 28, 28, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 99999 !important;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        #createCampaignModal.show,
+        #createCampaignModal.active {
+            display: flex !important;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Garantir que o modal-content esteja sempre visível */
+        #createCampaignModal .modal-content {
+            display: block !important;
+            background: #F4F7F5 !important;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(28, 28, 28, 0.5);
+            border: 1px solid #544350;
+            position: relative;
+            z-index: 100000 !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Overlay para mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Attend Finance</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                        <a href="{% url 'home' %}" class="nav-link">
+                            <i class="fas fa-th-large"></i>
+                            <span>Solicitações</span>
+                        </a>
+                    </li>
+
+                    {% load usuarios_tags %}
+                    {% if user|can_view_reports %}
+                    <li class="nav-item {% if request.resolver_match.url_name == 'relatorio' %}active{% endif %}">
+                        <a href="{% url 'relatorio' %}" class="nav-link">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Relatórios</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if user|can_view_dashboard %}
+                    <li class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <a href="{% url 'dashboard' %}" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboards</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if user|can_view_services %}
+                    <li class="nav-item {% if request.resolver_match.url_name == 'servicos' %}active{% endif %}">
+                        <a href="{% url 'servicos' %}" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Serviços</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+
+           <!-- ===============================================================================================================
+            =============================================suporte e ajuda===================================================
+            =============================================================================================================== -->
+
+            <!--<div class="sidebar-help">
+                <ul class="help-list">
+                    <li class="help-item">
+                        <a href="#" class="help-link">
+                            <i class="fas fa-question-circle"></i>
+                            <span>Faça uma pergunta</span>
+                        </a>
+                    </li>
+                    <li class="help-item">
+                        <a href="#" class="help-link">
+                            <i class="fas fa-question"></i>
+                            <span>Ajuda</span>
+                        </a>
+                    </li>
+                    <li class="help-item">
+                        <a href="#" class="help-link">
+                            <i class="fas fa-comment"></i>
+                            <span>Chat</span>
+                        </a>
+                    </li>
+                </ul>
+            </div> -->
+
+
+
+
+
+        </aside>
+     <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <div class="logo-section">
+                    </div>
+                </div>
+
+                <div class="header-center">
+                    <button class="btn-primary" id="createCampaignBtn">
+                        <i class="fas fa-plus"></i>
+                        Nova Solicitação Financeira
+                    </button>
+
+                    <div class="view-tabs">
+                        <a href="{% url 'home' %}" class="tab-btn {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                            <i class="fas fa-th"></i>
+                            Cards
+                        </a>
+                        <a href="{% url 'relatorio' %}" class="tab-btn {% if request.resolver_match.url_name == 'relatorio' %}active{% endif %}">
+                            <i class="fas fa-chart-bar"></i>
+                            Relatórios
+                        </a>
+                        <a href="{% url 'dashboard' %}" class="tab-btn {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Dashboards
+                        </a>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <div class="user-actions">
+                        <button class="action-btn" title="Notificações">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                        {% if user|can_manage_users %}
+                        <div class="settings-dropdown">
+                            <button class="action-btn" title="Configurações" id="settingsBtn">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <div class="settings-menu" id="settingsMenu">
+                                <a href="{% url 'gerenciar_usuarios' %}" class="settings-item">
+                                    <i class="fas fa-users-cog"></i>
+                                    <span>Gerenciar Usuários</span>
+                                </a>
+                                {% if user|can_view_teams %}
+                                <a href="{% url 'equipes' %}" class="settings-item">
+                                    <i class="fas fa-users"></i>
+                                    <span>Equipe</span>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="user-avatar-dropdown">
+                            <button class="user-avatar-btn" id="userAvatarBtn" title="Menu do usuário">
+                                <img src="https://via.placeholder.com/32" alt="Usuário">
+                            </button>
+                            <div class="user-menu" id="userMenu">
+                                <a href="{% url 'logout' %}" class="user-menu-item">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Sair</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            {% block content %}
+
+
+
+
+            {% endblock %}  
+        </main>
+    </div>
+    
+    <!-- Modal de Nova Solicitação - Disponível em todas as páginas -->
+    {% include 'forms/form-solicitacao.html' %}
+    
+    <!-- JavaScript base mínimo - sem defer para garantir que carregue antes -->
+    <script src="{% static 'js/base-minimal.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

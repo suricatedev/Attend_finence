@@ -63,7 +63,7 @@ body {
 
 /* Sidebar */
 .sidebar {
-    width: 220px;
+    width: 160px;
     background: linear-gradient(135deg, #1C1C1C 0%, #544350 100%);
     color: #F4F7F5;
     display: flex;
@@ -128,7 +128,7 @@ body {
 }
 
 .sidebar-header {
-    padding: 12px 16px;
+    padding: 10px 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
@@ -164,13 +164,13 @@ body {
 .nav-link {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 16px;
+    gap: 8px;
+    padding: 8px 12px;
     color: #F4F7F5;
     text-decoration: none;
     transition: all 0.2s ease;
     border-left: 3px solid transparent;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
 }
 
 .nav-link:hover,
@@ -227,7 +227,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
-    margin-left: 220px;
+    margin-left: 160px;
     overflow: hidden;
 }
 
@@ -301,32 +301,61 @@ body {
 
 .view-tabs {
     display: flex;
-    gap: 5px;
-    background: #F4F7F5;
-    padding: 4px;
-    border-radius: 8px;
-    border: 1px solid #544350;
+    gap: 8px;
+    background: #ffffff;
+    padding: 6px;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .tab-btn {
-    background: none;
+    background: transparent;
     border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
+    padding: 12px 24px;
+    border-radius: 8px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-    color: #544350;
+    gap: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #666;
+    text-decoration: none;
     font-weight: 500;
+    font-size: 0.95rem;
+    position: relative;
+    overflow: hidden;
 }
 
-.tab-btn.active,
-.tab-btn:hover {
-    background: #FFCB57;
+/* Remover underline completamente */
+.tab-btn:link,
+.tab-btn:visited {
+    text-decoration: none;
+}
+
+/* Efeito de hover suave */
+.tab-btn:hover:not(.active) {
+    background: #f5f5f5;
     color: #1C1C1C;
-    box-shadow: 0 2px 8px rgba(255, 203, 87, 0.3);
+    transform: translateY(-1px);
+}
+
+/* Estado ativo com gradiente suave */
+.tab-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    font-weight: 600;
+}
+
+/* Ícones mais destacados no ativo */
+.tab-btn.active i {
+    transform: scale(1.1);
+}
+
+/* Animação de entrada */
+.tab-btn i {
+    transition: transform 0.3s ease;
 }
 
 .header-right {
@@ -372,6 +401,96 @@ body {
     object-fit: cover;
 }
 
+/* User Avatar Dropdown */
+.user-avatar-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.user-avatar-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.user-avatar-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.user-avatar-btn img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #544350;
+    display: block;
+}
+
+.user-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    min-width: 220px;
+    padding: 8px 0;
+    display: none;
+    z-index: 1000;
+    border: 1px solid #e0e0e0;
+    animation: fadeInDown 0.2s ease;
+}
+
+.user-menu.show {
+    display: block;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.user-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    color: #1C1C1C;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.user-menu-item:hover {
+    background-color: #f5f5f5;
+}
+
+.user-menu-item i {
+    width: 18px;
+    color: #544350;
+    font-size: 16px;
+}
+
+.user-menu-divider {
+    height: 1px;
+    background: #e0e0e0;
+    margin: 8px 0;
+}
+
 /* Settings Dropdown */
 .settings-dropdown {
     position: relative;
@@ -380,7 +499,7 @@ body {
 
 .settings-menu {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 10px);
     right: 0;
     background: #F4F7F5;
     border: 1px solid #544350;
@@ -394,7 +513,8 @@ body {
     transition: all 0.2s ease;
 }
 
-.settings-dropdown.active .settings-menu {
+.settings-dropdown.active .settings-menu,
+.settings-menu.show {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
@@ -460,5 +580,174 @@ body {
     .btn-primary {
         padding: 10px 16px;
         font-size: 0.9rem;
+    }
+}
+
+/* ====================================================================
+   TEMAS ALTERNATIVOS PARA NAVEGAÇÃO (Descomente o que preferir)
+   ==================================================================== */
+
+/* 
+   TEMA ATUAL: Roxo/Azul (Padrão)
+   - Moderno e profissional
+   - Gradiente: #667eea → #764ba2
+*/
+
+/* OPÇÃO 2: Verde Menta - Descomente abaixo para usar
+.tab-btn.active {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(17, 153, 142, 0.3) !important;
+}
+*/
+
+/* OPÇÃO 3: Azul Oceano - Descomente abaixo para usar
+.tab-btn.active {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3) !important;
+}
+*/
+
+/* OPÇÃO 4: Laranja Sunset - Descomente abaixo para usar
+.tab-btn.active {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%) !important;
+    color: #1C1C1C !important;
+    box-shadow: 0 4px 12px rgba(250, 112, 154, 0.3) !important;
+}
+*/
+
+/* OPÇÃO 5: Cinza Escuro Minimalista - Descomente abaixo para usar
+.tab-btn.active {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(44, 62, 80, 0.3) !important;
+}
+*/
+
+/* OPÇÃO 6: Rosa/Vermelho - Descomente abaixo para usar
+.tab-btn.active {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3) !important;
+}
+*/
+
+/* ====================================================================
+   MELHORIAS EXTRAS NA NAVEGAÇÃO
+   ==================================================================== */
+
+/* Indicador de página ativa (linha inferior) - Alternativa */
+.tab-btn.active::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 2px 2px 0 0;
+}
+
+/* Tooltip ao passar o mouse */
+.tab-btn:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    border-radius: 4px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.tab-btn:hover::after {
+    opacity: 0; /* Desative se não quiser tooltip */
+}
+
+/* Contador de notificações (badge) */
+.tab-btn .badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #ff4757;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* Animação de pulso para notificações */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.tab-btn .badge {
+    animation: pulse 2s infinite;
+}
+
+/* Melhor contraste para ícones */
+.tab-btn i {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.tab-btn.active i {
+    opacity: 1;
+}
+
+/* Loading state */
+.tab-btn.loading {
+    pointer-events: none;
+    opacity: 0.6;
+    position: relative;
+}
+
+.tab-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+/* Acessibilidade - Focus para keyboard navigation */
+.tab-btn:focus-visible {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+/* Dark mode ready (se implementar depois) */
+@media (prefers-color-scheme: dark) {
+    .view-tabs {
+        background: #2d2d2d;
+        border-color: #444;
+    }
+    
+    .tab-btn {
+        color: #ccc;
+    }
+    
+    .tab-btn:hover:not(.active) {
+        background: #3d3d3d;
+        color: #fff;
     }
 }

@@ -16,15 +16,7 @@
                     <small class="form-help">Exemplo: INCXXXXX</small>
                 </div>
                 
-                <div class="form-group">
-                    <label for="campaignStatus">Status</label>
-                    <select id="campaignStatus" name="status">
-                        <option value="pendente">Pendente</option>
-                        <option value="aprovado">Aprovado</option>
-                        <option value="recusado">Recusado</option>
-                        <option value="concluido">Concluído</option>
-                    </select>
-                </div>
+                v
                 
                 <div class="form-group">
                     <label for="campaignTitle">Título da Solicitação</label>
@@ -53,10 +45,11 @@
                     <label for="campaignService">Serviço</label>
                     <select id="campaignService" name="service" required>
                         <option value="">Selecione o tipo de serviço</option>
-                        <option value="consultoria_TI">Consultoria em TI</option>
-                        <option value="desenvolvimento">Desenvolvimento de Software</option>
-                        <option value="manutencao_equipamentos">Manutenção de Equipamentos</option>
-                        <option value="treinamento_corporativo">Treinamento Corporativo</option>
+                        {% for servico in servicos_disponiveis %}
+                        <option value="{{ servico.id }}">{{ servico.nome }}</option>
+                        {% empty %}
+                        <option value="" disabled>Nenhum serviço disponível</option>
+                        {% endfor %}
                     </select>
                 </div>
                 
@@ -72,18 +65,8 @@
                     </div>
                     <div class="form-group">
                         <label for="campaignDataCriacao">Data de Criação</label>
-                        <input type="date" id="campaignDataCriacao" name="dataCriacao" required>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="campaignTempoCriacao">Tempo de Criação</label>
-                        <input type="time" id="campaignTempoCriacao" name="tempoCriacao" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="campaignTempoFila">Tempo na Fila</label>
-                        <input type="time" id="campaignTempoFila" name="tempoFila" required>
+                        <input type="date" id="campaignDataCriacao" name="dataCriacao" readonly style="background-color: #f0f0f0; cursor: not-allowed;">
+                        <small class="form-help">Data preenchida automaticamente</small>
                     </div>
                 </div>
                 
@@ -113,5 +96,18 @@
         </div>
     </div>
     <script src="/static/js/forms.js"></script>
+    <script>
+        // Preencher automaticamente a data de criação com a data de hoje
+        document.addEventListener('DOMContentLoaded', function() {
+            const dataCriacaoInput = document.getElementById('campaignDataCriacao');
+            if (dataCriacaoInput) {
+                const hoje = new Date();
+                const ano = hoje.getFullYear();
+                const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+                const dia = String(hoje.getDate()).padStart(2, '0');
+                dataCriacaoInput.value = `${ano}-${mes}-${dia}`;
+            }
+        });
+    </script>
 </div>
 

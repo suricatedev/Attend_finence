@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Sistema de Gestão Financeira{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Dashboard View -->
+<div class="dashboard-view" id="dashboardView">
+    <div class="dashboard-container">
+        <!-- Métricas Principais -->
+        <div class="metrics-row">
+            <div class="metric-card metric-card-primary">
+                <div class="metric-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="metric-content">
+                    <h3>Tempo Médio de Aprovação</h3>
+                    <div class="metric-value">{{ tempo_medio_aprovacao|floatformat:0 }}d</div>
+                    <div class="metric-change positive">Real</div>
+                </div>
+            </div>
+            
+            <div class="metric-card metric-card-secondary">
+                <div class="metric-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="metric-content">
+                    <h3>Tempo Médio de Resolução</h3>
+                    <div class="metric-value">{{ tempo_medio_resolucao|floatformat:0 }}d</div>
+                    <div class="metric-change positive">Real</div>
+                </div>
+            </div>
+            
+            <div class="metric-card metric-card-warning">
+                <div class="metric-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="metric-content">
+                    <h3>Solicitações Pendentes</h3>
+                    <div class="metric-value">{{ pendentes }}</div>
+                    <div class="metric-change negative">Total</div>
+                </div>
+            </div>
+            
+            <div class="metric-card metric-card-success">
+                <div class="metric-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="metric-content">
+                    <h3>Valor Total Processado</h3>
+                    <div class="metric-value">R$ {{ valor_total|floatformat:0 }}</div>
+                    <div class="metric-change positive">Total</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ========================================
+GRÁFICO DE LINHA PRINCIPAL - SOLICITAÇÕES AO LONGO DO TEMPO
+======================================== -->
+        <div class="chart-section">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title-section">
+                        <h2>Solicitações ao Longo do Tempo</h2>
+                    </div>
+                    <div class="chart-controls">
+                        <div class="period-selector">
+                            <button class="period-button active" data-period="6months">
+                                <i class="fas fa-calendar"></i>
+                                Jan - Jun
+                            </button>
+                            <button class="period-button" data-period="12months">
+                                <i class="fas fa-calendar-alt"></i>
+                                Ano Completo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-content">
+                    <canvas id="lineChart" width="100%" height="400"></canvas>
+                </div>
+                <div class="chart-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Total de Solicitações</span>
+                        <span class="stat-value">{{ total_solicitacoes }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Taxa de Aprovação</span>
+                        <span class="stat-value positive">{{ taxa_aprovacao|floatformat:1 }}%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Média Mensal</span>
+                        <span class="stat-value">{{ media_mensal }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ========================================
+GRÁFICOS SECUNDÁRIOS - 4 GRÁFICOS EM GRID 2x2
+======================================== -->
+        <div class="secondary-charts-grid">
+            <!-- Gráfico 1: Fluxo de Solicitações por Período (Barras + Linha) -->
+            <div class="chart-card">
+                <div class="chart-header-small">
+                    <h3>Fluxo de Solicitações por Período</h3>
+                </div>
+                <div class="chart-container-small">
+                    <canvas id="flowChart" height="200"></canvas>
+                </div>
+                <div class="chart-info">
+                    <div class="info-item">
+                        <span class="info-label">Solicitações Processadas</span>
+                        <span class="info-value">{{ aprovadas|add:recusadas|add:concluidas }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Taxa de Aprovação</span>
+                        <span class="info-value">{{ taxa_aprovacao|floatformat:1 }}%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico 2: Preferências por Dia da Semana (Barras Verticais) -->
+            <div class="chart-card">
+                <div class="chart-header-small">
+                    <h3>Preferências por Dia da Semana</h3>
+                </div>
+                <div class="chart-container-small">
+                    <canvas id="preferencesChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico 3: Análise de Status das Solicitações (Barras Horizontais Empilhadas) -->
+            <div class="chart-card">
+                <div class="chart-header-small">
+                    <h3>Análise de Status das Solicitações</h3>
+                </div>
+                <div class="chart-container-small">
+                    <canvas id="statusAnalysisChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico 4: Análise por Departamento (Rosca) -->
+            <div class="chart-card">
+                <div class="chart-header-small">
+                    <h3>Análise por Departamento</h3>
+                </div>
+                <div class="chart-container-small">
+                    <canvas id="departmentChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/dashboard.js' %}" defer></script>
+    <script>
+        // Passar dados do Django para JavaScript
+        window.dashboardData = {
+            totalSolicitacoes: {{ total_solicitacoes }},
+            pendentes: {{ pendentes }},
+            aprovadas: {{ aprovadas }},
+            recusadas: {{ recusadas }},
+            concluidas: {{ concluidas }},
+            valorTotal: {{ valor_total }},
+            valorAprovadas: {{ valor_aprovadas }},
+            valorPendentes: {{ valor_pendentes }},
+            valorConcluidas: {{ valor_concluidas }},
+            tempoMedioAprovacao: {{ tempo_medio_aprovacao|default:0 }},
+            tempoMedioResolucao: {{ tempo_medio_resolucao|default:0 }},
+            taxaAprovacao: {{ taxa_aprovacao|floatformat:2 }},
+            solicitacoesPorMes: {{ solicitacoes_por_mes_json|safe }},
+            solicitacoesPorMesDetalhado: {{ solicitacoes_por_mes_detalhado_json|safe }},
+            statusData: {
+                pendente: {{ status_data.pendente }},
+                aprovado: {{ status_data.aprovado }},
+                recusado: {{ status_data.recusado }},
+                concluido: {{ status_data.concluido }}
+            },
+            solicitacoesPorServico: {{ solicitacoes_por_servico_json|safe }},
+            prioridadeData: {
+                baixa: {{ prioridade_data.baixa|default:0 }},
+                media: {{ prioridade_data.media|default:0 }},
+                alta: {{ prioridade_data.alta|default:0 }}
+            },
+            solicitacoesPorDia: {{ solicitacoes_por_dia_json|safe }},
+            mediaMensal: {{ media_mensal }}
+        };
+    </script>
+{% endblock %}
