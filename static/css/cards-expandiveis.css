@@ -12,9 +12,9 @@
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(28, 28, 28, 0.08);
     position: relative;
-    overflow: hidden;
-    min-height: 120px;
-    max-height: 120px;
+    overflow: visible; /* permite crescer verticalmente */
+    min-height: 320px; /* aumenta altura base para exibir informações */
+    max-height: none; /* sem limite de altura no estado compacto */
     display: flex;
     flex-direction: column;
     justify-content: space-between;

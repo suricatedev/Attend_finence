@@ -14,13 +14,14 @@
 
 
 <body>
+    <video id="bgVideo" class="bg-video" muted loop playsinline></video>
     <div class="main-container">
         <div class="login-container">
             <div class="login-box">
                 <form class="form" method="POST" action="{% url 'login'%}">
                     {% csrf_token %}
                     <div class="logo">
-                        <i class="fas fa-user" style="color: #ffffff; font-size: 20px;"></i>
+                        <img src="/static/img/logo.png" alt="Logo" class="logo-img">
                     </div>
                     <h1 class="header">Bem-vindo de volta</h1>
                     <p class="subtitle">Por favor, insira seus dados.</p>
@@ -54,3 +55,36 @@
     </div>
 </body>
 </html>
+<script>
+    (function() {
+        var assets = ['back19.mp4','back20.mp4','back21.mp4','back22.mp4','back23.mp4','back17.mp4','back18.mp4', 'back24.mp4',];
+        var lastIndex = parseInt(localStorage.getItem('loginBgIndex'), 10);
+        if (isNaN(lastIndex) || lastIndex < 0 || lastIndex >= assets.length) {
+            lastIndex = Math.floor(Math.random() * assets.length);
+        }
+        var nextIndex = assets.length > 1 ? (lastIndex + 1) % assets.length : 0;
+        var chosen = assets[nextIndex];
+        document.addEventListener('DOMContentLoaded', function() {
+            var isVideo = /\.(mp4|webm|ogg)$/i.test(chosen);
+            var videoEl = document.getElementById('bgVideo');
+            if (isVideo) {
+                document.body.style.background = '';
+                if (videoEl) {
+                    videoEl.src = '/static/img/' + chosen;
+                    videoEl.style.display = 'block';
+                    videoEl.autoplay = true;
+                    try { videoEl.play().catch(function(){}); } catch(e) {}
+                }
+            } else {
+                if (videoEl) {
+                    videoEl.pause();
+                    videoEl.removeAttribute('src');
+                    videoEl.load();
+                    videoEl.style.display = 'none';
+                }
+                document.body.style.background = "url('/static/img/" + chosen + "') center/cover no-repeat";
+            }
+        });
+        try { localStorage.setItem('loginBgIndex', String(nextIndex)); } catch (e) {}
+    })();
+</script>

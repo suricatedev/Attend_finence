@@ -7,7 +7,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: url('../img/back03.png') center/cover no-repeat;
+    background: url('#') center/cover no-repeat;
     height: 100vh;
     display: flex;
     justify-content: center;
@@ -16,6 +16,18 @@ body {
     padding: 0;
     box-sizing: border-box;
     overflow: hidden;
+}
+
+/* Vídeo de background (para quando selecionado no script) */
+.bg-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+    display: none;
 }
 
 /* Container principal centralizado */
@@ -40,15 +52,15 @@ body {
 
 .login-box {
     width: 100%;
-    max-width: 350px;
-    background: rgba(0, 0, 0, 0.4);
+    max-width: 1350px;
+    background: rgba(68, 68, 68, 0.247);
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
     border-radius: 20px;
     box-shadow: 
-        0 25px 50px rgba(0, 0, 0, 0.3),
-        0 10px 20px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+        0 25px 50px rgba(0, 0, 0, 0.11),
+        0 10px 20px rgba(0, 0, 0, 0.082);
+    border: 1px solid rgb(255, 255, 255);
     position: relative;
     overflow: hidden;
     padding: 25px 20px;
@@ -64,39 +76,31 @@ body {
 }
 
 .logo {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, #e0bc18, #ccb805);
-    border-radius: 12px;
+    width: auto;
+    height: auto;
+    background: transparent; /* sem gradiente atrás do logo */
+    border-radius: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
-    margin: 0 auto 8px;
-    box-shadow: 0 6px 15px rgba(255, 210, 9, 0.4);
+    margin: 0 auto 12px;
+    box-shadow: none;
+    padding: 0;
 }
 
-.logo::before {
-    content: "";
-    position: absolute;
-    bottom: 6px;
-    width: 50%;
-    height: 20%;
-    border-top-left-radius: 25px;
-    border-top-right-radius: 25px;
-    border-bottom-right-radius: 12px;
-    border-bottom-left-radius: 12px;
-    border: 2px solid #ffffff;
-}
-
+.logo::before,
 .logo::after {
-    content: "";
-    position: absolute;
-    top: 6px;
-    width: 30%;
-    height: 30%;
-    border-radius: 50%;
-    border: 2px solid #ffffff;
+    content: none; /* remove ornamentos e qualquer "ícone" residual */
+    display: none;
+}
+
+/* Imagem do logo dentro do container */
+.logo-img {
+    max-width: 120px; /* ajuste de tamanho do logo */
+    height: auto;
+    display: block;
+    object-fit: contain;
 }
 
 .header {
