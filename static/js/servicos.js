@@ -238,16 +238,12 @@ function editService(serviceId) {
         // Extrair dados do card HTML
         const name = serviceCard.querySelector('.service-name, h3')?.textContent || '';
         const description = serviceCard.querySelector('.service-description, p')?.textContent || '';
-        const category = serviceCard.querySelector('.service-category')?.textContent?.toLowerCase() || '';
-        const icon = serviceCard.querySelector('.service-icon i')?.className || '';
         const isActive = serviceCard.querySelector('.service-status')?.classList.contains('active') || false;
         
         // Preencher formulário com dados do serviço
         form.querySelector('#editServiceId').value = serviceId;
         form.querySelector('#editServiceName').value = name;
-        form.querySelector('#editServiceDescription').value = description;
-        form.querySelector('#editServiceCategory').value = category;
-        form.querySelector('#editServiceIcon').value = icon;
+        form.querySelector('#editServiceDescription').value = description.trim();
         form.querySelector('#editServiceActive').value = isActive.toString();
         
         // Preencher informações adicionais
@@ -256,7 +252,9 @@ function editService(serviceId) {
         document.getElementById('editServiceUpdatedAt').textContent = new Date().toLocaleDateString('pt-BR');
         
         // Atualizar texto do botão de status
-        updateToggleStatusButton(isActive);
+        if (typeof updateToggleStatusButton === 'function') {
+            updateToggleStatusButton(isActive);
+        }
         
         modal.classList.add('show');
         document.body.style.overflow = 'hidden';
@@ -278,26 +276,26 @@ function deleteService(serviceId) {
     
     if (confirm(`Tem certeza que deseja excluir o serviço "${serviceName}"?`)) {
         // Enviar requisição para o backend
-        const formData = new FormData();
-        formData.append('id', serviceId);
-        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                          document.cookie.match(/csrftoken=([^;]+)/)?.[1];
         
-        fetch('/servicos/excluir/', {
-            method: 'POST',
-            body: formData,
+        fetch(`/servicos/deletar/${serviceId}/`, {
+            method: 'DELETE',
             headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
             }
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Remover card do HTML
-                serviceCard.remove();
-                updateStats();
-                showNotification('Serviço excluído com sucesso!', 'success');
+                showNotification(data.message || 'Serviço excluído com sucesso!', 'success');
+                // Recarregar a página para atualizar a lista
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             } else {
-                showNotification(data.message || 'Erro ao excluir serviço!', 'error');
+                showNotification(data.error || 'Erro ao excluir serviço!', 'error');
             }
         })
         .catch(error => {
@@ -307,52 +305,65 @@ function deleteService(serviceId) {
     }
 }
 
-// Função para lidar com envio do formulário
+// Função para lidar com envio do formulário (criar)
 function handleServiceSubmit(e) {
     e.preventDefault();
     
     const form = e.target;
     const formData = new FormData(form);
-    const serviceId = form.getAttribute('data-service-id');
-    
-    const serviceData = {
-        name: formData.get('name'),
-        description: formData.get('description'),
-        category: formData.get('category'),
-        icon: formData.get('icon'),
-        active: formData.get('active') === 'true',
-        updatedAt: new Date()
-    };
     
     // Validação básica
-    if (!serviceData.name || !serviceData.description || !serviceData.category || !serviceData.icon) {
-        showNotification('Por favor, preencha todos os campos obrigatórios.', 'error');
-            return;
-        }
-
-    if (serviceId) {
-        // Editar serviço existente
-        const index = services.findIndex(s => s.id === parseInt(serviceId));
-        if (index !== -1) {
-            services[index] = { ...services[index], ...serviceData };
-            showNotification('Serviço atualizado com sucesso!', 'success');
-        }
-    } else {
-        // Adicionar novo serviço
-        const newService = {
-            id: Date.now(), // ID simples baseado em timestamp
-            ...serviceData,
-            createdAt: new Date()
-        };
-        services.push(newService);
-        showNotification('Serviço adicionado com sucesso!', 'success');
+    const name = formData.get('name');
+    if (!name || !name.trim()) {
+        showNotification('O nome do serviço é obrigatório!', 'error');
+        return;
     }
     
-    // Atualizar interface e fechar modal
-    renderServices();
-    updateStats();
-    closeServiceModal();
-    form.removeAttribute('data-service-id');
+    // Obter CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                     document.cookie.match(/csrftoken=([^;]+)/)?.[1] ||
+                     '';
+    
+    if (!csrfToken) {
+        showNotification('Erro: Token CSRF não encontrado. Recarregue a página.', 'error');
+        return;
+    }
+    
+    // Enviar para o backend
+    fetch('/servicos/criar/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': csrfToken,
+        }
+    })
+    .then(response => {
+        // Verificar se a resposta é JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            return response.text().then(text => {
+                console.error('Resposta não JSON:', text);
+                throw new Error('Resposta inválida do servidor');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message || 'Serviço criado com sucesso!', 'success');
+            closeServiceModal();
+            // Recarregar a página para mostrar o novo serviço
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showNotification(data.error || 'Erro ao criar serviço!', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erro completo:', error);
+        showNotification('Erro ao criar serviço: ' + (error.message || 'Erro de conexão. Tente novamente.'), 'error');
+    });
 }
 
 // Função para lidar com atualização do serviço
@@ -365,73 +376,55 @@ function handleServiceUpdate(e) {
     
     // Validação básica
     const name = formData.get('name');
-    const description = formData.get('description');
-    const category = formData.get('category');
-    const icon = formData.get('icon');
-    
-    if (!name || !description || !category || !icon) {
-        showNotification('Por favor, preencha todos os campos obrigatórios.', 'error');
+    if (!name || !name.trim()) {
+        showNotification('O nome do serviço é obrigatório!', 'error');
         return;
     }
 
+    // Obter CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                     document.cookie.match(/csrftoken=([^;]+)/)?.[1] ||
+                     '';
+    
+    if (!csrfToken) {
+        showNotification('Erro: Token CSRF não encontrado. Recarregue a página.', 'error');
+        return;
+    }
+    
     // Enviar dados para o backend Django
-    fetch('/servicos/editar/', {
+    fetch(`/servicos/editar/${serviceId}/`, {
         method: 'POST',
         body: formData,
         headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'X-CSRFToken': csrfToken,
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        // Verificar se a resposta é JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            return response.text().then(text => {
+                console.error('Resposta não JSON:', text);
+                throw new Error('Resposta inválida do servidor');
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            // Atualizar card no HTML
-            const serviceCard = document.querySelector(`[data-service-id="${serviceId}"]`);
-            if (serviceCard) {
-                // Atualizar nome
-                const nameEl = serviceCard.querySelector('.service-name, h3');
-                if (nameEl) nameEl.textContent = name;
-                
-                // Atualizar descrição
-                const descEl = serviceCard.querySelector('.service-description, p');
-                if (descEl) {
-                    descEl.textContent = description;
-                    if (serviceCard.classList.contains('service-item')) {
-                        // Truncar descrição na lista
-                        const shortDesc = description.length > 60 ? description.substring(0, 60) + '...' : description;
-                        descEl.textContent = shortDesc;
-                    }
-                }
-                
-                // Atualizar categoria
-                const categoryEl = serviceCard.querySelector('.service-category');
-                if (categoryEl) categoryEl.textContent = categories[category] || category;
-                
-                // Atualizar ícone
-                const iconEl = serviceCard.querySelector('.service-icon i');
-                if (iconEl) iconEl.className = icon;
-                
-                // Atualizar status
-                const statusEl = serviceCard.querySelector('.service-status');
-                if (statusEl) {
-                    const isActive = formData.get('active') === 'true';
-                    statusEl.className = `service-status ${isActive ? 'active' : 'inactive'}`;
-                    statusEl.textContent = isActive ? 'Ativo' : 'Inativo';
-                }
-            }
-            
-            showNotification('Serviço atualizado com sucesso!', 'success');
-            
-            // Atualizar estatísticas e fechar modal
-            updateStats();
+            showNotification(data.message || 'Serviço atualizado com sucesso!', 'success');
             closeEditServiceModal();
+            // Recarregar a página para mostrar as alterações
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } else {
-            showNotification(data.message || 'Erro ao atualizar serviço!', 'error');
+            showNotification(data.error || 'Erro ao atualizar serviço!', 'error');
         }
     })
     .catch(error => {
-        console.error('Erro:', error);
-        showNotification('Erro de conexão. Tente novamente.', 'error');
+        console.error('Erro completo:', error);
+        showNotification('Erro ao atualizar serviço: ' + (error.message || 'Erro de conexão. Tente novamente.'), 'error');
     });
 }
 
@@ -567,38 +560,76 @@ function showNotification(message, type = 'info') {
 
 // Função para exportar serviços
 function exportServices() {
-    // Coletar dados dos serviços do HTML
-    const serviceItems = document.querySelectorAll('.service-item, .service-card');
-    const servicesData = Array.from(serviceItems).map(item => {
-        const id = item.getAttribute('data-service-id');
-        const name = item.querySelector('.service-name, h3')?.textContent || '';
-        const description = item.querySelector('.service-description, p')?.textContent || '';
-        const category = item.querySelector('.service-category')?.textContent || '';
-        const icon = item.querySelector('.service-icon i')?.className || '';
-        const active = item.querySelector('.service-status')?.classList.contains('active') || false;
+    try {
+        // Coletar dados dos serviços do HTML
+        const serviceItems = document.querySelectorAll('.service-item, .service-card');
         
-        return {
-            id: parseInt(id),
-            name,
-            description,
-            category: category.toLowerCase(),
-            icon,
-            active,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-    });
-    
-    const dataStr = JSON.stringify(servicesData, null, 2);
-    const dataBlob = new Blob([dataStr], {type: 'application/json'});
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `servicos_${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-    
-    showNotification('Serviços exportados com sucesso!', 'success');
+        if (serviceItems.length === 0) {
+            showNotification('Nenhum serviço para exportar!', 'info');
+            return;
+        }
+        
+        let csvContent = '\uFEFF'; // UTF-8 BOM para Excel
+        const delimiter = ';'; // Usar ponto e vírgula para Excel brasileiro
+        
+        // Cabeçalhos
+        const headers = ['ID', 'Nome', 'Descrição', 'Status'];
+        csvContent += headers.join(delimiter) + '\n';
+        
+        // Dados dos serviços
+        serviceItems.forEach(item => {
+            const id = item.getAttribute('data-service-id') || '';
+            const name = (item.querySelector('.service-name, h3')?.textContent || '').trim();
+            const description = (item.querySelector('.service-description, p')?.textContent || '').trim();
+            const statusEl = item.querySelector('.service-status');
+            const isActive = statusEl?.classList.contains('active') || false;
+            const status = isActive ? 'Ativo' : 'Inativo';
+            
+            // Função para escapar valores que contêm delimitador, vírgula ou aspas
+            const escapeValue = (value) => {
+                if (!value) return '';
+                const str = String(value);
+                if (str.includes(delimiter) || str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return '"' + str.replace(/"/g, '""') + '"';
+                }
+                return str;
+            };
+            
+            const row = [
+                escapeValue(id),
+                escapeValue(name),
+                escapeValue(description),
+                escapeValue(status)
+            ];
+            
+            csvContent += row.join(delimiter) + '\n';
+        });
+        
+        // Criar blob e download
+        const blob = new Blob([csvContent], { 
+            type: 'text/csv;charset=utf-8;' 
+        });
+        const link = document.createElement('a');
+        const dateStr = new Date().toISOString().split('T')[0];
+        const fileName = `servicos_${dateStr}.csv`;
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        
+        // Limpar após um tempo
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }, 100);
+        
+        showNotification('Serviços exportados com sucesso!', 'success');
+        
+    } catch (error) {
+        console.error('Erro ao exportar serviços:', error);
+        showNotification('Erro ao exportar serviços: ' + error.message, 'error');
+    }
 }
 
 // Função para atualizar estatísticas
@@ -679,4 +710,5 @@ function addNoResultsStyles() {
 }
 
 // Adicionar estilos quando a página carregar
+document.addEventListener('DOMContentLoaded', addNoResultsStyles);
 document.addEventListener('DOMContentLoaded', addNoResultsStyles);

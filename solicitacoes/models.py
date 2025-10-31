@@ -14,13 +14,6 @@ PRIORIDADE_CHOICES = [
     ('alta', 'Alta'),
 ]
 
-SERVICO_CHOICES = [
-    ('consultoria_TI', 'Consultoria em TI'),
-    ('desenvolvimento', 'Desenvolvimento de Software'),
-    ('manutencao_equipamentos', 'Manutenção de Equipamentos'),
-    ('treinamento_corporativo', 'Treinamento Corporativo'),
-]
-
 # Create your models here.
 class Solicitacoes(models.Model):
     ticket = models.CharField(max_length=25, default=0)
@@ -36,7 +29,7 @@ class Solicitacoes(models.Model):
     tempo_criacao = models.TimeField()
     tempo_fila =  models.TimeField()
     prioridade = models.CharField(max_length=20, choices=PRIORIDADE_CHOICES, default='baixa')
-    servico = models.CharField(max_length=30, choices=SERVICO_CHOICES, default='consultoria_TI')
+    servico = models.ForeignKey('servicos.Servico', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Serviço")
 
     def __str__(self):
         return f"{self.titulo} - {self.status}"

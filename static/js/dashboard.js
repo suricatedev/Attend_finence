@@ -851,36 +851,161 @@ function initializeLineChart() {
     const ctx = document.getElementById('lineChart');
     if (!ctx) return;
     if (lineChart) lineChart.destroy();
-    lineChart = new Chart(ctx, chartConfig);
+    
+    // Usar dados reais do backend se disponíveis
+    let dataToUse = chartData;
+    if (window.dashboardData && window.dashboardData.solicitacoesPorMesDetalhado) {
+        // Usar dados detalhados com status separado
+        const meses = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.mes);
+        const criadas = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.criadas || 0);
+        const aprovadas = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.aprovadas || 0);
+        const recusadas = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.recusadas || 0);
+        
+        dataToUse = {
+            labels: meses,
+            datasets: [
+                {
+                    ...chartData.datasets[0],
+                    label: 'Solicitações Criadas',
+                    data: criadas
+                },
+                {
+                    ...chartData.datasets[1],
+                    label: 'Solicitações Aprovadas',
+                    data: aprovadas
+                },
+                {
+                    ...chartData.datasets[2],
+                    label: 'Solicitações Recusadas',
+                    data: recusadas
+                }
+            ]
+        };
+    } else if (window.dashboardData && window.dashboardData.solicitacoesPorMes) {
+        // Fallback para dados simples se detalhado não estiver disponível
+        const meses = window.dashboardData.solicitacoesPorMes.map(item => item.mes);
+        const counts = window.dashboardData.solicitacoesPorMes.map(item => item.count);
+        
+        const totalAprovadas = window.dashboardData.aprovadas || 0;
+        const totalRecusadas = window.dashboardData.recusadas || 0;
+        const totalCriadas = window.dashboardData.totalSolicitacoes || 0;
+        
+        const proporcaoAprovadas = totalCriadas > 0 ? totalAprovadas / totalCriadas : 0;
+        const proporcaoRecusadas = totalCriadas > 0 ? totalRecusadas / totalCriadas : 0;
+        
+        const approvedData = counts.map(count => Math.round(count * proporcaoAprovadas));
+        const rejectedData = counts.map(count => Math.round(count * proporcaoRecusadas));
+        
+        dataToUse = {
+            labels: meses,
+            datasets: [
+                {
+                    ...chartData.datasets[0],
+                    label: 'Solicitações Criadas',
+                    data: counts
+                },
+                {
+                    ...chartData.datasets[1],
+                    label: 'Solicitações Aprovadas',
+                    data: approvedData
+                },
+                {
+                    ...chartData.datasets[2],
+                    label: 'Solicitações Recusadas',
+                    data: rejectedData
+                }
+            ]
+        };
+    }
+    
+    const configToUse = {
+        ...chartConfig,
+        data: dataToUse
+    };
+    
+    lineChart = new Chart(ctx, configToUse);
 }
 
 function changePeriod(period) {
-    const periods = {
-        '6months': { 
-            labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho'], 
-            data: { 
-                created: [180, 220, 280, 195, 240, 310], 
-                approved: [150, 180, 220, 160, 200, 250],
-                rejected: [25, 35, 45, 30, 35, 50]
-            } 
-        },
-        '12months': { 
-            labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'], 
-            data: { 
-                created: [180, 220, 280, 195, 240, 310, 275, 290, 320, 265, 285, 240], 
-                approved: [150, 180, 220, 160, 200, 250, 220, 230, 260, 210, 230, 190],
-                rejected: [25, 35, 45, 30, 35, 50, 40, 45, 50, 40, 45, 35]
-            } 
-        }
-    };
     if (!lineChart) return;
-    const selected = periods[period];
-    if (!selected) return;
-    lineChart.data.labels = selected.labels;
-    lineChart.data.datasets[0].data = selected.data.created;
-    lineChart.data.datasets[1].data = selected.data.approved;
-    lineChart.data.datasets[2].data = selected.data.rejected;
-    lineChart.update('active');
+    
+    // Se temos dados reais, usar eles
+    if (window.dashboardData && window.dashboardData.solicitacoesPorMesDetalhado) {
+        // Usar dados detalhados
+        let meses = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.mes);
+        let criadas = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.criadas || 0);
+        let aprovadas = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.aprovadas || 0);
+        let recusadas = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.recusadas || 0);
+        
+        // Filtrar dados baseado no período
+        if (period === '6months') {
+            meses = meses.slice(-6);
+            criadas = criadas.slice(-6);
+            aprovadas = aprovadas.slice(-6);
+            recusadas = recusadas.slice(-6);
+        }
+        
+        lineChart.data.labels = meses;
+        lineChart.data.datasets[0].data = criadas;
+        lineChart.data.datasets[1].data = aprovadas;
+        lineChart.data.datasets[2].data = recusadas;
+        lineChart.update('active');
+    } else if (window.dashboardData && window.dashboardData.solicitacoesPorMes) {
+        // Fallback para dados simples
+        let meses = window.dashboardData.solicitacoesPorMes.map(item => item.mes);
+        let counts = window.dashboardData.solicitacoesPorMes.map(item => item.count);
+        
+        const totalAprovadas = window.dashboardData.aprovadas || 0;
+        const totalRecusadas = window.dashboardData.recusadas || 0;
+        const totalCriadas = window.dashboardData.totalSolicitacoes || 0;
+        
+        const proporcaoAprovadas = totalCriadas > 0 ? totalAprovadas / totalCriadas : 0;
+        const proporcaoRecusadas = totalCriadas > 0 ? totalRecusadas / totalCriadas : 0;
+        
+        let approvedData = counts.map(count => Math.round(count * proporcaoAprovadas));
+        let rejectedData = counts.map(count => Math.round(count * proporcaoRecusadas));
+        
+        // Filtrar dados baseado no período
+        if (period === '6months') {
+            meses = meses.slice(-6);
+            counts = counts.slice(-6);
+            approvedData = approvedData.slice(-6);
+            rejectedData = rejectedData.slice(-6);
+        }
+        
+        lineChart.data.labels = meses;
+        lineChart.data.datasets[0].data = counts;
+        lineChart.data.datasets[1].data = approvedData;
+        lineChart.data.datasets[2].data = rejectedData;
+        lineChart.update('active');
+    } else {
+        // Fallback para dados simulados se não houver dados reais
+        const periods = {
+            '6months': { 
+                labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho'], 
+                data: { 
+                    created: [180, 220, 280, 195, 240, 310], 
+                    approved: [150, 180, 220, 160, 200, 250],
+                    rejected: [25, 35, 45, 30, 35, 50]
+                } 
+            },
+            '12months': { 
+                labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'], 
+                data: { 
+                    created: [180, 220, 280, 195, 240, 310, 275, 290, 320, 265, 285, 240], 
+                    approved: [150, 180, 220, 160, 200, 250, 220, 230, 260, 210, 230, 190],
+                    rejected: [25, 35, 45, 30, 35, 50, 40, 45, 50, 40, 45, 35]
+                } 
+            }
+        };
+        const selected = periods[period];
+        if (!selected) return;
+        lineChart.data.labels = selected.labels;
+        lineChart.data.datasets[0].data = selected.data.created;
+        lineChart.data.datasets[1].data = selected.data.approved;
+        lineChart.data.datasets[2].data = selected.data.rejected;
+        lineChart.update('active');
+    }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
