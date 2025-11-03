@@ -85,6 +85,28 @@
     
     .users-content {
         padding: 2rem;
+        max-height: calc(100vh - 350px);
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+    
+    .users-content::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    .users-content::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+    
+    .users-content::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+    
+    .users-content::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
     }
     
     .users-table {
@@ -96,6 +118,9 @@
     .users-table thead {
         background: #f8fafc;
         border-bottom: 2px solid #e2e8f0;
+        position: sticky;
+        top: 0;
+        z-index: 10;
     }
     
     .users-table th {
@@ -476,6 +501,11 @@
         
         .form-grid {
             grid-template-columns: 1fr;
+        }
+        
+        .users-content {
+            max-height: calc(100vh - 400px);
+            padding: 1rem;
         }
         
         .users-table {
