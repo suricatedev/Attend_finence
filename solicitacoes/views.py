@@ -321,7 +321,7 @@ def receber_dados(request):
             solicitacoes_aprovado = [s for s in todas_solicitacoes if s.status == "aprovado"]
             solicitacoes_concluido = [s for s in todas_solicitacoes if s.status == "concluido"]
             
-            return render(request, 'index.html', {
+            return render(request, 'home/index.html', {
                 'solicitacoes_pendentes': solicitacoes_pendentes,
                 'num_solicitacoes_pendentes': len(solicitacoes_pendentes),
 
