@@ -1,4 +1,4 @@
-// JavaScript SUPER SIMPLES - Apenas abrir e fechar modal
+﻿﻿// JavaScript SUPER SIMPLES - Apenas abrir e fechar modal
 
 // Esperar a página carregar
 window.addEventListener('DOMContentLoaded', function() {
@@ -16,7 +16,6 @@ window.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation(); // IMPORTANTE: Evitar propagação
             console.log('✅ Abrindo modal...');
-            
             // Limpar formulário antes de abrir
             const form = document.getElementById('createCampaignForm');
             if (form) {
@@ -45,8 +44,7 @@ window.addEventListener('DOMContentLoaded', function() {
                 
                 console.log('✅ Formulário limpo e resetado para padrão (Casual)');
             }
-            
-            modal.style.display = 'flex';
+                        modal.style.display = 'flex';
             modal.classList.add('show');
         });
     }
@@ -59,38 +57,37 @@ window.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Função para limpar formulário completamente
+    // Função para limpar e resetar o formulário do modal
     function clearFormCompletely() {
         const form = document.getElementById('createCampaignForm');
         if (form) {
             form.reset();
-            
-            // Resetar o tipo de rota para "Casual" (padrão)
+
+            // Remover classes e mensagens de erro
+            form.querySelectorAll('.form-group.error').forEach(group => group.classList.remove('error'));
+            form.querySelectorAll('.error-message').forEach(error => error.remove());
+
+            // Resetar a seleção de tipo para "Casual" e ajustar a visibilidade
             const routeCasual = document.getElementById('routeCasual');
             const routeEmRota = document.getElementById('routeEmRota');
             const formEmRota = document.getElementById('formEmRota');
             const formCasual = document.getElementById('formCasual');
-            
-            if (routeCasual) {
+
+            if (routeCasual && routeEmRota && formCasual && formEmRota) {
+                // Marcar "Casual" como padrão
                 routeCasual.checked = true;
-            }
-            if (routeEmRota) {
                 routeEmRota.checked = false;
-            }
-            
-            // Garantir que o formulário Casual esteja visível e habilitado
-            if (formCasual) {
+
+                // Exibir formulário "Casual" e ocultar "Em Rota"
                 formCasual.style.display = 'block';
-                // Habilitar todos os campos Casual
-                formCasual.querySelectorAll('input, select, textarea').forEach(field => {
-                    if (field.type !== 'file' && !field.readOnly) {
-                        field.disabled = false;
-                    }
-                });
-            }
-            if (formEmRota) {
                 formEmRota.style.display = 'none';
-                // Desabilitar todos os campos Em Rota
+
+                // Habilitar campos do formulário Casual
+                formCasual.querySelectorAll('input, select, textarea').forEach(field => {
+                    if (field.type !== 'file' && !field.readOnly) field.disabled = false;
+                });
+
+                // Desabilitar campos do formulário Em Rota
                 formEmRota.querySelectorAll('input, select, textarea').forEach(field => {
                     if (field.type !== 'file') {
                         field.disabled = true;
@@ -98,45 +95,15 @@ window.addEventListener('DOMContentLoaded', function() {
                     }
                 });
             }
-            
-            // Limpar TODOS os campos de ambos os formulários manualmente
-            // Isso garante que mesmo campos ocultos sejam limpos
-            if (formCasual) {
-                formCasual.querySelectorAll('input, select, textarea').forEach(field => {
-                    if (field.type !== 'file' && !field.readOnly) {
-                        field.value = '';
-                    }
-                });
-            }
-            if (formEmRota) {
-                formEmRota.querySelectorAll('input, select, textarea').forEach(field => {
-                    if (field.type !== 'file' && !field.readOnly) {
-                        field.value = '';
-                    }
-                });
-            }
-            
-            // Remover classes de erro
-            form.querySelectorAll('.form-group').forEach(group => {
-                group.classList.remove('error');
-            });
-            
-            // Remover mensagens de erro
-            form.querySelectorAll('.error-message').forEach(error => {
-                error.remove();
-            });
-            
-            console.log('✅ Formulário completamente limpo');
+            console.log('✅ Formulário limpo e resetado para o estado padrão (Casual).');
         }
     }
-    
     // Quando clicar no X, FECHAR o modal
     if (btnFechar && modal) {
         btnFechar.addEventListener('click', function(e) {
             e.stopPropagation();
             console.log('❌ Fechando modal...');
-            clearFormCompletely();
-            modal.style.display = 'none';
+            clearFormCompletely();            modal.style.display = 'none';
             modal.classList.remove('show');
         });
     }
@@ -146,8 +113,7 @@ window.addEventListener('DOMContentLoaded', function() {
         btnCancelar.addEventListener('click', function(e) {
             e.stopPropagation();
             console.log('❌ Cancelando...');
-            clearFormCompletely();
-            modal.style.display = 'none';
+            clearFormCompletely();            modal.style.display = 'none';
             modal.classList.remove('show');
         });
     }
@@ -158,8 +124,7 @@ window.addEventListener('DOMContentLoaded', function() {
             // Só fechar se clicar diretamente no modal (não no conteúdo)
             if (e.target === modal) {
                 console.log('❌ Clicou fora - fechando...');
-                clearFormCompletely();
-                modal.style.display = 'none';
+                clearFormCompletely();                modal.style.display = 'none';
                 modal.classList.remove('show');
             }
         });
@@ -169,8 +134,7 @@ window.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
             console.log('❌ ESC pressionado...');
-            clearFormCompletely();
-            modal.style.display = 'none';
+            clearFormCompletely();            modal.style.display = 'none';
             modal.classList.remove('show');
         }
     });

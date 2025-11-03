@@ -1,4 +1,4 @@
-/* ========================================
+﻿/* ========================================
    MODAL DE DETALHES DO CARD
    ======================================== */
 
@@ -266,7 +266,6 @@
         font-size: 1rem;
     }
 }
-
 /* Modal de Detalhes do Card */
 .card-detail-modal {
     display: none;

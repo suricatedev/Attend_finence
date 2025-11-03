@@ -1,12 +1,11 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attend Finance - Login</title>
-    <link rel="stylesheet" href="{% static 'css/login.css' %}">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 
 
@@ -15,15 +14,13 @@
 
 
 <body>
-    <video id="bgVideo" class="bg-video" muted loop playsinline></video>
-    <div class="main-container">
+    <video id="bgVideo" class="bg-video" muted loop playsinline></video>    <div class="main-container">
         <div class="login-container">
             <div class="login-box">
                 <form class="form" method="POST" action="{% url 'login'%}">
                     {% csrf_token %}
                     <div class="logo">
-                        <img src="{% static 'img/logo.png' %}" alt="Logo" class="logo-img">
-                    </div>
+                        <img src="{% static 'img/logo.png' %}" alt="Logo" class="logo-img">                    </div>
                     <h1 class="header">Bem-vindo de volta</h1>
                     <p class="subtitle">Por favor, insira seus dados.</p>
                     

@@ -1,4 +1,4 @@
-/* ========================================
+﻿/* ========================================
    CARDS EXPANDÍVEIS - KANBAN BOARD
    ======================================== */
 
@@ -14,8 +14,7 @@
     position: relative;
     overflow: visible; /* permite crescer verticalmente */
     min-height: 320px; /* aumenta altura base para exibir informações */
-    max-height: none; /* sem limite de altura no estado compacto */
-    display: flex;
+    max-height: none; /* sem limite de altura no estado compacto */    display: flex;
     flex-direction: column;
     justify-content: space-between;
 }

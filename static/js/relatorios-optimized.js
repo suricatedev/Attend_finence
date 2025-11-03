@@ -1,4 +1,4 @@
-// JavaScript Otimizado para Relatórios - Performance Melhorada
+﻿// JavaScript Otimizado para Relatórios - Performance Melhorada
 class RelatoriosOptimized {
     constructor() {
         this.data = [];
@@ -9,8 +9,7 @@ class RelatoriosOptimized {
         this.sortDirection = 'asc';
         this.currentFilters = {
             status: 'all',
-            tipo: 'all',
-            dateFrom: '',
+            tipo: 'all',            dateFrom: '',
             dateTo: '',
             service: '',
             priority: '',
@@ -83,8 +82,7 @@ class RelatoriosOptimized {
         rows.forEach(row => {
             const cells = row.querySelectorAll('td');
             if (cells.length > 0) {
-                // Extrair dados usando data attributes (mais confiável)
-                let status = row.dataset.status || '';
+                // Extrair dados usando data attributes (mais confiável)                let status = row.dataset.status || '';
                 const statusBadge = cells[6]?.querySelector('.status-badge');
                 if (!status && statusBadge) {
                     // Tentar extrair do class do badge
@@ -119,8 +117,7 @@ class RelatoriosOptimized {
                 }
                 
                 // Extrair tipo do data attribute
-                const tipo = row.dataset.tipo || '';
-                
+                const tipo = row.dataset.tipo || '';                
                 // Converter data de dd/mm/yyyy para yyyy-mm-dd
                 const parseDate = (dateStr) => {
                     if (!dateStr) return '';
@@ -141,8 +138,7 @@ class RelatoriosOptimized {
                     status: status.toLowerCase(),
                     statusDisplay: cells[6]?.textContent.trim() || '',
                     priority: priority,
-                    tipo: tipo.toLowerCase(),
-                    dataCriacao: parseDate(cells[8]?.textContent.trim() || ''),
+                    tipo: tipo.toLowerCase(),                    dataCriacao: parseDate(cells[8]?.textContent.trim() || ''),
                     dataPagamento: parseDate(cells[9]?.textContent.trim() || ''),
                 });
             }
@@ -221,7 +217,6 @@ class RelatoriosOptimized {
                 this.debouncedApplyFilters();
             });
         });
-
         // Filtros de data
         document.getElementById('dateFrom')?.addEventListener('change', () => {
             this.currentFilters.dateFrom = document.getElementById('dateFrom').value;
@@ -311,7 +306,6 @@ class RelatoriosOptimized {
         document.getElementById('closeDetailsModal')?.addEventListener('click', () => {
             this.closeModal();
         });
-
         // Event delegation para botões de ação (view e edit)
         const reportsTable = document.querySelector('.reports-table, table');
         if (reportsTable) {
@@ -338,8 +332,7 @@ class RelatoriosOptimized {
                     }
                 }
             });
-        }
-    }
+        }    }
 
     // Debounce otimizado para filtros
     debouncedApplyFilters() {
@@ -372,7 +365,6 @@ class RelatoriosOptimized {
                     return false;
                 }
             }
-
             // Filtro de data
             if (this.currentFilters.dateFrom && item.dataCriacao) {
                 const itemDate = new Date(item.dataCriacao);
@@ -432,8 +424,7 @@ class RelatoriosOptimized {
     clearFilters() {
         this.currentFilters = {
             status: 'all',
-            tipo: 'all',
-            dateFrom: '',
+            tipo: 'all',            dateFrom: '',
             dateTo: '',
             service: '',
             priority: '',
@@ -446,8 +437,7 @@ class RelatoriosOptimized {
         
         document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelector('[data-type="all"]')?.classList.add('active');
-        
-        const dateFrom = document.getElementById('dateFrom');
+                const dateFrom = document.getElementById('dateFrom');
         const dateTo = document.getElementById('dateTo');
         const serviceFilter = document.getElementById('serviceFilter');
         const priorityFilter = document.getElementById('priorityFilter');
@@ -512,14 +502,12 @@ class RelatoriosOptimized {
             row.setAttribute('data-priority', item.priority || '');
             row.setAttribute('data-service', item.service || '');
             row.setAttribute('data-tipo', item.tipo || '');
-            row.setAttribute('data-id', item.id || '');
-            row.innerHTML = this.getRowHTML(item);
+            row.setAttribute('data-id', item.id || '');            row.innerHTML = this.getRowHTML(item);
             fragment.appendChild(row);
         });
 
         // Limpar e adicionar todas as linhas de uma vez
         tbody.innerHTML = '';
-        
         // Se não houver dados filtrados, mostrar mensagem de estado vazio
         if (pageData.length === 0) {
             const emptyRow = document.createElement('tr');
@@ -535,7 +523,6 @@ class RelatoriosOptimized {
         } else {
             tbody.appendChild(fragment);
         }
-
         this.updatePagination();
         this.updateTableInfo();
         
@@ -560,6 +547,9 @@ class RelatoriosOptimized {
             <td class="actions-cell">
                 <button class="btn-action btn-view" onclick="relatoriosOptimized.showDetails('${item.id}')" title="Ver detalhes">
                     <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn-action btn-edit" onclick="relatoriosOptimized.editItem('${item.id}')" title="Editar">
+                    <i class="fas fa-edit"></i>
                 </button>
             </td>
         `;
@@ -1066,8 +1056,7 @@ class RelatoriosOptimized {
         } catch (error) {
             console.error('Erro ao exportar para PDF:', error);
             alert('Erro ao exportar para PDF: ' + error.message);
-        }
-    }
+        }    }
 
     exportToCSV() {
         const csvContent = this.generateCSV();

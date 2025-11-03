@@ -1,4 +1,4 @@
-/* ========================================
+﻿/* ========================================
    DESIGN MINIMALISTA E ELEGANTE
    Paleta de cores do site: #1C1C1C, #544350, #FFCB57, #F4F7F5
    ======================================== */
@@ -35,7 +35,6 @@
 .modal.show {
     display: flex !important;
 }
-
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }

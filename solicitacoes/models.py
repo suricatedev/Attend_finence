@@ -20,8 +20,7 @@ class Solicitacoes(models.Model):
         ('casual', 'Casual'),
         ('em_rota', 'Em Rota'),
     ]
-    
-    ticket = models.CharField(max_length=25, default=0)
+    ticket = models.CharField(max_length=25, unique=True, help_text="ID único da solicitação (Ex: INC001, ROTA-002)")
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='pendente')
     titulo = models.CharField(max_length = 70) 
     nome_solicitante = models.ForeignKey(User, on_delete=models.CASCADE) 

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}Serviços - Sistema de Gestão Financeira{% endblock %}
@@ -35,6 +35,24 @@
                     
                     <!-- Filtros -->
                     <div class="services-filters">
+                        <div class="filter-group">
+                            <label for="categoryFilter">
+                                <i class="fas fa-filter"></i>
+                                Categoria
+                            </label>
+                            <select id="categoryFilter">
+                                <option value="all">Todas as categorias</option>
+                                <option value="consultoria">Consultoria</option>
+                                <option value="desenvolvimento">Desenvolvimento</option>
+                                <option value="manutencao">Manutenção</option>
+                                <option value="treinamento">Treinamento</option>
+                                <option value="suporte">Suporte</option>
+                                <option value="infraestrutura">Infraestrutura</option>
+                                <option value="marketing">Marketing</option>
+                                <option value="outros">Outros</option>
+                            </select>
+                        </div>
+                        
                         <div class="filter-group">
                             <label for="statusFilter">
                                 <i class="fas fa-toggle-on"></i>
@@ -122,8 +140,7 @@
                                                     <i class="fas fa-edit"></i>
                                                     Editar
                                                 </button>
-                                                <button class="btn-delete" data-service-id="{{ servico.id }}" title="Excluir serviço">
-                                                    <i class="fas fa-trash"></i>
+                                                <button class="btn-delete" data-service-id="{{ servico.id }}" title="Excluir serviço">                                                    <i class="fas fa-trash"></i>
                                                     Excluir
                                                 </button>
                                             </div>
@@ -161,8 +178,7 @@
                                                 <i class="fas fa-edit"></i>
                                                 Editar
                                             </button>
-                                            <button class="btn-delete" data-service-id="{{ servico.id }}" title="Excluir serviço">
-                                                <i class="fas fa-trash"></i>
+                                            <button class="btn-delete" data-service-id="{{ servico.id }}" title="Excluir serviço">                                                <i class="fas fa-trash"></i>
                                                 Excluir
                                             </button>
                                         </div>

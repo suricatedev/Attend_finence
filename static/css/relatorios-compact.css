@@ -1,4 +1,4 @@
-/* ========================================
+﻿/* ========================================
    RELATÓRIOS OTIMIZADOS - LAYOUT COMPACTO
    ======================================== */
 
@@ -19,15 +19,13 @@
     display: flex;
     flex-direction: column;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    box-sizing: border-box;
-}
+    box-sizing: border-box;}
 
 /* Garantir que todas as seções respeitem o container */
 .reports-fullscreen > * {
     box-sizing: border-box;
     max-width: 100%;
-    overflow-x: hidden;
-}
+    overflow-x: hidden;}
 
 /* Garantir que o header não seja cortado */
 .reports-fullscreen > .reports-header {
@@ -42,8 +40,7 @@
 .reports-header {
     background: linear-gradient(135deg, #1C1C1C 0%, #544350 100%);
     color: white;
-    padding: 15px 25px;
-    display: flex;
+    padding: 15px 25px;    display: flex;
     align-items: center;
     justify-content: space-between;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -53,8 +50,7 @@
     box-sizing: border-box;
     gap: 20px;
     min-height: 70px;
-    position: relative;
-}
+    position: relative;}
 
 .header-left {
     display: flex;
@@ -62,8 +58,7 @@
     gap: 20px;
     flex: 1;
     min-width: 0;
-    flex-shrink: 1;
-}
+    flex-shrink: 1;}
 
 .btn-back {
     background: rgba(255, 255, 255, 0.1);
@@ -93,8 +88,7 @@
 }
 
 .page-title h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: 1.5rem;    font-weight: 700;
     margin: 0;
     color: white;
     white-space: nowrap;
@@ -105,8 +99,7 @@
 
 .page-title p {
     font-size: 0.85rem;
-    margin: 0;
-    color: rgba(255, 255, 255, 0.8);
+    margin: 0;    color: rgba(255, 255, 255, 0.8);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -125,8 +118,7 @@
     display: flex;
     gap: 8px;
     align-items: center;
-    flex-shrink: 0;
-}
+    flex-shrink: 0;}
 
 .btn-export {
     background: rgba(255, 203, 87, 0.9);
@@ -135,8 +127,7 @@
     padding: 10px 16px;
     border-radius: 6px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
+    display: flex;    align-items: center;
     gap: 6px;
     font-weight: 600;
     transition: all 0.2s ease;
@@ -148,8 +139,7 @@
 .btn-export:hover {
     background: #FFCB57;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 203, 87, 0.3);
-}
+    box-shadow: 0 4px 12px rgba(255, 203, 87, 0.3);}
 
 /* Primeiro botão: bordas arredondadas à esquerda */
 .btn-export:first-child {
@@ -187,8 +177,7 @@
     width: 100%;
     overflow-x: hidden;
     overflow-y: visible;
-    min-height: fit-content;
-}
+    min-height: fit-content;}
 
 .filters-container {
     display: flex;
@@ -320,7 +309,6 @@
     border-color: #FFCB57;
     font-weight: 600;
 }
-
 .date-range {
     display: flex;
     align-items: center;
@@ -470,8 +458,7 @@
     box-sizing: border-box;
     width: 100%;
     overflow-x: hidden;
-    overflow-y: visible;
-}
+    overflow-y: visible;}
 
 .stats-grid {
     display: grid;
@@ -552,8 +539,7 @@
     display: flex;
     flex-direction: column;
     flex: 1;
-    min-height: 0;
-}
+    min-height: 0;}
 
 .table-header {
     display: flex;
@@ -626,16 +612,14 @@
 /* Container da tabela com scroll */
 .table-container {
     overflow-x: auto; /* Scroll horizontal apenas quando necessário */
-    overflow-y: auto; /* Scroll vertical quando necessário */
-    border: 1px solid #e2e8f0;
+    overflow-y: auto; /* Scroll vertical quando necessário */    border: 1px solid #e2e8f0;
     border-radius: 6px;
     background: white;
     position: relative;
     width: 100%; /* Largura total */
     max-width: 100%;
     flex: 1;
-    min-height: 0;
-}
+    min-height: 0;}
 
 /* Scrollbar personalizada */
 .table-container::-webkit-scrollbar {
@@ -762,19 +746,16 @@
     min-width: 80px;
     width: auto;
 } /* Ações */
-
 .data-table th {
     background: #f8fafc;
     color: #1C1C1C;
     font-weight: 600;
-    padding: 10px 12px;
-    text-align: left;
+    padding: 10px 12px;    text-align: left;
     border-bottom: 1px solid #e2e8f0;
     position: relative;
     z-index: 10;
     font-size: 0.85rem;
-    white-space: nowrap;
-}
+    white-space: nowrap;}
 
 .data-table th.sortable {
     cursor: pointer;
@@ -794,8 +775,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     word-wrap: break-word;
-    vertical-align: middle;
-}
+    vertical-align: middle;}
 
 /* Especialmente para título - truncar se muito longo */
 .data-table td:nth-child(2) {
@@ -1091,8 +1071,7 @@
     .btn-export {
         flex: 1;
         min-width: 80px;
-        justify-content: center;
-    }
+        justify-content: center;    }
     
     .page-title h1 {
         font-size: 1.2rem;
@@ -1216,8 +1195,7 @@
     gap: 8px;
     justify-content: center;
     align-items: center;
-    width: 100%;
-}
+    width: 100%;}
 
 .btn-action {
     background: transparent;

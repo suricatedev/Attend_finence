@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load usuarios_tags %}
 
 {% block title %}Solicitações - Sistema de Gestão Financeira{% endblock %}
 
@@ -11,7 +12,6 @@
     <!-- Definir flag ANTES de qualquer JavaScript executar -->
     <script>
         window.MODAL_CONTROLLED_BY_BASE = true;
-        {% load usuarios_tags %}
         window.USER_CAN_CHANGE_STATUS = {% if user|can_change_status %}true{% else %}false{% endif %};
     </script>
 {% endblock %}

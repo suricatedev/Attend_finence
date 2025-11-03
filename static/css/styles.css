@@ -1,4 +1,4 @@
-/* Reset e configurações base */
+﻿/* Reset e configurações base */
 * {
     margin: 0;
     padding: 0;
@@ -2095,8 +2095,7 @@ body {
     white-space: normal; /* permite quebrar linha para mostrar tudo */
     overflow: visible;
     text-overflow: unset;
-    line-height: 1.2;
-}
+    line-height: 1.2;}
 
 /* Estilo especial para valor */
 .info-item:has(.info-label:contains("VALOR")) .info-value,

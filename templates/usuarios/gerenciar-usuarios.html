@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}Gerenciar Usuários - Sistema Financeiro{% endblock %}
@@ -516,8 +516,7 @@
             {% for message in messages %}
                 <div class="message {{ message.tags }}">
                     <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %}"></i>
-                    <span>{{ message }}</span>
-                </div>
+                    <span>{{ message }}</span>                </div>
             {% endfor %}
         </div>
     {% endif %}
@@ -869,5 +868,4 @@
         const gruposSelecionados = Array.from(this.selectedOptions).map(opt => opt.value.toLowerCase());
         console.log('Grupos selecionados:', gruposSelecionados);
     });
-</script>
-{% endblock %}
+</script>{% endblock %}

@@ -73,6 +73,7 @@ def receber_dados(request):
             tempo_fila_inicial = time(0, 0, 0)
             
             if tipo == 'em_rota':
+            
                 # Processar solicitação Em Rota
                 # Coletar todos os itens da rota
                 itens_rota = []
@@ -321,7 +322,7 @@ def receber_dados(request):
             solicitacoes_aprovado = [s for s in todas_solicitacoes if s.status == "aprovado"]
             solicitacoes_concluido = [s for s in todas_solicitacoes if s.status == "concluido"]
             
-            return render(request, 'index.html', {
+            return render(request, 'home/index.html', {
                 'solicitacoes_pendentes': solicitacoes_pendentes,
                 'num_solicitacoes_pendentes': len(solicitacoes_pendentes),
 
@@ -383,7 +384,7 @@ def obter_itens_rota(request, solicitacao_id):
             'success': False,
             'message': f'Erro ao obter itens da rota: {str(e)}'
         }, status=500)
-
+ 
 @require_http_methods(["POST"])
 def atualizar_status(request):
     """

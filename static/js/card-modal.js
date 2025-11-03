@@ -1,10 +1,9 @@
-// ========================================
+﻿// ========================================
 // MODAL DE DETALHES DO CARD
 // ========================================
 
 // Flag para evitar registrar listeners duplicados
 let modalListenersSetup = false;
-
 // Função para calcular tempo na fila
 function calculateQueueTime() {
     const timeElements = document.querySelectorAll('.card-time[data-creation-time]');
@@ -72,8 +71,7 @@ function initializeCardExpansion() {
 }
 
 // Função para abrir modal de detalhes do card
-async function openCardDetailModal(card) {
-    const modal = document.getElementById('cardDetailModal');
+async function openCardDetailModal(card) {    const modal = document.getElementById('cardDetailModal');
     const header = modal.querySelector('.modal-header');
     
     if (!modal) {
@@ -82,8 +80,7 @@ async function openCardDetailModal(card) {
     }
     
     // Extrair dados do card (agora é async)
-    const cardData = await extractCardData(card);
-    
+    const cardData = await extractCardData(card);    
     // Adicionar ID do card ao modal para referência
     const cardId = card.getAttribute('data-card-id') || Math.random().toString(36).substr(2, 9);
     modal.setAttribute('data-card-id', cardId);
@@ -109,8 +106,7 @@ async function openCardDetailModal(card) {
             sectionTitle.innerHTML = '<i class="fas fa-dollar-sign"></i> Valores e Status';
         }
     }
-    
-    // Preencher dados do modal
+        // Preencher dados do modal
     populateCardDetails(cardData);
     
     // Ajustar cor do header conforme status da coluna
@@ -141,8 +137,7 @@ async function extractCardData(card) {
     // Verificar se é uma solicitação "Em Rota"
     const tipo = card.getAttribute('data-tipo');
     data.isEmRota = tipo === 'em_rota';
-    
-    // Extrair informações básicas
+        // Extrair informações básicas
     const title = card.querySelector('.card-title');
     data.titulo = title ? title.textContent : 'Sem título';
     
@@ -177,8 +172,7 @@ async function extractCardData(card) {
                 data.solicitante = value.textContent;
             } else if (labelText.includes('recebedor')) {
                 data.recebedor = value.textContent;
-            } else if (labelText.includes('valor total') || labelText.includes('valor')) {
-                data.valor = value.textContent;
+            } else if (labelText.includes('valor total') || labelText.includes('valor')) {                data.valor = value.textContent;
             } else if (labelText.includes('criação')) {
                 data.dataCriacao = value.textContent;
             } else if (labelText.includes('pagamento')) {
@@ -328,8 +322,7 @@ async function extractCardData(card) {
     } else {
         console.log('ℹ️ Não é solicitação Em Rota');
     }
-    
-    // Extrair prioridade
+        // Extrair prioridade
     const priority = card.querySelector('.priority');
     data.prioridade = priority ? priority.textContent : 'Média';
     
@@ -488,8 +481,7 @@ function populateCardDetails(data) {
         if (routeItemsSection) {
             routeItemsSection.remove();
         }
-    }
-    
+    }    
     const prioridadeElement = document.getElementById('modal-prioridade');
     if (prioridadeElement) {
         prioridadeElement.textContent = data.prioridade || 'Média';
@@ -540,8 +532,7 @@ function setupModalEventListeners() {
     
     // Fechar modal com ESC
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && modal && modal.classList.contains('show')) {
-            closeCardDetailModal();
+        if (e.key === 'Escape' && modal && modal.classList.contains('show')) {            closeCardDetailModal();
         }
     });
     

@@ -1,4 +1,4 @@
-<!-- Modal para criar nova solicitação financeira -->
+﻿<!-- Modal para criar nova solicitação financeira -->
 <div class="modal" id="createCampaignModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -215,8 +215,7 @@
 
                     <div class="form-group" id="campaignServiceGroup">
                     <label for="campaignService">Serviço</label>
-                        <select id="campaignService" name="casual_service" required>
-                        <option value="">Selecione o tipo de serviço</option>
+                        <select id="campaignService" name="casual_service" required>                        <option value="">Selecione o tipo de serviço</option>
                         {% for servico in servicos_disponiveis %}
                         <option value="{{ servico.id }}">{{ servico.nome }}</option>
                         {% empty %}
@@ -227,8 +226,7 @@
                 
                 <div class="form-group">
                     <label for="campaignDescription">Descrição</label>
-                        <textarea id="campaignDescription" name="casual_description" rows="4" placeholder="Descreva detalhadamente a solicitação financeira..." required></textarea>
-                </div>
+                        <textarea id="campaignDescription" name="casual_description" rows="4" placeholder="Descreva detalhadamente a solicitação financeira..." required></textarea>                </div>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -237,26 +235,22 @@
                     </div>
                     <div class="form-group">
                         <label for="campaignDataCriacao">Data de Criação</label>
-                            <input type="date" id="campaignDataCriacao" name="casual_dataCriacao" readonly style="background-color: #f0f0f0; cursor: not-allowed;">
-                        <small class="form-help">Data preenchida automaticamente</small>
+                            <input type="date" id="campaignDataCriacao" name="casual_dataCriacao" readonly style="background-color: #f0f0f0; cursor: not-allowed;">                        <small class="form-help">Data preenchida automaticamente</small>
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label for="campaignAnexos">Anexos</label>
-                        <input type="file" id="campaignAnexos" name="casual_anexos" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
-                    <small class="form-help">Formatos aceitos: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG</small>
+                        <input type="file" id="campaignAnexos" name="casual_anexos" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">                    <small class="form-help">Formatos aceitos: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG</small>
                 </div>
                 
                 <div class="form-group">
                     <label for="campaignPriority">Prioridade</label>
-                        <select id="campaignPriority" name="casual_priority" required>
-                        <option value="baixa">Baixa</option>
+                        <select id="campaignPriority" name="casual_priority" required>                        <option value="baixa">Baixa</option>
                         <option value="media">Média</option>
                         <option value="alta">Alta</option>
                     </select>
-                    </div>
-                </div>
+                    </div>                </div>
             </form>
         </div>
         <div class="modal-footer">
@@ -544,8 +538,7 @@
 
     <script>
         // Preencher automaticamente a data de criação com a data de hoje
-        document.addEventListener('DOMContentLoaded', function() {
-                const hoje = new Date();
+        document.addEventListener('DOMContentLoaded', function() {                const hoje = new Date();
                 const ano = hoje.getFullYear();
                 const mes = String(hoje.getMonth() + 1).padStart(2, '0');
                 const dia = String(hoje.getDate()).padStart(2, '0');
@@ -730,8 +723,7 @@
                         e.target.value = 'R$ ' + value;
                     }
                 });
-            });
-        });
+            });        });
     </script>
 </div>
 

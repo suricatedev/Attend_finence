@@ -4,12 +4,11 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
-def limpar_servicos_antigos(apps, schema_editor):
+def limpar_servicos_antigos(apps, schema_editor): # type: ignore
     """
     Limpa os valores antigos do campo servico antes de converter para ForeignKey.
     Os valores antigos eram strings como 'consultoria_TI', agora será ForeignKey.
     """
-    db_alias = schema_editor.connection.alias
     with schema_editor.connection.cursor() as cursor:
         # Atualizar todos os registros para ter servico = NULL
         # SQLite aceita NULL mesmo em campos CharField que permitem NULL
@@ -18,7 +17,7 @@ def limpar_servicos_antigos(apps, schema_editor):
         )
 
 
-def reverter_limpeza(apps, schema_editor):
+def reverter_limpeza(apps, schema_editor): # type: ignore
     """
     Função reversa - não faz nada pois não podemos recuperar os valores antigos
     """
@@ -26,31 +25,16 @@ def reverter_limpeza(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('servicos', '0001_initial'),
         ('solicitacoes', '0002_solicitacoes_ticket'),
     ]
 
     operations = [
-        # Primeiro, alterar o CharField para permitir NULL e blank
-        migrations.AlterField(
-            model_name='solicitacoes',
-            name='servico',
-            field=models.CharField(blank=True, max_length=30, null=True, choices=[
-                ('consultoria_TI', 'Consultoria em TI'),
-                ('desenvolvimento', 'Desenvolvimento de Software'),
-                ('manutencao_equipamentos', 'Manutenção de Equipamentos'),
-                ('treinamento_corporativo', 'Treinamento Corporativo'),
-            ]),
-        ),
-        # Segundo, limpar os valores antigos
         migrations.RunPython(limpar_servicos_antigos, reverter_limpeza),
-        # Terceiro, alterar de CharField para ForeignKey
         migrations.AlterField(
             model_name='solicitacoes',
             name='servico',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='servicos.servico', verbose_name='Serviço'),
         ),
     ]
-

@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.contrib import messages
 from django.db.models import Sum, Count, Avg, Q
 from django.utils import timezone
@@ -200,7 +200,6 @@ def dashboard(request):
     
 def relatorio(request):
     if request.method == "GET":
-        print("ok")
         if not request.user.is_authenticated:
             return redirect('login')
         

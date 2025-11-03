@@ -1,4 +1,4 @@
-/* Kanban Board */
+﻿/* Kanban Board */
 .kanban-board {
     flex: 1;
     padding: 30px;
@@ -1348,5 +1348,4 @@
     
     .route-total-value {
         font-size: 1rem;
-    }
-}
+    }}
