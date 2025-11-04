@@ -1,4 +1,4 @@
-// ========================================
+﻿// ========================================
 // PÁGINA DE SERVIÇOS - FUNCIONALIDADES
 // ========================================
 
@@ -78,8 +78,7 @@ function switchView(view) {
                 applyServiceFilters();
             }
         }
-    }, 100);
-    
+    }, 100);    
     // Salvar preferência no localStorage
     localStorage.setItem('servicesView', view);
 }
@@ -178,7 +177,6 @@ function setupEventListeners() {
             showNotification('Lista atualizada!', 'success');
         });
     }
-    
     // Event delegation para botões de editar e excluir
     const servicesList = document.getElementById('servicesList');
     if (servicesList) {
@@ -202,8 +200,7 @@ function setupEventListeners() {
                 }
             }
         });
-    }
-}
+    }}
 
 // Função para configurar o modal
 function setupModal() {
@@ -790,8 +787,7 @@ function showFilterResults(visible, total) {
             listView.appendChild(message);
         } else if (currentView === 'grid' && gridView) {
             gridView.appendChild(message);
-        }
-    }
+        }    }
 }
 
 // Função para configurar filtros
@@ -880,8 +876,7 @@ function setupFilters() {
     
     // Aplicar filtro quando o status mudar
     if (statusFilter) {
-        statusFilter.addEventListener('change', applyFilters);
-    }
+        statusFilter.addEventListener('change', applyFilters);    }
 }
 
 // Função para adicionar estilos para "nenhum resultado"

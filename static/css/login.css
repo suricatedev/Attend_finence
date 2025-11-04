@@ -1,4 +1,4 @@
-/* Reset e configurações base */
+﻿/* Reset e configurações base */
 * {
     margin: 0;
     padding: 0;
@@ -27,7 +27,7 @@ body {
     height: 100%;
     object-fit: cover;
     z-index: -1;
-    display: none;
+    /* display: none; <-- REMOVIDO */
 }
 
 /* Container principal centralizado */
@@ -48,8 +48,7 @@ body {
     align-items: center;
     height: 100%;
     position: relative;
-    z-index: 1;
-}
+    z-index: 1;}
 
 .login-box {
     width: 100%;
@@ -66,23 +65,20 @@ body {
     overflow: hidden;
     padding: 40px 35px;
     margin: 0 auto;
-    z-index: 10;
-}
+    z-index: 10;}
 
 
 .form {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    width: 100%;
+    gap: 16px;    width: 100%;
 }
 
 .logo {
     width: auto;
     height: auto;
     background: transparent; /* sem gradiente atrás do logo */
-    border-radius: 0;
-    display: flex;
+    border-radius: 0;    display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
@@ -102,8 +98,7 @@ body {
     max-width: 120px; /* ajuste de tamanho do logo */
     height: auto;
     display: block;
-    object-fit: contain;
-}
+    object-fit: contain;}
 
 .header {
     text-align: center;
@@ -111,8 +106,7 @@ body {
     font-weight: 700;
     color: #FFCB57;
     margin-bottom: 8px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);}
 
 .subtitle {
     text-align: center;
@@ -122,16 +116,14 @@ body {
 }
 
 .input-group {
-    margin-bottom: 20px;
-}
+    margin-bottom: 20px;}
 
 .input-label {
     display: block;
     font-size: 14px;
     font-weight: 600;
     color: #FFCB57;
-    margin-bottom: 8px;
-}
+    margin-bottom: 8px;}
 
 .input {
     width: 100%;
@@ -141,8 +133,7 @@ body {
     background: rgba(255, 255, 255, 0.05);
     color: #ffffff;
     outline: none;
-    font-size: 14px;
-    font-weight: 400;
+    font-size: 14px;    font-weight: 400;
     transition: all 0.3s ease;
     box-sizing: border-box;
 }
@@ -150,8 +141,7 @@ body {
 .input:focus {
     border: 2px solid #FFCB57;
     background: rgba(255, 203, 87, 0.05);
-    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.1);
-}
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.1);}
 
 .input::placeholder {
     color: rgba(255, 255, 255, 0.6);
@@ -163,8 +153,7 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
-    font-size: 14px;
-}
+    font-size: 14px;}
 
 .remember-me {
     display: flex;
@@ -185,7 +174,6 @@ body {
     font-weight: 600;
     transition: color 0.3s ease;
 }
-
 .forgot-password:hover {
     color: #ffffff;
 }
@@ -196,8 +184,7 @@ body {
     border: none;
     border-radius: 12px;
     font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
+    font-weight: 700;    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -212,8 +199,7 @@ body {
 .button:hover {
     background: #ffffff65;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(43, 43, 43, 0.4);
-}
+    box-shadow: 0 6px 20px rgba(43, 43, 43, 0.4);}
 
 .button i {
     font-size: 16px;

@@ -1,12 +1,11 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attend Finance - Login</title>
-    <link rel="stylesheet" href="{% static 'css/login.css' %}">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 
 
@@ -15,15 +14,16 @@
 
 
 <body>
-    <video id="bgVideo" class="bg-video" muted loop playsinline></video>
+    <!-- O 'src' será definido dinamicamente pelo JavaScript abaixo -->
+    <video id="bgVideo" class="bg-video" muted loop playsinline autoplay style="display: block;"></video>
+    
     <div class="main-container">
         <div class="login-container">
             <div class="login-box">
                 <form class="form" method="POST" action="{% url 'login'%}">
                     {% csrf_token %}
                     <div class="logo">
-                        <img src="{% static 'img/logo.png' %}" alt="Logo" class="logo-img">
-                    </div>
+                        <img src="{% static 'img/logo.png' %}" alt="Logo" class="logo-img">                    </div>
                     <h1 class="header">Bem-vindo de volta</h1>
                     <p class="subtitle">Por favor, insira seus dados.</p>
                     
@@ -57,34 +57,53 @@
 </body>
 </html>
 <script>
-    (function() {
-        var assets = ['back10.png','back17.mp4','back18.mp4','back09.png','back20.mp4','back08.png','back05.png',];
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Lista de vídeos e imagens com caminhos gerados pelo Django
+        const videoAssets = [
+            "{% static 'img/back17.mp4' %}",
+            "{% static 'img/back18.mp4' %}",
+            "{% static 'img/back20.mp4' %}"
+        ];
+        
+        // Se você também tiver imagens, pode adicioná-las aqui
+        const imageAssets = [
+            // "{% static 'img/background-login.jpg' %}"
+        ];
+
+        const allAssets = [...videoAssets, ...imageAssets];
+
+        // 2. Lógica para escolher um asset diferente a cada visita
         var lastIndex = parseInt(localStorage.getItem('loginBgIndex'), 10);
-        if (isNaN(lastIndex) || lastIndex < 0 || lastIndex >= assets.length) {
-            lastIndex = Math.floor(Math.random() * assets.length);
+        if (isNaN(lastIndex) || lastIndex < 0 || lastIndex >= allAssets.length) {
+            lastIndex = -1; // Força a escolha de um novo na primeira vez
         }
-        var nextIndex = assets.length > 1 ? (lastIndex + 1) % assets.length : 0;
-        var chosen = assets[nextIndex];
-        document.addEventListener('DOMContentLoaded', function() {
-            var isVideo = /\.(mp4|webm|ogg)$/i.test(chosen);
-            var videoEl = document.getElementById('bgVideo');
-            if (isVideo) {
-                if (videoEl) {
-                    videoEl.src = '/static/img/' + chosen;
-                    videoEl.style.display = 'block';
-                    videoEl.autoplay = true;
-                    try { videoEl.play().catch(function(){}); } catch(e) {}
-                }
-            } else {
-                if (videoEl) {
-                    videoEl.pause();
-                    videoEl.removeAttribute('src');
-                    videoEl.load();
-                    videoEl.style.display = 'none';
-                }
-                document.body.style.background = "url('/static/img/" + chosen + "') center/cover no-repeat !important";
-            }
-        });
-        try { localStorage.setItem('loginBgIndex', String(nextIndex)); } catch (e) {}
-    })();
+        
+        var nextIndex = allAssets.length > 1 ? (lastIndex + 1) % allAssets.length : 0;
+        var chosenAsset = allAssets[nextIndex];
+
+        // 3. Aplicar o vídeo ou imagem de fundo
+        var videoEl = document.getElementById('bgVideo');
+        var isVideo = /\.(mp4|webm|ogg)$/i.test(chosenAsset);
+
+        if (isVideo && videoEl) {
+            videoEl.src = chosenAsset;
+            videoEl.style.display = 'block';
+            videoEl.play().catch(function(error) {
+                console.warn("A reprodução automática do vídeo foi bloqueada pelo navegador.", error);
+            });
+        } else {
+            if (videoEl) videoEl.style.display = 'none';
+            document.body.style.backgroundImage = `url('${chosenAsset}')`;
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundPosition = 'center';
+            document.body.style.backgroundRepeat = 'no-repeat';
+        }
+
+        // 4. Salvar o índice para a próxima visita
+        try {
+            localStorage.setItem('loginBgIndex', String(nextIndex));
+        } catch (e) {
+            console.error("Não foi possível salvar o índice do background no localStorage.", e);
+        }
+    });
 </script>

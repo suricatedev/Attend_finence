@@ -639,3 +639,522 @@
         transition-duration: 0.01ms !important;
     }
 }
+
+/* ========================================
+   ESTILOS DE FORMULÁRIO - EM ROTA E CASUAL
+   Estilos movidos de form-solicitacao.html
+   ======================================== */
+
+/* Estilos para route-classic */
+.route-classic {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+}
+
+.route-classic > label {
+    display: block;
+    margin-bottom: 1rem;
+    font-weight: 700;
+    color: #1C1C1C;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.route-options {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.route-option {
+    flex: 1;
+    min-width: 150px;
+    cursor: pointer;
+    position: relative;
+}
+
+.route-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.route-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #64748b;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
+}
+
+.route-label i {
+    font-size: 1.2rem;
+    color: #94a3b8;
+}
+
+.route-option input[type="radio"]:checked + .route-label {
+    background: linear-gradient(135deg, #FFCB57 0%, #FFC21C 100%);
+    border-color: #FFCB57;
+    color: #1C1C1C;
+    box-shadow: 0 4px 12px rgba(255, 203, 87, 0.3);
+    transform: translateY(-2px);
+}
+
+.route-option input[type="radio"]:checked + .route-label i {
+    color: #1C1C1C;
+}
+
+.route-label:hover {
+    border-color: #FFCB57;
+    transform: translateY(-1px);
+}
+
+/* Estilos para formulário Em Rota */
+.form-route {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.route-section-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.route-section-header h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #1C1C1C;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.route-section-header h3 i {
+    color: #FFCB57;
+}
+
+.route-section-header p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.route-id-group {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.route-id-group:hover {
+    border-color: #FFCB57;
+    background: #ffffff;
+}
+
+.route-id-header {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.route-id-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #FFCB57 0%, #FFC21C 100%);
+    color: #1C1C1C;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(255, 203, 87, 0.3);
+    flex-shrink: 0;
+}
+
+.route-id-title {
+    flex: 1;
+}
+
+.route-id-header label {
+    font-weight: 600;
+    color: #1C1C1C;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.route-id-header .required {
+    color: #ef4444;
+    font-weight: 700;
+}
+
+.route-id-header .optional {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 400;
+}
+
+.route-id-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.route-id-field label,
+.route-valor-field label,
+.route-servico-field label {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    font-weight: 600;
+    color: #475569;
+}
+
+.route-id-field,
+.route-valor-field,
+.route-servico-field {
+    margin-bottom: 0;
+}
+
+.route-id-field input {
+    font-weight: 600;
+}
+
+.route-servico-field select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: #ffffff;
+    color: #1C1C1C;
+    transition: all 0.3s ease;
+}
+
+.route-servico-field select:focus {
+    outline: none;
+    border-color: #FFCB57;
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2);
+}
+
+.route-servico-field select:hover {
+    border-color: #cbd5e0;
+}
+
+/* Estilos para valores detalhados */
+.route-valores-detalhados-wrapper {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.btn-toggle-valores {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-toggle-valores:hover {
+    background: #f1f5f9;
+    border-color: #FFCB57;
+    color: #1C1C1C;
+}
+
+.btn-toggle-valores i {
+    transition: transform 0.3s ease;
+}
+
+.btn-toggle-valores.active i {
+    transform: rotate(180deg);
+}
+
+.route-valores-detalhados {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.route-valores-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.route-valor-item {
+    margin-bottom: 0;
+}
+
+.route-valor-item label {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.route-valor-item label i {
+    color: #FFCB57;
+    font-size: 0.9rem;
+}
+
+.route-valor-item .valor-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: #ffffff;
+    color: #1C1C1C;
+    transition: all 0.3s ease;
+}
+
+.route-valor-item .valor-input:focus {
+    outline: none;
+    border-color: #FFCB57;
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2);
+}
+
+/* Estilos para seção de totais */
+.route-totais-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    border: 2px solid #FFCB57;
+}
+
+.totais-title {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1C1C1C;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.totais-title i {
+    color: #FFCB57;
+}
+
+/* Estilos para botão de adicionar ID */
+.route-add-id-container {
+    margin: 1.5rem 0;
+    display: flex;
+    justify-content: center;
+}
+
+.btn-add-route-id {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    background: linear-gradient(135deg, #FFCB57 0%, #FFC21C 100%);
+    color: #1C1C1C;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(255, 203, 87, 0.3);
+}
+
+.btn-add-route-id:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 203, 87, 0.4);
+}
+
+.btn-add-route-id:active {
+    transform: translateY(0);
+}
+
+.btn-add-route-id i {
+    font-size: 1rem;
+}
+
+/* Estilos para botão de remover ID */
+.btn-remove-route-id {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ef4444;
+    color: #ffffff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+    z-index: 10;
+}
+
+.btn-remove-route-id:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+/* Esconder botão de remover nos IDs obrigatórios (1 e 2) */
+.route-id-group[data-route-id="1"] .btn-remove-route-id,
+.route-id-group[data-route-id="2"] .btn-remove-route-id {
+    display: none;
+}
+
+.form-casual {
+    margin-top: 1.5rem;
+}
+
+/* Garantir que textarea seja interativo */
+#campaignDescription,
+textarea[name="description"] {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 10 !important;
+    cursor: text !important;
+    resize: vertical !important;
+    min-height: 100px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    background: #ffffff !important;
+    border: 1px solid #544350 !important;
+    border-radius: 6px !important;
+    padding: 12px !important;
+    font-size: 1rem !important;
+    font-family: inherit !important;
+    color: #1C1C1C !important;
+    line-height: 1.5 !important;
+}
+
+#campaignDescription:focus,
+textarea[name="description"]:focus {
+    outline: none !important;
+    border-color: #FFCB57 !important;
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2) !important;
+}
+
+.form-group textarea {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 1;
+    cursor: text;
+}
+
+/* Garantir que nenhum elemento esteja sobrepondo o textarea */
+.form-group {
+    position: relative;
+    z-index: 0;
+}
+
+.form-group textarea {
+    position: relative;
+    z-index: 2;
+}
+
+/* Media queries para formulário de solicitação */
+@media (max-width: 1024px) {
+    .route-id-inputs {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .route-valor-field {
+        grid-column: 1 / -1;
+    }
+
+    .route-valores-grid {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .route-options {
+        flex-direction: column;
+    }
+
+    .route-option {
+        min-width: 100%;
+    }
+
+    .route-id-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .route-id-number {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+
+    .route-id-inputs {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .route-valor-field {
+        grid-column: 1;
+    }
+
+    .route-valores-grid {
+        grid-template-columns: 1fr;
+    }
+}

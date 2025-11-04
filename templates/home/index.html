@@ -1,31 +1,154 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load usuarios_tags %}
 
 {% block title %}Solicitações - Sistema de Gestão Financeira{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/kanban.css' %}">
-    <link rel="stylesheet" href="{% static 'css/cards-expandiveis.css' %}">
-    <link rel="stylesheet" href="{% static 'css/card-modal.css' %}">
+    <link rel="stylesheet" href="{% static 'css/kanban-unified-layout.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cards-unified-layout.css' %}">
+    
+    <!-- CSS inline crítico para garantir layout horizontal perfeitamente organizado - ÚLTIMO -->
+    <style>
+        /* Forçar layout horizontal do Kanban - Sobrescrever TODOS os outros CSS */
+        #kanbanBoard,
+        div#kanbanBoard,
+        #kanbanBoard.kanban-board,
+        div#kanbanBoard.kanban-board,
+        .kanban-board#kanbanBoard,
+        [id="kanbanBoard"] {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 20px !important;
+            justify-content: center !important;
+            align-items: stretch !important;
+            overflow-x: visible !important;
+            overflow-y: hidden !important;
+            flex-wrap: nowrap !important;
+            width: 100% !important;
+            padding: 30px !important;
+            box-sizing: border-box !important;
+            margin: 0 !important;
+        }
+        
+        /* Garantir que nenhum display: block seja aplicado */
+        #kanbanBoard[style*="display: block"],
+        #kanbanBoard[style*="display:block"] {
+            display: flex !important;
+        }
+        
+        /* Colunas perfeitamente alinhadas e com larguras iguais */
+        #kanbanBoard .kanban-column,
+        div#kanbanBoard .kanban-column,
+        #kanbanBoard > .kanban-column,
+        [id="kanbanBoard"] .kanban-column,
+        #kanbanBoard .kanban-column[data-column],
+        #kanbanBoard .kanban-column[data-column="planning"],
+        #kanbanBoard .kanban-column[data-column="test"],
+        #kanbanBoard .kanban-column[data-column="launch"],
+        #kanbanBoard .kanban-column[data-column="success"] {
+            flex: 1 1 0% !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            width: auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            box-sizing: border-box !important;
+            margin: 0 !important;
+            height: calc(100vh - 140px) !important;
+            flex-shrink: 1 !important;
+            flex-grow: 1 !important;
+            flex-basis: 0% !important;
+        }
+        
+        /* Remover qualquer max-width que possa limitar as colunas */
+        #kanbanBoard .kanban-column[style*="max-width"],
+        #kanbanBoard .kanban-column[style*="maxWidth"],
+        #kanbanBoard .kanban-column[style*="min-width: 280"],
+        #kanbanBoard .kanban-column[style*="min-width: 300"] {
+            max-width: none !important;
+            min-width: 0 !important;
+        }
+        
+        /* Garantir que nenhuma coluna tenha largura específica */
+        #kanbanBoard .kanban-column[style*="width:"] {
+            width: auto !important;
+        }
+        
+        /* Sobrescrever TODAS as media queries - layout sempre horizontal em desktop */
+        @media (min-width: 769px) {
+            #kanbanBoard,
+            div#kanbanBoard,
+            #kanbanBoard.kanban-board,
+            div#kanbanBoard.kanban-board,
+            .kanban-board#kanbanBoard,
+            [id="kanbanBoard"] {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                padding: 30px !important;
+                gap: 20px !important;
+            }
+            
+            #kanbanBoard .kanban-column,
+            div#kanbanBoard .kanban-column,
+            #kanbanBoard > .kanban-column {
+                flex: 1 1 0% !important;
+                min-width: 0 !important;
+                max-width: none !important;
+            }
+        }
+        
+        /* Para tablets e desktop - SEMPRE horizontal */
+        @media (min-width: 992px) {
+            #kanbanBoard,
+            div#kanbanBoard,
+            #kanbanBoard.kanban-board,
+            [id="kanbanBoard"] {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                gap: 20px !important;
+            }
+            
+            #kanbanBoard .kanban-column {
+                flex: 1 1 0% !important;
+                max-width: none !important;
+            }
+        }
+        
+        /* Para telas grandes - SEMPRE horizontal */
+        @media (min-width: 1200px) {
+            #kanbanBoard,
+            div#kanbanBoard,
+            #kanbanBoard.kanban-board,
+            [id="kanbanBoard"] {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                gap: 20px !important;
+            }
+            
+            #kanbanBoard .kanban-column {
+                flex: 1 1 0% !important;
+                max-width: none !important;
+            }
+        }
+    </style>
     
     <!-- Definir flag ANTES de qualquer JavaScript executar -->
     {% load usuarios_tags %}
     <script>
         window.MODAL_CONTROLLED_BY_BASE = true;
-        // Configuração de permissões do usuário
-        {% if user|can_change_status %}
-        window.USER_CAN_CHANGE_STATUS = true;
-        {% else %}
-        window.USER_CAN_CHANGE_STATUS = false;
-        {% endif %}
+        window.USER_CAN_CHANGE_STATUS = {% if user|can_change_status %}true{% else %}false{% endif %};
     </script>
 {% endblock %}
 
 {% block content %}
 <!-- Kanban Board -->
-<div class="kanban-board" id="kanbanBoard">
+<div class="kanban-board" id="kanbanBoard" style="display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; gap: 20px !important; justify-content: center !important; align-items: stretch !important; width: 100% !important; max-width: 100% !important; padding: 30px !important; box-sizing: border-box !important; margin: 0 !important; overflow-x: visible !important; overflow-y: hidden !important; height: calc(100vh - 80px) !important; min-height: calc(100vh - 80px) !important; max-height: calc(100vh - 80px) !important;">
     <!-- Coluna Pendente -->
-    <div class="kanban-column" data-column="planning">
+    <div class="kanban-column" data-column="planning" style="flex: 1 1 0% !important; flex-grow: 1 !important; flex-shrink: 1 !important; flex-basis: 0% !important; min-width: 0 !important; max-width: none !important; width: auto !important; display: flex !important; flex-direction: column !important; margin: 0 !important; box-sizing: border-box !important; height: calc(100vh - 140px) !important; min-height: calc(100vh - 140px) !important; max-height: calc(100vh - 140px) !important; align-self: stretch !important; overflow: hidden !important;">
         <div class="column-header">
             <div class="column-title">
                 <i class="fas fa-clock"></i>
@@ -179,7 +302,7 @@
     </div>
 
     <!-- Coluna Recusado -->
-    <div class="kanban-column" data-column="test">
+    <div class="kanban-column" data-column="test" style="flex: 1 1 0% !important; flex-grow: 1 !important; flex-shrink: 1 !important; flex-basis: 0% !important; min-width: 0 !important; max-width: none !important; width: auto !important; display: flex !important; flex-direction: column !important; margin: 0 !important; box-sizing: border-box !important; height: calc(100vh - 140px) !important; min-height: calc(100vh - 140px) !important; max-height: calc(100vh - 140px) !important; align-self: stretch !important; overflow: hidden !important;">
         <div class="column-header">
             <div class="column-title">
                 <i class="fas fa-times-circle"></i>
@@ -333,7 +456,7 @@
     </div>
 
     <!-- Coluna Aprovado -->
-    <div class="kanban-column" data-column="launch">
+    <div class="kanban-column" data-column="launch" style="flex: 1 1 0% !important; flex-grow: 1 !important; flex-shrink: 1 !important; flex-basis: 0% !important; min-width: 0 !important; max-width: none !important; width: auto !important; display: flex !important; flex-direction: column !important; margin: 0 !important; box-sizing: border-box !important; height: calc(100vh - 140px) !important; min-height: calc(100vh - 140px) !important; max-height: calc(100vh - 140px) !important; align-self: stretch !important; overflow: hidden !important;">
         <div class="column-header">
             <div class="column-title">
                 <i class="fas fa-check-circle"></i>
@@ -487,7 +610,7 @@
     </div>
 
     <!-- Coluna Concluído -->
-    <div class="kanban-column" data-column="success">
+    <div class="kanban-column" data-column="success" style="flex: 1 1 0% !important; flex-grow: 1 !important; flex-shrink: 1 !important; flex-basis: 0% !important; min-width: 0 !important; max-width: none !important; width: auto !important; display: flex !important; flex-direction: column !important; margin: 0 !important; box-sizing: border-box !important; height: calc(100vh - 140px) !important; min-height: calc(100vh - 140px) !important; max-height: calc(100vh - 140px) !important; align-self: stretch !important; overflow: hidden !important;">
         <div class="column-header">
             <div class="column-title">
                 <i class="fas fa-flag-checkered"></i>
@@ -799,5 +922,488 @@
                 });
             }, 100);
         });
+        
+        // Forçar layout horizontal - executar múltiplas vezes para garantir
+        (function() {
+            function forcarLayoutHorizontal() {
+                // Forçar altura igual em todas as colunas
+                const kanbanBoard = document.getElementById('kanbanBoard');
+                if (kanbanBoard) {
+                    // FORÇAR LAYOUT HORIZONTAL - SOBRESCREVER TUDO
+                    kanbanBoard.setAttribute('style', 
+                        'display: flex !important; ' +
+                        'flex-direction: row !important; ' +
+                        'flex-wrap: nowrap !important; ' +
+                        'gap: 20px !important; ' +
+                        'justify-content: center !important; ' +
+                        'align-items: stretch !important; ' +
+                        'width: 100% !important; ' +
+                        'padding: 30px !important; ' +
+                        'box-sizing: border-box !important; ' +
+                        'margin: 0 !important; ' +
+                        'height: calc(100vh - 80px) !important; ' +
+                        'min-height: calc(100vh - 80px) !important; ' +
+                        'max-height: calc(100vh - 80px) !important;'
+                    );
+                    
+                    const columns = kanbanBoard.querySelectorAll('.kanban-column');
+                    columns.forEach((column, index) => {
+                        // FORÇAR LARGURAS IGUAIS E ALTURA FIXA - cada coluna deve ter exatamente 25% do espaço disponível e mesma altura
+                        const columnStyle = 
+                            'flex: 1 1 0% !important; ' +
+                            'flex-grow: 1 !important; ' +
+                            'flex-shrink: 1 !important; ' +
+                            'flex-basis: 0% !important; ' +
+                            'min-width: 0 !important; ' +
+                            'max-width: none !important; ' +
+                            'width: auto !important; ' +
+                            'display: flex !important; ' +
+                            'flex-direction: column !important; ' +
+                            'margin: 0 !important; ' +
+                            'box-sizing: border-box !important; ' +
+                            'height: calc(100vh - 140px) !important; ' +
+                            'min-height: calc(100vh - 140px) !important; ' +
+                            'max-height: calc(100vh - 140px) !important; ' +
+                            'align-self: stretch !important; ' +
+                            'overflow: hidden !important;';
+                        
+                        column.setAttribute('style', columnStyle);
+                        
+                        // Verificar e corrigir se alguma largura foi aplicada
+                        const computedStyle = window.getComputedStyle(column);
+                        const computedWidth = computedStyle.width;
+                        const computedFlexDirection = computedStyle.flexDirection;
+                        
+                        // Se a largura não está correta ou flex-direction está errado, corrigir
+                        if (computedFlexDirection !== 'row' && computedStyle.display === 'flex') {
+                            kanbanBoard.style.setProperty('flex-direction', 'row', 'important');
+                        }
+                    });
+                    
+                    // Verificar layout do container
+                    const computedBoardStyle = window.getComputedStyle(kanbanBoard);
+                    if (computedBoardStyle.flexDirection !== 'row') {
+                        kanbanBoard.style.setProperty('flex-direction', 'row', 'important');
+                    }
+                }
+            }
+            
+            // Executar imediatamente
+            forcarLayoutHorizontal();
+            
+            // Executar após DOM carregar
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', forcarLayoutHorizontal);
+            } else {
+                // DOM já carregado, executar após pequeno delay
+                setTimeout(forcarLayoutHorizontal, 0);
+            }
+            
+            // Executar após window load completo
+            window.addEventListener('load', function() {
+                setTimeout(forcarLayoutHorizontal, 100);
+            });
+            
+            // Observar mudanças no elemento para reaplicar o layout continuamente
+            const kanbanBoard = document.getElementById('kanbanBoard');
+            if (kanbanBoard && window.MutationObserver) {
+                const observer = new MutationObserver(function() {
+                    // Reaplicar layout sempre que houver mudança
+                    setTimeout(forcarLayoutHorizontal, 10);
+                });
+                
+                observer.observe(kanbanBoard, {
+                    attributes: true,
+                    attributeFilter: ['style', 'class'],
+                    childList: true,
+                    subtree: true
+                });
+                
+                // Verificar e corrigir continuamente o layout
+                let checkInterval = setInterval(function() {
+                    if (!kanbanBoard) return;
+                    
+                    const computedStyle = window.getComputedStyle(kanbanBoard);
+                    const flexDirection = computedStyle.flexDirection;
+                    const display = computedStyle.display;
+                    
+                    // Se não estiver horizontal, forçar novamente
+                    if (display !== 'flex' || flexDirection !== 'row') {
+                        forcarLayoutHorizontal();
+                    }
+                    
+                    // Verificar colunas também
+                    const columns = kanbanBoard.querySelectorAll('.kanban-column');
+                    columns.forEach(column => {
+                        const colComputed = window.getComputedStyle(column);
+                        const colWidth = colComputed.width;
+                        const colFlex = colComputed.flex;
+                        
+                        // Garantir que todas as colunas sejam visíveis e tenham largura mínima
+                        column.style.setProperty('display', 'flex', 'important');
+                        column.style.setProperty('flex-direction', 'column', 'important');
+                        column.style.setProperty('min-width', '280px', 'important');
+                        column.style.setProperty('visibility', 'visible', 'important');
+                        column.style.setProperty('opacity', '1', 'important');
+                        column.style.setProperty('flex', '1 1 0%', 'important');
+                        column.style.setProperty('max-width', 'none', 'important');
+                        column.style.setProperty('width', 'auto', 'important');
+                        column.style.setProperty('margin', '0', 'important');
+                    });
+                }, 300); // Verificar a cada 300ms
+                
+                // Limpar intervalo quando a página for descarregada
+                window.addEventListener('beforeunload', function() {
+                    clearInterval(checkInterval);
+                });
+            }
+        })();
+        
+        // FORÇA FINAL - Executar após TUDO carregar e garantir layout
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const kanbanBoard = document.getElementById('kanbanBoard');
+                if (kanbanBoard) {
+                    // FORÇAR ABSOLUTAMENTE O LAYOUT HORIZONTAL
+                    kanbanBoard.style.cssText = 
+                        'display: flex !important; ' +
+                        'flex-direction: row !important; ' +
+                        'flex-wrap: nowrap !important; ' +
+                        'gap: 20px !important; ' +
+                        'justify-content: center !important; ' +
+                        'align-items: stretch !important; ' +
+                        'width: 100% !important; ' +
+                        'max-width: 100% !important; ' +
+                        'padding: 30px !important; ' +
+                        'box-sizing: border-box !important; ' +
+                        'margin: 0 !important; ' +
+                        'overflow-x: visible !important; ' +
+                        'overflow-y: hidden !important; ' +
+                        'height: calc(100vh - 80px) !important; ' +
+                        'min-height: calc(100vh - 80px) !important; ' +
+                        'max-height: calc(100vh - 80px) !important;';
+                    
+                    const columns = kanbanBoard.querySelectorAll('.kanban-column');
+                    columns.forEach(column => {
+                        column.style.cssText = 
+                            'flex: 1 1 0% !important; ' +
+                            'flex-grow: 1 !important; ' +
+                            'flex-shrink: 1 !important; ' +
+                            'flex-basis: 0% !important; ' +
+                            'min-width: 280px !important; ' +
+                            'max-width: none !important; ' +
+                            'width: auto !important; ' +
+                            'display: flex !important; ' +
+                            'flex-direction: column !important; ' +
+                            'margin: 0 !important; ' +
+                            'box-sizing: border-box !important; ' +
+                            'height: calc(100vh - 140px) !important; ' +
+                            'min-height: calc(100vh - 140px) !important; ' +
+                            'max-height: calc(100vh - 140px) !important; ' +
+                            'align-self: stretch !important; ' +
+                            'overflow: hidden !important; ' +
+                            'visibility: visible !important; ' +
+                            'opacity: 1 !important;';
+                    });
+                }
+            }, 200);
+        });
+        
+        // Forçar layout unificado dos cards após movimentação
+        function aplicarLayoutUnificadoCards() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                // REMOVER qualquer estilo inline que possa estar causando diferenças
+                const parentColumn = card.closest('.kanban-column');
+                const columnData = parentColumn ? parentColumn.getAttribute('data-column') : null;
+                
+                // Garantir que o card tenha o layout correto - INDEPENDENTE DA COLUNA
+                card.style.setProperty('display', 'flex', 'important');
+                card.style.setProperty('flex-direction', 'column', 'important');
+                card.style.setProperty('justify-content', 'flex-start', 'important');
+                card.style.setProperty('align-items', 'stretch', 'important');
+                card.style.setProperty('min-height', '320px', 'important');
+                card.style.setProperty('max-height', 'none', 'important');
+                card.style.setProperty('height', 'auto', 'important');
+                card.style.setProperty('width', '100%', 'important');
+                card.style.setProperty('max-width', '100%', 'important');
+                card.style.setProperty('padding', '16px', 'important');
+                card.style.setProperty('margin-bottom', '15px', 'important');
+                card.style.setProperty('margin-left', '0', 'important');
+                card.style.setProperty('margin-right', '0', 'important');
+                card.style.setProperty('margin-top', '0', 'important');
+                card.style.setProperty('box-sizing', 'border-box', 'important');
+                card.style.setProperty('float', 'none', 'important');
+                card.style.setProperty('clear', 'none', 'important');
+                card.style.setProperty('position', 'relative', 'important');
+                card.style.setProperty('left', 'auto', 'important');
+                card.style.setProperty('right', 'auto', 'important');
+                card.style.setProperty('top', 'auto', 'important');
+                card.style.setProperty('bottom', 'auto', 'important');
+                card.style.setProperty('background', '#F4F7F5', 'important');
+                card.style.setProperty('border', '1px solid #544350', 'important');
+                card.style.setProperty('border-radius', '12px', 'important');
+                card.style.setProperty('box-shadow', '0 4px 12px rgba(28, 28, 28, 0.08)', 'important');
+                card.style.setProperty('overflow', 'visible', 'important');
+                card.style.setProperty('overflow-x', 'hidden', 'important');
+                card.style.setProperty('overflow-y', 'visible', 'important');
+                card.style.setProperty('flex-shrink', '0', 'important');
+                card.style.setProperty('flex-grow', '0', 'important');
+                card.style.setProperty('flex-basis', 'auto', 'important');
+                card.style.setProperty('position', 'relative', 'important');
+                card.style.setProperty('transition', 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 'important');
+                card.style.setProperty('cursor', 'pointer', 'important');
+                
+                // Garantir que o card-body tenha o layout correto
+                const cardBody = card.querySelector('.card-body');
+                if (cardBody) {
+                    cardBody.style.setProperty('flex', '1', 'important');
+                    cardBody.style.setProperty('display', 'flex', 'important');
+                    cardBody.style.setProperty('flex-direction', 'column', 'important');
+                    cardBody.style.setProperty('gap', '8px', 'important');
+                    cardBody.style.setProperty('min-height', '220px', 'important');
+                    cardBody.style.setProperty('padding', '4px', 'important');
+                    cardBody.style.setProperty('margin-bottom', '8px', 'important');
+                    cardBody.style.setProperty('box-sizing', 'border-box', 'important');
+                }
+                
+                // Garantir que card-info tenha o layout correto
+                const cardInfo = card.querySelector('.card-info');
+                if (cardInfo) {
+                    cardInfo.style.setProperty('display', 'flex', 'important');
+                    cardInfo.style.setProperty('flex-direction', 'column', 'important');
+                    cardInfo.style.setProperty('gap', '8px', 'important');
+                    cardInfo.style.setProperty('margin-bottom', '8px', 'important');
+                    cardInfo.style.setProperty('flex', '1', 'important');
+                }
+                
+                // Garantir que info-items tenham o layout correto
+                const infoItems = card.querySelectorAll('.info-item');
+                infoItems.forEach(item => {
+                    item.style.setProperty('display', 'flex', 'important');
+                    item.style.setProperty('align-items', 'center', 'important');
+                    item.style.setProperty('gap', '10px', 'important');
+                    item.style.setProperty('padding', '8px', 'important');
+                    item.style.setProperty('background-color', '#ffffff', 'important');
+                    item.style.setProperty('border-radius', '6px', 'important');
+                    item.style.setProperty('border', '1px solid #e9ecef', 'important');
+                    item.style.setProperty('font-size', '0.8rem', 'important');
+                    item.style.setProperty('box-sizing', 'border-box', 'important');
+                    item.style.setProperty('flex-shrink', '0', 'important');
+                });
+                
+                // Garantir que info-values quebrem corretamente valores longos
+                const infoValues = card.querySelectorAll('.info-value');
+                infoValues.forEach(value => {
+                    value.style.setProperty('color', '#1C1C1C', 'important');
+                    value.style.setProperty('font-size', '0.8rem', 'important');
+                    value.style.setProperty('font-weight', '500', 'important');
+                    value.style.setProperty('white-space', 'normal', 'important');
+                    value.style.setProperty('overflow', 'visible', 'important');
+                    value.style.setProperty('text-overflow', 'unset', 'important');
+                    value.style.setProperty('word-wrap', 'break-word', 'important');
+                    value.style.setProperty('word-break', 'break-word', 'important');
+                    value.style.setProperty('overflow-wrap', 'break-word', 'important');
+                    value.style.setProperty('flex', '1', 'important');
+                    value.style.setProperty('max-width', '100%', 'important');
+                    value.style.setProperty('box-sizing', 'border-box', 'important');
+                });
+                
+                // Garantir que card-header tenha o layout correto
+                const cardHeader = card.querySelector('.card-header');
+                if (cardHeader) {
+                    cardHeader.style.setProperty('margin-bottom', '12px', 'important');
+                    cardHeader.style.setProperty('flex-shrink', '0', 'important');
+                    cardHeader.style.setProperty('display', 'flex', 'important');
+                    cardHeader.style.setProperty('justify-content', 'space-between', 'important');
+                    cardHeader.style.setProperty('align-items', 'flex-start', 'important');
+                    cardHeader.style.setProperty('gap', '8px', 'important');
+                }
+                
+                // Garantir que card-title tenha o layout correto
+                const cardTitle = card.querySelector('.card-title');
+                if (cardTitle) {
+                    cardTitle.style.setProperty('font-size', '1rem', 'important');
+                    cardTitle.style.setProperty('font-weight', '700', 'important');
+                    cardTitle.style.setProperty('color', '#1C1C1C', 'important');
+                    cardTitle.style.setProperty('margin-bottom', '8px', 'important');
+                    cardTitle.style.setProperty('line-height', '1.2', 'important');
+                    cardTitle.style.setProperty('flex-shrink', '0', 'important');
+                    cardTitle.style.setProperty('min-height', '20px', 'important');
+                    cardTitle.style.setProperty('display', '-webkit-box', 'important');
+                    cardTitle.style.setProperty('-webkit-line-clamp', '2', 'important');
+                    cardTitle.style.setProperty('line-clamp', '2', 'important');
+                    cardTitle.style.setProperty('-webkit-box-orient', 'vertical', 'important');
+                    cardTitle.style.setProperty('overflow', 'hidden', 'important');
+                    cardTitle.style.setProperty('box-sizing', 'border-box', 'important');
+                }
+            });
+        }
+        
+        // Aplicar layout unificado imediatamente
+        aplicarLayoutUnificadoCards();
+        
+        // Função auxiliar para aplicar estilos a um card específico
+        function aplicarEstilosCard(card) {
+            if (!card || !card.classList) return;
+            
+            card.style.setProperty('display', 'flex', 'important');
+            card.style.setProperty('flex-direction', 'column', 'important');
+            card.style.setProperty('justify-content', 'flex-start', 'important');
+            card.style.setProperty('align-items', 'stretch', 'important');
+            card.style.setProperty('min-height', '320px', 'important');
+            card.style.setProperty('max-height', 'none', 'important');
+            card.style.setProperty('height', 'auto', 'important');
+            card.style.setProperty('width', '100%', 'important');
+            card.style.setProperty('max-width', '100%', 'important');
+            card.style.setProperty('padding', '16px', 'important');
+            card.style.setProperty('margin-bottom', '15px', 'important');
+            card.style.setProperty('margin-left', '0', 'important');
+            card.style.setProperty('margin-right', '0', 'important');
+            card.style.setProperty('margin-top', '0', 'important');
+            card.style.setProperty('box-sizing', 'border-box', 'important');
+            card.style.setProperty('background', '#F4F7F5', 'important');
+            card.style.setProperty('border', '1px solid #544350', 'important');
+            card.style.setProperty('border-radius', '12px', 'important');
+            card.style.setProperty('box-shadow', '0 4px 12px rgba(28, 28, 28, 0.08)', 'important');
+            card.style.setProperty('overflow', 'visible', 'important');
+            card.style.setProperty('overflow-x', 'hidden', 'important');
+            card.style.setProperty('overflow-y', 'visible', 'important');
+            card.style.setProperty('flex-shrink', '0', 'important');
+            card.style.setProperty('flex-grow', '0', 'important');
+            card.style.setProperty('flex-basis', 'auto', 'important');
+            card.style.setProperty('position', 'relative', 'important');
+            card.style.setProperty('float', 'none', 'important');
+            card.style.setProperty('clear', 'none', 'important');
+            card.style.setProperty('cursor', 'pointer', 'important');
+            
+            // Aplicar estilos aos elementos internos
+            const cardBody = card.querySelector('.card-body');
+            if (cardBody) {
+                cardBody.style.setProperty('flex', '1', 'important');
+                cardBody.style.setProperty('display', 'flex', 'important');
+                cardBody.style.setProperty('flex-direction', 'column', 'important');
+                cardBody.style.setProperty('gap', '8px', 'important');
+                cardBody.style.setProperty('min-height', '220px', 'important');
+                cardBody.style.setProperty('padding', '4px', 'important');
+                cardBody.style.setProperty('margin-bottom', '8px', 'important');
+                cardBody.style.setProperty('box-sizing', 'border-box', 'important');
+            }
+            
+            const cardInfo = card.querySelector('.card-info');
+            if (cardInfo) {
+                cardInfo.style.setProperty('display', 'flex', 'important');
+                cardInfo.style.setProperty('flex-direction', 'column', 'important');
+                cardInfo.style.setProperty('gap', '8px', 'important');
+                cardInfo.style.setProperty('margin-bottom', '8px', 'important');
+                cardInfo.style.setProperty('flex', '1', 'important');
+            }
+            
+            const infoItems = card.querySelectorAll('.info-item');
+            infoItems.forEach(item => {
+                item.style.setProperty('display', 'flex', 'important');
+                item.style.setProperty('align-items', 'center', 'important');
+                item.style.setProperty('gap', '10px', 'important');
+                item.style.setProperty('padding', '8px', 'important');
+                item.style.setProperty('background-color', '#ffffff', 'important');
+                item.style.setProperty('border-radius', '6px', 'important');
+                item.style.setProperty('border', '1px solid #e9ecef', 'important');
+                item.style.setProperty('font-size', '0.8rem', 'important');
+                item.style.setProperty('box-sizing', 'border-box', 'important');
+                item.style.setProperty('flex-shrink', '0', 'important');
+            });
+            
+            const infoValues = card.querySelectorAll('.info-value');
+            infoValues.forEach(value => {
+                value.style.setProperty('color', '#1C1C1C', 'important');
+                value.style.setProperty('font-size', '0.8rem', 'important');
+                value.style.setProperty('font-weight', '500', 'important');
+                value.style.setProperty('white-space', 'normal', 'important');
+                value.style.setProperty('overflow', 'visible', 'important');
+                value.style.setProperty('word-wrap', 'break-word', 'important');
+                value.style.setProperty('word-break', 'break-word', 'important');
+                value.style.setProperty('overflow-wrap', 'break-word', 'important');
+                value.style.setProperty('flex', '1', 'important');
+                value.style.setProperty('max-width', '100%', 'important');
+                value.style.setProperty('box-sizing', 'border-box', 'important');
+            });
+        }
+        
+        // Observar mudanças no DOM para reaplicar quando cards forem criados ou movidos
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1) {
+                            // Se o próprio nó é um card
+                            if (node.classList && node.classList.contains('card')) {
+                                // Aplicar imediatamente
+                                aplicarEstilosCard(node);
+                                // Reaplicar após pequeno delay para garantir
+                                setTimeout(function() {
+                                    aplicarEstilosCard(node);
+                                    aplicarLayoutUnificadoCards();
+                                }, 50);
+                                setTimeout(function() {
+                                    aplicarLayoutUnificadoCards();
+                                }, 200);
+                            }
+                            // Se o nó contém cards
+                            const cards = node.querySelectorAll ? node.querySelectorAll('.card') : [];
+                            if (cards.length > 0) {
+                                cards.forEach(card => {
+                                    // Aplicar estilos imediatamente ao card novo
+                                    aplicarEstilosCard(card);
+                                });
+                                // Reaplicar todos os cards após pequeno delay
+                                setTimeout(aplicarLayoutUnificadoCards, 50);
+                                setTimeout(aplicarLayoutUnificadoCards, 200);
+                            }
+                        }
+                    });
+                }
+            });
+        });
+        
+        // Observar mudanças em todas as colunas
+        const kanbanBoard = document.getElementById('kanbanBoard');
+        if (kanbanBoard) {
+            observer.observe(kanbanBoard, {
+                childList: true,
+                subtree: true,
+                attributes: false,
+                characterData: false
+            });
+        }
+        
+        // Reaplicar após pequeno delay para garantir que tudo está carregado
+        setTimeout(aplicarLayoutUnificadoCards, 100);
+        setTimeout(aplicarLayoutUnificadoCards, 500);
+        window.addEventListener('load', function() {
+            setTimeout(aplicarLayoutUnificadoCards, 300);
+            setTimeout(aplicarLayoutUnificadoCards, 800);
+        });
+        
+        // Verificação contínua para garantir que cards sempre mantenham formato correto
+        setInterval(function() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                const computedStyle = window.getComputedStyle(card);
+                
+                // Verificar se o card está com formato incorreto
+                const minHeight = computedStyle.minHeight;
+                const width = computedStyle.width;
+                const display = computedStyle.display;
+                const flexDirection = computedStyle.flexDirection;
+                
+                if (minHeight !== '320px' || 
+                    width !== '100%' ||
+                    display !== 'flex' ||
+                    flexDirection !== 'column') {
+                    // Aplicar estilos imediatamente ao card problemático
+                    aplicarEstilosCard(card);
+                }
+            });
+        }, 500); // Verificar a cada 500ms (mais frequente)
     </script>
 {% endblock %}

@@ -1,4 +1,4 @@
-// JavaScript específico para Kanban Board
+﻿// JavaScript específico para Kanban Board
 
 class KanbanManager {
     constructor() {
@@ -21,8 +21,7 @@ class KanbanManager {
             
             // REMOVIDO: FormManager já controla o submit
             // Não adicionar listener que bloqueia o submit
-            console.log('🔒 FormManager controla o submit - não adicionar listener duplicado');
-            return;
+            console.log('🔒 FormManager controla o submit - não adicionar listener duplicado');            return;
         }
         
         // Create campaign button (APENAS se não estiver controlado pelo base)
@@ -57,7 +56,6 @@ class KanbanManager {
         // REMOVIDO: O FormManager em app.js já gerencia o submit
         // Não adicionar listener adicional que bloqueia o submit para Django
         console.log('🔒 FormManager controla o submit do formulário - kanban.js não intercepta');
-
         // Add card buttons
         document.querySelectorAll('.add-card-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -210,8 +208,7 @@ class KanbanManager {
         console.warn('⚠️ Se você vê esta mensagem, há um listener duplicado em algum lugar');
         
         // NÃO fazer nada - deixar o FormManager processar
-        return;
-    }
+        return;    }
 
     renderCards() {
         // Limpar cards existentes

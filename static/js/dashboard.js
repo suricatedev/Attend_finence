@@ -27,7 +27,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Mostrar view selecionada
         switch(view) {
             case 'kanban':
-                kanbanBoard.style.display = 'block';
+                kanbanBoard.style.setProperty('display', 'flex', 'important');
+                kanbanBoard.style.setProperty('flex-direction', 'row', 'important');
+                kanbanBoard.style.setProperty('flex-wrap', 'nowrap', 'important');
                 cardsTab.classList.add('active');
                 break;
             case 'dashboard':

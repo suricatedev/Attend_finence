@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}Gerenciar Usuários - Sistema Financeiro{% endblock %}
@@ -85,6 +85,28 @@
     
     .users-content {
         padding: 2rem;
+        max-height: calc(100vh - 350px);
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+    
+    .users-content::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    .users-content::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+    
+    .users-content::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+    
+    .users-content::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
     }
     
     .users-table {
@@ -96,6 +118,9 @@
     .users-table thead {
         background: #f8fafc;
         border-bottom: 2px solid #e2e8f0;
+        position: sticky;
+        top: 0;
+        z-index: 10;
     }
     
     .users-table th {
@@ -478,6 +503,11 @@
             grid-template-columns: 1fr;
         }
         
+        .users-content {
+            max-height: calc(100vh - 400px);
+            padding: 1rem;
+        }
+        
         .users-table {
             font-size: 0.875rem;
         }
@@ -516,8 +546,7 @@
             {% for message in messages %}
                 <div class="message {{ message.tags }}">
                     <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %}"></i>
-                    <span>{{ message }}</span>
-                </div>
+                    <span>{{ message }}</span>                </div>
             {% endfor %}
         </div>
     {% endif %}
@@ -869,5 +898,4 @@
         const gruposSelecionados = Array.from(this.selectedOptions).map(opt => opt.value.toLowerCase());
         console.log('Grupos selecionados:', gruposSelecionados);
     });
-</script>
-{% endblock %}
+</script>{% endblock %}

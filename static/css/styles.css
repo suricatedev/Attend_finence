@@ -1,4 +1,4 @@
-/* Reset e configurações base */
+﻿/* Reset e configurações base */
 * {
     margin: 0;
     padding: 0;
@@ -528,7 +528,7 @@ body {
     padding: 30px;
     display: flex;
     gap: 20px;
-    overflow-x: hidden; /* Sem scroll horizontal - sempre mostrar os 4 cards */
+    overflow-x: visible; /* Permitir ver todas as colunas */
     overflow-y: hidden;
     background: #F4F7F5;
     height: calc(100vh - 80px);
@@ -539,8 +539,10 @@ body {
 }
 
 .kanban-column {
-    flex: 1 1 0; /* Distribuir espaço igualmente entre as 4 colunas */
-    min-width: 280px; /* Largura mínima reduzida */
+    flex: 1 1 0% !important; /* Distribuir espaço igualmente entre as 4 colunas */
+    min-width: 0 !important; /* Permitir que colunas encolham igualmente */
+    max-width: none !important; /* Remover limite de largura */
+    width: auto !important;
     background: #F4F7F5;
     border-radius: 16px;
     box-shadow: 0 6px 25px rgba(28, 28, 28, 0.08);
@@ -550,6 +552,7 @@ body {
     height: calc(100vh - 140px);
     position: relative;
     overflow: hidden;
+    margin: 0;
 }
 
 .kanban-column::before {
@@ -693,21 +696,35 @@ body {
 
 /* Cards */
 .card {
-    background: #F4F7F5;
-    border: 1px solid #544350;
-    border-radius: 12px;
-    padding: 16px;
-    cursor: move;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(28, 28, 28, 0.08);
-    position: relative;
-    overflow-y: auto;
-    overflow-x: hidden;
-    min-height: 200px;
-    max-height: 450px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    background: #F4F7F5 !important;
+    border: 1px solid #544350 !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 12px rgba(28, 28, 28, 0.08) !important;
+    position: relative !important;
+    overflow: visible !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    min-height: 320px !important;
+    max-height: none !important;
+    height: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    flex-basis: auto !important;
+    margin-bottom: 15px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    float: none !important;
+    clear: none !important;
 }
 
 /* Scrollbar personalizada para cards */
@@ -2095,8 +2112,7 @@ body {
     white-space: normal; /* permite quebrar linha para mostrar tudo */
     overflow: visible;
     text-overflow: unset;
-    line-height: 1.2;
-}
+    line-height: 1.2;}
 
 /* Estilo especial para valor */
 .info-item:has(.info-label:contains("VALOR")) .info-value,
@@ -2530,12 +2546,19 @@ body {
         justify-content: center;
     }
     
-    .kanban-board {
+    /* Layout vertical apenas para mobile - mas só se não for #kanbanBoard */
+    .kanban-board:not(#kanbanBoard) {
         padding: 20px 15px;
         flex-direction: column;
         gap: 15px;
         height: auto;
         overflow-y: auto;
+    }
+    
+    /* Garantir que #kanbanBoard sempre seja horizontal em telas maiores */
+    #kanbanBoard.kanban-board {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
     }
     
     .kanban-column {

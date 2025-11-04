@@ -1,4 +1,4 @@
-// JavaScript Unificado - Sistema de Gestão Financeira
+﻿// JavaScript Unificado - Sistema de Gestão Financeira
 
 // Utilitários globais
 const Utils = {
@@ -73,6 +73,13 @@ class ModalManager {
     }
 
     init() {
+        // Fechar modal ao clicar no overlay
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                this.closeModal();
+            }
+        });
+        
         // Fechar modal com ESC
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.activeModal) {
@@ -113,6 +120,42 @@ class ModalManager {
             this.activeModal.classList.remove('show');
             document.body.style.overflow = '';
             this.activeModal = null;
+        }
+    }
+
+    clearInvalidTimeFields() {
+        // Limpar campos de tempo que possam ter valores inválidos
+        const timeFields = document.querySelectorAll('input[type="time"]');
+        timeFields.forEach(field => {
+            const value = field.value;
+            // Se o valor contém segundos (formato HH:MM:SS), limpar
+            if (value && value.includes(':') && value.split(':').length > 2) {
+                field.value = '';
+            }
+        });
+    }
+
+    setDefaultDates() {
+        const today = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const timeString = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        
+        // Definir data de criação como hoje
+        const dataCriacaoField = document.getElementById('campaignDataCriacao');
+        if (dataCriacaoField && !dataCriacaoField.value) {
+            dataCriacaoField.value = today;
+        }
+        
+        // Definir tempo de criação como agora (apenas HH:MM)
+        const tempoCriacaoField = document.getElementById('campaignTempoCriacao');
+        if (tempoCriacaoField && !tempoCriacaoField.value) {
+            tempoCriacaoField.value = timeString;
+        }
+        
+        // Definir tempo na fila como 00:00
+        const tempoFilaField = document.getElementById('campaignTempoFila');
+        if (tempoFilaField && !tempoFilaField.value) {
+            tempoFilaField.value = '00:00';
         }
     }
 }
@@ -164,6 +207,7 @@ class FormManager {
         });
 
         // Submit de formulários
+        // ⚠️ CRÍTICO: Usar CAPTURE PHASE (true) para executar ANTES da validação nativa do navegador
         // ⚠️ CRÍTICO: Usar CAPTURE PHASE (true) para executar ANTES da validação nativa do navegador
         // Isso permite remover 'required' e desabilitar campos do formulário inativo
         document.addEventListener('submit', (e) => {
@@ -300,8 +344,7 @@ class FormManager {
                 this.handleSubmit(e);
             }
             }
-        }, false); // BUBBLE PHASE - para validação e processamento
-    }
+        }, false); // BUBBLE PHASE - para validação e processamento    }
     
     formatCurrencyField(field) {
         let value = field.value.replace(/[^\d]/g, '');
@@ -404,8 +447,7 @@ class FormManager {
                 });
             }
         }
-        
-        // Limpar erros anteriores
+                // Limpar erros anteriores
         form.querySelectorAll('.error-message').forEach(error => error.remove());
         form.querySelectorAll('.form-group').forEach(group => group.classList.remove('error'));
         
@@ -654,8 +696,7 @@ class FormManager {
                         if (formGroup) {
                         formGroup.classList.add('error');
                         this.showFieldError(formGroup, 'Formato de tempo inválido. Use HH:MM (ex: 14:30)');
-                        }
-                        isValid = false;
+                        }                        isValid = false;
                         errorCount++;
                         return;
                     }
@@ -663,8 +704,7 @@ class FormManager {
                 
                 if (formGroup) {
                 formGroup.classList.remove('error');
-                }
-            }
+                }            }
         });
 
         console.log(`Validação: ${isValid ? 'Válido' : 'Inválido'} (${errorCount} erros)`);
@@ -830,7 +870,6 @@ class FormManager {
         // Preparação adicional do formulário antes do submit (se necessário)
         // O título será gerado automaticamente no backend
     }
-
     async submitForm(form, formData) {
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalText = submitBtn.textContent;
@@ -874,8 +913,7 @@ class FormManager {
             form.reset();
             if (window.modalManager) {
                 window.modalManager.closeModal();
-            }
-            
+            }            
         } catch (error) {
             console.error('Erro ao criar solicitação:', error);
             Utils.showNotification('Erro ao criar solicitação: ' + error.message, 'error');
@@ -923,8 +961,7 @@ class KanbanManager {
                 console.log('KANBANMANAGER: Botão fechar clicado');
                 if (window.modalManager) {
                     window.modalManager.closeModal();
-                }
-            }
+                }            }
             
             // Cancel button
             if (e.target.id === 'cancelCreate') {
@@ -938,7 +975,6 @@ class KanbanManager {
         // REMOVIDO: O FormManager já gerencia o submit do formulário
         // Não precisa adicionar outro listener aqui que bloqueia o submit
         // O formulário será processado pelo handleSubmit do FormManager
-
         // Add card buttons
         document.querySelectorAll('.add-card-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -955,8 +991,7 @@ class KanbanManager {
             window.modalManager.showModal('createCampaignModal');
         } else {
             console.error('KANBANMANAGER: modalManager não está disponível!');
-        }
-    }
+        }    }
 
     loadInitialData() {
         // Carregar dados iniciais do servidor ou localStorage
@@ -1525,8 +1560,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('APP.JS: Kanban board não encontrado');
         }
     } catch (error) {
-        console.error('APP.JS: Erro ao inicializar sistema:', error);
-    }
+        console.error('APP.JS: Erro ao inicializar sistema:', error);    }
 
     // Adicionar estilos para animações
     const style = document.createElement('style');

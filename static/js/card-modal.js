@@ -1,10 +1,9 @@
-// ========================================
+﻿// ========================================
 // MODAL DE DETALHES DO CARD
 // ========================================
 
 // Flag para evitar registrar listeners duplicados
 let modalListenersSetup = false;
-
 // Função para calcular tempo na fila
 function calculateQueueTime() {
     const timeElements = document.querySelectorAll('.card-time[data-creation-time]');
@@ -72,8 +71,7 @@ function initializeCardExpansion() {
 }
 
 // Função para abrir modal de detalhes do card
-async function openCardDetailModal(card) {
-    const modal = document.getElementById('cardDetailModal');
+async function openCardDetailModal(card) {    const modal = document.getElementById('cardDetailModal');
     const header = modal.querySelector('.modal-header');
     
     if (!modal) {
@@ -82,8 +80,7 @@ async function openCardDetailModal(card) {
     }
     
     // Extrair dados do card (agora é async)
-    const cardData = await extractCardData(card);
-    
+    const cardData = await extractCardData(card);    
     // Adicionar ID do card ao modal para referência
     const cardId = card.getAttribute('data-card-id') || Math.random().toString(36).substr(2, 9);
     modal.setAttribute('data-card-id', cardId);
@@ -109,8 +106,7 @@ async function openCardDetailModal(card) {
             sectionTitle.innerHTML = '<i class="fas fa-dollar-sign"></i> Valores e Status';
         }
     }
-    
-    // Preencher dados do modal
+        // Preencher dados do modal
     populateCardDetails(cardData);
     
     // Ajustar cor do header conforme status da coluna
@@ -141,8 +137,7 @@ async function extractCardData(card) {
     // Verificar se é uma solicitação "Em Rota"
     const tipo = card.getAttribute('data-tipo');
     data.isEmRota = tipo === 'em_rota';
-    
-    // Extrair informações básicas
+        // Extrair informações básicas
     const title = card.querySelector('.card-title');
     data.titulo = title ? title.textContent : 'Sem título';
     
@@ -177,8 +172,7 @@ async function extractCardData(card) {
                 data.solicitante = value.textContent;
             } else if (labelText.includes('recebedor')) {
                 data.recebedor = value.textContent;
-            } else if (labelText.includes('valor total') || labelText.includes('valor')) {
-                data.valor = value.textContent;
+            } else if (labelText.includes('valor total') || labelText.includes('valor')) {                data.valor = value.textContent;
             } else if (labelText.includes('criação')) {
                 data.dataCriacao = value.textContent;
             } else if (labelText.includes('pagamento')) {
@@ -328,8 +322,7 @@ async function extractCardData(card) {
     } else {
         console.log('ℹ️ Não é solicitação Em Rota');
     }
-    
-    // Extrair prioridade
+        // Extrair prioridade
     const priority = card.querySelector('.priority');
     data.prioridade = priority ? priority.textContent : 'Média';
     
@@ -488,8 +481,7 @@ function populateCardDetails(data) {
         if (routeItemsSection) {
             routeItemsSection.remove();
         }
-    }
-    
+    }    
     const prioridadeElement = document.getElementById('modal-prioridade');
     if (prioridadeElement) {
         prioridadeElement.textContent = data.prioridade || 'Média';
@@ -540,8 +532,7 @@ function setupModalEventListeners() {
     
     // Fechar modal com ESC
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && modal && modal.classList.contains('show')) {
-            closeCardDetailModal();
+        if (e.key === 'Escape' && modal && modal.classList.contains('show')) {            closeCardDetailModal();
         }
     });
     
@@ -607,6 +598,78 @@ function moveCardToFila(cardId, targetFila) {
             
             // Adicionar card na nova coluna
             targetColumn.appendChild(card);
+            
+            // Reaplicar layout unificado do card após movimentação
+            if (typeof aplicarLayoutUnificadoCards === 'function') {
+                aplicarLayoutUnificadoCards();
+            } else {
+                // Forçar layout unificado diretamente
+                card.style.cssText = 
+                    'display: flex !important; ' +
+                    'flex-direction: column !important; ' +
+                    'justify-content: flex-start !important; ' +
+                    'align-items: stretch !important; ' +
+                    'min-height: 320px !important; ' +
+                    'max-height: none !important; ' +
+                    'height: auto !important; ' +
+                    'width: 100% !important; ' +
+                    'padding: 16px !important; ' +
+                    'margin-bottom: 15px !important; ' +
+                    'box-sizing: border-box !important; ' +
+                    'overflow: visible !important; ' +
+                    'overflow-x: hidden !important; ' +
+                    'overflow-y: visible !important; ' +
+                    'flex-shrink: 0 !important; ' +
+                    'position: relative !important;';
+                
+                const cardBody = card.querySelector('.card-body');
+                if (cardBody) {
+                    cardBody.style.cssText = 
+                        'flex: 1 !important; ' +
+                        'display: flex !important; ' +
+                        'flex-direction: column !important; ' +
+                        'gap: 8px !important; ' +
+                        'min-height: 220px !important; ' +
+                        'padding: 4px !important; ' +
+                        'margin-bottom: 8px !important; ' +
+                        'box-sizing: border-box !important;';
+                }
+            }
+            
+            // GARANTIR QUE TODAS AS COLUNAS FICAM VISÍVEIS APÓS MOVER CARD
+            setTimeout(function() {
+                const kanbanBoard = document.getElementById('kanbanBoard');
+                if (kanbanBoard) {
+                    // Forçar layout horizontal
+                    kanbanBoard.style.setProperty('display', 'flex', 'important');
+                    kanbanBoard.style.setProperty('flex-direction', 'row', 'important');
+                    kanbanBoard.style.setProperty('flex-wrap', 'nowrap', 'important');
+                    kanbanBoard.style.setProperty('overflow-x', 'visible', 'important');
+                    kanbanBoard.style.setProperty('width', '100%', 'important');
+                    kanbanBoard.style.setProperty('align-items', 'stretch', 'important');
+                    
+                    // Garantir que todas as colunas sejam visíveis
+                    const columns = kanbanBoard.querySelectorAll('.kanban-column');
+                    columns.forEach(column => {
+                        column.style.setProperty('display', 'flex', 'important');
+                        column.style.setProperty('flex-direction', 'column', 'important');
+                        column.style.setProperty('min-width', '280px', 'important');
+                        column.style.setProperty('visibility', 'visible', 'important');
+                        column.style.setProperty('opacity', '1', 'important');
+                        column.style.setProperty('flex', '1 1 0%', 'important');
+                    });
+                    
+                    // Reaplicar layout unificado dos cards
+                    if (typeof aplicarLayoutUnificadoCards === 'function') {
+                        aplicarLayoutUnificadoCards();
+                    }
+                    
+                    // Reaplicar layout horizontal se existir função
+                    if (typeof forcarLayoutHorizontal === 'function') {
+                        forcarLayoutHorizontal();
+                    }
+                }
+            }, 100);
             
             // Atualizar contadores das colunas
             updateColumnCounters();

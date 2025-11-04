@@ -1,4 +1,4 @@
-from django.views import View
+﻿from django.views import View
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
@@ -73,7 +73,6 @@ class RegisterarUsuario(View):
         if len(self.password) < 6:
             messages.error(request, 'A senha deve ter pelo menos 6 caracteres.')
             return redirect('gerenciar_usuarios')
-
         # Criar usuário
         try:
             self.user = User.objects.create_user(
@@ -103,7 +102,6 @@ class RegisterarUsuario(View):
                 messages.warning(request, f'Usuário criado, mas nenhum grupo válido foi atribuído.')
             else:
                 messages.success(request, f"Usuário '{self.name_user}' criado com sucesso!")
-            
             return redirect('gerenciar_usuarios')
             
         except Exception as e:
@@ -265,7 +263,6 @@ class DeletarUsuario(View):
             messages.error(request, f"Erro ao deletar usuário: {str(e)}")
             return redirect('gerenciar_usuarios')
 
-
 class Equipes(View):
     def get(self, request):
         if not request.user.is_authenticated:
@@ -297,5 +294,3 @@ class Equipes(View):
 
 
     
-
-

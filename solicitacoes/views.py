@@ -8,6 +8,17 @@ from servicos.models import Servico
 from django.utils import timezone
 import json
 
+def limpar_valor_monetario(valor_raw):
+    """Função auxiliar para limpar e converter valor monetário formatado"""
+    if not valor_raw:
+        return 0.0
+    try:
+        # Remover formatação brasileira
+        valor_limpo = valor_raw.replace('R$', '').replace(' ', '').replace('.', '').replace(',', '.').strip()
+        return float(valor_limpo)
+    except (ValueError, AttributeError):
+        return 0.0
+
 def receber_dados(request):
     if request.method == 'POST':
         try:
@@ -73,13 +84,28 @@ def receber_dados(request):
             tempo_fila_inicial = time(0, 0, 0)
             
             if tipo == 'em_rota':
+            
                 # Processar solicitação Em Rota
-                # Coletar todos os itens da rota
+                # Coletar todos os itens da rota dinamicamente
                 itens_rota = []
                 valor_total = 0.0
                 ticket_principal = None
                 
-                for i in range(1, 5):
+                # Buscar todos os IDs enviados (pode ser qualquer número)
+                route_ids_encontrados = []
+                for key in request.POST.keys():
+                    if key.startswith('route_id_'):
+                        try:
+                            num_id = int(key.replace('route_id_', ''))
+                            route_ids_encontrados.append(num_id)
+                        except ValueError:
+                            continue
+                
+                # Ordenar os IDs para processar em ordem
+                route_ids_encontrados.sort()
+                
+                ordem = 1
+                for i in route_ids_encontrados:
                     route_id = request.POST.get(f'route_id_{i}', '').strip()
                     route_valor_raw = request.POST.get(f'route_valor_{i}', '').strip()
                     route_servico_id = request.POST.get(f'route_servico_{i}', '').strip()
@@ -88,16 +114,19 @@ def receber_dados(request):
                     
                     if route_id:  # Se há ID, deve ter valor e serviço
                         # Limpar valor - mesmo tratamento do Casual
-                        valor_item = 0.0
-                        if route_valor_raw:
-                            try:
-                                # Remover formatação brasileira
-                                valor_limpo = route_valor_raw.replace('R$', '').replace(' ', '').replace('.', '').replace(',', '.').strip()
-                                valor_item = float(valor_limpo)
-                                print(f"🔍 DEBUG Em Rota - Item {i} valor processado: {valor_item}")
-                            except (ValueError, AttributeError) as e:
-                                print(f"⚠️ ERRO ao processar valor do item {i} '{route_valor_raw}': {e}")
-                                valor_item = 0.0
+                        valor_item = limpar_valor_monetario(route_valor_raw)
+                        print(f"🔍 DEBUG Em Rota - Item {i} valor processado: {valor_item}")
+                        
+                        # Capturar valores detalhados
+                        valor_km = limpar_valor_monetario(request.POST.get(f'route_valor_km_{i}', '').strip())
+                        valor_pedagio = limpar_valor_monetario(request.POST.get(f'route_valor_pedagio_{i}', '').strip())
+                        valor_hospedagem = limpar_valor_monetario(request.POST.get(f'route_valor_hospedagem_{i}', '').strip())
+                        valor_fluvial = limpar_valor_monetario(request.POST.get(f'route_valor_fluvial_{i}', '').strip())
+                        valor_outros = limpar_valor_monetario(request.POST.get(f'route_valor_outros_{i}', '').strip())
+                        
+                        # Se o valor principal não foi informado, calcular pela soma dos detalhados
+                        if valor_item == 0.0:
+                            valor_item = valor_km + valor_pedagio + valor_hospedagem + valor_fluvial + valor_outros
                         
                         # Buscar serviço
                         servico_obj = None
@@ -107,16 +136,22 @@ def receber_dados(request):
                             except Servico.DoesNotExist:
                                 pass
                         
-                        if i == 1:
+                        if ordem == 1:
                             ticket_principal = route_id
                         
                         itens_rota.append({
                             'ticket': route_id,
                             'valor': valor_item,
                             'servico': servico_obj,
-                            'ordem': i
+                            'ordem': ordem,
+                            'valor_km': valor_km,
+                            'valor_pedagio': valor_pedagio,
+                            'valor_hospedagem': valor_hospedagem,
+                            'valor_fluvial': valor_fluvial,
+                            'valor_outros': valor_outros
                         })
                         valor_total += valor_item
+                        ordem += 1
                 
                 if len(itens_rota) < 2:
                     messages.error(request, 'Solicitação Em Rota precisa de no mínimo 2 itens preenchidos.')
@@ -170,10 +205,14 @@ def receber_dados(request):
                 route_tickets = [item['ticket'] for item in itens_rota]
                 titulo = f"Solicitação Em Rota - {', '.join(route_tickets)}"
                 
+                # Capturar valor de receita
+                valor_receita = limpar_valor_monetario(request.POST.get('route_valor_receita', '').strip())
+                
                 # Criar solicitação principal
                 print(f"🔍 DEBUG Criando solicitação Em Rota:")
                 print(f"   - Ticket: {ticket_principal}")
                 print(f"   - Valor Total: {valor_total}")
+                print(f"   - Valor Receita: {valor_receita}")
                 print(f"   - Itens: {len(itens_rota)}")
                 
                 solicitacao = Solicitacoes.objects.create(
@@ -191,7 +230,8 @@ def receber_dados(request):
                     tempo_fila=tempo_fila_inicial,
                     prioridade=prioridade,
                     servico=itens_rota[0]['servico'],  # Serviço principal (primeiro item)
-                    tipo='em_rota'
+                    tipo='em_rota',
+                    valor_receita=valor_receita
                 )
                 
                 print(f"✅ Solicitação Em Rota criada com sucesso! ID: {solicitacao.id}")
@@ -203,7 +243,12 @@ def receber_dados(request):
                         ticket_item=item['ticket'],
                         valor=item['valor'],
                         servico=item['servico'],
-                        ordem=item['ordem']
+                        ordem=item['ordem'],
+                        valor_km=item['valor_km'],
+                        valor_pedagio=item['valor_pedagio'],
+                        valor_hospedagem=item['valor_hospedagem'],
+                        valor_fluvial=item['valor_fluvial'],
+                        valor_outros=item['valor_outros']
                     )
                 
             else:
@@ -235,16 +280,20 @@ def receber_dados(request):
                         return redirect('/solicitacoes/home/')
                 
                 # Limpar valor: remover R$, pontos e trocar vírgula por ponto
-                valor = 0.0
-                if valor_raw:
-                    try:
-                        # Remover formatação brasileira
-                        valor_limpo = valor_raw.replace('R$', '').replace(' ', '').replace('.', '').replace(',', '.').strip()
-                        valor = float(valor_limpo)
-                        print(f"🔍 DEBUG - Valor processado: {valor}")
-                    except (ValueError, AttributeError) as e:
-                        print(f"⚠️ ERRO ao processar valor '{valor_raw}': {e}")
-                        valor = 0.0
+                valor = limpar_valor_monetario(valor_raw)
+                print(f"🔍 DEBUG - Valor processado: {valor}")
+                
+                # Capturar valores detalhados
+                valor_km = limpar_valor_monetario(request.POST.get('casual_valor_km', '').strip())
+                valor_pedagio = limpar_valor_monetario(request.POST.get('casual_valor_pedagio', '').strip())
+                valor_hospedagem = limpar_valor_monetario(request.POST.get('casual_valor_hospedagem', '').strip())
+                valor_fluvial = limpar_valor_monetario(request.POST.get('casual_valor_fluvial', '').strip())
+                valor_outros = limpar_valor_monetario(request.POST.get('casual_valor_outros', '').strip())
+                valor_receita = limpar_valor_monetario(request.POST.get('casual_valor_receita', '').strip())
+                
+                # Se o valor principal não foi informado, calcular pela soma dos detalhados
+                if valor == 0.0:
+                    valor = valor_km + valor_pedagio + valor_hospedagem + valor_fluvial + valor_outros
                 
                 # Buscar o objeto Servico pelo ID
                 servico_obj = None
@@ -264,6 +313,7 @@ def receber_dados(request):
                 print(f"🔍 DEBUG Criando solicitação Casual:")
                 print(f"   - ID/Ticket: {ticket_final}")
                 print(f"   - Valor: {valor}")
+                print(f"   - Valor Receita: {valor_receita}")
                 print(f"   - Serviço: {servico_obj}")
                 print(f"   - Tipo: casual")
                 
@@ -283,7 +333,13 @@ def receber_dados(request):
                         tempo_fila=tempo_fila_inicial,
                         prioridade=prioridade,
                         servico=servico_obj,
-                        tipo='casual'
+                        tipo='casual',
+                        valor_km=valor_km,
+                        valor_pedagio=valor_pedagio,
+                        valor_hospedagem=valor_hospedagem,
+                        valor_fluvial=valor_fluvial,
+                        valor_outros=valor_outros,
+                        valor_receita=valor_receita
                     )
                     
                     print(f"✅ Solicitação Casual criada com sucesso! ID: {solicitacao.id}, Ticket: {solicitacao.ticket}")
@@ -383,7 +439,7 @@ def obter_itens_rota(request, solicitacao_id):
             'success': False,
             'message': f'Erro ao obter itens da rota: {str(e)}'
         }, status=500)
-
+ 
 @require_http_methods(["POST"])
 def atualizar_status(request):
     """
