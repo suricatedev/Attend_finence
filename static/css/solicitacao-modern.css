@@ -72,10 +72,11 @@
 
 .modal-header {
     background: var(--primary-gradient);
-    padding: 32px 40px 24px;
+    padding: 20px 30px;
     border-radius: var(--border-radius-xl) var(--border-radius-xl) 0 0;
     position: relative;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .modal-header::before {
@@ -91,7 +92,7 @@
 
 .modal-header h2 {
     color: white;
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 700;
     margin: 0;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -136,9 +137,31 @@
    ======================================== */
 
 .modal-body {
-    padding: 40px;
+    padding: 24px 30px;
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     position: relative;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 203, 87, 0.5) transparent;
+}
+
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 203, 87, 0.5);
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 203, 87, 0.7);
 }
 
 .modal-body::before {
@@ -341,13 +364,14 @@
    ======================================== */
 
 .modal-footer {
-    padding: 24px 40px 32px;
+    padding: 20px 30px;
     display: flex;
     gap: 16px;
     justify-content: flex-end;
     background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
     border-top: 1px solid rgba(226, 232, 240, 0.8);
     position: relative;
+    flex-shrink: 0;
 }
 
 .modal-footer::before {
@@ -552,7 +576,8 @@
     }
     
     .modal-body {
-        padding: 24px 20px;
+        padding: 20px;
+        max-height: calc(100vh - 180px);
     }
     
     .modal-footer {
@@ -637,5 +662,888 @@
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+    }
+}
+
+/* ========================================
+   VALORES DETALHADOS - ESTILIZAÇÃO
+   ======================================== */
+
+.valores-detalhados-group {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.valores-detalhados-group:hover {
+    border-color: #FFCB57;
+    box-shadow: 0 4px 12px rgba(255, 203, 87, 0.15);
+}
+
+.valores-detalhados-title {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1C1C1C;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #FFCB57;
+}
+
+.valores-detalhados-title i {
+    color: #FFCB57;
+    font-size: 1.1rem;
+}
+
+.valores-detalhados-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.valores-detalhados-grid .form-group {
+    margin-bottom: 0;
+}
+
+.valores-detalhados-grid .form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #544350;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.valor-detalhado,
+.valor-detalhado-casual {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: #ffffff;
+    color: #1C1C1C;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.valor-detalhado:focus,
+.valor-detalhado-casual:focus {
+    outline: none;
+    border-color: #FFCB57;
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2);
+    background: #fffef5;
+}
+
+.valor-detalhado:hover,
+.valor-detalhado-casual:hover {
+    border-color: #cbd5e0;
+}
+
+.valor-total-route {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 2px solid #FFCB57;
+}
+
+.valor-total-route label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1C1C1C;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.valor-total,
+.valor-total-geral {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #28a745;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    background: #e8f5e8;
+    color: #28a745;
+    font-weight: 700;
+    text-align: center;
+    cursor: not-allowed;
+}
+
+.valor-receita,
+.valor-receita-casual {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #FFCB57;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    background: #fffef5;
+    color: #1C1C1C;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+.valor-receita:focus,
+.valor-receita-casual:focus {
+    outline: none;
+    border-color: #FFC21C;
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.3);
+    background: #fff9e6;
+}
+
+.valores-gerais-rota {
+    margin-top: 1.25rem;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    border: 2px solid #FFCB57;
+    box-shadow: 0 4px 16px rgba(255, 203, 87, 0.15);
+}
+
+.valores-gerais-rota h4 {
+    margin: 0 0 0.875rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1C1C1C;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.valores-gerais-rota h4 i {
+    color: #FFCB57;
+    font-size: 1.2rem;
+}
+
+.valores-gerais-rota .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+.valores-gerais-rota .form-group {
+    margin-bottom: 0;
+    min-width: 0;
+}
+
+.valores-gerais-rota .form-group label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1C1C1C;
+    margin-bottom: 0.75rem;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.valores-gerais-rota .valor-total-geral {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid #28a745;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+    color: #28a745;
+    font-weight: 700;
+    text-align: center;
+    cursor: not-allowed;
+    letter-spacing: 0.5px;
+    box-sizing: border-box;
+}
+
+.valores-gerais-rota .valor-receita {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid #FFCB57;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: #fffef5;
+    color: #1C1C1C;
+    font-weight: 700;
+    text-align: center;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+    box-sizing: border-box;
+}
+
+.valores-gerais-rota .valor-receita:focus {
+    outline: none;
+    border-color: #FFC21C;
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.3);
+    background: #fff9e6;
+}
+
+/* Responsividade para valores detalhados */
+@media (max-width: 1024px) {
+    .valores-detalhados-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .valores-gerais-rota .form-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .valores-detalhados-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .valores-detalhados-group {
+        padding: 1rem;
+    }
+    
+    .valores-gerais-rota {
+        padding: 1rem;
+    }
+    
+    .valor-total,
+    .valor-total-geral,
+    .valor-receita,
+    .valor-receita-casual {
+        font-size: 1rem;
+        padding: 10px;
+    }
+}
+
+/* ========================================
+   ESTILOS PARA ROUTE CLASSIC E FORMULÁRIO EM ROTA
+   ======================================== */
+
+/* Estilos para route-classic */
+.route-classic {
+    margin-bottom: 1.25rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+}
+
+.route-classic > label {
+    display: block;
+    margin-bottom: 1rem;
+    font-weight: 700;
+    color: #1C1C1C;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.route-options {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.route-option {
+    flex: 1;
+    min-width: 150px;
+    cursor: pointer;
+    position: relative;
+}
+
+.route-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.route-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #64748b;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
+}
+
+.route-label i {
+    font-size: 1.2rem;
+    color: #94a3b8;
+}
+
+.route-option input[type="radio"]:checked + .route-label {
+    background: linear-gradient(135deg, #FFCB57 0%, #FFC21C 100%);
+    border-color: #FFCB57;
+    color: #1C1C1C;
+    box-shadow: 0 4px 12px rgba(255, 203, 87, 0.3);
+    transform: translateY(-2px);
+}
+
+.route-option input[type="radio"]:checked + .route-label i {
+    color: #1C1C1C;
+}
+
+.route-label:hover {
+    border-color: #FFCB57;
+    transform: translateY(-1px);
+}
+
+/* Estilos para formulário Em Rota */
+.form-route {
+    margin-top: 1rem;
+    padding: 1.25rem;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.route-section-header {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.route-section-header h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #1C1C1C;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.route-section-header h3 i {
+    color: #FFCB57;
+}
+
+.route-section-header p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+/* Estilos para grupos de ID */
+.route-id-group {
+    margin-bottom: 1.25rem;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.route-id-group:hover {
+    border-color: #FFCB57;
+    background: linear-gradient(135deg, #ffffff 0%, #fffef5 100%);
+    box-shadow: 0 4px 16px rgba(255, 203, 87, 0.15);
+    transform: translateY(-2px);
+}
+
+.route-id-header {
+    margin-bottom: 0.875rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.route-id-header label {
+    font-weight: 700;
+    color: #1C1C1C;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.route-id-header .required {
+    color: #ef4444;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.route-id-header .optional {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-left: 0.25rem;
+}
+
+.route-id-inputs {
+    display: grid;
+    grid-template-columns: 2.2fr 1.3fr 2fr;
+    gap: 1rem;
+    align-items: start;
+    margin-bottom: 0;
+}
+
+.route-id-field,
+.route-valor-field,
+.route-servico-field {
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.route-id-field {
+    position: relative;
+}
+
+.route-id-field input {
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 11px 13px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1C1C1C;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+.route-id-field input:focus {
+    outline: none;
+    border-color: #FFCB57;
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2);
+    background: #fffef5;
+}
+
+.route-id-field input:hover {
+    border-color: #cbd5e0;
+}
+
+.route-id-field .form-help {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: #64748b;
+    font-style: italic;
+}
+
+.route-valor-field label,
+.route-servico-field label {
+    font-size: 0.875rem;
+    margin-bottom: 0.65rem;
+    display: block;
+    font-weight: 600;
+    color: #1C1C1C;
+    letter-spacing: 0.2px;
+}
+
+.route-valor-field input {
+    padding: 11px 13px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: #ffffff;
+    color: #1C1C1C;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.route-valor-field input:focus {
+    outline: none;
+    border-color: #FFCB57;
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2);
+    background: #fffef5;
+}
+
+.route-valor-field input:hover {
+    border-color: #cbd5e0;
+}
+
+.route-servico-field select {
+    width: 100%;
+    padding: 11px 13px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: #ffffff;
+    color: #1C1C1C;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.route-servico-field select:focus {
+    outline: none;
+    border-color: #FFCB57;
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2);
+    background: #fffef5;
+}
+
+.route-servico-field select:hover {
+    border-color: #cbd5e0;
+}
+
+.form-casual {
+    margin-top: 1.5rem;
+}
+
+/* Container para botão de adicionar ID */
+.add-id-container {
+    margin: 1.5rem 0;
+    display: none;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.form-route .add-id-container {
+    display: flex !important;
+}
+
+/* Container para IDs dinâmicos */
+#route-ids-dinamicos {
+    display: block !important;
+    visibility: visible !important;
+    width: 100%;
+    min-height: 20px;
+}
+
+#route-ids-dinamicos .route-id-group {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    margin-bottom: 1.25rem !important;
+}
+
+/* Garantir que elementos dinâmicos sejam sempre visíveis */
+.form-route #route-ids-dinamicos .route-id-group {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.btn-add-route-id {
+    display: flex !important;
+    align-items: center;
+    gap: 0.75rem;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 10;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #FFCB57 0%, #FFC21C 100%);
+    color: #1C1C1C;
+    border: 2px solid #FFCB57;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(255, 203, 87, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-add-route-id:hover {
+    background: linear-gradient(135deg, #FFC21C 0%, #FFCB57 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 203, 87, 0.4);
+}
+
+.btn-add-route-id:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(255, 203, 87, 0.3);
+}
+
+.btn-add-route-id i {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+/* Botão de remover ID */
+.btn-remove-route-id {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 32px;
+    height: 32px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 2px solid #ef4444;
+    border-radius: 50%;
+    color: #ef4444;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.btn-remove-route-id:hover {
+    background: #ef4444;
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.route-id-header {
+    position: relative;
+}
+
+/* Estilos para valores detalhados dentro de route-id-group */
+.route-id-group .valores-detalhados-group {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    border-radius: 10px;
+    border: 1.5px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.route-id-group .valores-detalhados-group:hover {
+    border-color: #FFCB57;
+    box-shadow: 0 2px 8px rgba(255, 203, 87, 0.1);
+}
+
+.route-id-group .valores-detalhados-title {
+    margin: 0 0 0.875rem 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1C1C1C;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #FFCB57;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.route-id-group .valores-detalhados-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem 1.25rem;
+    margin-bottom: 0.875rem;
+    align-items: start;
+}
+
+.route-id-group .valores-detalhados-grid .form-group {
+    margin-bottom: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.route-id-group .valores-detalhados-grid .form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #544350;
+    margin-bottom: 0.5rem;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    line-height: 1.4;
+}
+
+.route-id-group .valor-detalhado {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: #ffffff;
+    color: #1C1C1C;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    box-sizing: border-box;
+}
+
+.route-id-group .valor-detalhado:focus {
+    outline: none;
+    border-color: #FFCB57;
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2);
+    background: #fffef5;
+}
+
+.route-id-group .valor-detalhado:hover {
+    border-color: #cbd5e0;
+}
+
+.route-id-group .valor-total-route {
+    margin-top: 0.875rem;
+    padding-top: 0.875rem;
+    border-top: 2px solid #FFCB57;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.route-id-group .valor-total-route label {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #1C1C1C;
+    margin-bottom: 0.5rem;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.route-id-group .valor-total {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #28a745;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+    color: #28a745;
+    font-weight: 700;
+    text-align: center;
+    cursor: not-allowed;
+    letter-spacing: 0.5px;
+}
+
+/* Garantir que textarea seja interativo */
+#campaignDescription,
+textarea[name="description"] {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 10 !important;
+    cursor: text !important;
+    resize: vertical !important;
+    min-height: 100px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    background: #ffffff !important;
+    border: 1px solid #544350 !important;
+    border-radius: 6px !important;
+    padding: 12px !important;
+    font-size: 1rem !important;
+    font-family: inherit !important;
+    color: #1C1C1C !important;
+    line-height: 1.5 !important;
+}
+
+#campaignDescription:focus,
+textarea[name="description"]:focus {
+    outline: none !important;
+    border-color: #FFCB57 !important;
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2) !important;
+}
+
+.form-group textarea {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 1;
+    cursor: text;
+}
+
+/* Garantir que nenhum elemento esteja sobrepondo o textarea */
+.form-group {
+    position: relative;
+    z-index: 0;
+}
+
+.form-group textarea {
+    position: relative;
+    z-index: 2;
+}
+
+/* Responsividade para formulário Em Rota */
+@media (max-width: 1200px) {
+    .route-id-inputs {
+        grid-template-columns: 2fr 1.2fr 1.8fr;
+        gap: 1rem;
+    }
+
+    .route-id-group .valores-detalhados-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .valores-gerais-rota .form-row {
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 1024px) {
+    .route-id-inputs {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .route-servico-field {
+        grid-column: 1 / -1;
+    }
+
+    .route-id-group .valores-detalhados-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .valores-gerais-rota .form-row {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .valores-gerais-rota .form-group label {
+        white-space: normal;
+        line-height: 1.5;
+    }
+}
+
+@media (max-width: 768px) {
+    .route-options {
+        flex-direction: column;
+    }
+
+    .route-option {
+        min-width: 100%;
+    }
+
+    .route-id-group {
+        padding: 1.25rem;
+    }
+
+    .route-id-inputs {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .route-servico-field {
+        grid-column: 1;
+    }
+
+    .route-id-group .valores-detalhados-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .route-id-group .valores-detalhados-group {
+        padding: 1.25rem;
+    }
+
+    .route-id-group .valores-detalhados-grid .form-group label {
+        white-space: normal;
+        line-height: 1.4;
+    }
+
+    .valores-gerais-rota .form-row {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .route-id-group .valores-detalhados-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .route-id-group .valores-detalhados-grid .form-group label {
+        white-space: normal;
+        text-overflow: unset;
     }
 }

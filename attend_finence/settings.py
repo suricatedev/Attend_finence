@@ -119,6 +119,12 @@ STATICFILES_DIRS = [
 # Diretório onde os arquivos estáticos serão coletados para produção
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Garantir que arquivos de vídeo sejam incluídos no collectstatic
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

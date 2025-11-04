@@ -36,11 +36,11 @@
                 <div id="formEmRota" class="form-route" style="display: none;">
                     <div class="route-section-header">
                         <h3><i class="fas fa-route"></i> Solicitações Agrupadas</h3>
-                        <p>Preencha até 4 IDs de solicitação (mínimo 2 obrigatórios)</p>
+                        <p>Preencha os IDs de solicitação (mínimo 2 obrigatórios, adicione quantos precisar)</p>
                     </div>
                     
                     <!-- ID 1 - Obrigatório -->
-                    <div class="route-id-group">
+                    <div class="route-id-group" data-route-id="1">
                         <div class="route-id-header">
                             <label for="routeId1">ID da Solicitação 1 <span class="required">*</span></label>
                         </div>
@@ -65,10 +65,40 @@
                                 </select>
                             </div>
                         </div>
+                        <!-- Valores Detalhados para ID 1 -->
+                        <div class="valores-detalhados-group">
+                            <h4 class="valores-detalhados-title">Valores Detalhados</h4>
+                            <div class="valores-detalhados-grid">
+                                <div class="form-group">
+                                    <label for="routeValorKm1">Valor KM</label>
+                                    <input type="text" id="routeValorKm1" name="route_valor_km_1" class="valor-detalhado" placeholder="0,00" data-route="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="routeValorPedagio1">Valor Pedagio</label>
+                                    <input type="text" id="routeValorPedagio1" name="route_valor_pedagio_1" class="valor-detalhado" placeholder="0,00" data-route="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="routeValorHospedagem1">Valor Hospedagem</label>
+                                    <input type="text" id="routeValorHospedagem1" name="route_valor_hospedagem_1" class="valor-detalhado" placeholder="0,00" data-route="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="routeValorFluvial1">Valor Fluvial</label>
+                                    <input type="text" id="routeValorFluvial1" name="route_valor_fluvial_1" class="valor-detalhado" placeholder="0,00" data-route="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="routeValorOutros1">Outros</label>
+                                    <input type="text" id="routeValorOutros1" name="route_valor_outros_1" class="valor-detalhado" placeholder="0,00" data-route="1">
+                                </div>
+                            </div>
+                            <div class="form-group valor-total-route">
+                                <label for="routeValorTotal1">Total deste ID</label>
+                                <input type="text" id="routeValorTotal1" name="route_valor_total_1" readonly class="valor-total" placeholder="R$ 0,00">
+                            </div>
+                        </div>
                     </div>
 
                     <!-- ID 2 - Obrigatório -->
-                    <div class="route-id-group">
+                    <div class="route-id-group" data-route-id="2">
                         <div class="route-id-header">
                             <label for="routeId2">ID da Solicitação 2 <span class="required">*</span></label>
                         </div>
@@ -93,60 +123,60 @@
                                 </select>
                             </div>
                         </div>
+                        <!-- Valores Detalhados para ID 2 -->
+                        <div class="valores-detalhados-group">
+                            <h4 class="valores-detalhados-title">Valores Detalhados</h4>
+                            <div class="valores-detalhados-grid">
+                                <div class="form-group">
+                                    <label for="routeValorKm2">Valor KM</label>
+                                    <input type="text" id="routeValorKm2" name="route_valor_km_2" class="valor-detalhado" placeholder="0,00" data-route="2">
+                                </div>
+                                <div class="form-group">
+                                    <label for="routeValorPedagio2">Valor Pedagio</label>
+                                    <input type="text" id="routeValorPedagio2" name="route_valor_pedagio_2" class="valor-detalhado" placeholder="0,00" data-route="2">
+                                </div>
+                                <div class="form-group">
+                                    <label for="routeValorHospedagem2">Valor Hospedagem</label>
+                                    <input type="text" id="routeValorHospedagem2" name="route_valor_hospedagem_2" class="valor-detalhado" placeholder="0,00" data-route="2">
+                                </div>
+                                <div class="form-group">
+                                    <label for="routeValorFluvial2">Valor Fluvial</label>
+                                    <input type="text" id="routeValorFluvial2" name="route_valor_fluvial_2" class="valor-detalhado" placeholder="0,00" data-route="2">
+                                </div>
+                                <div class="form-group">
+                                    <label for="routeValorOutros2">Outros</label>
+                                    <input type="text" id="routeValorOutros2" name="route_valor_outros_2" class="valor-detalhado" placeholder="0,00" data-route="2">
+                                </div>
+                            </div>
+                            <div class="form-group valor-total-route">
+                                <label for="routeValorTotal2">Total deste ID</label>
+                                <input type="text" id="routeValorTotal2" name="route_valor_total_2" readonly class="valor-total" placeholder="R$ 0,00">
+                            </div>
+                        </div>
                     </div>
-
-                    <!-- ID 3 - Opcional -->
-                    <div class="route-id-group">
-                        <div class="route-id-header">
-                            <label for="routeId3">ID da Solicitação 3 <span class="optional">(Opcional)</span></label>
-                        </div>
-                        <div class="route-id-inputs">
-                            <div class="form-group route-id-field">
-                                <input type="text" id="routeId3" name="route_id_3" placeholder="Ex: INCXXXXX">
-                                <small class="form-help">ID opcional</small>
-                            </div>
-                            <div class="form-group route-valor-field">
-                                <label for="routeValor3">Valor</label>
-                                <input type="text" id="routeValor3" name="route_valor_3" placeholder="Ex: 1500">
-                            </div>
-                            <div class="form-group route-servico-field">
-                                <label for="routeServico3">Serviço</label>
-                                <select id="routeServico3" name="route_servico_3">
-                                    <option value="">Selecione o serviço</option>
-                                    {% for servico in servicos_disponiveis %}
-                                    <option value="{{ servico.id }}">{{ servico.nome }}</option>
-                                    {% empty %}
-                                    <option value="" disabled>Nenhum serviço disponível</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
+                    
+                    <!-- Container para IDs dinâmicos adicionais -->
+                    <div id="route-ids-dinamicos" style="display: block; visibility: visible;"></div>
+                    
+                    <!-- Botão para adicionar novo ID -->
+                    <div class="add-id-container">
+                        <button type="button" id="btnAddRouteId" class="btn-add-route-id" onclick="console.log('🔵 onclick inline disparado!'); console.log('🔍 Verificando função:', typeof window.criarNovoRouteId); if(window.criarNovoRouteId){console.log('✅ Função existe, chamando...'); window.criarNovoRouteId(event);} else {console.error('❌ Função criarNovoRouteId não existe!'); alert('Erro: Função não encontrada. Recarregue a página.');} return false;" style="pointer-events: auto; cursor: pointer;">
+                            <i class="fas fa-plus"></i>
+                            Adicionar Novo ID
+                        </button>
                     </div>
-
-                    <!-- ID 4 - Opcional -->
-                    <div class="route-id-group">
-                        <div class="route-id-header">
-                            <label for="routeId4">ID da Solicitação 4 <span class="optional">(Opcional)</span></label>
-                        </div>
-                        <div class="route-id-inputs">
-                            <div class="form-group route-id-field">
-                                <input type="text" id="routeId4" name="route_id_4" placeholder="Ex: INCXXXXX">
-                                <small class="form-help">ID opcional</small>
+                    
+                    <!-- Valores Gerais para Em Rota -->
+                    <div class="valores-gerais-rota">
+                        <h4><i class="fas fa-calculator"></i> Resumo Geral</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="routeValorTotalTodos">Total Geral dos IDs</label>
+                                <input type="text" id="routeValorTotalTodos" name="route_valor_total_todos" readonly class="valor-total-geral" placeholder="R$ 0,00">
                             </div>
-                            <div class="form-group route-valor-field">
-                                <label for="routeValor4">Valor</label>
-                                <input type="text" id="routeValor4" name="route_valor_4" placeholder="Ex: 1500">
-                            </div>
-                            <div class="form-group route-servico-field">
-                                <label for="routeServico4">Serviço</label>
-                                <select id="routeServico4" name="route_servico_4">
-                                    <option value="">Selecione o serviço</option>
-                                    {% for servico in servicos_disponiveis %}
-                                    <option value="{{ servico.id }}">{{ servico.nome }}</option>
-                                    {% empty %}
-                                    <option value="" disabled>Nenhum serviço disponível</option>
-                                    {% endfor %}
-                                </select>
+                            <div class="form-group">
+                                <label for="routeValorReceita">Valor de Receita <span class="required">*</span></label>
+                                <input type="text" id="routeValorReceita" name="route_valor_receita" class="valor-receita" placeholder="R$ 0,00" required>
                             </div>
                         </div>
                     </div>
@@ -224,6 +254,39 @@
                     </select>
                 </div>
                 
+                <!-- Valores Detalhados para Casual -->
+                <div class="valores-detalhados-group" style="margin-top: 1.5rem;">
+                    <h4 class="valores-detalhados-title">Valores Detalhados</h4>
+                    <div class="valores-detalhados-grid">
+                        <div class="form-group">
+                            <label for="casualValorKm">Valor KM</label>
+                            <input type="text" id="casualValorKm" name="casual_valor_km" class="valor-detalhado-casual" placeholder="0,00">
+                        </div>
+                        <div class="form-group">
+                            <label for="casualValorPedagio">Valor Pedagio</label>
+                            <input type="text" id="casualValorPedagio" name="casual_valor_pedagio" class="valor-detalhado-casual" placeholder="0,00">
+                        </div>
+                        <div class="form-group">
+                            <label for="casualValorHospedagem">Valor Hospedagem</label>
+                            <input type="text" id="casualValorHospedagem" name="casual_valor_hospedagem" class="valor-detalhado-casual" placeholder="0,00">
+                        </div>
+                        <div class="form-group">
+                            <label for="casualValorFluvial">Valor Fluvial</label>
+                            <input type="text" id="casualValorFluvial" name="casual_valor_fluvial" class="valor-detalhado-casual" placeholder="0,00">
+                        </div>
+                        <div class="form-group">
+                            <label for="casualValorOutros">Outros</label>
+                            <input type="text" id="casualValorOutros" name="casual_valor_outros" class="valor-detalhado-casual" placeholder="0,00">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Valor de Receita para Casual -->
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label for="casualValorReceita">Valor de Receita <span class="required">*</span></label>
+                    <input type="text" id="casualValorReceita" name="casual_valor_receita" class="valor-receita-casual" placeholder="R$ 0,00" required style="font-weight: 700; font-size: 1.1rem; color: #FFCB57;">
+                </div>
+                
                 <div class="form-group">
                     <label for="campaignDescription">Descrição</label>
                         <textarea id="campaignDescription" name="casual_description" rows="4" placeholder="Descreva detalhadamente a solicitação financeira..." required></textarea>                </div>
@@ -262,281 +325,233 @@
             </button>
         </div>
     </div>
-    <style>
-        /* Estilos para route-classic */
-        .route-classic {
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border-radius: 12px;
-            border: 2px solid #e2e8f0;
-        }
-
-        .route-classic > label {
-            display: block;
-            margin-bottom: 1rem;
-            font-weight: 700;
-            color: #1C1C1C;
-            font-size: 1.1rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .route-options {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .route-option {
-            flex: 1;
-            min-width: 150px;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .route-option input[type="radio"] {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .route-label {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-            padding: 1rem 1.5rem;
-            background: #ffffff;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-weight: 600;
-            color: #64748b;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-align: center;
-        }
-
-        .route-label i {
-            font-size: 1.2rem;
-            color: #94a3b8;
-        }
-
-        .route-option input[type="radio"]:checked + .route-label {
-            background: linear-gradient(135deg, #FFCB57 0%, #FFC21C 100%);
-            border-color: #FFCB57;
-            color: #1C1C1C;
-            box-shadow: 0 4px 12px rgba(255, 203, 87, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .route-option input[type="radio"]:checked + .route-label i {
-            color: #1C1C1C;
-        }
-
-        .route-label:hover {
-            border-color: #FFCB57;
-            transform: translateY(-1px);
-        }
-
-        /* Estilos para formulário Em Rota */
-        .form-route {
-            margin-top: 1.5rem;
-            padding: 1.5rem;
-            background: #ffffff;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .route-section-header {
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #f1f5f9;
-        }
-
-        .route-section-header h3 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #1C1C1C;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .route-section-header h3 i {
-            color: #FFCB57;
-        }
-
-        .route-section-header p {
-            margin: 0;
-            color: #64748b;
-            font-size: 0.9rem;
-        }
-
-        .route-id-group {
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            background: #f8fafc;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
-            transition: all 0.3s ease;
-        }
-
-        .route-id-group:hover {
-            border-color: #FFCB57;
-            background: #ffffff;
-        }
-
-        .route-id-header {
-            margin-bottom: 0.75rem;
-        }
-
-        .route-id-header label {
-            font-weight: 600;
-            color: #1C1C1C;
-            font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .route-id-header .required {
-            color: #ef4444;
-            font-weight: 700;
-        }
-
-        .route-id-header .optional {
-            color: #94a3b8;
-            font-size: 0.85rem;
-            font-weight: 400;
-        }
-
-        .route-id-inputs {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1.5fr;
-            gap: 1rem;
-        }
-
-        .route-id-field,
-        .route-valor-field,
-        .route-servico-field {
-            margin-bottom: 0;
-        }
-
-        .route-id-field input {
-            font-weight: 600;
-        }
-
-        .route-valor-field label,
-        .route-servico-field label {
-            font-size: 0.875rem;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-
-        .route-servico-field select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            background: #ffffff;
-            color: #1C1C1C;
-            transition: all 0.3s ease;
-        }
-
-        .route-servico-field select:focus {
-            outline: none;
-            border-color: #FFCB57;
-            box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2);
-        }
-
-        .route-servico-field select:hover {
-            border-color: #cbd5e0;
-        }
-
-        .form-casual {
-            margin-top: 1.5rem;
-        }
-
-        /* Garantir que textarea seja interativo */
-        #campaignDescription,
-        textarea[name="description"] {
-            pointer-events: auto !important;
-            position: relative !important;
-            z-index: 10 !important;
-            cursor: text !important;
-            resize: vertical !important;
-            min-height: 100px !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-            background: #ffffff !important;
-            border: 1px solid #544350 !important;
-            border-radius: 6px !important;
-            padding: 12px !important;
-            font-size: 1rem !important;
-            font-family: inherit !important;
-            color: #1C1C1C !important;
-            line-height: 1.5 !important;
-        }
-
-        #campaignDescription:focus,
-        textarea[name="description"]:focus {
-            outline: none !important;
-            border-color: #FFCB57 !important;
-            box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2) !important;
-        }
-
-        .form-group textarea {
-            pointer-events: auto !important;
-            position: relative;
-            z-index: 1;
-            cursor: text;
-        }
-
-        /* Garantir que nenhum elemento esteja sobrepondo o textarea */
-        .form-group {
-            position: relative;
-            z-index: 0;
-        }
-
-        .form-group textarea {
-            position: relative;
-            z-index: 2;
-        }
-
-        @media (max-width: 1024px) {
-            .route-id-inputs {
-                grid-template-columns: 1fr 1fr;
-                gap: 1rem;
-            }
-
-            .route-servico-field {
-                grid-column: 1 / -1;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .route-options {
-                flex-direction: column;
-            }
-
-            .route-option {
-                min-width: 100%;
-            }
-
-            .route-id-inputs {
-                grid-template-columns: 1fr;
-                gap: 0.75rem;
-            }
-
-            .route-servico-field {
-                grid-column: 1;
-            }
-        }
-    </style>
 
     <script>
+        // ============================================
+        // DEFINIR FUNÇÃO GLOBALMENTE ANTES DE TUDO
+        // ============================================
+        // Esta função PRECISA estar disponível globalmente IMEDIATAMENTE
+        window.criarNovoRouteId = function(e) {
+            console.log('🔵🔵🔵 ========== FUNÇÃO criarNovoRouteId CHAMADA ==========');
+            console.log('📋 Evento recebido:', e);
+            
+            // Prevenir múltiplas execuções simultâneas
+            if (window.criandoNovoId) {
+                console.log('⏳ Já está criando um ID, aguarde...');
+                return false;
+            }
+            window.criandoNovoId = true;
+            console.log('✅ Flag criandoNovoId definida como true');
+            
+            try {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('✅ Evento preventDefault e stopPropagation executados');
+                }
+                
+                console.log('🔵🔵🔵 ========== CRIANDO NOVO ID ==========');
+                
+                // PASSO 1: Encontrar container
+                const container = document.getElementById('route-ids-dinamicos');
+                if (!container) {
+                    console.error('❌ ERRO: Container route-ids-dinamicos não encontrado!');
+                    alert('Erro: Container não encontrado. Recarregue a página.');
+                    window.criandoNovoId = false;
+                    return false;
+                }
+                console.log('✅ PASSO 1: Container encontrado:', container);
+                
+                // Garantir que o container está visível
+                container.style.display = 'block';
+                container.style.visibility = 'visible';
+                console.log('✅ Container configurado como visível');
+                
+                // PASSO 2: Encontrar template
+                let template = document.querySelector('.route-id-group[data-route-id="2"]');
+                if (!template) {
+                    console.error('❌ ERRO: Template com data-route-id="2" não encontrado!');
+                    console.log('🔍 Tentando encontrar qualquer route-id-group...');
+                    template = document.querySelector('.route-id-group');
+                    if (template) {
+                        console.log('⚠️ Usando primeiro route-id-group encontrado:', template);
+                    } else {
+                        console.error('❌ Nenhum route-id-group encontrado!');
+                        alert('Erro: Template não encontrado. Recarregue a página.');
+                        window.criandoNovoId = false;
+                        return false;
+                    }
+                }
+                console.log('✅ PASSO 2: Template encontrado:', template);
+                console.log('📋 Template tem', template.children.length, 'filhos');
+                console.log('📋 Template data-route-id:', template.getAttribute('data-route-id'));
+                
+                // PASSO 3: Clonar template
+                const novoId = template.cloneNode(true);
+                const novoNumero = window.routeIdCounter ? window.routeIdCounter++ : (window.routeIdCounter = 3, window.routeIdCounter++);
+                novoId.setAttribute('data-route-id', novoNumero);
+                console.log('✅ PASSO 3: Template clonado, novo número:', novoNumero);
+                
+                // Atualizar IDs, names e labels de forma OTIMIZADA
+                const elementosParaAtualizar = [
+                    ...novoId.querySelectorAll('[id*="routeId2"]'),
+                    ...novoId.querySelectorAll('[id*="routeValor2"]'),
+                    ...novoId.querySelectorAll('[id*="routeServico2"]'),
+                    ...novoId.querySelectorAll('[id*="routeValorKm2"]'),
+                    ...novoId.querySelectorAll('[id*="routeValorPedagio2"]'),
+                    ...novoId.querySelectorAll('[id*="routeValorHospedagem2"]'),
+                    ...novoId.querySelectorAll('[id*="routeValorFluvial2"]'),
+                    ...novoId.querySelectorAll('[id*="routeValorOutros2"]'),
+                    ...novoId.querySelectorAll('[id*="routeValorTotal2"]'),
+                    ...novoId.querySelectorAll('[name*="_2"]'),
+                    ...novoId.querySelectorAll('label[for*="2"]')
+                ];
+                
+                elementosParaAtualizar.forEach(elemento => {
+                    if (elemento.id && elemento.id.includes('2')) {
+                        elemento.id = elemento.id.replace(/2/g, novoNumero);
+                    }
+                    if (elemento.name && elemento.name.includes('2')) {
+                        elemento.name = elemento.name.replace(/2/g, novoNumero);
+                    }
+                    if (elemento.hasAttribute('data-route') && elemento.getAttribute('data-route') === '2') {
+                        elemento.setAttribute('data-route', novoNumero);
+                    }
+                    if (elemento.htmlFor && elemento.htmlFor.includes('2')) {
+                        elemento.htmlFor = elemento.htmlFor.replace(/2/g, novoNumero);
+                    }
+                    if ((elemento.tagName === 'INPUT' || elemento.tagName === 'SELECT') && 
+                        elemento.type !== 'file' && elemento.type !== 'button' && 
+                        elemento.type !== 'submit') {
+                        elemento.value = '';
+                    }
+                });
+                
+                // Atualizar texto dos labels
+                novoId.querySelectorAll('label').forEach(label => {
+                    const texto = label.textContent || label.innerHTML || '';
+                    if (texto.includes('ID da Solicitação 2') || texto.includes('Solicitação 2')) {
+                        label.innerHTML = label.innerHTML.replace(/Solicitação 2/g, `Solicitação ${novoNumero}`);
+                        label.innerHTML = label.innerHTML.replace(/ID da Solicitação 2/g, `ID da Solicitação ${novoNumero}`);
+                        if (!label.innerHTML.includes('(Opcional)')) {
+                            label.innerHTML += ' <span class="optional">(Opcional)</span>';
+                        }
+                    }
+                });
+                
+                // Remover required dos campos opcionais
+                novoId.querySelectorAll('input[required], select[required]').forEach(campo => {
+                    campo.removeAttribute('required');
+                });
+                
+                // Adicionar botão de remover
+                const header = novoId.querySelector('.route-id-header');
+                if (header) {
+                    const btnRemover = document.createElement('button');
+                    btnRemover.type = 'button';
+                    btnRemover.className = 'btn-remove-route-id';
+                    btnRemover.innerHTML = '<i class="fas fa-times"></i>';
+                    btnRemover.title = 'Remover este ID';
+                    btnRemover.onclick = function() {
+                        novoId.remove();
+                        if (window.calcularTotalTodosIDs) {
+                            window.calcularTotalTodosIDs();
+                        }
+                    };
+                    header.appendChild(btnRemover);
+                }
+                
+                // Garantir que o novo elemento tem todas as classes necessárias
+                if (!novoId.classList.contains('route-id-group')) {
+                    novoId.classList.add('route-id-group');
+                }
+                
+                // PASSO 4: ADICIONAR O ELEMENTO AO DOM
+                console.log(`📦 PASSO 4: Adicionando novo ID ${novoNumero} ao container...`);
+                console.log(`📦 Container antes:`, container.children.length, 'filhos');
+                console.log(`📦 novoId tem`, novoId.children.length, 'filhos');
+                
+                try {
+                    container.appendChild(novoId);
+                    console.log(`✅ PASSO 4: Novo ID ${novoNumero} adicionado ao container`);
+                    console.log(`📦 Container depois:`, container.children.length, 'filhos');
+                } catch (error) {
+                    console.error('❌ ERRO ao fazer appendChild:', error);
+                    console.error('Stack:', error.stack);
+                    window.criandoNovoId = false;
+                    return false;
+                }
+                
+                // PASSO 5: Verificação IMEDIATA e forçar visibilidade
+                console.log(`🔍 PASSO 5: Verificando se elemento foi adicionado...`);
+                const verificarAdicionado = document.querySelector(`[data-route-id="${novoNumero}"]`);
+                if (verificarAdicionado) {
+                    console.log(`✅ PASSO 5: Elemento encontrado no DOM!`);
+                    verificarAdicionado.setAttribute('style', 'display: block !important; visibility: visible !important; opacity: 1 !important; width: 100% !important; margin-bottom: 1.25rem !important;');
+                    verificarAdicionado.style.display = 'block';
+                    verificarAdicionado.style.visibility = 'visible';
+                    verificarAdicionado.style.opacity = '1';
+                    verificarAdicionado.style.width = '100%';
+                    verificarAdicionado.style.marginBottom = '1.25rem';
+                    
+                    const rect = verificarAdicionado.getBoundingClientRect();
+                    console.log(`📍 Dimensões:`, {
+                        width: rect.width,
+                        height: rect.height,
+                        top: rect.top,
+                        left: rect.left
+                    });
+                    
+                    if (rect.width === 0 || rect.height === 0) {
+                        console.warn('⚠️ Elemento não tem dimensões! Forçando novamente...');
+                        verificarAdicionado.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; width: 100% !important; height: auto !important; margin-bottom: 1.25rem !important; position: relative !important;';
+                    }
+                    
+                    console.log(`✅✅✅ PASSO 5: ID ${novoNumero} está no DOM e visível!`);
+                } else {
+                    console.error(`❌ ERRO CRÍTICO: ID ${novoNumero} não encontrado após appendChild!`);
+                    window.criandoNovoId = false;
+                    return false;
+                }
+                
+                // Configurar event listeners para o novo ID (se a função existir)
+                if (window.configurarEventListenersNovoId) {
+                    window.configurarEventListenersNovoId(novoNumero);
+                }
+                
+                // Recalcular totais (se a função existir)
+                if (window.calcularTotalTodosIDs) {
+                    window.calcularTotalTodosIDs();
+                }
+                
+                // Scroll suave para o novo ID
+                setTimeout(() => {
+                    const elemento = document.querySelector(`[data-route-id="${novoNumero}"]`);
+                    if (elemento) {
+                        elemento.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }, 200);
+                
+                // Liberar flag e finalizar
+                window.criandoNovoId = false;
+                console.log(`✅✅✅ Novo ID ${novoNumero} criado com sucesso! ✅✅✅`);
+                return true;
+                
+            } catch (error) {
+                console.error('❌ ERRO CRÍTICO na função criarNovoRouteId:', error);
+                console.error('Stack trace:', error.stack);
+                alert('Erro ao criar novo ID: ' + error.message);
+                window.criandoNovoId = false;
+                return false;
+            }
+        };
+        
+        console.log('✅✅✅ Função criarNovoRouteId definida GLOBALMENTE:', typeof window.criarNovoRouteId);
+        
+        // ============================================
+        // FIM DA DEFINIÇÃO GLOBAL
+        // ============================================
+        
         // Preencher automaticamente a data de criação com a data de hoje
         document.addEventListener('DOMContentLoaded', function() {                const hoje = new Date();
                 const ano = hoje.getFullYear();
@@ -575,6 +590,23 @@
                                 field.removeAttribute('readonly');
                             }
                         });
+                        // Mostrar botão de adicionar ID
+                        const btnAdd = document.getElementById('btnAddRouteId');
+                        const addContainer = document.querySelector('.add-id-container');
+                        if (btnAdd && addContainer) {
+                            addContainer.style.display = 'flex';
+                            addContainer.style.visibility = 'visible';
+                            console.log('✅ Botão de adicionar ID exibido');
+                            // Garantir que o listener está anexado quando o formulário for exibido
+                            if (window.setupAddButton) {
+                                setTimeout(() => {
+                                    window.setupAddButton();
+                                    console.log('✅ Listener do botão configurado após exibir formulário');
+                                }, 100);
+                            }
+                        } else {
+                            console.warn('⚠️ Botão ou container não encontrado ao exibir formulário Em Rota');
+                        }
                     }
                     
                     // Ocultar e DESABILITAR formulário Casual
@@ -613,6 +645,17 @@
                                 field.value = '';
                             }
                         });
+                        // Ocultar botão de adicionar ID
+                        const btnAdd = document.getElementById('btnAddRouteId');
+                        if (btnAdd) {
+                            btnAdd.closest('.add-id-container').style.display = 'none';
+                        }
+                        // Limpar IDs dinâmicos adicionados
+                        const container = document.getElementById('route-ids-dinamicos');
+                        if (container) {
+                            container.innerHTML = '';
+                        }
+                        window.routeIdCounter = 3; // Resetar contador
                     }
                 }
             }
@@ -677,17 +720,8 @@
                     });
                 }
 
-                // Validação para ID 3
-                const routeId3 = document.getElementById('routeId3');
-                const routeValor3 = document.getElementById('routeValor3');
-                const routeServico3 = document.getElementById('routeServico3');
-                validateOptionalGroup(routeId3, routeValor3, routeServico3);
-
-                // Validação para ID 4
-                const routeId4 = document.getElementById('routeId4');
-                const routeValor4 = document.getElementById('routeValor4');
-                const routeServico4 = document.getElementById('routeServico4');
-                validateOptionalGroup(routeId4, routeValor4, routeServico4);
+                // ID 2 é obrigatório, não precisa de validação condicional
+                // Validação para IDs 3+ será feita dinamicamente quando adicionados
             }
 
             setupRouteValidation();
@@ -723,7 +757,357 @@
                         e.target.value = 'R$ ' + value;
                     }
                 });
-            });        });
+            });
+
+            // ============================================
+            // FUNÇÕES PARA VALORES DETALHADOS
+            // ============================================
+            
+            // Função para converter valor formatado para número
+            function parseValorMonetario(valor) {
+                if (!valor) return 0;
+                // Remove "R$ ", espaços, pontos e substitui vírgula por ponto
+                const limpo = valor.toString().replace(/R\$\s?/g, '').replace(/\./g, '').replace(',', '.').trim();
+                return parseFloat(limpo) || 0;
+            }
+            
+            // Função para formatar número para valor monetário
+            function formatarValorMonetario(valor) {
+                if (!valor || valor === 0) return 'R$ 0,00';
+                return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            }
+            
+            // Função para calcular total de um ID específico
+            function calcularTotalID(numeroID) {
+                const campos = [
+                    document.getElementById(`routeValorKm${numeroID}`),
+                    document.getElementById(`routeValorPedagio${numeroID}`),
+                    document.getElementById(`routeValorHospedagem${numeroID}`),
+                    document.getElementById(`routeValorFluvial${numeroID}`),
+                    document.getElementById(`routeValorOutros${numeroID}`)
+                ];
+                
+                let total = 0;
+                campos.forEach(campo => {
+                    if (campo) {
+                        total += parseValorMonetario(campo.value);
+                    }
+                });
+                
+                const campoTotal = document.getElementById(`routeValorTotal${numeroID}`);
+                if (campoTotal) {
+                    campoTotal.value = formatarValorMonetario(total);
+                }
+                
+                return total;
+            }
+            
+            // Função para calcular total de todos os IDs
+            function calcularTotalTodosIDs() {
+                let totalTodos = 0;
+                
+                // Calcular IDs fixos (1 e 2)
+                for (let i = 1; i <= 2; i++) {
+                    const totalID = calcularTotalID(i);
+                    totalTodos += totalID;
+                }
+                
+                // Calcular IDs dinâmicos (3+)
+                const idsDinamicos = document.querySelectorAll('#route-ids-dinamicos .route-id-group');
+                idsDinamicos.forEach(idGroup => {
+                    const routeId = idGroup.getAttribute('data-route-id');
+                    if (routeId) {
+                        const totalID = calcularTotalID(parseInt(routeId));
+                        totalTodos += totalID;
+                    }
+                });
+                
+                const campoTotalTodos = document.getElementById('routeValorTotalTodos');
+                if (campoTotalTodos) {
+                    campoTotalTodos.value = formatarValorMonetario(totalTodos);
+                }
+            }
+            
+            // Adicionar event listeners para campos de valores detalhados (Em Rota) - apenas IDs fixos 1 e 2
+            for (let i = 1; i <= 2; i++) {
+                const campos = [
+                    `routeValorKm${i}`,
+                    `routeValorPedagio${i}`,
+                    `routeValorHospedagem${i}`,
+                    `routeValorFluvial${i}`,
+                    `routeValorOutros${i}`
+                ];
+                
+                campos.forEach(nomeCampo => {
+                    const campo = document.getElementById(nomeCampo);
+                    if (campo) {
+                        // Formatação monetária ao digitar
+                        campo.addEventListener('input', function(e) {
+                            let value = e.target.value.replace(/\D/g, '');
+                            if (value) {
+                                value = value.replace(/^0+/, '');
+                                if (!value) value = '0';
+                                const numericValue = parseFloat(value) / 100;
+                                e.target.value = formatarValorMonetario(numericValue);
+                            } else {
+                                e.target.value = '';
+                            }
+                            calcularTotalID(i);
+                            calcularTotalTodosIDs();
+                        });
+                        
+                        // Formatação ao perder foco
+                        campo.addEventListener('blur', function(e) {
+                            const valor = parseValorMonetario(e.target.value);
+                            e.target.value = formatarValorMonetario(valor);
+                        });
+                    }
+                });
+            }
+            
+            // Formatação para Valor de Receita (Em Rota)
+            const routeValorReceita = document.getElementById('routeValorReceita');
+            if (routeValorReceita) {
+                routeValorReceita.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value) {
+                        value = value.replace(/^0+/, '');
+                        if (!value) value = '0';
+                        const numericValue = parseFloat(value) / 100;
+                        e.target.value = formatarValorMonetario(numericValue);
+                    } else {
+                        e.target.value = '';
+                    }
+                });
+                
+                routeValorReceita.addEventListener('blur', function(e) {
+                    const valor = parseValorMonetario(e.target.value);
+                    e.target.value = formatarValorMonetario(valor);
+                });
+            }
+            
+            // ============================================
+            // VALORES DETALHADOS PARA CASUAL
+            // ============================================
+            
+            const camposCasual = [
+                'casualValorKm',
+                'casualValorPedagio',
+                'casualValorHospedagem',
+                'casualValorFluvial',
+                'casualValorOutros'
+            ];
+            
+            camposCasual.forEach(nomeCampo => {
+                const campo = document.getElementById(nomeCampo);
+                if (campo) {
+                    campo.addEventListener('input', function(e) {
+                        let value = e.target.value.replace(/\D/g, '');
+                        if (value) {
+                            value = value.replace(/^0+/, '');
+                            if (!value) value = '0';
+                            const numericValue = parseFloat(value) / 100;
+                            e.target.value = formatarValorMonetario(numericValue);
+                        } else {
+                            e.target.value = '';
+                        }
+                    });
+                    
+                    campo.addEventListener('blur', function(e) {
+                        const valor = parseValorMonetario(e.target.value);
+                        e.target.value = formatarValorMonetario(valor);
+                    });
+                }
+            });
+            
+            // Formatação para Valor de Receita (Casual)
+            const casualValorReceita = document.getElementById('casualValorReceita');
+            if (casualValorReceita) {
+                casualValorReceita.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value) {
+                        value = value.replace(/^0+/, '');
+                        if (!value) value = '0';
+                        const numericValue = parseFloat(value) / 100;
+                        e.target.value = formatarValorMonetario(numericValue);
+                    } else {
+                        e.target.value = '';
+                    }
+                });
+                
+                casualValorReceita.addEventListener('blur', function(e) {
+                    const valor = parseValorMonetario(e.target.value);
+                    e.target.value = formatarValorMonetario(valor);
+                });
+            }
+            
+            // Inicializar cálculos
+            calcularTotalTodosIDs();
+            
+            // ============================================
+            // INICIALIZAR CONTADOR GLOBAL
+            // ============================================
+            
+            // Inicializar contador global (se ainda não existir)
+            if (!window.routeIdCounter) {
+                window.routeIdCounter = 3; // Começa do ID 3 (já temos 1 e 2 fixos)
+            }
+            
+            // A função criarNovoRouteId já foi definida GLOBALMENTE acima (antes do DOMContentLoaded)
+            // Não precisa definir novamente aqui!
+            
+            // Função para configurar event listeners de um novo ID
+            function configurarEventListenersNovoId(numeroID) {
+                // Formatação de valores monetários
+                const valorInputs = [
+                    `routeValor${numeroID}`,
+                    `routeValorKm${numeroID}`,
+                    `routeValorPedagio${numeroID}`,
+                    `routeValorHospedagem${numeroID}`,
+                    `routeValorFluvial${numeroID}`,
+                    `routeValorOutros${numeroID}`
+                ];
+                
+                valorInputs.forEach(idInput => {
+                    const input = document.getElementById(idInput);
+                    if (input) {
+                        input.addEventListener('input', function(e) {
+                            let value = e.target.value.replace(/\D/g, '');
+                            if (value) {
+                                value = value.replace(/^0+/, '');
+                                if (!value) value = '0';
+                                const numericValue = parseFloat(value) / 100;
+                                e.target.value = formatarValorMonetario(numericValue);
+                                
+                                // Se for um valor detalhado, recalcular total
+                                if (idInput.includes('ValorKm') || idInput.includes('ValorPedagio') || 
+                                    idInput.includes('ValorHospedagem') || idInput.includes('ValorFluvial') || 
+                                    idInput.includes('ValorOutros')) {
+                                    calcularTotalID(numeroID);
+                                    calcularTotalTodosIDs();
+                                }
+                            } else {
+                                e.target.value = '';
+                                if (idInput.includes('ValorKm') || idInput.includes('ValorPedagio') || 
+                                    idInput.includes('ValorHospedagem') || idInput.includes('ValorFluvial') || 
+                                    idInput.includes('ValorOutros')) {
+                                    calcularTotalID(numeroID);
+                                    calcularTotalTodosIDs();
+                                }
+                            }
+                        });
+                        
+                        input.addEventListener('blur', function(e) {
+                            const valor = parseValorMonetario(e.target.value);
+                            e.target.value = formatarValorMonetario(valor);
+                        });
+                    }
+                });
+                
+                // Validação condicional: se ID for preenchido, valor e serviço também devem ser obrigatórios
+                const idInput = document.getElementById(`routeId${numeroID}`);
+                const valorInput = document.getElementById(`routeValor${numeroID}`);
+                const servicoInput = document.getElementById(`routeServico${numeroID}`);
+                
+                if (idInput && valorInput && servicoInput) {
+                    idInput.addEventListener('input', function() {
+                        if (this.value.trim()) {
+                            valorInput.setAttribute('required', 'required');
+                            servicoInput.setAttribute('required', 'required');
+                        } else {
+                            valorInput.removeAttribute('required');
+                            servicoInput.removeAttribute('required');
+                        }
+                    });
+                    
+                    valorInput.addEventListener('input', function() {
+                        if (this.value.trim()) {
+                            if (!idInput.value.trim()) {
+                                idInput.setAttribute('required', 'required');
+                            }
+                            if (!servicoInput.value) {
+                                servicoInput.setAttribute('required', 'required');
+                            }
+                        } else if (!idInput.value.trim() && !servicoInput.value) {
+                            idInput.removeAttribute('required');
+                            servicoInput.removeAttribute('required');
+                        }
+                    });
+                    
+                    servicoInput.addEventListener('change', function() {
+                        if (this.value) {
+                            if (!idInput.value.trim()) {
+                                idInput.setAttribute('required', 'required');
+                            }
+                            if (!valorInput.value.trim()) {
+                                valorInput.setAttribute('required', 'required');
+                            }
+                        } else if (!idInput.value.trim() && !valorInput.value.trim()) {
+                            idInput.removeAttribute('required');
+                            valorInput.removeAttribute('required');
+                        }
+                    });
+                }
+            }
+            
+            // Função já está definida globalmente acima, apenas confirmar
+            console.log('✅ Função criarNovoRouteId já está definida globalmente:', typeof window.criarNovoRouteId);
+            
+            // Event listener usando event delegation como backup
+            document.addEventListener('click', function(e) {
+                const clickedElement = e.target;
+                const btnAddRouteId = document.getElementById('btnAddRouteId');
+                
+                // Verificar se o clique foi no botão
+                const isButtonClick = 
+                    clickedElement.id === 'btnAddRouteId' ||
+                    clickedElement.closest('#btnAddRouteId') !== null ||
+                    clickedElement.closest('.btn-add-route-id') !== null;
+                
+                if (isButtonClick && btnAddRouteId && window.criarNovoRouteId) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🔵 CLIQUE NO BOTÃO (event delegation)');
+                    window.criarNovoRouteId(e);
+                    return false;
+                }
+            }, false);
+            
+            // Função auxiliar para configurar o botão quando o formulário for exibido
+            function setupAddButton() {
+                const btnAddRouteId = document.getElementById('btnAddRouteId');
+                if (btnAddRouteId) {
+                    // Garantir que o onclick inline está funcionando
+                    btnAddRouteId.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('🔵 CLIQUE NO BOTÃO (onclick direto)');
+                        if (window.criarNovoRouteId) {
+                            window.criarNovoRouteId(e);
+                        }
+                        return false;
+                    };
+                    
+                    console.log('✅ Botão configurado com onclick direto');
+                } else {
+                    console.warn('⚠️ Botão btnAddRouteId não encontrado');
+                }
+            }
+            
+            // Tornar a função global
+            window.setupAddButton = setupAddButton;
+            
+            // Configurar quando o DOM estiver pronto
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupAddButton);
+            } else {
+                setupAddButton();
+            }
+            
+            // Tentar novamente após um delay
+            setTimeout(setupAddButton, 300);
+            setTimeout(setupAddButton, 1000);
+        });
     </script>
 </div>
 

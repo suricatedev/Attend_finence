@@ -8,6 +8,17 @@ from servicos.models import Servico
 from django.utils import timezone
 import json
 
+def limpar_valor_monetario(valor_raw):
+    """Função auxiliar para limpar e converter valores monetários formatados"""
+    if not valor_raw:
+        return 0.0
+    try:
+        # Remover formatação brasileira: R$, espaços, pontos de milhar, trocar vírgula por ponto
+        valor_limpo = valor_raw.replace('R$', '').replace(' ', '').replace('.', '').replace(',', '.').strip()
+        return float(valor_limpo) if valor_limpo else 0.0
+    except (ValueError, AttributeError):
+        return 0.0
+
 def receber_dados(request):
     if request.method == 'POST':
         try:
@@ -22,7 +33,7 @@ def receber_dados(request):
             
             print(f"🔍 DEBUG: Tipo recebido do formulário: '{tipo_raw}' -> processado como: '{tipo}'")
             
-            # Capturar dados comuns do POST baseado no tipo
+                # Capturar dados comuns do POST baseado no tipo
             status = request.POST.get('status', 'pendente')
             
             # Dados são capturados com prefixos diferentes baseado no tipo
@@ -32,12 +43,27 @@ def receber_dados(request):
                 data_de_pagamento_str = request.POST.get('route_dataPagamento', '').strip()
                 prioridade = request.POST.get('route_priority', 'baixa')
                 anexo = request.FILES.get('route_anexos')
+                # Para Em Rota, os valores detalhados estão apenas nos itens, não no geral
+                # Apenas o valor de receita é geral
+                valor_km = 0.0
+                valor_pedagio = 0.0
+                valor_hospedagem = 0.0
+                valor_fluvial = 0.0
+                valor_outros = 0.0
+                valor_receita = limpar_valor_monetario(request.POST.get('route_valor_receita', '').strip())
             else:  # Casual
                 nome_do_recebedor = request.POST.get('casual_recebedor', '').strip()
                 descricao = request.POST.get('casual_description', '').strip()
                 data_de_pagamento_str = request.POST.get('casual_dataPagamento', '').strip()
                 prioridade = request.POST.get('casual_priority', 'baixa')
                 anexo = request.FILES.get('casual_anexos')
+                # Capturar valores detalhados para Casual
+                valor_km = limpar_valor_monetario(request.POST.get('casual_valor_km', '').strip())
+                valor_pedagio = limpar_valor_monetario(request.POST.get('casual_valor_pedagio', '').strip())
+                valor_hospedagem = limpar_valor_monetario(request.POST.get('casual_valor_hospedagem', '').strip())
+                valor_fluvial = limpar_valor_monetario(request.POST.get('casual_valor_fluvial', '').strip())
+                valor_outros = limpar_valor_monetario(request.POST.get('casual_valor_outros', '').strip())
+                valor_receita = limpar_valor_monetario(request.POST.get('casual_valor_receita', '').strip())
             
             print(f"🔍 DEBUG Campos - Tipo: '{tipo}', Recebedor: '{nome_do_recebedor}', Descrição: '{descricao[:50]}...', Data: '{data_de_pagamento_str}', Prioridade: '{prioridade}'")
             
@@ -75,30 +101,59 @@ def receber_dados(request):
             if tipo == 'em_rota':
             
                 # Processar solicitação Em Rota
-                # Coletar todos os itens da rota
+                # Coletar todos os itens da rota (IDs dinâmicos)
                 itens_rota = []
                 valor_total = 0.0
                 ticket_principal = None
                 
-                for i in range(1, 5):
+                # Coletar todos os IDs dinamicamente (não apenas 1-4)
+                # Verificar todos os campos route_id_N no POST
+                route_ids_encontrados = []
+                for key in request.POST.keys():
+                    if key.startswith('route_id_'):
+                        # Extrair o número do ID (ex: route_id_5 -> 5)
+                        try:
+                            num_id = int(key.replace('route_id_', ''))
+                            route_ids_encontrados.append(num_id)
+                        except ValueError:
+                            continue
+                
+                # Ordenar para processar na ordem correta
+                route_ids_encontrados.sort()
+                print(f"🔍 DEBUG Em Rota - IDs encontrados: {route_ids_encontrados}")
+                
+                ordem_atual = 1
+                for i in route_ids_encontrados:
                     route_id = request.POST.get(f'route_id_{i}', '').strip()
                     route_valor_raw = request.POST.get(f'route_valor_{i}', '').strip()
                     route_servico_id = request.POST.get(f'route_servico_{i}', '').strip()
                     
-                    print(f"🔍 DEBUG Em Rota - Item {i}: ID='{route_id}', Valor='{route_valor_raw}', Servico='{route_servico_id}'")
+                    # Capturar valores detalhados para cada ID
+                    valor_km = limpar_valor_monetario(request.POST.get(f'route_valor_km_{i}', '').strip())
+                    valor_pedagio = limpar_valor_monetario(request.POST.get(f'route_valor_pedagio_{i}', '').strip())
+                    valor_hospedagem = limpar_valor_monetario(request.POST.get(f'route_valor_hospedagem_{i}', '').strip())
+                    valor_fluvial = limpar_valor_monetario(request.POST.get(f'route_valor_fluvial_{i}', '').strip())
+                    valor_outros = limpar_valor_monetario(request.POST.get(f'route_valor_outros_{i}', '').strip())
+                    
+                    print(f"🔍 DEBUG Em Rota - Item {i} (ordem {ordem_atual}): ID='{route_id}', Valor='{route_valor_raw}', Servico='{route_servico_id}'")
                     
                     if route_id:  # Se há ID, deve ter valor e serviço
+                        # Validação: se ID está preenchido, valor e serviço são obrigatórios
+                        if not route_valor_raw:
+                            messages.error(request, f'Para o ID {route_id}, o campo "Valor" é obrigatório.')
+                            return redirect('/solicitacoes/home/')
+                        
+                        if not route_servico_id:
+                            messages.error(request, f'Para o ID {route_id}, o campo "Serviço" é obrigatório.')
+                            return redirect('/solicitacoes/home/')
+                        
                         # Limpar valor - mesmo tratamento do Casual
-                        valor_item = 0.0
-                        if route_valor_raw:
-                            try:
-                                # Remover formatação brasileira
-                                valor_limpo = route_valor_raw.replace('R$', '').replace(' ', '').replace('.', '').replace(',', '.').strip()
-                                valor_item = float(valor_limpo)
-                                print(f"🔍 DEBUG Em Rota - Item {i} valor processado: {valor_item}")
-                            except (ValueError, AttributeError) as e:
-                                print(f"⚠️ ERRO ao processar valor do item {i} '{route_valor_raw}': {e}")
-                                valor_item = 0.0
+                        valor_item = limpar_valor_monetario(route_valor_raw)
+                        print(f"🔍 DEBUG Em Rota - Item {i} valor processado: {valor_item}")
+                        
+                        if valor_item <= 0:
+                            messages.error(request, f'O valor do ID {route_id} deve ser maior que zero.')
+                            return redirect('/solicitacoes/home/')
                         
                         # Buscar serviço
                         servico_obj = None
@@ -106,21 +161,28 @@ def receber_dados(request):
                             try:
                                 servico_obj = Servico.objects.get(id=route_servico_id, ativo=True)
                             except Servico.DoesNotExist:
-                                pass
+                                messages.error(request, f'Serviço selecionado para o ID {route_id} não foi encontrado ou está inativo.')
+                                return redirect('/solicitacoes/home/')
                         
-                        if i == 1:
+                        if ordem_atual == 1:
                             ticket_principal = route_id
                         
                         itens_rota.append({
                             'ticket': route_id,
                             'valor': valor_item,
                             'servico': servico_obj,
-                            'ordem': i
+                            'ordem': ordem_atual,
+                            'valor_km': valor_km,
+                            'valor_pedagio': valor_pedagio,
+                            'valor_hospedagem': valor_hospedagem,
+                            'valor_fluvial': valor_fluvial,
+                            'valor_outros': valor_outros
                         })
                         valor_total += valor_item
+                        ordem_atual += 1
                 
-                if len(itens_rota) < 2:
-                    messages.error(request, 'Solicitação Em Rota precisa de no mínimo 2 itens preenchidos.')
+                if len(itens_rota) < 1:
+                    messages.error(request, 'Solicitação Em Rota precisa de no mínimo 1 item preenchido.')
                     return redirect('/solicitacoes/home/')
                 
                 if not ticket_principal:
@@ -192,7 +254,13 @@ def receber_dados(request):
                     tempo_fila=tempo_fila_inicial,
                     prioridade=prioridade,
                     servico=itens_rota[0]['servico'],  # Serviço principal (primeiro item)
-                    tipo='em_rota'
+                    tipo='em_rota',
+                    valor_km=valor_km,
+                    valor_pedagio=valor_pedagio,
+                    valor_hospedagem=valor_hospedagem,
+                    valor_fluvial=valor_fluvial,
+                    valor_outros=valor_outros,
+                    valor_receita=valor_receita
                 )
                 
                 print(f"✅ Solicitação Em Rota criada com sucesso! ID: {solicitacao.id}")
@@ -204,7 +272,12 @@ def receber_dados(request):
                         ticket_item=item['ticket'],
                         valor=item['valor'],
                         servico=item['servico'],
-                        ordem=item['ordem']
+                        ordem=item['ordem'],
+                        valor_km=item.get('valor_km', 0.0),
+                        valor_pedagio=item.get('valor_pedagio', 0.0),
+                        valor_hospedagem=item.get('valor_hospedagem', 0.0),
+                        valor_fluvial=item.get('valor_fluvial', 0.0),
+                        valor_outros=item.get('valor_outros', 0.0)
                     )
                 
             else:
@@ -235,17 +308,9 @@ def receber_dados(request):
                         print(f"❌ ERRO: ID '{id}' já existe no banco de dados!")
                         return redirect('/solicitacoes/home/')
                 
-                # Limpar valor: remover R$, pontos e trocar vírgula por ponto
-                valor = 0.0
-                if valor_raw:
-                    try:
-                        # Remover formatação brasileira
-                        valor_limpo = valor_raw.replace('R$', '').replace(' ', '').replace('.', '').replace(',', '.').strip()
-                        valor = float(valor_limpo)
-                        print(f"🔍 DEBUG - Valor processado: {valor}")
-                    except (ValueError, AttributeError) as e:
-                        print(f"⚠️ ERRO ao processar valor '{valor_raw}': {e}")
-                        valor = 0.0
+                # Limpar valor usando função auxiliar
+                valor = limpar_valor_monetario(valor_raw)
+                print(f"🔍 DEBUG - Valor processado: {valor}")
                 
                 # Buscar o objeto Servico pelo ID
                 servico_obj = None
@@ -284,7 +349,13 @@ def receber_dados(request):
                         tempo_fila=tempo_fila_inicial,
                         prioridade=prioridade,
                         servico=servico_obj,
-                        tipo='casual'
+                        tipo='casual',
+                        valor_km=valor_km,
+                        valor_pedagio=valor_pedagio,
+                        valor_hospedagem=valor_hospedagem,
+                        valor_fluvial=valor_fluvial,
+                        valor_outros=valor_outros,
+                        valor_receita=valor_receita
                     )
                     
                     print(f"✅ Solicitação Casual criada com sucesso! ID: {solicitacao.id}, Ticket: {solicitacao.ticket}")
@@ -357,14 +428,20 @@ def obter_itens_rota(request, solicitacao_id):
         # Buscar todos os itens da rota
         itens = solicitacao.itens_rota.all().order_by('ordem')
         
-        # Serializar os itens
+        # Serializar os itens com valores detalhados
         itens_data = []
         for item in itens:
             itens_data.append({
                 'ordem': item.ordem,
                 'id': item.ticket_item,
                 'valor': f'R$ {item.valor:.2f}',
-                'servico': item.servico.nome if item.servico else 'N/A'
+                'servico': item.servico.nome if item.servico else 'N/A',
+                'valor_km': f'R$ {item.valor_km:.2f}',
+                'valor_pedagio': f'R$ {item.valor_pedagio:.2f}',
+                'valor_hospedagem': f'R$ {item.valor_hospedagem:.2f}',
+                'valor_fluvial': f'R$ {item.valor_fluvial:.2f}',
+                'valor_outros': f'R$ {item.valor_outros:.2f}',
+                'valor_total_item': f'R$ {item.valor:.2f}'
             })
         
         return JsonResponse({

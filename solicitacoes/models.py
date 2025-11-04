@@ -35,6 +35,14 @@ class Solicitacoes(models.Model):
     prioridade = models.CharField(max_length=20, choices=PRIORIDADE_CHOICES, default='baixa')
     servico = models.ForeignKey('servicos.Servico', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Serviço")
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='casual', verbose_name="Tipo de Solicitação")
+    
+    # Campos de valores detalhados (para Casual e geral Em Rota)
+    valor_km = models.FloatField(default=0.0, verbose_name="Valor KM")
+    valor_pedagio = models.FloatField(default=0.0, verbose_name="Valor Pedagio")
+    valor_hospedagem = models.FloatField(default=0.0, verbose_name="Valor Hospedagem")
+    valor_fluvial = models.FloatField(default=0.0, verbose_name="Valor Fluvial")
+    valor_outros = models.FloatField(default=0.0, verbose_name="Valor Outros")
+    valor_receita = models.FloatField(default=0.0, verbose_name="Valor de Receita")
 
     def __str__(self):
         return f"{self.titulo} - {self.status}"
@@ -46,6 +54,13 @@ class SolicitacaoRotaItem(models.Model):
     valor = models.FloatField(verbose_name="Valor")
     servico = models.ForeignKey('servicos.Servico', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Serviço")
     ordem = models.IntegerField(default=1, verbose_name="Ordem")
+    
+    # Campos de valores detalhados (para cada ID em Em Rota)
+    valor_km = models.FloatField(default=0.0, verbose_name="Valor KM")
+    valor_pedagio = models.FloatField(default=0.0, verbose_name="Valor Pedagio")
+    valor_hospedagem = models.FloatField(default=0.0, verbose_name="Valor Hospedagem")
+    valor_fluvial = models.FloatField(default=0.0, verbose_name="Valor Fluvial")
+    valor_outros = models.FloatField(default=0.0, verbose_name="Valor Outros")
 
     class Meta:
         ordering = ['ordem']

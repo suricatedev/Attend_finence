@@ -6,8 +6,10 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/kanban.css' %}">
+    <link rel="stylesheet" href="{% static 'css/kanban-fix.css' %}">
     <link rel="stylesheet" href="{% static 'css/cards-expandiveis.css' %}">
     <link rel="stylesheet" href="{% static 'css/card-modal.css' %}">
+    <link rel="stylesheet" href="{% static 'css/card-status-colors.css' %}">
     
     <!-- Definir flag ANTES de qualquer JavaScript executar -->
     <script>
@@ -47,7 +49,7 @@
         </div>
         <div class="column-content" data-column="planning">
             {% for solicitacao in solicitacoes_pendentes %}
-            <div class="card card-status-pending" draggable="true" data-card-id="{{ solicitacao.id }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}">
+            <div class="card card-status-pending" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}">
                 <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                 </div>
@@ -129,7 +131,7 @@
         </div>
         <div class="column-content" data-column="test">
             {% for solicitacao in solicitacoes_recusados %}
-            <div class="card card-status-rejected" draggable="true" data-card-id="{{ solicitacao.id }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}">
+            <div class="card card-status-rejected" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}">
                 <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                 </div>
@@ -211,7 +213,7 @@
         </div>
         <div class="column-content" data-column="launch">
             {% for solicitacao in solicitacoes_aprovado %}
-            <div class="card card-status-approved" draggable="true" data-card-id="{{ solicitacao.id }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}">
+            <div class="card card-status-approved" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}">
                 <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                 </div>
@@ -293,7 +295,7 @@
         </div>
         <div class="column-content" data-column="success">
             {% for solicitacao in solicitacoes_concluido %}
-            <div class="card card-status-completed" draggable="true" data-card-id="{{ solicitacao.id }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}">
+            <div class="card card-status-completed" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}">
                 <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                 </div>
