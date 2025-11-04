@@ -8,6 +8,7 @@ import json
 from solicitacoes.models import Solicitacoes
 from servicos.models import Servico
 from usuarios.decorators import user_can_view_dashboard, user_can_view_reports
+from django.shortcuts import render, redirect
 
 def dashboard(request):
     if request.method == "GET":
