@@ -34,7 +34,12 @@
                     
                     <div class="input-group">
                         <label class="input-label">Senha</label>
-                        <input type="password" name="password" placeholder="Senha" class="input" required />
+                        <div class="password-input-wrapper">
+                            <input type="password" name="password" id="passwordInput" placeholder="Senha" class="input" required />
+                            <button type="button" class="password-toggle" id="togglePassword" aria-label="Mostrar/Ocultar senha">
+                                <i class="fas fa-eye" id="eyeIcon"></i>
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="options">
@@ -176,6 +181,31 @@
             localStorage.setItem('loginBgIndex', String(nextIndex));
         } catch (e) {
             console.error("⚠️ Não foi possível salvar no localStorage:", e);
+        }
+        
+        // 5. Configurar botão de mostrar/ocultar senha
+        const togglePasswordBtn = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('passwordInput');
+        const eyeIcon = document.getElementById('eyeIcon');
+        
+        if (togglePasswordBtn && passwordInput && eyeIcon) {
+            togglePasswordBtn.addEventListener('click', function() {
+                const isPassword = passwordInput.type === 'password';
+                
+                if (isPassword) {
+                    // Mostrar senha
+                    passwordInput.type = 'text';
+                    eyeIcon.classList.remove('fa-eye');
+                    eyeIcon.classList.add('fa-eye-slash');
+                    togglePasswordBtn.setAttribute('aria-label', 'Ocultar senha');
+                } else {
+                    // Ocultar senha
+                    passwordInput.type = 'password';
+                    eyeIcon.classList.remove('fa-eye-slash');
+                    eyeIcon.classList.add('fa-eye');
+                    togglePasswordBtn.setAttribute('aria-label', 'Mostrar senha');
+                }
+            });
         }
     });
 </script>

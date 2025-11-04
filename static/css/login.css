@@ -133,15 +133,141 @@ body {
     background: rgba(255, 255, 255, 0.05);
     color: #ffffff;
     outline: none;
-    font-size: 14px;    font-weight: 400;
+    font-size: 14px;
+    font-weight: 400;
     transition: all 0.3s ease;
     box-sizing: border-box;
+}
+
+/* Wrapper para o campo de senha com botão de mostrar/ocultar */
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrapper .input {
+    padding-right: 52px; /* Espaço para o botão do olho */
+}
+
+/* Botão de mostrar/ocultar senha - Estilização Profissional */
+.password-toggle {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%);
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(71, 71, 71, 0.85);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    z-index: 10;
+    width: 42px;
+    height: 42px;
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.password-toggle::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 203, 87, 0.2) 0%, rgba(255, 203, 87, 0.05) 100%);
+    border-radius: 10px;
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
+}
+
+.password-toggle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(255, 203, 87, 0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
+}
+
+.password-toggle:hover {
+    background: linear-gradient(135deg, rgba(255, 203, 87, 0.25) 0%, rgba(255, 203, 87, 0.15) 100%);
+    border-color: rgba(255, 203, 87, 0.5);
+    color: #FFCB57;
+    transform: translateY(-50%) scale(1.08);
+    box-shadow: 
+        0 4px 16px rgba(255, 203, 87, 0.3),
+        0 2px 8px rgba(255, 203, 87, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.password-toggle:hover::before {
+    opacity: 1;
+}
+
+.password-toggle:hover::after {
+    width: 60px;
+    height: 60px;
+}
+
+.password-toggle:active {
+    transform: translateY(-50%) scale(1.02);
+    box-shadow: 
+        0 2px 8px rgba(255, 203, 87, 0.25),
+        inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.password-toggle:focus {
+    outline: 2px solid rgba(255, 203, 87, 0.6);
+    outline-offset: 3px;
+    border-color: rgba(255, 203, 87, 0.6);
+}
+
+.password-toggle i {
+    font-size: 18px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: block;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.password-toggle:hover i {
+    color: #FFCB57;
+    transform: scale(1.15);
+    filter: drop-shadow(0 2px 4px rgba(255, 203, 87, 0.4));
 }
 
 .input:focus {
     border: 2px solid #FFCB57;
     background: rgba(255, 203, 87, 0.05);
-    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.1);}
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.1);
+}
+
+/* Quando o campo de senha está focado, destacar o botão também */
+.password-input-wrapper:focus-within .password-toggle {
+    border-color: rgba(255, 203, 87, 0.4);
+    background: linear-gradient(135deg, rgba(255, 203, 87, 0.18) 0%, rgba(255, 203, 87, 0.12) 100%);
+    box-shadow: 
+        0 2px 8px rgba(255, 203, 87, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
 
 .input::placeholder {
     color: rgba(255, 255, 255, 0.6);
@@ -248,6 +374,25 @@ body {
         font-size: 12px;
     }
     
+    .password-input-wrapper .input {
+        padding-right: 44px;
+    }
+    
+    .password-toggle {
+        right: 4px;
+        width: 38px;
+        height: 38px;
+    }
+    
+    .password-toggle i {
+        font-size: 16px;
+    }
+    
+    .password-toggle:hover::after {
+        width: 50px;
+        height: 50px;
+    }
+    
     .button {
         height: 40px;
         font-size: 13px;
@@ -277,6 +422,25 @@ body {
     .input {
         padding: 6px 0;
         font-size: 11px;
+    }
+    
+    .password-input-wrapper .input {
+        padding-right: 40px;
+    }
+    
+    .password-toggle {
+        right: 3px;
+        width: 34px;
+        height: 34px;
+    }
+    
+    .password-toggle i {
+        font-size: 15px;
+    }
+    
+    .password-toggle:hover::after {
+        width: 45px;
+        height: 45px;
     }
     
     .button {
