@@ -231,14 +231,6 @@ body {
     overflow: hidden;
 }
 
-/* Garantir que o kanban-board dentro do main-content fique horizontal */
-.main-content #kanbanBoard,
-.main-content .kanban-board#kanbanBoard {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-}
-
 /* Header */
 .header {
     background: #F4F7F5;

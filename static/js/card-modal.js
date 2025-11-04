@@ -134,12 +134,20 @@ async function openCardDetailModal(card) {    const modal = document.getElementB
 async function extractCardData(card) {
     const data = {};
     
-    // Verificar se é uma solicitação "Em Rota"
-    const tipo = card.getAttribute('data-tipo');
-    data.isEmRota = tipo === 'em_rota';
-        // Extrair informações básicas
+    // Extrair informações básicas primeiro
     const title = card.querySelector('.card-title');
     data.titulo = title ? title.textContent : 'Sem título';
+    
+    // Verificar se é uma solicitação "Em Rota"
+    const tipo = card.getAttribute('data-tipo');
+    const tituloTexto = data.titulo ? data.titulo.toLowerCase() : '';
+    // Detectar se é "Em Rota" pelo atributo data-tipo ou pelo título
+    data.isEmRota = tipo === 'em_rota' || tituloTexto.includes('em rota') || tituloTexto.includes('em_rota');
+    console.log('🔍 Verificando se é Em Rota:', {
+        tipo: tipo,
+        titulo: tituloTexto,
+        isEmRota: data.isEmRota
+    });
     
     // ✅ Extrair ID (primeiro info-item que não tem label - é o ticket)
     const firstInfoItem = card.querySelector('.info-item');
@@ -202,14 +210,18 @@ async function extractCardData(card) {
             console.log(`🔍 Itens encontrados no card: ${routeItems.length}`);
         }
         
-        // Se ainda não encontrou, tentar buscar pelo data-solicitacao-id ou data-card-id para fazer requisição AJAX
-        if (routeItems.length === 0) {
-            // Tentar vários atributos para encontrar o ID
-            const solicitacaoId = card.getAttribute('data-solicitacao-id') || 
-                                 card.getAttribute('data-card-id') ||
-                                 card.getAttribute('id')?.replace('card-', '') ||
-                                 card.closest('.card')?.getAttribute('data-solicitacao-id');
-            console.log('⚠️ Nenhum item encontrado no HTML. Tentando buscar via AJAX. ID da solicitação:', solicitacaoId);
+        // SEMPRE tentar buscar via AJAX para garantir que temos os dados mais atualizados
+        // Tentar vários atributos para encontrar o ID
+        const solicitacaoId = card.getAttribute('data-card-id') ||
+                             card.getAttribute('data-solicitacao-id') ||
+                             card.getAttribute('id')?.replace('card-', '') ||
+                             card.closest('.card')?.getAttribute('data-card-id');
+        
+        console.log('🔍 ID da solicitação encontrado:', solicitacaoId);
+        
+        // Se não encontrou itens no HTML OU se encontrou mas quer garantir dados atualizados, buscar via AJAX
+        if (routeItems.length === 0 || solicitacaoId) {
+            console.log('🔍 Buscando itens via AJAX. ID da solicitação:', solicitacaoId);
             
             // Fazer requisição AJAX para obter os itens da rota
             if (solicitacaoId) {
@@ -217,6 +229,8 @@ async function extractCardData(card) {
                     // Buscar CSRF token
                     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
                                      document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+                    
+                    console.log('📡 Fazendo requisição AJAX para:', `/solicitacoes/obter-itens-rota/${solicitacaoId}/`);
                     
                     const response = await fetch(`/solicitacoes/obter-itens-rota/${solicitacaoId}/`, {
                         method: 'GET',
@@ -228,29 +242,54 @@ async function extractCardData(card) {
                     
                     if (response.ok) {
                         const result = await response.json();
-                        if (result.success && result.itens) {
+                        console.log('📦 Resposta AJAX recebida:', result);
+                        
+                        if (result.success && result.itens && result.itens.length > 0) {
                             console.log('✅ Itens obtidos via AJAX:', result.itens);
                             data.itensRota = result.itens.map(item => ({
                                 ordem: item.ordem,
                                 id: item.id,
                                 valor: item.valor,
-                                servico: item.servico
+                                servico: item.servico,
+                                valor_km: item.valor_km || 'R$ 0,00',
+                                valor_pedagio: item.valor_pedagio || 'R$ 0,00',
+                                valor_hospedagem: item.valor_hospedagem || 'R$ 0,00',
+                                valor_fluvial: item.valor_fluvial || 'R$ 0,00',
+                                valor_outros: item.valor_outros || 'R$ 0,00',
+                                valor_total_item: item.valor_total_item || item.valor
                             }));
+                            console.log('✅ data.itensRota configurado com', data.itensRota.length, 'itens:', data.itensRota);
+                            
                             // Atualizar valor total também
                             if (result.valor_total) {
                                 data.valor = result.valor_total;
                             }
+                        } else {
+                            console.warn('⚠️ Nenhum item retornado na resposta AJAX ou success=false');
+                            if (!data.itensRota) data.itensRota = [];
                         }
                     } else {
-                        console.warn('⚠️ Erro ao buscar itens via AJAX:', response.status);
+                        const errorText = await response.text();
+                        console.warn('⚠️ Erro ao buscar itens via AJAX:', response.status, errorText);
+                        if (!data.itensRota) data.itensRota = [];
                     }
                 } catch (error) {
                     console.error('❌ Erro na requisição AJAX:', error);
+                    if (!data.itensRota) data.itensRota = [];
                 }
+            } else {
+                console.warn('⚠️ ID da solicitação não encontrado, não é possível buscar itens via AJAX');
+                if (!data.itensRota) data.itensRota = [];
             }
+        } else {
+            // Se não é Em Rota, garantir que itensRota está vazio
+            data.itensRota = [];
         }
         
-        routeItems.forEach((item, index) => {
+        // Se já temos dados via AJAX, não processar routeItems do DOM
+        // Apenas processar routeItems se não tivermos dados via AJAX
+        if (!data.itensRota || data.itensRota.length === 0) {
+            routeItems.forEach((item, index) => {
             const itemNumber = item.querySelector('.route-item-number');
             const itemId = item.querySelector('.route-item-id');
             const itemValor = item.querySelector('.route-item-valor');
@@ -306,6 +345,10 @@ async function extractCardData(card) {
             
             // Se pelo menos um dos campos existe, adicionar o item
             if (itemId || itemNumber || valorExtraido !== 'R$ 0,00' || servicoExtraido !== 'N/A') {
+                // Garantir que data.itensRota existe
+                if (!data.itensRota) {
+                    data.itensRota = [];
+                }
                 data.itensRota.push({
                     ordem: ordem,
                     id: itemId ? itemId.textContent.replace(/^#/, '').trim() : '',
@@ -315,10 +358,13 @@ async function extractCardData(card) {
             }
         });
         
-        // Ordenar por ordem
-        data.itensRota.sort((a, b) => a.ordem - b.ordem);
+        // Ordenar por ordem (apenas se tiver itens)
+        if (data.itensRota && data.itensRota.length > 0) {
+            data.itensRota.sort((a, b) => a.ordem - b.ordem);
+        }
         
-        console.log('✅ Itens extraídos:', data.itensRota);
+        console.log('✅ Itens extraídos (DOM):', data.itensRota);
+        }
     } else {
         console.log('ℹ️ Não é solicitação Em Rota');
     }
@@ -431,20 +477,51 @@ function populateCardDetails(data) {
             
             console.log(`🔍 Criando item ${index + 1}:`, item);
             
+            // Construir HTML dos valores detalhados
+            const valoresDetalhados = [];
+            if (item.valor_km && item.valor_km !== 'R$ 0,00') {
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">KM:</span><span>${item.valor_km}</span></div>`);
+            }
+            if (item.valor_pedagio && item.valor_pedagio !== 'R$ 0,00') {
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Pedágio:</span><span>${item.valor_pedagio}</span></div>`);
+            }
+            if (item.valor_hospedagem && item.valor_hospedagem !== 'R$ 0,00') {
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Hospedagem:</span><span>${item.valor_hospedagem}</span></div>`);
+            }
+            if (item.valor_fluvial && item.valor_fluvial !== 'R$ 0,00') {
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Fluvial:</span><span>${item.valor_fluvial}</span></div>`);
+            }
+            if (item.valor_outros && item.valor_outros !== 'R$ 0,00') {
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Outros:</span><span>${item.valor_outros}</span></div>`);
+            }
+            
+            const valoresDetalhadosHTML = valoresDetalhados.length > 0 
+                ? `<div class="route-item-valores-detalhados">
+                    <div class="valores-detalhados-title-mini"><i class="fas fa-list"></i> Valores Detalhados</div>
+                    <div class="valores-detalhados-grid-mini">
+                        ${valoresDetalhados.join('')}
+                    </div>
+                </div>` 
+                : '';
+            
             itemDiv.innerHTML = `
                 <div class="route-item-modal-header">
-                    <span class="route-item-modal-number">Item ${item.ordem}</span>
-                    <span class="route-item-modal-id">#${item.id || 'N/A'}</span>
+                    <div class="route-item-header-left">
+                        <span class="route-item-modal-number">ID ${item.ordem}</span>
+                        <span class="route-item-modal-id">#${item.id || 'N/A'}</span>
+                    </div>
+                    <div class="route-item-header-right">
+                        <span class="route-item-modal-total">${item.valor_total_item || item.valor || 'R$ 0,00'}</span>
+                    </div>
                 </div>
                 <div class="route-item-modal-details">
-                    <div class="route-item-modal-info">
-                        <span class="route-item-modal-label"><i class="fas fa-dollar-sign"></i> Valor:</span>
-                        <span class="route-item-modal-value">${item.valor || 'R$ 0,00'}</span>
+                    <div class="route-item-modal-main-info">
+                        <div class="route-item-modal-info">
+                            <span class="route-item-modal-label"><i class="fas fa-cog"></i> Serviço:</span>
+                            <span class="route-item-modal-service">${item.servico || 'N/A'}</span>
+                        </div>
                     </div>
-                    <div class="route-item-modal-info">
-                        <span class="route-item-modal-label"><i class="fas fa-cog"></i> Serviço:</span>
-                        <span class="route-item-modal-service">${item.servico || 'N/A'}</span>
-                    </div>
+                    ${valoresDetalhadosHTML}
                 </div>
             `;
             
@@ -504,37 +581,80 @@ function populateCardDetails(data) {
 
 // Função para configurar event listeners do modal
 function setupModalEventListeners() {
-    // Evitar registrar listeners duplicados
-    if (modalListenersSetup) {
+    const modal = document.getElementById('cardDetailModal');
+    if (!modal) {
+        console.error('Modal não encontrado em setupModalEventListeners');
         return;
     }
-    modalListenersSetup = true;
     
-    const modal = document.getElementById('cardDetailModal');
+    // Buscar botões toda vez que o modal é aberto
     const closeBtn = document.getElementById('closeCardModal');
     const closeModalBtn = document.getElementById('closeModalBtn');
-    const overlay = modal ? modal.querySelector('.modal-overlay') : null;
+    const overlay = modal.querySelector('.modal-overlay');
+    
+    console.log('🔍 Configurando listeners do modal:', {
+        closeBtn: !!closeBtn,
+        closeModalBtn: !!closeModalBtn,
+        overlay: !!overlay
+    });
     
     // Fechar modal com botão X
     if (closeBtn) {
-        closeBtn.addEventListener('click', closeCardDetailModal);
+        // Remover listeners anteriores
+        const newCloseBtn = closeBtn.cloneNode(true);
+        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+        newCloseBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('✅ Botão X clicado, fechando modal');
+            closeCardDetailModal();
+            return false;
+        });
+        console.log('✅ Listener do botão X adicionado');
+    } else {
+        console.warn('⚠️ Botão closeCardModal não encontrado');
     }
     
     // Fechar modal com botão Voltar
     if (closeModalBtn) {
-        closeModalBtn.addEventListener('click', closeCardDetailModal);
+        // Remover listeners anteriores
+        const newCloseModalBtn = closeModalBtn.cloneNode(true);
+        closeModalBtn.parentNode.replaceChild(newCloseModalBtn, closeModalBtn);
+        newCloseModalBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('✅ Botão Voltar clicado, fechando modal');
+            closeCardDetailModal();
+            return false;
+        });
+        console.log('✅ Listener do botão Voltar adicionado');
+    } else {
+        console.warn('⚠️ Botão closeModalBtn não encontrado');
     }
     
     // Fechar modal clicando no overlay
     if (overlay) {
-        overlay.addEventListener('click', closeCardDetailModal);
+        // Remover listeners anteriores
+        const newOverlay = overlay.cloneNode(true);
+        overlay.parentNode.replaceChild(newOverlay, overlay);
+        newOverlay.addEventListener('click', function(e) {
+            if (e.target === newOverlay) {
+                console.log('✅ Overlay clicado, fechando modal');
+                closeCardDetailModal();
+            }
+        });
     }
     
-    // Fechar modal com ESC
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && modal && modal.classList.contains('show')) {            closeCardDetailModal();
-        }
-    });
+    // Fechar modal com ESC (apenas uma vez no documento)
+    if (!modalListenersSetup) {
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal && modal.classList.contains('show')) {
+                console.log('✅ Tecla ESC pressionada, fechando modal');
+                closeCardDetailModal();
+            }
+        });
+        modalListenersSetup = true;
+    }
     
     // Event listener para mover card entre filas
     const moverFilaBtn = document.getElementById('moverFilaBtn');
@@ -598,78 +718,6 @@ function moveCardToFila(cardId, targetFila) {
             
             // Adicionar card na nova coluna
             targetColumn.appendChild(card);
-            
-            // Reaplicar layout unificado do card após movimentação
-            if (typeof aplicarLayoutUnificadoCards === 'function') {
-                aplicarLayoutUnificadoCards();
-            } else {
-                // Forçar layout unificado diretamente
-                card.style.cssText = 
-                    'display: flex !important; ' +
-                    'flex-direction: column !important; ' +
-                    'justify-content: flex-start !important; ' +
-                    'align-items: stretch !important; ' +
-                    'min-height: 320px !important; ' +
-                    'max-height: none !important; ' +
-                    'height: auto !important; ' +
-                    'width: 100% !important; ' +
-                    'padding: 16px !important; ' +
-                    'margin-bottom: 15px !important; ' +
-                    'box-sizing: border-box !important; ' +
-                    'overflow: visible !important; ' +
-                    'overflow-x: hidden !important; ' +
-                    'overflow-y: visible !important; ' +
-                    'flex-shrink: 0 !important; ' +
-                    'position: relative !important;';
-                
-                const cardBody = card.querySelector('.card-body');
-                if (cardBody) {
-                    cardBody.style.cssText = 
-                        'flex: 1 !important; ' +
-                        'display: flex !important; ' +
-                        'flex-direction: column !important; ' +
-                        'gap: 8px !important; ' +
-                        'min-height: 220px !important; ' +
-                        'padding: 4px !important; ' +
-                        'margin-bottom: 8px !important; ' +
-                        'box-sizing: border-box !important;';
-                }
-            }
-            
-            // GARANTIR QUE TODAS AS COLUNAS FICAM VISÍVEIS APÓS MOVER CARD
-            setTimeout(function() {
-                const kanbanBoard = document.getElementById('kanbanBoard');
-                if (kanbanBoard) {
-                    // Forçar layout horizontal
-                    kanbanBoard.style.setProperty('display', 'flex', 'important');
-                    kanbanBoard.style.setProperty('flex-direction', 'row', 'important');
-                    kanbanBoard.style.setProperty('flex-wrap', 'nowrap', 'important');
-                    kanbanBoard.style.setProperty('overflow-x', 'visible', 'important');
-                    kanbanBoard.style.setProperty('width', '100%', 'important');
-                    kanbanBoard.style.setProperty('align-items', 'stretch', 'important');
-                    
-                    // Garantir que todas as colunas sejam visíveis
-                    const columns = kanbanBoard.querySelectorAll('.kanban-column');
-                    columns.forEach(column => {
-                        column.style.setProperty('display', 'flex', 'important');
-                        column.style.setProperty('flex-direction', 'column', 'important');
-                        column.style.setProperty('min-width', '280px', 'important');
-                        column.style.setProperty('visibility', 'visible', 'important');
-                        column.style.setProperty('opacity', '1', 'important');
-                        column.style.setProperty('flex', '1 1 0%', 'important');
-                    });
-                    
-                    // Reaplicar layout unificado dos cards
-                    if (typeof aplicarLayoutUnificadoCards === 'function') {
-                        aplicarLayoutUnificadoCards();
-                    }
-                    
-                    // Reaplicar layout horizontal se existir função
-                    if (typeof forcarLayoutHorizontal === 'function') {
-                        forcarLayoutHorizontal();
-                    }
-                }
-            }, 100);
             
             // Atualizar contadores das colunas
             updateColumnCounters();
@@ -772,9 +820,15 @@ function showNotification(message, type = 'info') {
 
 // Função para fechar modal de detalhes
 function closeCardDetailModal() {
+    console.log('🔴 Fechando modal de detalhes do card...');
     const modal = document.getElementById('cardDetailModal');
-    modal.classList.remove('show');
-    document.body.style.overflow = '';
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+        console.log('✅ Modal fechado com sucesso');
+    } else {
+        console.error('❌ Modal não encontrado ao tentar fechar');
+    }
 }
 
 // Inicialização quando o DOM estiver carregado

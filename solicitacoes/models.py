@@ -36,7 +36,7 @@ class Solicitacoes(models.Model):
     servico = models.ForeignKey('servicos.Servico', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Serviço")
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='casual', verbose_name="Tipo de Solicitação")
     
-    # Campos de valores detalhados (usado principalmente para solicitações Casual)
+    # Campos de valores detalhados (para Casual e geral Em Rota)
     valor_km = models.FloatField(default=0.0, verbose_name="Valor KM")
     valor_pedagio = models.FloatField(default=0.0, verbose_name="Valor Pedagio")
     valor_hospedagem = models.FloatField(default=0.0, verbose_name="Valor Hospedagem")
@@ -55,7 +55,7 @@ class SolicitacaoRotaItem(models.Model):
     servico = models.ForeignKey('servicos.Servico', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Serviço")
     ordem = models.IntegerField(default=1, verbose_name="Ordem")
     
-    # Campos de valores detalhados para cada item da rota
+    # Campos de valores detalhados (para cada ID em Em Rota)
     valor_km = models.FloatField(default=0.0, verbose_name="Valor KM")
     valor_pedagio = models.FloatField(default=0.0, verbose_name="Valor Pedagio")
     valor_hospedagem = models.FloatField(default=0.0, verbose_name="Valor Hospedagem")

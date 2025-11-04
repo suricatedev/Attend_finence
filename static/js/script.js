@@ -747,9 +747,7 @@ class CampaignManager {
         
         switch(view) {
             case 'kanban':
-                kanbanBoard.style.setProperty('display', 'flex', 'important');
-                kanbanBoard.style.setProperty('flex-direction', 'row', 'important');
-                kanbanBoard.style.setProperty('flex-wrap', 'nowrap', 'important');
+                kanbanBoard.style.display = 'flex';
                 break;
             case 'reports':
                 kanbanBoard.style.display = 'none';
