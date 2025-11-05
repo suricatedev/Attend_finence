@@ -47,7 +47,7 @@
                             <input type="checkbox" />
                             Lembrar senha
                         </label>
-                        <a href="#" class="forgot-password">Esqueceu sua senha?</a>
+                        <a href="{% url 'solicitar_recuperacao_senha' %}" class="forgot-password">Esqueceu sua senha?</a>
                     </div>
                     
                     <button type="submit" class="button">
@@ -62,6 +62,18 @@
 </body>
 </html>
 <script>
+    // ⚠️ CRÍTICO: Carregar imagem IMEDIATAMENTE para garantir que sempre apareça algo
+    (function() {
+        // Carregar primeira imagem de fallback imediatamente (antes do DOMContentLoaded)
+        const immediateImage = "{% static 'img/back04.png' %}";
+        document.body.style.backgroundImage = `url('${immediateImage}')`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+        document.body.style.backgroundRepeat = 'no-repeat';
+        document.body.style.backgroundColor = '#1a1a1a'; // Fallback enquanto carrega
+        console.log('🚀 Background inicial carregado imediatamente');
+    })();
+    
     document.addEventListener('DOMContentLoaded', function() {
         console.log('🎬 Inicializando background de login...');
         
@@ -72,113 +84,159 @@
             "{% static 'img/back20.mp4' %}"
         ];
         
-        // Imagens de fallback caso os vídeos não carreguem
+        // Imagens de fallback (priorizadas para VPS)
         const imageAssets = [
             "{% static 'img/back04.png' %}",
             "{% static 'img/back05.png' %}",
-            "{% static 'img/back06.png' %}"
+            "{% static 'img/back06.png' %}",
+            "{% static 'img/back07.png' %}",
+            "{% static 'img/back08.png' %}",
+            "{% static 'img/back09.png' %}",
+            "{% static 'img/back10.png' %}",
+            "{% static 'img/back11.png' %}",
+            "{% static 'img/back12.png' %}",
+            "{% static 'img/back13.png' %}"
         ];
 
-        const allAssets = [...videoAssets, ...imageAssets];
-        console.log('📦 Assets disponíveis:', allAssets);
+        // Detectar se está em ambiente lento (VPS) - usar conexão lenta como indicador
+        const isSlowConnection = navigator.connection && (
+            navigator.connection.effectiveType === 'slow-2g' || 
+            navigator.connection.effectiveType === '2g' ||
+            navigator.connection.saveData === true
+        );
+        
+        // Priorizar imagens em conexões lentas ou VPS
+        const preferImages = isSlowConnection || localStorage.getItem('preferImages') === 'true';
+        
+        console.log('📦 Assets disponíveis:', {
+            videos: videoAssets.length,
+            images: imageAssets.length,
+            preferImages: preferImages,
+            connectionType: navigator.connection ? navigator.connection.effectiveType : 'unknown'
+        });
 
-        // 2. Lógica para escolher um asset diferente a cada visita
+        // 2. Escolher asset (priorizar imagens se preferImages)
         var lastIndex = parseInt(localStorage.getItem('loginBgIndex'), 10);
-        if (isNaN(lastIndex) || lastIndex < 0 || lastIndex >= allAssets.length) {
-            lastIndex = -1; // Força a escolha de um novo na primeira vez
+        if (isNaN(lastIndex) || lastIndex < 0) {
+            lastIndex = -1;
         }
         
-        var nextIndex = allAssets.length > 1 ? (lastIndex + 1) % allAssets.length : 0;
-        var chosenAsset = allAssets[nextIndex];
-        console.log('✅ Asset escolhido:', chosenAsset);
+        var chosenAsset;
+        var chosenIndex;
+        
+        if (preferImages) {
+            // Priorizar imagens
+            chosenIndex = imageAssets.length > 1 ? ((lastIndex + 1) % imageAssets.length) : 0;
+            chosenAsset = imageAssets[chosenIndex];
+            console.log('🖼️ Priorizando imagem (VPS/conexão lenta):', chosenAsset);
+        } else {
+            // Tentar vídeo primeiro
+            const allAssets = [...videoAssets, ...imageAssets];
+            chosenIndex = allAssets.length > 1 ? ((lastIndex + 1) % allAssets.length) : 0;
+            chosenAsset = allAssets[chosenIndex];
+            console.log('✅ Asset escolhido:', chosenAsset);
+        }
 
         // 3. Aplicar o vídeo ou imagem de fundo
         var videoEl = document.getElementById('bgVideo');
         var isVideo = /\.(mp4|webm|ogg)$/i.test(chosenAsset);
+        var videoLoaded = false;
+        var currentImageSrc = null;
 
-        if (isVideo && videoEl) {
-            console.log('🎥 Tentando carregar vídeo:', chosenAsset);
-            
-            // Verificar se o vídeo existe antes de tentar carregar
-            var testVideo = new Audio(chosenAsset);
-            testVideo.oncanplaythrough = function() {
-                console.log('✅ Vídeo pode ser reproduzido');
-                videoEl.src = chosenAsset;
-                videoEl.style.display = 'block';
-                videoEl.load();
-                videoEl.play().catch(function(error) {
-                    console.warn("⚠️ Reprodução automática bloqueada, tentando fallback:", error);
-                    loadFallback();
-                });
-            };
-            
-            testVideo.onerror = function() {
-                console.error('❌ Erro ao carregar vídeo:', chosenAsset);
-                console.log('🔄 Tentando fallback para imagem...');
-                loadFallback();
-            };
-            
-            // Timeout de 3 segundos para detectar se o vídeo não carrega
-            setTimeout(function() {
-                if (!videoEl.src || videoEl.readyState === 0) {
-                    console.warn('⏱️ Timeout ao carregar vídeo, usando fallback');
-                    loadFallback();
-                }
-            }, 3000);
-            
-            // Tentar carregar diretamente também
-            videoEl.src = chosenAsset;
-            videoEl.style.display = 'block';
-            videoEl.load();
-            
-            videoEl.addEventListener('loadeddata', function() {
-                console.log('✅ Vídeo carregado com sucesso');
-                videoEl.play().catch(function(error) {
-                    console.warn("⚠️ Erro ao reproduzir:", error);
-                });
-            });
-            
-            videoEl.addEventListener('error', function(e) {
-                console.error('❌ Erro no elemento de vídeo:', e);
-                loadFallback();
-            });
-            
-        } else {
-            console.log('🖼️ Carregando imagem de fundo:', chosenAsset);
-            if (videoEl) videoEl.style.display = 'none';
-            loadImage(chosenAsset);
-        }
-
-        // Função para carregar imagem de fallback
-        function loadFallback() {
-            console.log('🔄 Carregando fallback...');
-            var fallbackIndex = (nextIndex + 1) % imageAssets.length;
-            var fallbackAsset = imageAssets[fallbackIndex] || imageAssets[0];
-            if (videoEl) videoEl.style.display = 'none';
-            loadImage(fallbackAsset);
-        }
-        
-        // Função para carregar imagem
+        // Função para carregar imagem (rápida e confiável)
         function loadImage(imageSrc) {
+            // Evitar recarregar a mesma imagem
+            if (currentImageSrc === imageSrc) return;
+            currentImageSrc = imageSrc;
+            
             var img = new Image();
             img.onload = function() {
                 document.body.style.backgroundImage = `url('${imageSrc}')`;
                 document.body.style.backgroundSize = 'cover';
                 document.body.style.backgroundPosition = 'center';
                 document.body.style.backgroundRepeat = 'no-repeat';
+                document.body.style.backgroundColor = ''; // Limpar cor de fallback
                 console.log('✅ Imagem de fundo carregada:', imageSrc);
             };
             img.onerror = function() {
                 console.error('❌ Erro ao carregar imagem:', imageSrc);
-                // Usar uma cor de fundo como último recurso
-                document.body.style.backgroundColor = '#1a1a1a';
+                // Tentar próxima imagem
+                var nextImageIndex = (imageAssets.indexOf(imageSrc) + 1) % imageAssets.length;
+                var nextImage = imageAssets[nextImageIndex];
+                if (nextImage !== imageSrc) {
+                    loadImage(nextImage);
+                } else {
+                    document.body.style.backgroundColor = '#1a1a1a';
+                }
             };
             img.src = imageSrc;
+        }
+        
+        // Função para carregar vídeo (opcional, substitui imagem se carregar rápido)
+        function loadVideo(videoSrc) {
+            if (!videoEl || videoLoaded) return;
+            
+            console.log('🎥 Tentando carregar vídeo:', videoSrc);
+            
+            // Timeout reduzido para 1.5 segundos (mais rápido)
+            var videoTimeout = setTimeout(function() {
+                if (!videoLoaded) {
+                    console.warn('⏱️ Timeout ao carregar vídeo (1.5s), mantendo imagem');
+                    if (videoEl) videoEl.style.display = 'none';
+                }
+            }, 1500);
+            
+            videoEl.src = videoSrc;
+            videoEl.style.display = 'block';
+            videoEl.load();
+            
+            videoEl.addEventListener('loadeddata', function() {
+                clearTimeout(videoTimeout);
+                videoLoaded = true;
+                console.log('✅ Vídeo carregado com sucesso');
+                // Ocultar background de imagem quando vídeo estiver pronto
+                document.body.style.backgroundImage = 'none';
+                videoEl.classList.add('playing'); // Adicionar classe para fade in
+                videoEl.play().catch(function(error) {
+                    console.warn("⚠️ Erro ao reproduzir vídeo:", error);
+                    // Se não conseguir reproduzir, manter imagem
+                    if (videoEl) {
+                        videoEl.style.display = 'none';
+                        videoEl.classList.remove('playing');
+                    }
+                    document.body.style.backgroundImage = `url('${imageAssets[0]}')`;
+                });
+            });
+            
+            videoEl.addEventListener('error', function(e) {
+                clearTimeout(videoTimeout);
+                console.error('❌ Erro no elemento de vídeo:', e);
+                if (videoEl) videoEl.style.display = 'none';
+                // Manter imagem de fundo
+            });
+        }
+
+        if (isVideo && videoEl && !preferImages) {
+            // Carregar imagem primeiro como fallback visual imediato
+            var fallbackImage = imageAssets[0];
+            loadImage(fallbackImage);
+            
+            // Tentar carregar vídeo em paralelo (sem bloquear)
+            loadVideo(chosenAsset);
+        } else {
+            // Carregar imagem diretamente
+            console.log('🖼️ Carregando imagem de fundo:', chosenAsset);
+            if (videoEl) videoEl.style.display = 'none';
+            loadImage(chosenAsset);
         }
 
         // 4. Salvar o índice para a próxima visita
         try {
-            localStorage.setItem('loginBgIndex', String(nextIndex));
+            localStorage.setItem('loginBgIndex', String(chosenIndex));
+            // Se preferimos imagens, salvar essa preferência
+            if (preferImages) {
+                localStorage.setItem('preferImages', 'true');
+            }
         } catch (e) {
             console.error("⚠️ Não foi possível salvar no localStorage:", e);
         }

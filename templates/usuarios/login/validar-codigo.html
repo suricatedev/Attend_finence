@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validar Código - Attend Finance</title>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .code-input-container {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+        .code-digit {
+            width: 50px;
+            height: 60px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: 2px solid #FFCB57;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+        .code-digit:focus {
+            outline: none;
+            border-color: #FFCB57;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 10px rgba(255, 203, 87, 0.5);
+        }
+        .email-info {
+            background: rgba(255, 203, 87, 0.1);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+            color: #FFCB57;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <video id="bgVideo" class="bg-video" muted loop playsinline autoplay style="display: block;"></video>
+    
+    <div class="main-container">
+        <div class="login-container">
+            <div class="login-box">
+                <form class="form" method="POST" action="{% url 'validar_codigo_recuperacao' %}" id="codeForm">
+                    {% csrf_token %}
+                    <div class="logo">
+                        <img src="{% static 'img/logo.png' %}" alt="Logo" class="logo-img">
+                    </div>
+                    <h1 class="header">Validar Código</h1>
+                    <p class="subtitle">Digite o código de 6 dígitos enviado para seu email</p>
+                    
+                    {% if email %}
+                    <div class="email-info">
+                        <i class="fas fa-envelope"></i> {{ email }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 8px; background: {% if message.tags == 'error' %}#f8d7da{% elif message.tags == 'success' %}#d4edda{% else %}#d1ecf1{% endif %}; color: {% if message.tags == 'error' %}#721c24{% elif message.tags == 'success' %}#155724{% else %}#0c5460{% endif %}; border: 1px solid {% if message.tags == 'error' %}#f5c6cb{% elif message.tags == 'success' %}#c3e6cb{% else %}#bee5eb{% endif %};">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <div class="code-input-container">
+                        <input type="text" name="code" id="codeInput" class="input" maxlength="6" placeholder="000000" required autofocus style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem; font-weight: bold;" />
+                    </div>
+                    
+                    <button type="submit" class="button">
+                        <i class="fas fa-check-circle"></i>
+                        Validar Código
+                    </button>
+                    
+                    <div style="text-align: center; margin-top: 1.5rem;">
+                        <a href="{% url 'solicitar_recuperacao_senha' %}" style="color: #FFCB57; text-decoration: none; font-size: 0.9rem;">
+                            <i class="fas fa-redo"></i> Solicitar novo código
+                        </a>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <a href="{% url 'login' %}" style="color: #FFCB57; text-decoration: none; font-size: 0.9rem;">
+                            <i class="fas fa-arrow-left"></i> Voltar para o login
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+<script>
+    // Script de background
+    (function() {
+        const immediateImage = "{% static 'img/back04.png' %}";
+        document.body.style.backgroundImage = `url('${immediateImage}')`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+        document.body.style.backgroundRepeat = 'no-repeat';
+        document.body.style.backgroundColor = '#1a1a1a';
+    })();
+    
+    // Formatação automática do código (apenas números)
+    document.getElementById('codeInput').addEventListener('input', function(e) {
+        e.target.value = e.target.value.replace(/\D/g, '').substring(0, 6);
+    });
+</script>
+

@@ -88,11 +88,11 @@
                         </button>
                         <button class="type-btn" data-type="casual">
                             <i class="fas fa-file-invoice"></i>
-                            Casual
+                            Individual
                         </button>
                         <button class="type-btn" data-type="em_rota">
                             <i class="fas fa-route"></i>
-                            Em Rota
+                            Agrupados
                         </button>
                     </div>
                 </div>
@@ -237,7 +237,34 @@
                             Serviço <i class="fas fa-sort"></i>
                         </th>
                         <th class="sortable" data-column="valor">
-                            Valor <i class="fas fa-sort"></i>
+                            Valor Total <i class="fas fa-sort"></i>
+                        </th>
+                        <th class="valores-detalhados-toggle-header">
+                            <button type="button" id="toggleValoresDetalhados" class="btn-toggle-valores" title="Expandir/Colapsar Valores Detalhados">
+                                <i class="fas fa-chevron-right" id="toggleIcon"></i>
+                                <span>Valores Detalhados</span>
+                            </button>
+                        </th>
+                        <th class="valores-detalhados-col" style="display: none;">
+                            Receita <i class="fas fa-sort"></i>
+                        </th>
+                        <th class="valores-detalhados-col" style="display: none;">
+                            EM ROTA <i class="fas fa-sort"></i>
+                        </th>
+                        <th class="valores-detalhados-col" style="display: none;">
+                            KM <i class="fas fa-sort"></i>
+                        </th>
+                        <th class="valores-detalhados-col" style="display: none;">
+                            Pedágio <i class="fas fa-sort"></i>
+                        </th>
+                        <th class="valores-detalhados-col" style="display: none;">
+                            Hospedagem <i class="fas fa-sort"></i>
+                        </th>
+                        <th class="valores-detalhados-col" style="display: none;">
+                            Fluvial <i class="fas fa-sort"></i>
+                        </th>
+                        <th class="valores-detalhados-col" style="display: none;">
+                            Outros <i class="fas fa-sort"></i>
                         </th>
                         <th class="sortable" data-column="status">
                             Status <i class="fas fa-sort"></i>
@@ -262,7 +289,29 @@
                         <td>{{ solicitacao.nome_solicitante }}</td>
                         <td>{{ solicitacao.nome_do_recebedor }}</td>
                         <td>{{ solicitacao.servico.nome|default:"N/A" }}</td>
-                        <td>R$ {{ solicitacao.valor|floatformat:2 }}</td>
+                        <td><strong>R$ {{ solicitacao.valor|floatformat:2 }}</strong></td>
+                        <td class="valores-detalhados-toggle-cell" style="display: none;"></td>
+                        <td class="valores-detalhados-col" style="display: none;">
+                            <span class="valor-receita">R$ {{ solicitacao.valor_receita|floatformat:2 }}</span>
+                        </td>
+                        <td class="valores-detalhados-col" style="display: none;">
+                            <span class="valor-em-rota" style="color: #FF6B6B; font-weight: 700;">R$ {{ solicitacao.valor_em_rota|floatformat:2 }}</span>
+                        </td>
+                        <td class="valores-detalhados-col" style="display: none;">
+                            <span class="valor-detail">R$ {{ solicitacao.valor_km|floatformat:2 }}</span>
+                        </td>
+                        <td class="valores-detalhados-col" style="display: none;">
+                            <span class="valor-detail">R$ {{ solicitacao.valor_pedagio|floatformat:2 }}</span>
+                        </td>
+                        <td class="valores-detalhados-col" style="display: none;">
+                            <span class="valor-detail">R$ {{ solicitacao.valor_hospedagem|floatformat:2 }}</span>
+                        </td>
+                        <td class="valores-detalhados-col" style="display: none;">
+                            <span class="valor-detail">R$ {{ solicitacao.valor_fluvial|floatformat:2 }}</span>
+                        </td>
+                        <td class="valores-detalhados-col" style="display: none;">
+                            <span class="valor-detail">R$ {{ solicitacao.valor_outros|floatformat:2 }}</span>
+                        </td>
                         <td>
                             <span class="status-badge status-{{ solicitacao.status }}">
                                 {{ solicitacao.get_status_display }}
@@ -283,7 +332,7 @@
                     </tr>
                     {% empty %}
                     <tr class="empty-state">
-                        <td colspan="10" style="text-align: center; padding: 3rem;">
+                        <td colspan="18" style="text-align: center; padding: 3rem;">
                             <i class="fas fa-inbox" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
                             <p style="color: #999; font-size: 1.1rem;">Nenhuma solicitação encontrada</p>
                             <p style="color: #ccc; font-size: 0.9rem;">Crie uma nova solicitação para começar</p>

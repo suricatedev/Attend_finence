@@ -7,7 +7,8 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: url('#') center/cover no-repeat;
+    background: #1a1a1a center/cover no-repeat;
+    background-attachment: fixed;
     height: 100vh;
     display: flex;
     justify-content: center;
@@ -16,6 +17,7 @@ body {
     padding: 0;
     box-sizing: border-box;
     overflow: hidden;
+    transition: background-image 0.5s ease-in-out;
 }
 
 /* Vídeo de background (para quando selecionado no script) */
@@ -27,7 +29,12 @@ body {
     height: 100%;
     object-fit: cover;
     z-index: -1;
-    /* display: none; <-- REMOVIDO */
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.bg-video.playing {
+    opacity: 1;
 }
 
 /* Container principal centralizado */

@@ -32,6 +32,7 @@ class Solicitacoes(models.Model):
     anexo = models.FileField(upload_to = 'anexos/', blank = True, null = True)
     tempo_criacao = models.TimeField()
     tempo_fila =  models.TimeField()
+    data_entrada_status = models.DateTimeField(auto_now_add=True, null=True, blank=True, verbose_name="Data de Entrada no Status Atual")
     prioridade = models.CharField(max_length=20, choices=PRIORIDADE_CHOICES, default='baixa')
     servico = models.ForeignKey('servicos.Servico', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Serviço")
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='casual', verbose_name="Tipo de Solicitação")
@@ -43,6 +44,8 @@ class Solicitacoes(models.Model):
     valor_fluvial = models.FloatField(default=0.0, verbose_name="Valor Fluvial")
     valor_outros = models.FloatField(default=0.0, verbose_name="Valor Outros")
     valor_receita = models.FloatField(default=0.0, verbose_name="Valor de Receita")
+    valor_em_rota = models.FloatField(default=0.0, verbose_name="Valor EM ROTA")
+    descricao_em_rota = models.TextField(blank=True, null=True, verbose_name="Descrição do Pagamento EM ROTA")
 
     def __str__(self):
         return f"{self.titulo} - {self.status}"

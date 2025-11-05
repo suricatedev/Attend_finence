@@ -338,6 +338,37 @@ class KanbanManager {
                     card.status = newStatus;
                     card.updatedAt = new Date();
                     
+                    // ⚠️ IMPORTANTE: Atualizar data-entry-time para reiniciar o contador
+                    // Buscar o card no DOM após renderização
+                    setTimeout(() => {
+                        const cardElement = document.querySelector(`[data-card-id="${cardId}"]`);
+                        if (cardElement) {
+                            const cardTimeElement = cardElement.querySelector('.card-time');
+                            if (cardTimeElement) {
+                                const now = new Date();
+                                const timeString = now.getFullYear() + '-' + 
+                                    String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                                    String(now.getDate()).padStart(2, '0') + ' ' + 
+                                    String(now.getHours()).padStart(2, '0') + ':' + 
+                                    String(now.getMinutes()).padStart(2, '0') + ':' + 
+                                    String(now.getSeconds()).padStart(2, '0');
+                                cardTimeElement.setAttribute('data-entry-time', timeString);
+                                cardTimeElement.removeAttribute('data-creation-time'); // Remover atributo antigo
+                                
+                                // Atualizar o tempo imediatamente para mostrar 0min
+                                const timeSpan = cardTimeElement.querySelector('.queue-time');
+                                if (timeSpan) {
+                                    timeSpan.textContent = '0min';
+                                }
+                                
+                                // Recalcular o tempo
+                                if (typeof calculateQueueTime === 'function') {
+                                    calculateQueueTime();
+                                }
+                            }
+                        }
+                    }, 100);
+                    
                     this.renderCards();
                     this.saveCards();
                     

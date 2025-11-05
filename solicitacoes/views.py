@@ -50,6 +50,8 @@ def receber_dados(request):
                 valor_hospedagem = 0.0
                 valor_fluvial = 0.0
                 valor_outros = 0.0
+                valor_em_rota = limpar_valor_monetario(request.POST.get('route_valor_em_rota', '').strip())
+                descricao_em_rota = request.POST.get('route_descricao_em_rota', '').strip()
                 valor_receita = limpar_valor_monetario(request.POST.get('route_valor_receita', '').strip())
             else:  # Casual
                 nome_do_recebedor = request.POST.get('casual_recebedor', '').strip()
@@ -137,22 +139,31 @@ def receber_dados(request):
                     
                     print(f"🔍 DEBUG Em Rota - Item {i} (ordem {ordem_atual}): ID='{route_id}', Valor='{route_valor_raw}', Servico='{route_servico_id}'")
                     
-                    if route_id:  # Se há ID, deve ter valor e serviço
-                        # Validação: se ID está preenchido, valor e serviço são obrigatórios
-                        if not route_valor_raw:
-                            messages.error(request, f'Para o ID {route_id}, o campo "Valor" é obrigatório.')
-                            return redirect('/solicitacoes/home/')
-                        
+                    if route_id:  # Se há ID, deve ter serviço (valor é opcional)
+                        # Validação: se ID está preenchido, serviço é obrigatório
                         if not route_servico_id:
                             messages.error(request, f'Para o ID {route_id}, o campo "Serviço" é obrigatório.')
                             return redirect('/solicitacoes/home/')
                         
-                        # Limpar valor - mesmo tratamento do Casual
-                        valor_item = limpar_valor_monetario(route_valor_raw)
+                        # Limpar valor - mesmo tratamento do Casual (opcional)
+                        valor_item = limpar_valor_monetario(route_valor_raw) if route_valor_raw else 0.0
                         print(f"🔍 DEBUG Em Rota - Item {i} valor processado: {valor_item}")
                         
+                        # Se não há valor de atividade, calcular a partir dos valores detalhados
                         if valor_item <= 0:
-                            messages.error(request, f'O valor do ID {route_id} deve ser maior que zero.')
+                            valor_detalhados = valor_km + valor_pedagio + valor_hospedagem + valor_fluvial + valor_outros
+                            if valor_detalhados > 0:
+                                valor_item = valor_detalhados
+                                print(f"🔍 DEBUG Em Rota - Item {i} valor calculado a partir dos detalhados: {valor_item}")
+                            else:
+                                # Se não há valor de atividade nem valores detalhados, permitir mas com valor 0
+                                print(f"⚠️ DEBUG Em Rota - Item {i} sem valor de atividade nem valores detalhados")
+                                valor_item = 0.0
+                        
+                        # Verificar se pelo menos um valor (atividade ou detalhados) foi preenchido
+                        total_valores = valor_item + valor_km + valor_pedagio + valor_hospedagem + valor_fluvial + valor_outros
+                        if total_valores <= 0:
+                            messages.error(request, f'Para o ID {route_id}, preencha pelo menos um valor (Atividade ou algum custo adicional).')
                             return redirect('/solicitacoes/home/')
                         
                         # Buscar serviço
@@ -192,42 +203,65 @@ def receber_dados(request):
                 tickets_rota = [item['ticket'] for item in itens_rota if item['ticket']]
                 tickets_existentes = []
                 for ticket in tickets_rota:
+                    # Verificar se existe como ticket principal em Solicitacoes
                     if Solicitacoes.objects.filter(ticket=ticket).exists():
                         solicitacao_existente = Solicitacoes.objects.filter(ticket=ticket).first()
-                        # Obter o tipo de forma segura
                         if solicitacao_existente:
                             tipo_dict = dict(Solicitacoes.TIPO_CHOICES)
                             tipo_existente = tipo_dict.get(solicitacao_existente.tipo, solicitacao_existente.tipo)
-                        else:
-                            tipo_existente = "N/A"
-                        tickets_existentes.append(f"{ticket} (Tipo: {tipo_existente})")
+                            tickets_existentes.append(f"{ticket} (Solicitação {tipo_existente})")
+                    
+                    # Verificar se existe como ticket_item em SolicitacaoRotaItem
+                    elif SolicitacaoRotaItem.objects.filter(ticket_item=ticket).exists():
+                        item_existente = SolicitacaoRotaItem.objects.filter(ticket_item=ticket).first()
+                        if item_existente and item_existente.solicitacao:
+                            tipo_dict = dict(Solicitacoes.TIPO_CHOICES)
+                            tipo_existente = tipo_dict.get(item_existente.solicitacao.tipo, item_existente.solicitacao.tipo)
+                            tickets_existentes.append(f"{ticket} (Item de rota {tipo_existente})")
                 
                 if tickets_existentes:
                     tickets_str = ", ".join(tickets_existentes)
                     messages.error(
                         request, 
-                        f'Os seguintes IDs já estão cadastrados no sistema: {tickets_str}. '
+                        f'⚠️ Os seguintes IDs já estão cadastrados no sistema: {tickets_str}. '
                         f'Por favor, use IDs diferentes para os itens da rota.'
                     )
                     print(f"❌ ERRO: IDs já existem no banco de dados: {tickets_existentes}")
                     return redirect('/solicitacoes/home/')
                 
-                # Verificar se o ticket principal já existe
+                # Verificar se o ticket principal já existe (verificação adicional)
                 if Solicitacoes.objects.filter(ticket=ticket_principal).exists():
                     solicitacao_existente = Solicitacoes.objects.filter(ticket=ticket_principal).first()
-                    # Obter o tipo de forma segura
                     if solicitacao_existente:
                         tipo_dict = dict(Solicitacoes.TIPO_CHOICES)
                         tipo_existente = tipo_dict.get(solicitacao_existente.tipo, solicitacao_existente.tipo)
+                        messages.error(
+                            request, 
+                            f'⚠️ O ID principal "{ticket_principal}" já está cadastrado no sistema como solicitação "{tipo_existente}"! '
+                            f'Por favor, use um ID diferente.'
+                        )
                     else:
-                        tipo_existente = "N/A"
-                    messages.error(
-                        request, 
-                        f'O ID principal "{ticket_principal}" já está cadastrado no sistema! '
-                        f'Por favor, use um ID diferente. (Tipo existente: {tipo_existente})'
-                    )
+                        messages.error(
+                            request, 
+                            f'⚠️ O ID principal "{ticket_principal}" já está cadastrado no sistema! '
+                            f'Por favor, use um ID diferente.'
+                        )
                     print(f"❌ ERRO: Ticket principal '{ticket_principal}' já existe no banco de dados!")
                     return redirect('/solicitacoes/home/')
+                
+                # Verificar se ticket principal existe como item de rota
+                if SolicitacaoRotaItem.objects.filter(ticket_item=ticket_principal).exists():
+                    item_existente = SolicitacaoRotaItem.objects.filter(ticket_item=ticket_principal).first()
+                    if item_existente and item_existente.solicitacao:
+                        tipo_dict = dict(Solicitacoes.TIPO_CHOICES)
+                        tipo_existente = tipo_dict.get(item_existente.solicitacao.tipo, item_existente.solicitacao.tipo)
+                        messages.error(
+                            request, 
+                            f'⚠️ O ID principal "{ticket_principal}" já está cadastrado como item de rota em uma solicitação "{tipo_existente}"! '
+                            f'Por favor, use um ID diferente.'
+                        )
+                        print(f"❌ ERRO: Ticket principal '{ticket_principal}' já existe como item de rota!")
+                        return redirect('/solicitacoes/home/')
                 
                 # Gerar título automaticamente baseado nos IDs da rota
                 route_tickets = [item['ticket'] for item in itens_rota]
@@ -252,6 +286,7 @@ def receber_dados(request):
                     anexo=anexo,
                     tempo_criacao=tempo_criacao_auto,
                     tempo_fila=tempo_fila_inicial,
+                    data_entrada_status=timezone.now(),  # Data de entrada no status inicial
                     prioridade=prioridade,
                     servico=itens_rota[0]['servico'],  # Serviço principal (primeiro item)
                     tipo='em_rota',
@@ -260,7 +295,9 @@ def receber_dados(request):
                     valor_hospedagem=valor_hospedagem,
                     valor_fluvial=valor_fluvial,
                     valor_outros=valor_outros,
-                    valor_receita=valor_receita
+                    valor_receita=valor_receita,
+                    valor_em_rota=valor_em_rota,
+                    descricao_em_rota=descricao_em_rota
                 )
                 
                 print(f"✅ Solicitação Em Rota criada com sucesso! ID: {solicitacao.id}")
@@ -294,23 +331,66 @@ def receber_dados(request):
                     ticket_existente = Solicitacoes.objects.filter(ticket=id).exists()
                     if ticket_existente:
                         solicitacao_existente = Solicitacoes.objects.filter(ticket=id).first()
-                        # Obter o tipo de forma segura
                         if solicitacao_existente:
                             tipo_dict = dict(Solicitacoes.TIPO_CHOICES)
                             tipo_existente = tipo_dict.get(solicitacao_existente.tipo, solicitacao_existente.tipo)
+                            messages.error(
+                                request, 
+                                f'⚠️ O ID "{id}" já está cadastrado no sistema como solicitação "{tipo_existente}"! '
+                                f'Por favor, use um ID diferente.'
+                            )
                         else:
-                            tipo_existente = "N/A"
-                        messages.error(
-                            request, 
-                            f'O ID "{id}" já está cadastrado no sistema! '
-                            f'Por favor, use um ID diferente. (Tipo existente: {tipo_existente})'
-                        )
+                            messages.error(
+                                request, 
+                                f'⚠️ O ID "{id}" já está cadastrado no sistema! '
+                                f'Por favor, use um ID diferente.'
+                            )
                         print(f"❌ ERRO: ID '{id}' já existe no banco de dados!")
                         return redirect('/solicitacoes/home/')
+                    
+                    # Verificar se existe como item de rota
+                    if SolicitacaoRotaItem.objects.filter(ticket_item=id).exists():
+                        item_existente = SolicitacaoRotaItem.objects.filter(ticket_item=id).first()
+                        if item_existente and item_existente.solicitacao:
+                            tipo_dict = dict(Solicitacoes.TIPO_CHOICES)
+                            tipo_existente = tipo_dict.get(item_existente.solicitacao.tipo, item_existente.solicitacao.tipo)
+                            messages.error(
+                                request, 
+                                f'⚠️ O ID "{id}" já está cadastrado como item de rota em uma solicitação "{tipo_existente}"! '
+                                f'Por favor, use um ID diferente.'
+                            )
+                            print(f"❌ ERRO: ID '{id}' já existe como item de rota!")
+                            return redirect('/solicitacoes/home/')
                 
                 # Limpar valor usando função auxiliar
                 valor = limpar_valor_monetario(valor_raw)
-                print(f"🔍 DEBUG - Valor processado: {valor}")
+                print(f"🔍 DEBUG Casual - Valor recebido do formulário: '{valor_raw}' -> processado: {valor}")
+                
+                # Se o valor for 0 ou não foi calculado, calcular a partir dos valores detalhados
+                if valor == 0.0 or not valor_raw or valor_raw.strip() == '':
+                    # Calcular valor total a partir dos valores detalhados + receita
+                    valor_calculado = (
+                        valor_km + valor_pedagio + valor_hospedagem + 
+                        valor_fluvial + valor_outros + valor_receita
+                    )
+                    print(f"🔍 DEBUG Casual - Valores detalhados: KM={valor_km}, Pedágio={valor_pedagio}, Hospedagem={valor_hospedagem}, Fluvial={valor_fluvial}, Outros={valor_outros}, Receita={valor_receita}")
+                    print(f"🔍 DEBUG Casual - Valor calculado a partir dos detalhados: {valor_calculado}")
+                    
+                    if valor_calculado > 0:
+                        valor = valor_calculado
+                        print(f"🔍 DEBUG - Valor recalculado a partir dos detalhados: {valor}")
+                    else:
+                        messages.error(request, 'O valor total da solicitação deve ser maior que zero. Preencha pelo menos um valor detalhado ou o valor de receita.')
+                        print(f"❌ ERRO - Valor calculado é zero ou negativo: {valor_calculado}")
+                        return redirect('/solicitacoes/home/')
+                
+                print(f"🔍 DEBUG - Valor final processado: {valor}")
+                
+                # Validação: valor deve ser maior que zero
+                if valor <= 0:
+                    messages.error(request, 'O valor total da solicitação deve ser maior que zero.')
+                    print(f"❌ ERRO - Valor final é zero ou negativo: {valor}")
+                    return redirect('/solicitacoes/home/')
                 
                 # Buscar o objeto Servico pelo ID
                 servico_obj = None
@@ -347,6 +427,7 @@ def receber_dados(request):
                         anexo=anexo,
                         tempo_criacao=tempo_criacao_auto,
                         tempo_fila=tempo_fila_inicial,
+                        data_entrada_status=timezone.now(),  # Data de entrada no status inicial
                         prioridade=prioridade,
                         servico=servico_obj,
                         tipo='casual',
@@ -447,7 +528,9 @@ def obter_itens_rota(request, solicitacao_id):
         return JsonResponse({
             'success': True,
             'itens': itens_data,
-            'valor_total': f'R$ {solicitacao.valor:.2f}'
+            'valor_total': f'R$ {solicitacao.valor:.2f}',
+            'valor_em_rota': f'R$ {solicitacao.valor_em_rota:.2f}',
+            'descricao_em_rota': solicitacao.descricao_em_rota or ''
         })
         
     except Solicitacoes.DoesNotExist:
@@ -460,6 +543,119 @@ def obter_itens_rota(request, solicitacao_id):
         return JsonResponse({
             'success': False,
             'message': f'Erro ao obter itens da rota: {str(e)}'
+        }, status=500)
+
+@require_http_methods(["GET"])
+def obter_valores_detalhados_casual(request, solicitacao_id):
+    """
+    View para obter os valores detalhados de uma solicitação Casual via AJAX
+    """
+    try:
+        solicitacao = Solicitacoes.objects.select_related('servico').get(id=solicitacao_id)
+        
+        # Verificar se é uma solicitação "Casual"
+        if solicitacao.tipo != 'casual':
+            return JsonResponse({
+                'success': False,
+                'message': 'Esta solicitação não é do tipo "Casual"'
+            }, status=400)
+        
+        # Serializar os valores detalhados
+        valores_detalhados = {
+            'valor_km': f'R$ {solicitacao.valor_km:.2f}',
+            'valor_pedagio': f'R$ {solicitacao.valor_pedagio:.2f}',
+            'valor_hospedagem': f'R$ {solicitacao.valor_hospedagem:.2f}',
+            'valor_fluvial': f'R$ {solicitacao.valor_fluvial:.2f}',
+            'valor_outros': f'R$ {solicitacao.valor_outros:.2f}',
+            'valor_receita': f'R$ {solicitacao.valor_receita:.2f}',
+            'valor_total': f'R$ {solicitacao.valor:.2f}',
+            'servico': solicitacao.servico.nome if solicitacao.servico else 'N/A'
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'valores': valores_detalhados
+        })
+        
+    except Solicitacoes.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Solicitação não encontrada'
+        }, status=404)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Erro ao obter valores detalhados: {str(e)}'
+        }, status=500)
+
+@require_http_methods(["GET"])
+def obter_detalhes_completos(request, solicitacao_id):
+    """
+    View para obter detalhes completos de uma solicitação (para relatório)
+    Inclui todos os valores detalhados e informações completas
+    """
+    try:
+        solicitacao = Solicitacoes.objects.select_related('servico', 'nome_solicitante').prefetch_related('itens_rota__servico').get(id=solicitacao_id)
+        
+        # Informações básicas
+        dados = {
+            'id': solicitacao.id,
+            'ticket': solicitacao.ticket,
+            'titulo': solicitacao.titulo,
+            'solicitante': str(solicitacao.nome_solicitante),
+            'recebedor': solicitacao.nome_do_recebedor,
+            'servico': solicitacao.servico.nome if solicitacao.servico else 'N/A',
+            'tipo': solicitacao.tipo,
+            'status': solicitacao.status,
+            'prioridade': solicitacao.prioridade,
+            'descricao': solicitacao.descricao or 'N/A',
+            'data_criacao': solicitacao.data_de_criacao.strftime('%d/%m/%Y') if solicitacao.data_de_criacao else 'N/A',
+            'data_pagamento': solicitacao.data_de_pagamento.strftime('%d/%m/%Y') if solicitacao.data_de_pagamento else 'N/A',
+            'valor_total': f'R$ {solicitacao.valor:.2f}',
+            'valor_receita': f'R$ {solicitacao.valor_receita:.2f}',
+            'valor_em_rota': f'R$ {solicitacao.valor_em_rota:.2f}',
+            'descricao_em_rota': solicitacao.descricao_em_rota or '',
+            # Valores detalhados (sempre presentes)
+            'valor_km': f'R$ {solicitacao.valor_km:.2f}',
+            'valor_pedagio': f'R$ {solicitacao.valor_pedagio:.2f}',
+            'valor_hospedagem': f'R$ {solicitacao.valor_hospedagem:.2f}',
+            'valor_fluvial': f'R$ {solicitacao.valor_fluvial:.2f}',
+            'valor_outros': f'R$ {solicitacao.valor_outros:.2f}',
+        }
+        
+        # Se for "Em Rota", incluir itens da rota
+        if solicitacao.tipo == 'em_rota':
+            itens_rota = solicitacao.itens_rota.all().order_by('ordem')
+            dados['itens_rota'] = []
+            for item in itens_rota:
+                dados['itens_rota'].append({
+                    'ordem': item.ordem,
+                    'ticket_item': item.ticket_item,
+                    'servico': item.servico.nome if item.servico else 'N/A',
+                    'valor': f'R$ {item.valor:.2f}',
+                    'valor_km': f'R$ {item.valor_km:.2f}',
+                    'valor_pedagio': f'R$ {item.valor_pedagio:.2f}',
+                    'valor_hospedagem': f'R$ {item.valor_hospedagem:.2f}',
+                    'valor_fluvial': f'R$ {item.valor_fluvial:.2f}',
+                    'valor_outros': f'R$ {item.valor_outros:.2f}',
+                })
+        
+        return JsonResponse({
+            'success': True,
+            'dados': dados
+        })
+        
+    except Solicitacoes.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Solicitação não encontrada'
+        }, status=404)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Erro ao obter detalhes: {str(e)}'
         }, status=500)
  
 @require_http_methods(["POST"])
@@ -507,7 +703,13 @@ def atualizar_status(request):
         status_db = status_mapping.get(new_status, new_status)
         
         # Buscar e atualizar solicitação
+        from django.utils import timezone
         solicitacao = Solicitacoes.objects.get(id=card_id)
+        
+        # Se o status mudou, atualizar data_entrada_status
+        if solicitacao.status != status_db:
+            solicitacao.data_entrada_status = timezone.now()
+        
         solicitacao.status = status_db
         solicitacao.save()
         

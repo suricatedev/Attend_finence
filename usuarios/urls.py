@@ -10,4 +10,8 @@ urlpatterns = [
     path("editar-usuario/<int:user_id>/", views.EditarUsuario.as_view(), name="editar_usuario"),
     path("deletar-usuario/<int:user_id>/", views.DeletarUsuario.as_view(), name="deletar_usuario"),
     path("equipes/", views.Equipes.as_view(), name="equipes"),
+    # Recuperação de senha
+    path("recuperar-senha/", views.SolicitarRecuperacaoSenha.as_view(), name="solicitar_recuperacao_senha"),
+    path("validar-codigo/", views.ValidarCodigoRecuperacao.as_view(), name="validar_codigo_recuperacao"),
+    path("redefinir-senha/", views.RedefinirSenha.as_view(), name="redefinir_senha"),
 ]
