@@ -1,0 +1,121 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redefinir Senha - Attend Finance</title>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <video id="bgVideo" class="bg-video" muted loop playsinline autoplay style="display: block;"></video>
+    
+    <div class="main-container">
+        <div class="login-container">
+            <div class="login-box">
+                <form class="form" method="POST" action="{% url 'redefinir_senha' %}">
+                    {% csrf_token %}
+                    <div class="logo">
+                        <img src="{% static 'img/logo.png' %}" alt="Logo" class="logo-img">
+                    </div>
+                    <h1 class="header">Nova Senha</h1>
+                    <p class="subtitle">Defina sua nova senha</p>
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 8px; background: {% if message.tags == 'error' %}#f8d7da{% elif message.tags == 'success' %}#d4edda{% else %}#d1ecf1{% endif %}; color: {% if message.tags == 'error' %}#721c24{% elif message.tags == 'success' %}#155724{% else %}#0c5460{% endif %}; border: 1px solid {% if message.tags == 'error' %}#f5c6cb{% elif message.tags == 'success' %}#c3e6cb{% else %}#bee5eb{% endif %};">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <div class="input-group">
+                        <label class="input-label">Nova Senha</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" name="new_password" id="newPassword" placeholder="Digite sua nova senha" class="input" required autofocus minlength="6" />
+                            <button type="button" class="password-toggle" id="toggleNewPassword" aria-label="Mostrar/Ocultar senha">
+                                <i class="fas fa-eye" id="eyeIconNew"></i>
+                            </button>
+                        </div>
+                        <small style="color: #999; font-size: 0.8rem; margin-top: 0.25rem; display: block;">Mínimo de 6 caracteres</small>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">Confirmar Senha</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" name="confirm_password" id="confirmPassword" placeholder="Confirme sua nova senha" class="input" required minlength="6" />
+                            <button type="button" class="password-toggle" id="toggleConfirmPassword" aria-label="Mostrar/Ocultar senha">
+                                <i class="fas fa-eye" id="eyeIconConfirm"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="button">
+                        <i class="fas fa-key"></i>
+                        Redefinir Senha
+                    </button>
+                    
+                    <div style="text-align: center; margin-top: 1.5rem;">
+                        <a href="{% url 'login' %}" style="color: #FFCB57; text-decoration: none; font-size: 0.9rem;">
+                            <i class="fas fa-arrow-left"></i> Voltar para o login
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+<script>
+    // Script de background
+    (function() {
+        const immediateImage = "{% static 'img/back04.png' %}";
+        document.body.style.backgroundImage = `url('${immediateImage}')`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+        document.body.style.backgroundRepeat = 'no-repeat';
+        document.body.style.backgroundColor = '#1a1a1a';
+    })();
+    
+    // Toggle para nova senha
+    const toggleNewPassword = document.getElementById('toggleNewPassword');
+    const newPasswordInput = document.getElementById('newPassword');
+    const eyeIconNew = document.getElementById('eyeIconNew');
+    
+    if (toggleNewPassword && newPasswordInput && eyeIconNew) {
+        toggleNewPassword.addEventListener('click', function() {
+            const isPassword = newPasswordInput.type === 'password';
+            if (isPassword) {
+                newPasswordInput.type = 'text';
+                eyeIconNew.classList.remove('fa-eye');
+                eyeIconNew.classList.add('fa-eye-slash');
+            } else {
+                newPasswordInput.type = 'password';
+                eyeIconNew.classList.remove('fa-eye-slash');
+                eyeIconNew.classList.add('fa-eye');
+            }
+        });
+    }
+    
+    // Toggle para confirmar senha
+    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const eyeIconConfirm = document.getElementById('eyeIconConfirm');
+    
+    if (toggleConfirmPassword && confirmPasswordInput && eyeIconConfirm) {
+        toggleConfirmPassword.addEventListener('click', function() {
+            const isPassword = confirmPasswordInput.type === 'password';
+            if (isPassword) {
+                confirmPasswordInput.type = 'text';
+                eyeIconConfirm.classList.remove('fa-eye');
+                eyeIconConfirm.classList.add('fa-eye-slash');
+            } else {
+                confirmPasswordInput.type = 'password';
+                eyeIconConfirm.classList.remove('fa-eye-slash');
+                eyeIconConfirm.classList.add('fa-eye');
+            }
+        });
+    }
+</script>
+

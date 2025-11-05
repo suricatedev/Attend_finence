@@ -129,3 +129,24 @@ STATICFILES_FINDERS = [
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Configurações de Email
+# Se EMAIL_HOST_USER não estiver configurado, usa console backend para desenvolvimento
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+
+if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+    # Configurações de produção (quando email está configurado)
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+    EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+    EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+    DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
+    print('✅ Email SMTP configurado para envio real.')
+else:
+    # Modo desenvolvimento: emails são exibidos no console
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    DEFAULT_FROM_EMAIL = 'noreply@attendfinance.com'
+    print('⚠️ ATENÇÃO: Email SMTP não configurado. Usando console backend (emails aparecerão no terminal).')
+    print('   Para enviar emails reais, configure EMAIL_HOST_USER e EMAIL_HOST_PASSWORD no arquivo .env')
+    print('   Veja instruções em: CONFIGURAR_EMAIL.md')

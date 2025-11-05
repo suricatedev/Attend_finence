@@ -19,6 +19,156 @@
 {% endblock %}
 
 {% block content %}
+<!-- Mensagens do Django -->
+{% if messages %}
+<style>
+    .messages-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        max-width: 400px;
+    }
+    
+    .messages-container .alert {
+        margin-bottom: 10px;
+        padding: 1rem 1.25rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: slideInRight 0.3s ease-out;
+    }
+    
+    .messages-container .alert-error {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        color: #721c24;
+        border-left: 4px solid #dc3545;
+    }
+    
+    .messages-container .alert-success {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        color: #155724;
+        border-left: 4px solid #28a745;
+    }
+    
+    .messages-container .alert-warning {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+        color: #856404;
+        border-left: 4px solid #ffc107;
+    }
+    
+    .messages-container .alert-info {
+        background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+        color: #0c5460;
+        border-left: 4px solid #17a2b8;
+    }
+    
+    .messages-container .alert-content {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .messages-container .alert-icon {
+        flex-shrink: 0;
+        font-size: 1.25rem;
+    }
+    
+    .messages-container .alert-text {
+        flex: 1;
+    }
+    
+    .messages-container .alert-text strong {
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+    
+    .messages-container .close-message {
+        background: none;
+        border: none;
+        color: inherit;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0;
+        margin-left: 0.5rem;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+    
+    .messages-container .close-message:hover {
+        opacity: 1;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+</style>
+
+<div class="messages-container">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible">
+        <div class="alert-content">
+            <div class="alert-icon">
+                {% if message.tags == 'error' %}
+                <i class="fas fa-exclamation-circle"></i>
+                {% elif message.tags == 'success' %}
+                <i class="fas fa-check-circle"></i>
+                {% elif message.tags == 'warning' %}
+                <i class="fas fa-exclamation-triangle"></i>
+                {% else %}
+                <i class="fas fa-info-circle"></i>
+                {% endif %}
+            </div>
+            <div class="alert-text">
+                <strong>
+                    {% if message.tags == 'error' %}Erro
+                    {% elif message.tags == 'success' %}Sucesso
+                    {% elif message.tags == 'warning' %}Aviso
+                    {% else %}Informação{% endif %}:
+                </strong>
+                <span>{{ message }}</span>
+            </div>
+            <button type="button" class="close-message" onclick="this.closest('.alert').remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    // Auto-remover mensagens após 5 segundos
+    document.addEventListener('DOMContentLoaded', function() {
+        const messages = document.querySelectorAll('.messages-container .alert');
+        messages.forEach(function(msg) {
+            setTimeout(function() {
+                msg.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(function() {
+                    msg.remove();
+                }, 300);
+            }, 5000);
+        });
+    });
+</script>
+{% endif %}
+
 <!-- Kanban Board -->
 <div class="kanban-board" id="kanbanBoard">
     <!-- Coluna Pendente -->
@@ -85,7 +235,7 @@
                             <span class="info-value">{{ solicitacao.data_de_pagamento|date:"d/m/Y" }}</span>
                         </div>
                     </div>
-                    <div class="card-time" data-creation-time="{{ solicitacao.data_de_criacao|date:'Y-m-d' }} {{ solicitacao.tempo_criacao|time:'H:i:s' }}">
+                    <div class="card-time" data-entry-time="{% if solicitacao.data_entrada_status %}{{ solicitacao.data_entrada_status|date:'Y-m-d H:i:s' }}{% else %}{{ solicitacao.data_de_criacao|date:'Y-m-d' }} {{ solicitacao.tempo_criacao|time:'H:i:s' }}{% endif %}">
                         <i class="fas fa-clock"></i>
                         <span class="queue-time">Calculando...</span>
                     </div>
@@ -167,7 +317,7 @@
                             <span class="info-value">{{ solicitacao.data_de_pagamento|date:"d/m/Y" }}</span>
                         </div>
                     </div>
-                    <div class="card-time" data-creation-time="{{ solicitacao.data_de_criacao|date:'Y-m-d' }} {{ solicitacao.tempo_criacao|time:'H:i:s' }}">
+                    <div class="card-time" data-entry-time="{% if solicitacao.data_entrada_status %}{{ solicitacao.data_entrada_status|date:'Y-m-d H:i:s' }}{% else %}{{ solicitacao.data_de_criacao|date:'Y-m-d' }} {{ solicitacao.tempo_criacao|time:'H:i:s' }}{% endif %}">
                         <i class="fas fa-clock"></i>
                         <span class="queue-time">Calculando...</span>
                     </div>
@@ -249,7 +399,7 @@
                             <span class="info-value">{{ solicitacao.data_de_pagamento|date:"d/m/Y" }}</span>
                         </div>
                     </div>
-                    <div class="card-time" data-creation-time="{{ solicitacao.data_de_criacao|date:'Y-m-d' }} {{ solicitacao.tempo_criacao|time:'H:i:s' }}">
+                    <div class="card-time" data-entry-time="{% if solicitacao.data_entrada_status %}{{ solicitacao.data_entrada_status|date:'Y-m-d H:i:s' }}{% else %}{{ solicitacao.data_de_criacao|date:'Y-m-d' }} {{ solicitacao.tempo_criacao|time:'H:i:s' }}{% endif %}">
                         <i class="fas fa-clock"></i>
                         <span class="queue-time">Calculando...</span>
                     </div>

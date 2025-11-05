@@ -4,20 +4,28 @@
 
 // Flag para evitar registrar listeners duplicados
 let modalListenersSetup = false;
-// Função para calcular tempo na fila
+// Função para calcular tempo na fila (a partir da entrada no status atual)
 function calculateQueueTime() {
-    const timeElements = document.querySelectorAll('.card-time[data-creation-time]');
+    // Buscar por data-entry-time (preferencial) ou data-creation-time (fallback)
+    const timeElements = document.querySelectorAll('.card-time[data-entry-time], .card-time[data-creation-time]');
     
     timeElements.forEach(element => {
-        const creationTime = element.getAttribute('data-creation-time');
-        if (creationTime) {
-            const creationDate = new Date(creationTime);
+        // Priorizar data-entry-time (quando entrou no status atual)
+        let entryTime = element.getAttribute('data-entry-time');
+        if (!entryTime) {
+            // Fallback para data-creation-time (compatibilidade)
+            entryTime = element.getAttribute('data-creation-time');
+        }
+        
+        if (entryTime) {
+            // Converter para Date object
+            const entryDate = new Date(entryTime);
             const now = new Date();
-            let diffMs = now - creationDate;
+            let diffMs = now - entryDate;
             
             // ✅ GARANTIR QUE NUNCA SEJA NEGATIVO
             if (diffMs < 0) {
-                diffMs = 0; // Se a data de criação está no futuro, usar 0
+                diffMs = 0; // Se a data está no futuro, usar 0
             }
             
             // Converter para minutos
@@ -90,6 +98,10 @@ async function openCardDetailModal(card) {    const modal = document.getElementB
     if (routeItemsSection) {
         routeItemsSection.remove();
     }
+    const casualValoresSection = document.getElementById('modal-casual-valores');
+    if (casualValoresSection) {
+        casualValoresSection.remove();
+    }
     
     // Restaurar campo "Valor" se estava oculto
     const valorElement = document.getElementById('modal-valor');
@@ -138,15 +150,17 @@ async function extractCardData(card) {
     const title = card.querySelector('.card-title');
     data.titulo = title ? title.textContent : 'Sem título';
     
-    // Verificar se é uma solicitação "Em Rota"
+    // Verificar se é uma solicitação "Em Rota" ou "Casual"
     const tipo = card.getAttribute('data-tipo');
     const tituloTexto = data.titulo ? data.titulo.toLowerCase() : '';
     // Detectar se é "Em Rota" pelo atributo data-tipo ou pelo título
     data.isEmRota = tipo === 'em_rota' || tituloTexto.includes('em rota') || tituloTexto.includes('em_rota');
-    console.log('🔍 Verificando se é Em Rota:', {
+    data.isCasual = tipo === 'casual' || tituloTexto.includes('casual');
+    console.log('🔍 Verificando tipo de solicitação:', {
         tipo: tipo,
         titulo: tituloTexto,
-        isEmRota: data.isEmRota
+        isEmRota: data.isEmRota,
+        isCasual: data.isCasual
     });
     
     // ✅ Extrair ID (primeiro info-item que não tem label - é o ticket)
@@ -264,6 +278,16 @@ async function extractCardData(card) {
                             if (result.valor_total) {
                                 data.valor = result.valor_total;
                             }
+                            
+                            // Adicionar valor EM ROTA e descrição se disponível
+                            if (result.valor_em_rota) {
+                                data.valorEmRota = result.valor_em_rota;
+                                console.log('✅ Valor EM ROTA adicionado:', data.valorEmRota);
+                            }
+                            if (result.descricao_em_rota) {
+                                data.descricaoEmRota = result.descricao_em_rota;
+                                console.log('✅ Descrição EM ROTA adicionada:', data.descricaoEmRota);
+                            }
                         } else {
                             console.warn('⚠️ Nenhum item retornado na resposta AJAX ou success=false');
                             if (!data.itensRota) data.itensRota = [];
@@ -365,10 +389,67 @@ async function extractCardData(card) {
         
         console.log('✅ Itens extraídos (DOM):', data.itensRota);
         }
+    } else if (data.isCasual) {
+        // Se for "Casual", buscar valores detalhados via AJAX
+        console.log('🔍 É solicitação Casual - buscando valores detalhados...');
+        
+        // Tentar vários atributos para encontrar o ID
+        const solicitacaoId = card.getAttribute('data-card-id') ||
+                             card.getAttribute('data-solicitacao-id') ||
+                             card.getAttribute('id')?.replace('card-', '') ||
+                             card.closest('.card')?.getAttribute('data-card-id');
+        
+        console.log('🔍 ID da solicitação Casual encontrado:', solicitacaoId);
+        
+        if (solicitacaoId) {
+            try {
+                // Buscar CSRF token
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                                 document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+                
+                console.log('📡 Fazendo requisição AJAX para valores Casual:', `/solicitacoes/obter-valores-casual/${solicitacaoId}/`);
+                
+                const response = await fetch(`/solicitacoes/obter-valores-casual/${solicitacaoId}/`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('📦 Valores Casual recebidos:', result);
+                    
+                    if (result.success && result.valores) {
+                        console.log('✅ Valores detalhados Casual obtidos via AJAX');
+                        data.valoresDetalhados = result.valores;
+                        // Atualizar valor total também
+                        if (result.valores.valor_total) {
+                            data.valor = result.valores.valor_total;
+                        }
+                    } else {
+                        console.warn('⚠️ Nenhum valor retornado na resposta AJAX');
+                        data.valoresDetalhados = null;
+                    }
+                } else {
+                    const errorText = await response.text();
+                    console.warn('⚠️ Erro ao buscar valores Casual via AJAX:', response.status, errorText);
+                    data.valoresDetalhados = null;
+                }
+            } catch (error) {
+                console.error('❌ Erro na requisição AJAX para valores Casual:', error);
+                data.valoresDetalhados = null;
+            }
+        } else {
+            console.warn('⚠️ ID da solicitação Casual não encontrado, não é possível buscar valores via AJAX');
+            data.valoresDetalhados = null;
+        }
     } else {
-        console.log('ℹ️ Não é solicitação Em Rota');
+        console.log('ℹ️ Tipo de solicitação não identificado');
     }
-        // Extrair prioridade
+    
+    // Extrair prioridade
     const priority = card.querySelector('.priority');
     data.prioridade = priority ? priority.textContent : 'Média';
     
@@ -528,11 +609,162 @@ function populateCardDetails(data) {
             itemsList.appendChild(itemDiv);
         });
         
+        // Adicionar item "EM ROTA" se houver valor_em_rota
+        if (data.valorEmRota && data.valorEmRota !== 'R$ 0,00' && parseFloat(data.valorEmRota.replace(/[^\d,]/g, '').replace(',', '.')) > 0) {
+            const emRotaItem = document.createElement('div');
+            emRotaItem.className = 'route-item-modal';
+            emRotaItem.style.borderLeft = '4px solid #FF6B6B';
+            
+            const descricaoHTML = data.descricaoEmRota && data.descricaoEmRota.trim() 
+                ? `<div class="route-item-modal-info" style="margin-top: 0.5rem;">
+                    <span class="route-item-modal-label"><i class="fas fa-comment"></i> Descrição:</span>
+                    <span class="route-item-modal-service">${data.descricaoEmRota}</span>
+                </div>`
+                : '';
+            
+            emRotaItem.innerHTML = `
+                <div class="route-item-modal-header">
+                    <div class="route-item-header-left">
+                        <span class="route-item-modal-number" style="background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%);">EM ROTA</span>
+                        <span class="route-item-modal-id" style="background: rgba(255, 107, 107, 0.1);">Forma de Pagamento</span>
+                    </div>
+                    <div class="route-item-header-right">
+                        <span class="route-item-modal-total" style="background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%);">${data.valorEmRota || 'R$ 0,00'}</span>
+                    </div>
+                </div>
+                <div class="route-item-modal-details">
+                    <div class="route-item-modal-main-info">
+                        <div class="route-item-modal-info">
+                            <span class="route-item-modal-label"><i class="fas fa-credit-card"></i> Tipo:</span>
+                            <span class="route-item-modal-service">Pagamento EM ROTA</span>
+                        </div>
+                        ${descricaoHTML}
+                    </div>
+                </div>
+            `;
+            
+            itemsList.appendChild(emRotaItem);
+            console.log('✅ Item EM ROTA adicionado ao modal');
+        }
+        
         routeItemsSection.appendChild(itemsList);
         console.log('✅ Lista de itens adicionada ao modal');
         
+    } else if (data.isCasual && data.valoresDetalhados) {
+        // Para solicitação "Casual", exibir valores detalhados
+        
+        console.log('✅ É solicitação Casual com valores detalhados. Exibindo...');
+        
+        // Mudar o título da seção para "Valores Detalhados"
+        if (valoresStatusSection) {
+            const sectionTitle = valoresStatusSection.querySelector('.section-title');
+            if (sectionTitle) {
+                sectionTitle.innerHTML = '<i class="fas fa-list-alt"></i> Valores Detalhados';
+                console.log('✅ Título da seção alterado para "Valores Detalhados"');
+            }
+        }
+        
+        // ✅ MOSTRAR o campo "Valor Total"
+        if (valorContainer && valorElement) {
+            valorContainer.style.display = '';
+            const valorLabel = valorContainer.querySelector('.detail-label');
+            if (valorLabel) {
+                valorLabel.textContent = 'Valor Total';
+                valorLabel.style.display = '';
+            }
+            valorElement.textContent = data.valoresDetalhados.valor_total || data.valor || 'R$ 0,00';
+            valorElement.style.display = '';
+            console.log('✅ Campo Valor Total configurado:', data.valoresDetalhados.valor_total);
+        }
+        
+        // Remover seção anterior se existir
+        let casualValoresSection = document.getElementById('modal-casual-valores');
+        if (casualValoresSection) {
+            casualValoresSection.remove();
+        }
+        
+        // Criar nova seção de valores detalhados do Casual
+        casualValoresSection = document.createElement('div');
+        casualValoresSection.id = 'modal-casual-valores';
+        casualValoresSection.className = 'route-items-modal-section';
+        
+        if (valoresStatusSection) {
+            // Inserir após o campo Valor Total, mas antes de Prioridade
+            const prioridadeItem = valoresStatusSection.querySelector('.detail-item:nth-of-type(2)');
+            if (prioridadeItem) {
+                valoresStatusSection.insertBefore(casualValoresSection, prioridadeItem);
+            } else {
+                const valorTotalItem = valorContainer;
+                if (valorTotalItem && valorTotalItem.nextSibling) {
+                    valoresStatusSection.insertBefore(casualValoresSection, valorTotalItem.nextSibling);
+                } else {
+                    valoresStatusSection.appendChild(casualValoresSection);
+                }
+            }
+        }
+        
+        // Criar header para os valores detalhados
+        const valoresHeader = document.createElement('div');
+        valoresHeader.className = 'route-items-modal-header';
+        valoresHeader.innerHTML = '<i class="fas fa-coins"></i> <span>Detalhamento de Valores</span>';
+        casualValoresSection.appendChild(valoresHeader);
+        
+        // Criar grid de valores detalhados
+        const valoresGrid = document.createElement('div');
+        valoresGrid.className = 'valores-detalhados-grid-mini';
+        
+        const valores = data.valoresDetalhados;
+        const valoresDetalhados = [];
+        
+        // Construir cards para cada valor detalhado (se diferente de R$ 0,00)
+        if (valores.valor_km && valores.valor_km !== 'R$ 0,00') {
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">KM:</span><span>${valores.valor_km}</span></div>`);
+        }
+        if (valores.valor_pedagio && valores.valor_pedagio !== 'R$ 0,00') {
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Pedágio:</span><span>${valores.valor_pedagio}</span></div>`);
+        }
+        if (valores.valor_hospedagem && valores.valor_hospedagem !== 'R$ 0,00') {
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Hospedagem:</span><span>${valores.valor_hospedagem}</span></div>`);
+        }
+        if (valores.valor_fluvial && valores.valor_fluvial !== 'R$ 0,00') {
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Fluvial:</span><span>${valores.valor_fluvial}</span></div>`);
+        }
+        if (valores.valor_outros && valores.valor_outros !== 'R$ 0,00') {
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Outros:</span><span>${valores.valor_outros}</span></div>`);
+        }
+        if (valores.valor_receita && valores.valor_receita !== 'R$ 0,00') {
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Receita:</span><span>${valores.valor_receita}</span></div>`);
+        }
+        
+        if (valoresDetalhados.length > 0) {
+            valoresGrid.innerHTML = valoresDetalhados.join('');
+            casualValoresSection.appendChild(valoresGrid);
+            console.log('✅ Grid de valores detalhados Casual criado com', valoresDetalhados.length, 'valores');
+        } else {
+            // Se não há valores detalhados, exibir mensagem
+            const semValores = document.createElement('div');
+            semValores.className = 'route-item-modal-info';
+            semValores.style.padding = '12px';
+            semValores.style.textAlign = 'center';
+            semValores.style.color = '#999';
+            semValores.innerHTML = '<i class="fas fa-info-circle"></i> Nenhum valor detalhado preenchido';
+            casualValoresSection.appendChild(semValores);
+        }
+        
+        // Exibir serviço se disponível
+        if (valores.servico && valores.servico !== 'N/A') {
+            const servicoInfo = document.createElement('div');
+            servicoInfo.className = 'route-item-modal-info';
+            servicoInfo.style.marginTop = '12px';
+            servicoInfo.innerHTML = `
+                <span class="route-item-modal-label"><i class="fas fa-cog"></i> Serviço:</span>
+                <span class="route-item-modal-service">${valores.servico}</span>
+            `;
+            casualValoresSection.appendChild(servicoInfo);
+        }
+        
     } else {
-        // Para solicitação "Casual", restaurar seção normal
+        // Para outras solicitações, restaurar seção normal
         
         // Restaurar título da seção
         if (valoresStatusSection) {
@@ -553,10 +785,14 @@ function populateCardDetails(data) {
             }
         }
         
-        // Remover seção de itens da rota se existir
+        // Remover seções de valores detalhados se existirem
         const routeItemsSection = document.getElementById('modal-route-items');
         if (routeItemsSection) {
             routeItemsSection.remove();
+        }
+        const casualValoresSection = document.getElementById('modal-casual-valores');
+        if (casualValoresSection) {
+            casualValoresSection.remove();
         }
     }    
     const prioridadeElement = document.getElementById('modal-prioridade');
@@ -718,6 +954,26 @@ function moveCardToFila(cardId, targetFila) {
             
             // Adicionar card na nova coluna
             targetColumn.appendChild(card);
+            
+            // ⚠️ IMPORTANTE: Atualizar data-entry-time para reiniciar o contador
+            const cardTimeElement = card.querySelector('.card-time');
+            if (cardTimeElement) {
+                const now = new Date();
+                const timeString = now.getFullYear() + '-' + 
+                    String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(now.getDate()).padStart(2, '0') + ' ' + 
+                    String(now.getHours()).padStart(2, '0') + ':' + 
+                    String(now.getMinutes()).padStart(2, '0') + ':' + 
+                    String(now.getSeconds()).padStart(2, '0');
+                cardTimeElement.setAttribute('data-entry-time', timeString);
+                cardTimeElement.removeAttribute('data-creation-time'); // Remover atributo antigo
+                
+                // Atualizar o tempo imediatamente para mostrar 0min
+                const timeSpan = cardTimeElement.querySelector('.queue-time');
+                if (timeSpan) {
+                    timeSpan.textContent = '0min';
+                }
+            }
             
             // Atualizar contadores das colunas
             updateColumnCounters();

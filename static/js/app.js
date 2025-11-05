@@ -344,7 +344,8 @@ class FormManager {
                 this.handleSubmit(e);
             }
             }
-        }, false); // BUBBLE PHASE - para validação e processamento    }
+        }, false); // BUBBLE PHASE - para validação e processamento
+    }
     
     formatCurrencyField(field) {
         let value = field.value.replace(/[^\d]/g, '');
@@ -431,7 +432,38 @@ class FormManager {
                 });
             }
         } else {
-            // Casual ativo - DESABILITAR TODOS os campos Em Rota
+            // Casual ativo - HABILITAR todos os campos Casual
+            if (formCasual) {
+                const casualFields = formCasual.querySelectorAll('input, select, textarea');
+                console.log(`🔍 Habilitando ${casualFields.length} campos Casual`);
+                casualFields.forEach(field => {
+                    if (field.type !== 'file' && field.type !== 'hidden') {
+                        // ⚠️ CRÍTICO: Garantir que o campo está habilitado
+                        field.disabled = false;
+                        // Garantir que o campo está visível
+                        const parentGroup = field.closest('.form-group');
+                        if (parentGroup) {
+                            parentGroup.style.display = '';
+                            parentGroup.style.visibility = '';
+                        }
+                        // Garantir que campos obrigatórios mantenham o required
+                        // Não remover required aqui, apenas garantir que está habilitado
+                        console.log(`  ✅ Habilitado: ${field.name || field.id}, disabled: ${field.disabled}, required: ${field.hasAttribute('required')}, value length: ${(field.value || '').length}`);
+                    }
+                });
+                
+                // ⚠️ VERIFICAÇÃO ESPECIAL para o campo description
+                const descriptionField = formCasual.querySelector('#campaignDescription');
+                if (descriptionField) {
+                    descriptionField.disabled = false;
+                    descriptionField.removeAttribute('readonly');
+                    console.log(`🔍 Campo description verificado: disabled=${descriptionField.disabled}, value="${(descriptionField.value || '').substring(0, 30)}...", required=${descriptionField.hasAttribute('required')}`);
+                } else {
+                    console.error('❌ Campo #campaignDescription não encontrado no formulário Casual!');
+                }
+            }
+            
+            // DESABILITAR TODOS os campos Em Rota
             if (formEmRota) {
                 const emRotaFields = formEmRota.querySelectorAll('input, select, textarea');
                 console.log(`🔍 Desabilitando ${emRotaFields.length} campos Em Rota`);
@@ -557,16 +589,44 @@ class FormManager {
             });
         }
         
+        // ⚠️ CRÍTICO: Garantir que TODOS os campos do formulário ativo estão habilitados ANTES de buscar campos required
+        if (activeForm) {
+            const activeFields = activeForm.querySelectorAll('input, select, textarea');
+            console.log(`🔍 Garantindo que ${activeFields.length} campos do formulário ativo estão habilitados`);
+            activeFields.forEach(field => {
+                if (field.type !== 'file' && field.type !== 'hidden' && field.type !== 'radio') {
+                    if (field.disabled) {
+                        console.warn(`⚠️ Campo ${field.name || field.id} estava desabilitado - habilitando agora`);
+                        field.disabled = false;
+                    }
+                    // Garantir que o campo está visível
+                    if (!isElementVisible(field)) {
+                        console.warn(`⚠️ Campo ${field.name || field.id} não está visível - verificando parent`);
+                        const parent = field.closest('.form-group');
+                        if (parent) {
+                            parent.style.display = 'block';
+                            parent.style.visibility = 'visible';
+                        }
+                    }
+                }
+            });
+        }
+        
         // Buscar apenas campos do formulário ativo que estão habilitados
         const requiredFields = activeForm ? 
-            Array.from(activeForm.querySelectorAll('[required]')).filter(field => 
-                !field.disabled && 
-                field.type !== 'hidden' &&
-                field.type !== 'radio' &&
-                isElementVisible(field) && 
-                !isFieldInHiddenContainer(field) &&
-                field.offsetParent !== null // Verificação adicional de visibilidade
-            ) : [];
+            Array.from(activeForm.querySelectorAll('[required]')).filter(field => {
+                // Garantir que o campo está habilitado antes de incluir na validação
+                if (field.disabled) {
+                    console.warn(`⚠️ Campo required ${field.name || field.id} está desabilitado - habilitando`);
+                    field.disabled = false;
+                }
+                return !field.disabled && 
+                    field.type !== 'hidden' &&
+                    field.type !== 'radio' &&
+                    isElementVisible(field) && 
+                    !isFieldInHiddenContainer(field) &&
+                    field.offsetParent !== null; // Verificação adicional de visibilidade
+            }) : [];
         
         let isValid = true;
         let errorCount = 0;
@@ -581,18 +641,31 @@ class FormManager {
         })));
 
         requiredFields.forEach(field => {
+            // ⚠️ GARANTIR que o campo está habilitado antes de validar
+            if (field.disabled) {
+                console.warn(`⚠️ Campo ${field.name || field.id} está desabilitado no loop de validação - habilitando`);
+                field.disabled = false;
+            }
+            
             // Verificar se o campo está realmente visível
             if (!isElementVisible(field)) {
+                console.warn(`⚠️ Campo ${field.name || field.id} não está visível - pulando validação`);
                 return; // Campo não visível, pular
             }
             
             // Verificar se está em container oculto
             if (isFieldInHiddenContainer(field)) {
+                console.warn(`⚠️ Campo ${field.name || field.id} está em container oculto - pulando validação`);
                 return; // Campo em container oculto, pular
             }
             
             const fieldName = field.name || field.id || '';
             const formGroup = field.closest('.form-group');
+            
+            // Log detalhado para campos TEXTAREA
+            if (field.tagName === 'TEXTAREA') {
+                console.log(`🔍 Validando TEXTAREA: ${fieldName}, disabled: ${field.disabled}, value: "${(field.value || '').substring(0, 50)}", length: ${(field.value || '').length}, visible: ${isElementVisible(field)}`);
+            }
             
             // ===== VALIDAÇÃO ESPECÍFICA PARA "EM ROTA" =====
             if (isEmRotaActive) {
@@ -657,6 +730,40 @@ class FormManager {
                     field.removeAttribute('required');
                     return;
                 }
+                
+                // ⚠️ IMPORTANTE: Campo hidden casual_valor não deve ser validado como obrigatório
+                // O valor será calculado automaticamente antes do submit
+                if (fieldName === 'casual_valor' || field.id === 'casual_valor_hidden') {
+                    // Garantir que o valor foi calculado antes de validar
+                    const formCasual = form.querySelector('#formCasual');
+                    if (formCasual && window.getComputedStyle(formCasual).display !== 'none') {
+                        // Chamar função de cálculo se existir globalmente
+                        if (typeof window.calcularValorTotalCasual === 'function') {
+                            window.calcularValorTotalCasual();
+                        }
+                        // Verificar se o valor foi calculado (não pode ser 0 ou vazio)
+                        const valorCalculado = parseFloat((field.value || '0').toString().replace(',', '.')) || 0;
+                        if (valorCalculado > 0) {
+                            // Valor válido, remover required e não validar
+                            field.removeAttribute('required');
+                            return; // Pular validação deste campo
+                        }
+                    }
+                    // Se não foi calculado ainda ou é zero, remover required para não bloquear
+                    field.removeAttribute('required');
+                    return; // Pular validação deste campo (será validado no submit handler)
+                }
+                
+                // ⚠️ GARANTIR que campos do formulário Casual estão habilitados antes de validar
+                if (fieldName.startsWith('casual_') || field.id === 'campaignDescription' || 
+                    field.id === 'campaignRecebedor' || field.id === 'campaignService' ||
+                    field.id === 'campaignDataPagamento' || field.id === 'campaignPriority') {
+                    // Se o campo está desabilitado, habilitar antes de validar
+                    if (field.disabled) {
+                        console.warn(`⚠️ Campo ${fieldName || field.id} está desabilitado - habilitando para validação`);
+                        field.disabled = false;
+                    }
+                }
             }
             
             // ===== VALIDAÇÃO DO VALOR DO CAMPO =====
@@ -669,6 +776,11 @@ class FormManager {
                 }
             } else if (field.type === 'file') {
                 value = field.files && field.files.length > 0 ? 'has-file' : '';
+            } else if (field.tagName === 'TEXTAREA') {
+                // Para TEXTAREA, fazer trim mas manter espaços em branco se necessário
+                value = (field.value || '').trim();
+                // Log para debug de textarea
+                console.log(`🔍 TEXTAREA - campo: ${fieldName || field.id}, valor length: ${value.length}, valor: "${value.substring(0, 50)}${value.length > 50 ? '...' : ''}"`);
             } else {
                 value = (field.value || '').trim();
             }
@@ -680,14 +792,57 @@ class FormManager {
             
             // Verificar se campo está vazio
             if (!value || value === '' || value === '0') {
-                console.log(`❌ Campo vazio detectado: ${fieldName || field.id}, valor: '${value}', tipo: ${field.type || field.tagName}`);
-                if (formGroup) {
-                formGroup.classList.add('error');
-                this.showFieldError(formGroup, 'Este campo é obrigatório');
+                // ⚠️ Para campos TEXTAREA, verificar se realmente está vazio ou se foi limpo acidentalmente
+                if (field.tagName === 'TEXTAREA') {
+                    // Tentar recuperar valor do campo novamente
+                    const currentValue = field.value || '';
+                    if (currentValue.trim().length === 0) {
+                        console.log(`❌ Campo TEXTAREA vazio detectado: ${fieldName || field.id}, valor: '${currentValue}', disabled: ${field.disabled}, readonly: ${field.readOnly}`);
+                        
+                        // Verificar se o campo está desabilitado ou readonly
+                        if (field.disabled) {
+                            console.error(`❌ ERRO CRÍTICO: Campo ${fieldName || field.id} está DESABILITADO! Habilitando agora...`);
+                            field.disabled = false;
+                            // Tentar novamente após habilitar
+                            const retryValue = field.value || '';
+                            if (retryValue.trim().length > 0) {
+                                console.log(`✅ Campo foi habilitado e tem valor: ${retryValue.substring(0, 30)}...`);
+                                value = retryValue.trim();
+                            } else {
+                                // Campo realmente está vazio - mostrar erro
+                                if (formGroup) {
+                                    formGroup.classList.add('error');
+                                    this.showFieldError(formGroup, 'O campo "Descrição" é obrigatório. Por favor, preencha a descrição da solicitação.');
+                                }
+                                isValid = false;
+                                errorCount++;
+                                errors.push(fieldName || 'Campo sem nome');
+                            }
+                        } else {
+                            // Campo está habilitado mas vazio - mostrar erro
+                            if (formGroup) {
+                                formGroup.classList.add('error');
+                                this.showFieldError(formGroup, 'O campo "Descrição" é obrigatório. Por favor, preencha a descrição da solicitação.');
+                            }
+                            isValid = false;
+                            errorCount++;
+                            errors.push(fieldName || 'Campo sem nome');
+                        }
+                    } else {
+                        // Valor encontrado após verificação
+                        value = currentValue.trim();
+                    }
+                } else {
+                    // Para outros campos, comportamento normal
+                    console.log(`❌ Campo vazio detectado: ${fieldName || field.id}, valor: '${value}', tipo: ${field.type || field.tagName}`);
+                    if (formGroup) {
+                        formGroup.classList.add('error');
+                        this.showFieldError(formGroup, 'Este campo é obrigatório');
+                    }
+                    isValid = false;
+                    errorCount++;
+                    errors.push(fieldName || 'Campo sem nome');
                 }
-                isValid = false;
-                errorCount++;
-                errors.push(fieldName || 'Campo sem nome');
             } else {
                 // Validação específica para campos de tempo
                 if (field.type === 'time' && value) {
