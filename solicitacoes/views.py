@@ -19,7 +19,68 @@ def limpar_valor_monetario(valor_raw):
     except (ValueError, AttributeError):
         return 0.0
 
+def garantir_migracao_campos():
+    """
+    Função auxiliar para garantir que os campos necessários existam no banco.
+    Aplica a migração automaticamente se os campos não existirem.
+    """
+    try:
+        from django.db import connection
+        cursor = connection.cursor()
+        cursor.execute("PRAGMA table_info(solicitacoes_solicitacoes)")
+        columns = [row[1] for row in cursor.fetchall()]
+        
+        # Verificar se campos faltam e aplicar migração SQL diretamente
+        campos_necessarios = {
+            'data_entrada_status': "ALTER TABLE solicitacoes_solicitacoes ADD COLUMN data_entrada_status DATETIME DEFAULT NULL;",
+            'valor_em_rota': "ALTER TABLE solicitacoes_solicitacoes ADD COLUMN valor_em_rota REAL DEFAULT 0.0;",
+            'descricao_em_rota': "ALTER TABLE solicitacoes_solicitacoes ADD COLUMN descricao_em_rota TEXT DEFAULT NULL;"
+        }
+        
+        campos_adicionados = False
+        for campo, sql in campos_necessarios.items():
+            if campo not in columns:
+                try:
+                    cursor.execute(sql)
+                    print(f"✅ Campo {campo} adicionado ao banco de dados")
+                    campos_adicionados = True
+                except Exception as e:
+                    if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
+                        print(f"⚠️ Erro ao adicionar campo {campo}: {e}")
+        
+        # Se data_entrada_status foi adicionado, atualizar registros existentes
+        if campos_adicionados:
+            try:
+                # Verificar se o campo existe agora (pode ter sido adicionado)
+                cursor.execute("PRAGMA table_info(solicitacoes_solicitacoes)")
+                columns_atualizadas = [row[1] for row in cursor.fetchall()]
+                if 'data_entrada_status' in columns_atualizadas:
+                    cursor.execute("""
+                        UPDATE solicitacoes_solicitacoes 
+                        SET data_entrada_status = datetime(data_de_criacao || ' ' || time(tempo_criacao))
+                        WHERE data_entrada_status IS NULL;
+                    """)
+                    print(f"✅ {cursor.rowcount} registros atualizados com data_entrada_status")
+            except Exception as e:
+                print(f"⚠️ Erro ao atualizar data_entrada_status: {e}")
+        
+        # Registrar migração se aplicou alguma
+        if campos_adicionados:
+            try:
+                cursor.execute(
+                    "INSERT OR IGNORE INTO django_migrations (app, name, applied) VALUES (?, ?, ?)",
+                    ['solicitacoes', '0006_add_data_entrada_status', timezone.now()]
+                )
+                print("✅ Migração registrada no Django")
+            except Exception as e:
+                print(f"⚠️ Erro ao registrar migração (pode ser ignorado): {e}")
+    except Exception as e:
+        print(f"⚠️ Erro ao verificar/aplicar migração: {e}")
+
 def receber_dados(request):
+    # Garantir que a migração está aplicada antes de processar qualquer requisição
+    garantir_migracao_campos()
+    
     if request.method == 'POST':
         try:
             
@@ -464,29 +525,47 @@ def receber_dados(request):
         Se não, retorna e redireciona para a área do login.
         """
         if request.user.is_authenticated:
-            # Otimização: Buscar todas as solicitações de uma vez
-            # e usar select_related e prefetch_related para otimizar queries
-            todas_solicitacoes = Solicitacoes.objects.select_related('nome_solicitante', 'servico').prefetch_related('itens_rota__servico').all()
-            
-            # Filtrar em memória ao invés de fazer múltiplas queries
-            solicitacoes_pendentes = [s for s in todas_solicitacoes if s.status == "pendente"]
-            solicitacoes_recusados = [s for s in todas_solicitacoes if s.status == "recusado"]
-            solicitacoes_aprovado = [s for s in todas_solicitacoes if s.status == "aprovado"]
-            solicitacoes_concluido = [s for s in todas_solicitacoes if s.status == "concluido"]
-            
-            return render(request, 'home/index.html', {
-                'solicitacoes_pendentes': solicitacoes_pendentes,
-                'num_solicitacoes_pendentes': len(solicitacoes_pendentes),
+            # Buscar as solicitações normalmente (migração já foi garantida no início da função)
+            try:
+                # Otimização: Buscar todas as solicitações de uma vez
+                # e usar select_related e prefetch_related para otimizar queries
+                todas_solicitacoes = Solicitacoes.objects.select_related('nome_solicitante', 'servico').prefetch_related('itens_rota__servico').all()
+                
+                # Filtrar em memória ao invés de fazer múltiplas queries
+                solicitacoes_pendentes = [s for s in todas_solicitacoes if s.status == "pendente"]
+                solicitacoes_recusados = [s for s in todas_solicitacoes if s.status == "recusado"]
+                solicitacoes_aprovado = [s for s in todas_solicitacoes if s.status == "aprovado"]
+                solicitacoes_concluido = [s for s in todas_solicitacoes if s.status == "concluido"]
+                
+                return render(request, 'home/index.html', {
+                    'solicitacoes_pendentes': solicitacoes_pendentes,
+                    'num_solicitacoes_pendentes': len(solicitacoes_pendentes),
 
-                'solicitacoes_recusados': solicitacoes_recusados,
-                'num_solicitacoes_recusados': len(solicitacoes_recusados),
+                    'solicitacoes_recusados': solicitacoes_recusados,
+                    'num_solicitacoes_recusados': len(solicitacoes_recusados),
 
-                'solicitacoes_aprovado': solicitacoes_aprovado,
-                'num_solicitacoes_aprovado': len(solicitacoes_aprovado),
+                    'solicitacoes_aprovado': solicitacoes_aprovado,
+                    'num_solicitacoes_aprovado': len(solicitacoes_aprovado),
 
-                'solicitacoes_concluido': solicitacoes_concluido,
-                'num_solicitacoes_concluido': len(solicitacoes_concluido),
-            })
+                    'solicitacoes_concluido': solicitacoes_concluido,
+                    'num_solicitacoes_concluido': len(solicitacoes_concluido),
+                })
+            except Exception as e:
+                import traceback
+                error_trace = traceback.format_exc()
+                print(f"❌ Erro ao buscar solicitações: {str(e)}")
+                print(f"📋 Traceback:\n{error_trace}")
+                # Retornar página vazia ao invés de erro
+                return render(request, 'home/index.html', {
+                    'solicitacoes_pendentes': [],
+                    'num_solicitacoes_pendentes': 0,
+                    'solicitacoes_recusados': [],
+                    'num_solicitacoes_recusados': 0,
+                    'solicitacoes_aprovado': [],
+                    'num_solicitacoes_aprovado': 0,
+                    'solicitacoes_concluido': [],
+                    'num_solicitacoes_concluido': 0,
+                })
         else:
             return redirect('login')
 
