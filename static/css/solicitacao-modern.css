@@ -1083,7 +1083,7 @@
 
 .route-id-inputs {
     display: grid;
-    grid-template-columns: 2.2fr 1.3fr 2fr;
+    grid-template-columns: 1.5fr 1.2fr 1.8fr 1.8fr 1.8fr 1.5fr 1.2fr;
     gap: 1rem;
     align-items: start;
     margin-bottom: 0;
@@ -1091,10 +1091,15 @@
 
 .route-id-field,
 .route-valor-field,
-.route-servico-field {
+.route-servico-field,
+.route-recebedor-field,
+.route-pix-field,
+.route-cliente-empresa-field,
+.route-cnpj-field {
     margin-bottom: 0;
     display: flex;
     flex-direction: column;
+    min-width: 0; /* Permite que o grid funcione corretamente */
 }
 
 .route-id-field {
@@ -1185,6 +1190,61 @@
 
 .route-servico-field select:hover {
     border-color: #cbd5e0;
+}
+
+/* Estilos para campos de Recebedor e Chave PIX */
+.route-recebedor-field label,
+.route-pix-field label,
+.route-cliente-empresa-field label,
+.route-cnpj-field label {
+    font-size: 0.875rem;
+    margin-bottom: 0.65rem;
+    display: block;
+    font-weight: 600;
+    color: #1C1C1C;
+}
+
+.route-recebedor-field input,
+.route-pix-field input,
+.route-cliente-empresa-field input,
+.route-cnpj-field input {
+    width: 100%;
+    padding: 11px 13px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: #ffffff;
+    color: #1C1C1C;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+.route-recebedor-field input:focus,
+.route-cliente-empresa-field input:focus {
+    outline: none;
+    border-color: #FFCB57;
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2);
+    background: #fffef5;
+}
+
+.route-recebedor-field input:hover,
+.route-cliente-empresa-field input:hover {
+    border-color: #cbd5e0;
+}
+
+.route-pix-field input,
+.route-cnpj-field input {
+    background: #f0f0f0;
+    cursor: not-allowed;
+    color: #64748b;
+}
+
+.route-pix-field input:focus,
+.route-cnpj-field input:focus {
+    border-color: #cbd5e0;
+    box-shadow: none;
+    background: #f0f0f0;
 }
 
 .form-casual {
@@ -1454,8 +1514,8 @@ textarea[name="description"]:focus {
 /* Responsividade para formulário Em Rota */
 @media (max-width: 1200px) {
     .route-id-inputs {
-        grid-template-columns: 2fr 1.2fr 1.8fr;
-        gap: 1rem;
+        grid-template-columns: 1.2fr 1fr 1.5fr 1.5fr 1.5fr 1.2fr 1fr;
+        gap: 0.8rem;
     }
 
     .route-id-group .valores-detalhados-grid {
@@ -1475,6 +1535,13 @@ textarea[name="description"]:focus {
     }
 
     .route-servico-field {
+        grid-column: 1 / -1;
+    }
+    
+    .route-recebedor-field,
+    .route-pix-field,
+    .route-cliente-empresa-field,
+    .route-cnpj-field {
         grid-column: 1 / -1;
     }
 

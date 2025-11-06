@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-from .models import Solicitacoes, SolicitacaoRotaItem
+from .models import Solicitacoes, SolicitacaoRotaItem, Recebedor, ClienteEmpresa
 from servicos.models import Servico
 from django.utils import timezone
 import json
@@ -23,10 +23,46 @@ def garantir_migracao_campos():
     """
     Função auxiliar para garantir que os campos necessários existam no banco.
     Aplica a migração automaticamente se os campos não existirem.
+    Também cria a tabela ClienteEmpresa se não existir.
     """
     try:
         from django.db import connection
         cursor = connection.cursor()
+        
+        # Verificar e criar tabela ClienteEmpresa se não existir
+        cursor.execute("""
+            SELECT name FROM sqlite_master 
+            WHERE type='table' AND name='solicitacoes_clienteempresa';
+        """)
+        tabela_existe = cursor.fetchone()
+        if not tabela_existe:
+            try:
+                cursor.execute("""
+                    CREATE TABLE solicitacoes_clienteempresa (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        nome VARCHAR(200) NOT NULL UNIQUE,
+                        cnpj VARCHAR(18),
+                        ativo BOOLEAN NOT NULL DEFAULT 1,
+                        data_criacao DATETIME NOT NULL,
+                        data_atualizacao DATETIME NOT NULL
+                    );
+                """)
+                print("✅ Tabela solicitacoes_clienteempresa criada automaticamente!")
+            except Exception as e:
+                if "already exists" not in str(e).lower() and "duplicate" not in str(e).lower():
+                    print(f"⚠️ Erro ao criar tabela ClienteEmpresa: {e}")
+        else:
+            # Se a tabela existe, verificar se tem o campo CNPJ
+            cursor.execute("PRAGMA table_info(solicitacoes_clienteempresa)")
+            columns_cliente = [row[1] for row in cursor.fetchall()]
+            if 'cnpj' not in columns_cliente:
+                try:
+                    cursor.execute("ALTER TABLE solicitacoes_clienteempresa ADD COLUMN cnpj VARCHAR(18) DEFAULT NULL;")
+                    print("✅ Campo cnpj adicionado à tabela solicitacoes_clienteempresa")
+                except Exception as e:
+                    if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
+                        print(f"⚠️ Erro ao adicionar campo cnpj na tabela ClienteEmpresa: {e}")
+        
         cursor.execute("PRAGMA table_info(solicitacoes_solicitacoes)")
         columns = [row[1] for row in cursor.fetchall()]
         
@@ -34,7 +70,10 @@ def garantir_migracao_campos():
         campos_necessarios = {
             'data_entrada_status': "ALTER TABLE solicitacoes_solicitacoes ADD COLUMN data_entrada_status DATETIME DEFAULT NULL;",
             'valor_em_rota': "ALTER TABLE solicitacoes_solicitacoes ADD COLUMN valor_em_rota REAL DEFAULT 0.0;",
-            'descricao_em_rota': "ALTER TABLE solicitacoes_solicitacoes ADD COLUMN descricao_em_rota TEXT DEFAULT NULL;"
+            'descricao_em_rota': "ALTER TABLE solicitacoes_solicitacoes ADD COLUMN descricao_em_rota TEXT DEFAULT NULL;",
+            'chave_pix': "ALTER TABLE solicitacoes_solicitacoes ADD COLUMN chave_pix VARCHAR(255) DEFAULT NULL;",
+            'cliente_empresa': "ALTER TABLE solicitacoes_solicitacoes ADD COLUMN cliente_empresa VARCHAR(200) DEFAULT NULL;",
+            'cnpj': "ALTER TABLE solicitacoes_solicitacoes ADD COLUMN cnpj VARCHAR(18) DEFAULT NULL;"
         }
         
         campos_adicionados = False
@@ -47,6 +86,39 @@ def garantir_migracao_campos():
                 except Exception as e:
                     if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
                         print(f"⚠️ Erro ao adicionar campo {campo}: {e}")
+        
+        # Verificar também na tabela de itens de rota
+        cursor.execute("PRAGMA table_info(solicitacoes_solicitacaorotaitem)")
+        columns_rota = [row[1] for row in cursor.fetchall()]
+        
+        if 'cliente_empresa' not in columns_rota:
+            try:
+                cursor.execute("ALTER TABLE solicitacoes_solicitacaorotaitem ADD COLUMN cliente_empresa VARCHAR(200) DEFAULT NULL;")
+                print(f"✅ Campo cliente_empresa adicionado à tabela solicitacoes_solicitacaorotaitem")
+                campos_adicionados = True
+            except Exception as e:
+                if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
+                    print(f"⚠️ Erro ao adicionar campo cliente_empresa na tabela de itens: {e}")
+        
+        # Verificar se campo CNPJ existe na tabela de itens de rota
+        if 'cnpj' not in columns_rota:
+            try:
+                cursor.execute("ALTER TABLE solicitacoes_solicitacaorotaitem ADD COLUMN cnpj VARCHAR(18) DEFAULT NULL;")
+                print(f"✅ Campo cnpj adicionado à tabela solicitacoes_solicitacaorotaitem")
+                campos_adicionados = True
+            except Exception as e:
+                if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
+                    print(f"⚠️ Erro ao adicionar campo cnpj na tabela de itens: {e}")
+        
+        # Verificar se campo CNPJ existe na tabela principal
+        if 'cnpj' not in columns:
+            try:
+                cursor.execute("ALTER TABLE solicitacoes_solicitacoes ADD COLUMN cnpj VARCHAR(18) DEFAULT NULL;")
+                print(f"✅ Campo cnpj adicionado à tabela solicitacoes_solicitacoes")
+                campos_adicionados = True
+            except Exception as e:
+                if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
+                    print(f"⚠️ Erro ao adicionar campo cnpj: {e}")
         
         # Se data_entrada_status foi adicionado, atualizar registros existentes
         if campos_adicionados:
@@ -116,6 +188,9 @@ def receber_dados(request):
                 valor_receita = limpar_valor_monetario(request.POST.get('route_valor_receita', '').strip())
             else:  # Casual
                 nome_do_recebedor = request.POST.get('casual_recebedor', '').strip()
+                chave_pix_casual = request.POST.get('casual_pix', '').strip()
+                cliente_empresa_casual = request.POST.get('casual_cliente_empresa', '').strip()
+                cnpj_casual = request.POST.get('casual_cnpj', '').strip()
                 descricao = request.POST.get('casual_description', '').strip()
                 data_de_pagamento_str = request.POST.get('casual_dataPagamento', '').strip()
                 prioridade = request.POST.get('casual_priority', 'baixa')
@@ -190,6 +265,10 @@ def receber_dados(request):
                     route_id = request.POST.get(f'route_id_{i}', '').strip()
                     route_valor_raw = request.POST.get(f'route_valor_{i}', '').strip()
                     route_servico_id = request.POST.get(f'route_servico_{i}', '').strip()
+                    route_recebedor = request.POST.get(f'route_recebedor_{i}', '').strip()
+                    route_pix = request.POST.get(f'route_pix_{i}', '').strip()
+                    route_cliente_empresa = request.POST.get(f'route_cliente_empresa_{i}', '').strip()
+                    route_cnpj = request.POST.get(f'route_cnpj_{i}', '').strip()
                     
                     # Capturar valores detalhados para cada ID
                     valor_km = limpar_valor_monetario(request.POST.get(f'route_valor_km_{i}', '').strip())
@@ -244,6 +323,10 @@ def receber_dados(request):
                             'valor': valor_item,
                             'servico': servico_obj,
                             'ordem': ordem_atual,
+                            'recebedor': route_recebedor,
+                            'chave_pix': route_pix,
+                            'cliente_empresa': route_cliente_empresa,
+                            'cnpj': route_cnpj,
                             'valor_km': valor_km,
                             'valor_pedagio': valor_pedagio,
                             'valor_hospedagem': valor_hospedagem,
@@ -371,6 +454,10 @@ def receber_dados(request):
                         valor=item['valor'],
                         servico=item['servico'],
                         ordem=item['ordem'],
+                        recebedor=item.get('recebedor', ''),
+                        chave_pix=item.get('chave_pix', ''),
+                        cliente_empresa=item.get('cliente_empresa', ''),
+                        cnpj=item.get('cnpj', ''),
                         valor_km=item.get('valor_km', 0.0),
                         valor_pedagio=item.get('valor_pedagio', 0.0),
                         valor_hospedagem=item.get('valor_hospedagem', 0.0),
@@ -481,6 +568,9 @@ def receber_dados(request):
                         titulo=titulo,
                         nome_solicitante=request.user,
                         nome_do_recebedor=nome_do_recebedor,
+                        chave_pix=chave_pix_casual,
+                        cliente_empresa=cliente_empresa_casual,
+                        cnpj=cnpj_casual,
                         valor=valor,
                         descricao=descricao,
                         data_de_pagamento=data_de_pagamento,
@@ -596,6 +686,10 @@ def obter_itens_rota(request, solicitacao_id):
                 'id': item.ticket_item,
                 'valor': f'R$ {item.valor:.2f}',
                 'servico': item.servico.nome if item.servico else 'N/A',
+                'recebedor': item.recebedor or '',
+                'chave_pix': item.chave_pix or '',
+                'cliente_empresa': item.cliente_empresa or '',
+                'cnpj': item.cnpj or '',
                 'valor_km': f'R$ {item.valor_km:.2f}',
                 'valor_pedagio': f'R$ {item.valor_pedagio:.2f}',
                 'valor_hospedagem': f'R$ {item.valor_hospedagem:.2f}',
@@ -684,6 +778,9 @@ def obter_detalhes_completos(request, solicitacao_id):
             'titulo': solicitacao.titulo,
             'solicitante': str(solicitacao.nome_solicitante),
             'recebedor': solicitacao.nome_do_recebedor,
+            'chave_pix': solicitacao.chave_pix or '',
+            'cliente_empresa': solicitacao.cliente_empresa or '',
+            'cnpj': solicitacao.cnpj or '',
             'servico': solicitacao.servico.nome if solicitacao.servico else 'N/A',
             'tipo': solicitacao.tipo,
             'status': solicitacao.status,
@@ -712,6 +809,10 @@ def obter_detalhes_completos(request, solicitacao_id):
                     'ordem': item.ordem,
                     'ticket_item': item.ticket_item,
                     'servico': item.servico.nome if item.servico else 'N/A',
+                    'recebedor': item.recebedor or '',
+                    'chave_pix': item.chave_pix or '',
+                    'cliente_empresa': item.cliente_empresa or '',
+                    'cnpj': item.cnpj or '',
                     'valor': f'R$ {item.valor:.2f}',
                     'valor_km': f'R$ {item.valor_km:.2f}',
                     'valor_pedagio': f'R$ {item.valor_pedagio:.2f}',
@@ -798,21 +899,128 @@ def atualizar_status(request):
             'card_id': card_id,
             'new_status': status_db
         })
-        
     except Solicitacoes.DoesNotExist:
         return JsonResponse({
             'success': False,
             'message': 'Solicitação não encontrada'
         }, status=404)
-        
     except json.JSONDecodeError:
         return JsonResponse({
             'success': False,
             'message': 'Erro ao processar dados JSON'
         }, status=400)
-        
     except Exception as e:
         return JsonResponse({
             'success': False,
             'message': f'Erro ao atualizar status: {str(e)}'
+        }, status=500)
+
+@require_http_methods(["GET"])
+def buscar_recebedores(request):
+    """
+    View para buscar recebedores via AJAX
+    Retorna lista de recebedores ativos para preencher datalist
+    Pode buscar por ID específico ou por nome
+    """
+    try:
+        query = request.GET.get('q', '').strip()
+        recebedor_id = request.GET.get('id', '').strip()
+        
+        # Se há ID específico, buscar apenas esse recebedor
+        if recebedor_id:
+            try:
+                recebedor = Recebedor.objects.get(id=int(recebedor_id))
+                recebedores_list = [{
+                    'id': recebedor.id,
+                    'nome': recebedor.nome,
+                    'chave_pix': recebedor.chave_pix,
+                    'ativo': recebedor.ativo
+                }]
+            except (Recebedor.DoesNotExist, ValueError):
+                recebedores_list = []
+        else:
+            recebedores = Recebedor.objects.all()
+            
+            if query:
+                # Buscar por nome (inclui inativos se houver query)
+                recebedores = recebedores.filter(nome__icontains=query)
+            else:
+                # Se não há query, retornar apenas ativos
+                recebedores = recebedores.filter(ativo=True)
+            
+            recebedores_list = [
+                {
+                    'id': r.id,
+                    'nome': r.nome,
+                    'chave_pix': r.chave_pix,
+                    'ativo': r.ativo
+                }
+                for r in recebedores[:20]  # Limitar a 20 resultados
+            ]
+        
+        return JsonResponse({
+            'success': True,
+            'recebedores': recebedores_list
+        })
+    except Exception as e:
+        print(f"❌ Erro ao buscar recebedores: {e}")
+        return JsonResponse({
+            'success': False,
+            'recebedores': [],
+            'message': str(e)
+        }, status=500)
+
+@require_http_methods(["GET"])
+def buscar_clientes_empresas(request):
+    """
+    View para buscar clientes/empresas via AJAX
+    Retorna lista de clientes/empresas ativos para preencher datalist
+    Pode buscar por ID específico ou por nome
+    """
+    try:
+        query = request.GET.get('q', '').strip()
+        cliente_id = request.GET.get('id', '').strip()
+        
+        # Se há ID específico, buscar apenas esse cliente
+        if cliente_id:
+            try:
+                cliente = ClienteEmpresa.objects.get(id=int(cliente_id))
+                clientes_list = [{
+                    'id': cliente.id,
+                    'nome': cliente.nome,
+                    'cnpj': cliente.cnpj or '',
+                    'ativo': cliente.ativo
+                }]
+            except (ClienteEmpresa.DoesNotExist, ValueError):
+                clientes_list = []
+        else:
+            clientes = ClienteEmpresa.objects.all()
+            
+            if query:
+                # Buscar por nome (inclui inativos se houver query)
+                clientes = clientes.filter(nome__icontains=query)
+            else:
+                # Se não há query, retornar apenas ativos
+                clientes = clientes.filter(ativo=True)
+            
+            clientes_list = [
+                {
+                    'id': c.id,
+                    'nome': c.nome,
+                    'cnpj': c.cnpj or '',
+                    'ativo': c.ativo
+                }
+                for c in clientes[:20]  # Limitar a 20 resultados
+            ]
+        
+        return JsonResponse({
+            'success': True,
+            'clientes_empresas': clientes_list
+        })
+    except Exception as e:
+        print(f"❌ Erro ao buscar clientes/empresas: {e}")
+        return JsonResponse({
+            'success': False,
+            'clientes_empresas': [],
+            'message': str(e)
         }, status=500)

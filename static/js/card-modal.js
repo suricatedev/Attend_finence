@@ -265,6 +265,10 @@ async function extractCardData(card) {
                                 id: item.id,
                                 valor: item.valor,
                                 servico: item.servico,
+                                recebedor: item.recebedor || '',
+                                chave_pix: item.chave_pix || '',
+                                cliente_empresa: item.cliente_empresa || '',
+                                cnpj: item.cnpj || '',
                                 valor_km: item.valor_km || 'R$ 0,00',
                                 valor_pedagio: item.valor_pedagio || 'R$ 0,00',
                                 valor_hospedagem: item.valor_hospedagem || 'R$ 0,00',
@@ -585,6 +589,30 @@ function populateCardDetails(data) {
                 </div>` 
                 : '';
             
+            // Construir informações de recebedor, PIX, cliente/empresa e CNPJ
+            const infoAdicional = [];
+            if (item.recebedor) {
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-user-check"></i> Recebedor:</span><span class="route-item-modal-value">${item.recebedor}</span></div>`);
+            }
+            if (item.chave_pix) {
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-qrcode"></i> Chave PIX:</span><span class="route-item-modal-value">${item.chave_pix}</span></div>`);
+            }
+            if (item.cliente_empresa) {
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-building"></i> Cliente/Empresa:</span><span class="route-item-modal-value">${item.cliente_empresa}</span></div>`);
+            }
+            if (item.cnpj) {
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-id-card"></i> CNPJ:</span><span class="route-item-modal-value">${item.cnpj}</span></div>`);
+            }
+            
+            const infoAdicionalHTML = infoAdicional.length > 0 
+                ? `<div class="route-item-info-adicional">
+                    <div class="route-item-info-title"><i class="fas fa-info-circle"></i> Informações Adicionais</div>
+                    <div class="route-item-info-grid">
+                        ${infoAdicional.join('')}
+                    </div>
+                </div>` 
+                : '';
+            
             itemDiv.innerHTML = `
                 <div class="route-item-modal-header">
                     <div class="route-item-header-left">
@@ -602,6 +630,7 @@ function populateCardDetails(data) {
                             <span class="route-item-modal-service">${item.servico || 'N/A'}</span>
                         </div>
                     </div>
+                    ${infoAdicionalHTML}
                     ${valoresDetalhadosHTML}
                 </div>
             `;

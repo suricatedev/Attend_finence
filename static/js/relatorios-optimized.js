@@ -110,18 +110,25 @@ class RelatoriosOptimized {
                 }
                 
                 // Encontrar índice correto das células (considerando colunas adicionais)
-                // Estrutura: ID(0), Título(1), Solicitante(2), Recebedor(3), Serviço(4), Valor(5), 
-                // [Toggle Cell(6)], [Receita(7)], [EM ROTA(8)], [KM(9)], [Pedágio(10)], [Hospedagem(11)], [Fluvial(12)], [Outros(13)], 
-                // Status(14), Prioridade(15), Criação(16), Pagamento(17), Ações(18)
-                let statusIdx = 14, priorityIdx = 15, dataCriacaoIdx = 16, dataPagamentoIdx = 17;
+                // Estrutura: ID(0), Título(1), Solicitante(2), Recebedor(3), Chave PIX(4), Cliente/Empresa(5), CNPJ(6), Serviço(7), Valor(8), 
+                // [Toggle Cell(9)], [Receita(10)], [EM ROTA(11)], [KM(12)], [Pedágio(13)], [Hospedagem(14)], [Fluvial(15)], [Outros(16)], 
+                // Status(17), Prioridade(18), Criação(19), Pagamento(20), Ações(21)
+                let statusIdx = 17, priorityIdx = 18, dataCriacaoIdx = 19, dataPagamentoIdx = 20;
                 
                 // Se não há colunas de valores detalhados visíveis, ajustar índices
                 if (valoresCells.length === 0) {
-                    statusIdx = 6;
-                    priorityIdx = 7;
-                    dataCriacaoIdx = 8;
-                    dataPagamentoIdx = 9;
+                    statusIdx = 9;
+                    priorityIdx = 10;
+                    dataCriacaoIdx = 11;
+                    dataPagamentoIdx = 12;
                 }
+                
+                // Extrair novos campos
+                const recebedor = cells[3]?.textContent.trim() || '';
+                const chavePix = cells[4]?.textContent.trim() || '';
+                const clienteEmpresa = cells[5]?.textContent.trim() || '';
+                const cnpj = cells[6]?.textContent.trim() || '';
+                const serviceText = cells[7]?.textContent.trim() || '';
                 
                 const statusBadge = cells[statusIdx]?.querySelector('.status-badge');
                 if (!status && statusBadge) {
@@ -143,8 +150,7 @@ class RelatoriosOptimized {
                 
                 // Extrair serviço do data attribute (usa ID do serviço)
                 let service = row.dataset.service || '';
-                if (!service) {
-                    const serviceText = cells[4]?.textContent.trim() || '';
+                if (!service && serviceText) {
                     const serviceMap = {
                         'Consultoria em TI': 'consultoria_TI',
                         'Desenvolvimento de Software': 'desenvolvimento',
@@ -176,9 +182,12 @@ class RelatoriosOptimized {
                     ticket: ticket, // Manter ticket separado para exibição
                     title: cells[1]?.textContent.trim() || '',
                     solicitante: cells[2]?.textContent.trim() || '',
-                    recebedor: cells[3]?.textContent.trim() || '',
+                    recebedor: recebedor,
+                    chavePix: chavePix,
+                    clienteEmpresa: clienteEmpresa,
+                    cnpj: cnpj,
                     service: service,
-                    valor: cells[5]?.textContent.trim() || '',
+                    valor: cells[8]?.textContent.trim() || '',
                     valorReceita: valorReceita,
                     valorEmRota: valorEmRota,
                     valorKm: valorKm,
@@ -297,6 +306,24 @@ class RelatoriosOptimized {
         // Filtro de prioridade
         document.getElementById('priorityFilter')?.addEventListener('change', () => {
             this.currentFilters.priority = document.getElementById('priorityFilter').value;
+            this.debouncedApplyFilters();
+        });
+
+        // Filtro de Cliente/Empresa
+        document.getElementById('clienteEmpresaFilter')?.addEventListener('input', (e) => {
+            this.currentFilters.clienteEmpresa = e.target.value.toLowerCase();
+            this.debouncedApplyFilters();
+        });
+
+        // Filtro de CNPJ
+        document.getElementById('cnpjFilter')?.addEventListener('input', (e) => {
+            this.currentFilters.cnpj = e.target.value.toLowerCase();
+            this.debouncedApplyFilters();
+        });
+
+        // Filtro de Chave PIX
+        document.getElementById('chavePixFilter')?.addEventListener('input', (e) => {
+            this.currentFilters.chavePix = e.target.value.toLowerCase();
             this.debouncedApplyFilters();
         });
 
@@ -459,10 +486,34 @@ class RelatoriosOptimized {
                 }
             }
 
-            // Filtro de busca
+            // Filtro de Cliente/Empresa
+            if (this.currentFilters.clienteEmpresa) {
+                const clienteEmpresa = (item.clienteEmpresa || '').toLowerCase();
+                if (!clienteEmpresa.includes(this.currentFilters.clienteEmpresa)) {
+                    return false;
+                }
+            }
+
+            // Filtro de CNPJ
+            if (this.currentFilters.cnpj) {
+                const cnpj = (item.cnpj || '').toLowerCase();
+                if (!cnpj.includes(this.currentFilters.cnpj)) {
+                    return false;
+                }
+            }
+
+            // Filtro de Chave PIX
+            if (this.currentFilters.chavePix) {
+                const chavePix = (item.chavePix || '').toLowerCase();
+                if (!chavePix.includes(this.currentFilters.chavePix)) {
+                    return false;
+                }
+            }
+
+            // Filtro de busca (inclui novos campos)
             if (this.currentFilters.search) {
                 const searchTerm = this.currentFilters.search;
-                const searchableText = `${item.id} ${item.title} ${item.solicitante} ${item.recebedor}`.toLowerCase();
+                const searchableText = `${item.id} ${item.title} ${item.solicitante} ${item.recebedor} ${item.service || ''} ${item.clienteEmpresa || ''} ${item.cnpj || ''} ${item.chavePix || ''}`.toLowerCase();
                 if (!searchableText.includes(searchTerm)) {
                     return false;
                 }
@@ -482,11 +533,15 @@ class RelatoriosOptimized {
     clearFilters() {
         this.currentFilters = {
             status: 'all',
-            tipo: 'all',            dateFrom: '',
+            tipo: 'all',
+            dateFrom: '',
             dateTo: '',
             service: '',
             priority: '',
-            search: ''
+            search: '',
+            clienteEmpresa: '',
+            cnpj: '',
+            chavePix: ''
         };
 
         // Resetar UI
@@ -495,17 +550,24 @@ class RelatoriosOptimized {
         
         document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelector('[data-type="all"]')?.classList.add('active');
-                const dateFrom = document.getElementById('dateFrom');
+        
+        const dateFrom = document.getElementById('dateFrom');
         const dateTo = document.getElementById('dateTo');
         const serviceFilter = document.getElementById('serviceFilter');
         const priorityFilter = document.getElementById('priorityFilter');
         const searchInput = document.getElementById('searchInput');
+        const clienteEmpresaFilter = document.getElementById('clienteEmpresaFilter');
+        const cnpjFilter = document.getElementById('cnpjFilter');
+        const chavePixFilter = document.getElementById('chavePixFilter');
 
         if (dateFrom) dateFrom.value = '';
         if (dateTo) dateTo.value = '';
         if (serviceFilter) serviceFilter.value = '';
         if (priorityFilter) priorityFilter.value = '';
         if (searchInput) searchInput.value = '';
+        if (clienteEmpresaFilter) clienteEmpresaFilter.value = '';
+        if (cnpjFilter) cnpjFilter.value = '';
+        if (chavePixFilter) chavePixFilter.value = '';
 
         this.setDefaultDates();
         this.applyFilters();
@@ -571,7 +633,7 @@ class RelatoriosOptimized {
             const emptyRow = document.createElement('tr');
             emptyRow.className = 'empty-state';
             const isExpanded = localStorage.getItem('valoresDetalhadosExpanded') === 'true';
-            const colspan = isExpanded ? 18 : 11;
+            const colspan = isExpanded ? 21 : 14;
             emptyRow.innerHTML = `
                 <td colspan="${colspan}" style="text-align: center; padding: 3rem;">
                     <i class="fas fa-inbox" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
@@ -600,7 +662,10 @@ class RelatoriosOptimized {
             <td>${item.ticket || item.id}</td>
             <td>${item.title}</td>
             <td>${item.solicitante}</td>
-            <td>${item.recebedor}</td>
+            <td>${item.recebedor || '-'}</td>
+            <td>${item.chavePix || '-'}</td>
+            <td>${item.clienteEmpresa || '-'}</td>
+            <td>${item.cnpj || '-'}</td>
             <td>${item.service}</td>
             <td><strong>${item.valor}</strong></td>
             <td class="valores-detalhados-toggle-cell" style="display: ${displayStyle};"></td>
@@ -967,6 +1032,25 @@ class RelatoriosOptimized {
                 }
                 
                 dados.itens_rota.forEach((item, index) => {
+                    // Construir informações adicionais (recebedor, PIX, cliente/empresa, CNPJ)
+                    let infoAdicional = '';
+                    if (item.recebedor || item.chave_pix || item.cliente_empresa || item.cnpj) {
+                        infoAdicional = '<div class="route-item-info-adicional">';
+                        if (item.recebedor) {
+                            infoAdicional += `<div class="route-item-info"><label><i class="fas fa-user-check"></i> Recebedor:</label><span>${item.recebedor}</span></div>`;
+                        }
+                        if (item.chave_pix) {
+                            infoAdicional += `<div class="route-item-info"><label><i class="fas fa-qrcode"></i> Chave PIX:</label><span>${item.chave_pix}</span></div>`;
+                        }
+                        if (item.cliente_empresa) {
+                            infoAdicional += `<div class="route-item-info"><label><i class="fas fa-building"></i> Cliente/Empresa:</label><span>${item.cliente_empresa}</span></div>`;
+                        }
+                        if (item.cnpj) {
+                            infoAdicional += `<div class="route-item-info"><label><i class="fas fa-id-card"></i> CNPJ:</label><span>${item.cnpj}</span></div>`;
+                        }
+                        infoAdicional += '</div>';
+                    }
+                    
                     html += `
                         <div class="route-item-detail-card">
                             <div class="route-item-header">
@@ -978,6 +1062,7 @@ class RelatoriosOptimized {
                                     <label>Serviço:</label>
                                     <span>${item.servico}</span>
                                 </div>
+                                ${infoAdicional}
                                 <div class="route-item-valores">
                                     <div class="valor-detail"><label>KM:</label><span>${item.valor_km}</span></div>
                                     <div class="valor-detail"><label>Pedágio:</label><span>${item.valor_pedagio}</span></div>

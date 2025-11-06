@@ -65,6 +65,28 @@
                                     {% endfor %}
                                 </select>
                             </div>
+                            <div class="form-group route-recebedor-field">
+                                <label for="routeRecebedor1">Recebedor</label>
+                                <input type="text" id="routeRecebedor1" name="route_recebedor_1" class="recebedor-input" list="recebedores-list-1" placeholder="Digite ou selecione o recebedor" autocomplete="off">
+                                <datalist id="recebedores-list-1" class="recebedores-datalist"></datalist>
+                                <small class="form-help">Digite o nome do recebedor</small>
+                            </div>
+                            <div class="form-group route-pix-field">
+                                <label for="routePix1">Chave PIX</label>
+                                <input type="text" id="routePix1" name="route_pix_1" class="pix-input" placeholder="Chave PIX será preenchida automaticamente" readonly style="background-color: #f0f0f0;">
+                                <small class="form-help">Preenchido automaticamente</small>
+                            </div>
+                            <div class="form-group route-cliente-empresa-field">
+                                <label for="routeClienteEmpresa1">Cliente/Empresa</label>
+                                <input type="text" id="routeClienteEmpresa1" name="route_cliente_empresa_1" class="cliente-empresa-input" list="clientes-list-1" placeholder="Digite ou selecione o cliente/empresa" autocomplete="off">
+                                <datalist id="clientes-list-1" class="clientes-datalist"></datalist>
+                                <small class="form-help">Digite o nome do cliente/empresa</small>
+                            </div>
+                            <div class="form-group route-cnpj-field">
+                                <label for="routeCnpj1">CNPJ</label>
+                                <input type="text" id="routeCnpj1" name="route_cnpj_1" class="cnpj-input" placeholder="CNPJ será preenchido automaticamente" readonly style="background-color: #f0f0f0;">
+                                <small class="form-help">Preenchido automaticamente</small>
+                            </div>
                         </div>
                         <!-- Valores Detalhados para ID 1 -->
                         <div class="valores-detalhados-group">
@@ -123,6 +145,28 @@
                                     <option value="" disabled>Nenhum serviço disponível</option>
                                     {% endfor %}
                                 </select>
+                            </div>
+                            <div class="form-group route-recebedor-field">
+                                <label for="routeRecebedor2">Recebedor</label>
+                                <input type="text" id="routeRecebedor2" name="route_recebedor_2" class="recebedor-input" list="recebedores-list-2" placeholder="Digite ou selecione o recebedor" autocomplete="off">
+                                <datalist id="recebedores-list-2" class="recebedores-datalist"></datalist>
+                                <small class="form-help">Digite o nome do recebedor</small>
+                            </div>
+                            <div class="form-group route-pix-field">
+                                <label for="routePix2">Chave PIX</label>
+                                <input type="text" id="routePix2" name="route_pix_2" class="pix-input" placeholder="Chave PIX será preenchida automaticamente" readonly style="background-color: #f0f0f0;">
+                                <small class="form-help">Preenchido automaticamente</small>
+                            </div>
+                            <div class="form-group route-cliente-empresa-field">
+                                <label for="routeClienteEmpresa2">Cliente/Empresa</label>
+                                <input type="text" id="routeClienteEmpresa2" name="route_cliente_empresa_2" class="cliente-empresa-input" list="clientes-list-2" placeholder="Digite ou selecione o cliente/empresa" autocomplete="off">
+                                <datalist id="clientes-list-2" class="clientes-datalist"></datalist>
+                                <small class="form-help">Digite o nome do cliente/empresa</small>
+                            </div>
+                            <div class="form-group route-cnpj-field">
+                                <label for="routeCnpj2">CNPJ</label>
+                                <input type="text" id="routeCnpj2" name="route_cnpj_2" class="cnpj-input" placeholder="CNPJ será preenchido automaticamente" readonly style="background-color: #f0f0f0;">
+                                <small class="form-help">Preenchido automaticamente</small>
                             </div>
                         </div>
                         <!-- Valores Detalhados para ID 2 -->
@@ -254,7 +298,25 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="campaignRecebedor">Nome do Recebedor</label>
-                            <input type="text" id="campaignRecebedor" name="casual_recebedor" placeholder="Ex: Maria Santos" required>
+                        <input type="text" id="campaignRecebedor" name="casual_recebedor" class="recebedor-input" list="recebedores-list-casual" placeholder="Digite ou selecione o recebedor" autocomplete="off" required>
+                        <datalist id="recebedores-list-casual" class="recebedores-datalist"></datalist>
+                        <small class="form-help">Digite o nome do recebedor</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="campaignPix">Chave PIX</label>
+                        <input type="text" id="campaignPix" name="casual_pix" class="pix-input" placeholder="Chave PIX será preenchida automaticamente" readonly style="background-color: #f0f0f0;">
+                        <small class="form-help">Preenchido automaticamente</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="campaignClienteEmpresa">Cliente/Empresa</label>
+                        <input type="text" id="campaignClienteEmpresa" name="casual_cliente_empresa" class="cliente-empresa-input" list="clientes-list-casual" placeholder="Digite ou selecione o cliente/empresa" autocomplete="off">
+                        <datalist id="clientes-list-casual" class="clientes-datalist"></datalist>
+                        <small class="form-help">Digite o nome do cliente/empresa</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="campaignCnpj">CNPJ</label>
+                        <input type="text" id="campaignCnpj" name="casual_cnpj" class="cnpj-input" placeholder="CNPJ será preenchido automaticamente" readonly style="background-color: #f0f0f0;">
+                        <small class="form-help">Preenchido automaticamente</small>
                     </div>
                 </div>
                 
@@ -419,6 +481,10 @@
                     ...novoId.querySelectorAll('[id*="routeId2"]'),
                     ...novoId.querySelectorAll('[id*="routeValor2"]'),
                     ...novoId.querySelectorAll('[id*="routeServico2"]'),
+                    ...novoId.querySelectorAll('[id*="routeRecebedor2"]'),
+                    ...novoId.querySelectorAll('[id*="routePix2"]'),
+                    ...novoId.querySelectorAll('[id*="routeClienteEmpresa2"]'),
+                    ...novoId.querySelectorAll('[id*="routeCnpj2"]'),
                     ...novoId.querySelectorAll('[id*="routeValorKm2"]'),
                     ...novoId.querySelectorAll('[id*="routeValorPedagio2"]'),
                     ...novoId.querySelectorAll('[id*="routeValorHospedagem2"]'),
@@ -426,7 +492,9 @@
                     ...novoId.querySelectorAll('[id*="routeValorOutros2"]'),
                     ...novoId.querySelectorAll('[id*="routeValorTotal2"]'),
                     ...novoId.querySelectorAll('[name*="_2"]'),
-                    ...novoId.querySelectorAll('label[for*="2"]')
+                    ...novoId.querySelectorAll('label[for*="2"]'),
+                    ...novoId.querySelectorAll('datalist[id*="recebedores-list-2"]'),
+                    ...novoId.querySelectorAll('datalist[id*="clientes-list-2"]')
                 ];
                 
                 elementosParaAtualizar.forEach(elemento => {
@@ -598,8 +666,10 @@
                             } else {
                                 e.target.value = '';
                             }
-                            // Calcular total deste ID e total geral IMEDIATAMENTE
-                            calcularTotal();
+                            // Calcular total deste ID e total geral usando requestAnimationFrame para garantir DOM atualizado
+                            requestAnimationFrame(() => {
+                                calcularTotal();
+                            });
                         });
                         
                         // Formatação ao perder foco
@@ -616,10 +686,17 @@
                 
                 // Adicionar também usando event delegation no container como backup
                 // Isso garante que mesmo se os listeners diretos falharem, o cálculo ainda funcionará
+                // IMPORTANTE: Sempre usar event delegation para garantir que funcione com todos os IDs dinâmicos
                 const containerDinamicos = document.getElementById('route-ids-dinamicos');
-                if (containerDinamicos && !containerDinamicos.hasAttribute('data-delegation-added')) {
-                    containerDinamicos.setAttribute('data-delegation-added', 'true');
-                    containerDinamicos.addEventListener('input', function(e) {
+                if (containerDinamicos) {
+                    // Remover listener anterior se existir (para evitar múltiplos listeners)
+                    const existingHandler = containerDinamicos._delegationHandler;
+                    if (existingHandler) {
+                        containerDinamicos.removeEventListener('input', existingHandler);
+                    }
+                    
+                    // Criar novo handler
+                    const delegationHandler = function(e) {
                         const target = e.target;
                         const id = target.id;
                         
@@ -635,34 +712,69 @@
                                 numeroID = parseInt(match[1]);
                             }
                             
-                            if (numeroID && numeroID >= 3) {
+                            // Processar tanto IDs fixos (1, 2) quanto dinâmicos (3+)
+                            if (numeroID && numeroID >= 1) {
                                 console.log(`💰 Event delegation: campo ${id} alterado, recalculando ID ${numeroID}...`);
-                                // Pequeno delay para garantir que o valor foi atualizado
-                                setTimeout(() => {
-                                    if (window.calcularTotalID) {
-                                        const totalID = window.calcularTotalID(numeroID);
-                                        console.log(`💰 Total ID ${numeroID}: ${formatarValorMonetario(totalID)}`);
-                                    }
-                                    if (window.calcularTotalTodosIDs) {
-                                        window.calcularTotalTodosIDs();
-                                    }
-                                }, 10);
+                                
+                                // Usar requestAnimationFrame para garantir que o DOM foi atualizado
+                                requestAnimationFrame(() => {
+                                    setTimeout(() => {
+                                        if (window.calcularTotalID) {
+                                            const totalID = window.calcularTotalID(numeroID);
+                                            console.log(`💰 Total ID ${numeroID}: ${formatarValorMonetario(totalID)}`);
+                                        }
+                                        if (window.calcularTotalTodosIDs) {
+                                            window.calcularTotalTodosIDs();
+                                        }
+                                    }, 0);
+                                });
                             }
                         }
-                    });
-                    console.log('✅ Event delegation adicionado ao container como backup');
+                    };
+                    
+                    // Armazenar referência do handler para poder remover depois
+                    containerDinamicos._delegationHandler = delegationHandler;
+                    containerDinamicos.addEventListener('input', delegationHandler, true); // Use capture phase
+                    console.log('✅ Event delegation atualizado no container');
                 }
                 
-                // Calcular total inicial após adicionar ao DOM
+                // Atualizar datalists para o novo ID dinâmico
                 setTimeout(() => {
-                    if (window.calcularTotalID) {
-                        window.calcularTotalID(novoNumero);
+                    // Buscar datalists dentro do novo ID
+                    const recebedoresDatalist = novoId.querySelector(`datalist[id*="recebedores-list-${novoNumero}"]`);
+                    const clientesDatalist = novoId.querySelector(`datalist[id*="clientes-list-${novoNumero}"]`);
+                    
+                    // Preencher datalists se existirem
+                    if (recebedoresDatalist && window.carregarRecebedores) {
+                        // A função carregarRecebedores já preenche todos os datalists
+                        window.carregarRecebedores();
                     }
-                    if (window.calcularTotalTodosIDs) {
-                        window.calcularTotalTodosIDs();
+                    if (clientesDatalist && window.carregarClientesEmpresas) {
+                        // A função carregarClientesEmpresas já preenche todos os datalists
+                        window.carregarClientesEmpresas();
                     }
-                    console.log('✅ Totais calculados inicialmente para ID', novoNumero);
-                }, 50);
+                    console.log('✅ Datalists atualizados para ID', novoNumero);
+                }, 100);
+                
+                // Calcular total inicial após adicionar ao DOM
+                // Usar múltiplos delays para garantir que o DOM está totalmente renderizado
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        // Verificar se o elemento ainda existe no DOM
+                        const elementoVerificar = document.querySelector(`[data-route-id="${novoNumero}"]`);
+                        if (elementoVerificar) {
+                            if (window.calcularTotalID) {
+                                const total = window.calcularTotalID(novoNumero);
+                                console.log(`✅ Total inicial calculado para ID ${novoNumero}: ${formatarValorMonetario(total)}`);
+                            }
+                            if (window.calcularTotalTodosIDs) {
+                                window.calcularTotalTodosIDs();
+                            }
+                        } else {
+                            console.warn(`⚠️ Elemento ID ${novoNumero} não encontrado no DOM para cálculo inicial`);
+                        }
+                    }, 100);
+                });
                 
                 // Scroll suave para o novo ID
                 setTimeout(() => {
@@ -939,6 +1051,13 @@
             // Função para calcular total de um ID específico
             // Tornar global para acesso de outras funções
             window.calcularTotalID = function(numeroID) {
+                // Verificar se o elemento existe no DOM antes de calcular
+                const elementoGrupo = document.querySelector(`[data-route-id="${numeroID}"]`);
+                if (!elementoGrupo) {
+                    console.warn(`⚠️ Grupo ID ${numeroID} não encontrado no DOM`);
+                    return 0;
+                }
+                
                 // Incluir o campo "Valor Atividade" no cálculo
                 const campoValorAtividade = document.getElementById(`routeValor${numeroID}`);
                 const campos = [
@@ -951,13 +1070,21 @@
                 ];
                 
                 let total = 0;
+                let camposEncontrados = 0;
                 campos.forEach(campo => {
                     if (campo) {
+                        camposEncontrados++;
                         const valor = parseValorMonetario(campo.value);
                         total += valor;
                         console.log(`🔍 ID ${numeroID} - Campo ${campo.id}: "${campo.value}" -> ${valor}`);
                     }
                 });
+                
+                // Se nenhum campo foi encontrado, pode ser que o elemento ainda não esteja no DOM
+                if (camposEncontrados === 0) {
+                    console.warn(`⚠️ Nenhum campo de valor encontrado para ID ${numeroID}`);
+                    return 0;
+                }
                 
                 const campoTotal = document.getElementById(`routeValorTotal${numeroID}`);
                 if (campoTotal) {
@@ -979,22 +1106,31 @@
                 for (let i = 1; i <= 2; i++) {
                     if (window.calcularTotalID) {
                         const totalID = window.calcularTotalID(i);
-                    totalTodos += totalID;
+                        totalTodos += totalID;
                         console.log(`🔍 Total ID ${i}: ${totalID}`);
                     }
                 }
                 
                 // Calcular IDs dinâmicos (3+)
-                const idsDinamicos = document.querySelectorAll('#route-ids-dinamicos .route-id-group');
-                console.log(`🔍 Encontrados ${idsDinamicos.length} IDs dinâmicos`);
-                idsDinamicos.forEach(idGroup => {
-                    const routeId = idGroup.getAttribute('data-route-id');
-                    if (routeId && window.calcularTotalID) {
-                        const totalID = window.calcularTotalID(parseInt(routeId));
-                        totalTodos += totalID;
-                        console.log(`🔍 Total ID dinâmico ${routeId}: ${totalID}`);
-                    }
-                });
+                // Buscar todos os grupos de IDs dinâmicos no container
+                const containerDinamicos = document.getElementById('route-ids-dinamicos');
+                if (containerDinamicos) {
+                    const idsDinamicos = containerDinamicos.querySelectorAll('.route-id-group[data-route-id]');
+                    console.log(`🔍 Encontrados ${idsDinamicos.length} IDs dinâmicos`);
+                    
+                    idsDinamicos.forEach(idGroup => {
+                        const routeId = idGroup.getAttribute('data-route-id');
+                        if (routeId && window.calcularTotalID) {
+                            const numeroID = parseInt(routeId);
+                            // Sempre calcular, independente da visibilidade (elementos podem estar ocultos mas ainda no DOM)
+                            const totalID = window.calcularTotalID(numeroID);
+                            totalTodos += totalID;
+                            console.log(`🔍 Total ID dinâmico ${routeId}: ${totalID}`);
+                        }
+                    });
+                } else {
+                    console.warn('⚠️ Container route-ids-dinamicos não encontrado');
+                }
                 
                 const campoTotalTodos = document.getElementById('routeValorTotalTodos');
                 if (campoTotalTodos) {
@@ -1003,6 +1139,8 @@
                 } else {
                     console.warn('⚠️ Campo routeValorTotalTodos não encontrado');
                 }
+                
+                return totalTodos;
             };
             
             // Adicionar event listeners para TODOS os campos de valor (Em Rota) - IDs fixos 1 e 2
@@ -1477,6 +1615,294 @@
             // Tentar novamente após um delay
             setTimeout(setupAddButton, 300);
             setTimeout(setupAddButton, 1000);
+            
+            // ============================================
+            // FUNCIONALIDADE DE RECEBEDOR E CHAVE PIX
+            // ============================================
+            
+            // Carregar lista de recebedores ao carregar a página
+            function carregarRecebedores() {
+                fetch('/solicitacoes/buscar-recebedores/')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.recebedores) {
+                            // Preencher todos os datalists (incluindo o do Casual)
+                            document.querySelectorAll('.recebedores-datalist').forEach(datalist => {
+                                datalist.innerHTML = '';
+                                data.recebedores.forEach(recebedor => {
+                                    const option = document.createElement('option');
+                                    option.value = recebedor.nome;
+                                    option.setAttribute('data-pix', recebedor.chave_pix);
+                                    datalist.appendChild(option);
+                                });
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar recebedores:', error);
+                    });
+            }
+            
+            // Função para preencher chave PIX automaticamente
+            function preencherChavePix(recebedorInput, pixInput) {
+                const nomeRecebedor = recebedorInput.value.trim();
+                
+                if (!nomeRecebedor) {
+                    pixInput.value = '';
+                    return;
+                }
+                
+                // Buscar recebedor via AJAX
+                fetch(`/solicitacoes/buscar-recebedores/?q=${encodeURIComponent(nomeRecebedor)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.recebedores) {
+                            // Procurar recebedor exato
+                            const recebedor = data.recebedores.find(r => 
+                                r.nome.toLowerCase() === nomeRecebedor.toLowerCase()
+                            );
+                            
+                            if (recebedor) {
+                                pixInput.value = recebedor.chave_pix;
+                            } else {
+                                // Se não encontrar exato, tentar o primeiro resultado
+                                if (data.recebedores.length > 0) {
+                                    pixInput.value = data.recebedores[0].chave_pix;
+                                } else {
+                                    pixInput.value = '';
+                                }
+                            }
+                        } else {
+                            pixInput.value = '';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar chave PIX:', error);
+                        pixInput.value = '';
+                    });
+            }
+            
+            // Adicionar event listeners para campos de recebedor existentes
+            function configurarRecebedores() {
+                // Para campos estáticos (ID 1 e 2)
+                for (let i = 1; i <= 2; i++) {
+                    const recebedorInput = document.getElementById(`routeRecebedor${i}`);
+                    const pixInput = document.getElementById(`routePix${i}`);
+                    
+                    if (recebedorInput && pixInput) {
+                        recebedorInput.addEventListener('input', function() {
+                            preencherChavePix(this, pixInput);
+                        });
+                        
+                        recebedorInput.addEventListener('change', function() {
+                            preencherChavePix(this, pixInput);
+                        });
+                    }
+                }
+                
+                // Para formulário Casual
+                const campaignRecebedor = document.getElementById('campaignRecebedor');
+                const campaignPix = document.getElementById('campaignPix');
+                
+                if (campaignRecebedor && campaignPix) {
+                    campaignRecebedor.addEventListener('input', function() {
+                        preencherChavePix(this, campaignPix);
+                    });
+                    
+                    campaignRecebedor.addEventListener('change', function() {
+                        preencherChavePix(this, campaignPix);
+                    });
+                }
+                
+                // Para campos dinâmicos (usar event delegation)
+                document.addEventListener('input', function(e) {
+                    if (e.target.classList.contains('recebedor-input')) {
+                        const recebedorInput = e.target;
+                        
+                        // Verificar se é campo de rota dinâmico
+                        if (recebedorInput.id.startsWith('routeRecebedor')) {
+                            const numeroID = recebedorInput.id.replace('routeRecebedor', '');
+                            const pixInput = document.getElementById(`routePix${numeroID}`);
+                            
+                            if (pixInput) {
+                                preencherChavePix(recebedorInput, pixInput);
+                            }
+                        }
+                        // Verificar se é campo Casual
+                        else if (recebedorInput.id === 'campaignRecebedor') {
+                            const pixInput = document.getElementById('campaignPix');
+                            if (pixInput) {
+                                preencherChavePix(recebedorInput, pixInput);
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // ============================================
+            // FUNCIONALIDADE DE CLIENTE/EMPRESA
+            // ============================================
+            
+            // Carregar lista de clientes/empresas ao carregar a página
+            function carregarClientesEmpresas() {
+                fetch('/solicitacoes/buscar-clientes-empresas/')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.clientes_empresas) {
+                            // Preencher todos os datalists de clientes
+                            document.querySelectorAll('.clientes-datalist').forEach(datalist => {
+                                datalist.innerHTML = '';
+                                data.clientes_empresas.forEach(cliente => {
+                                    const option = document.createElement('option');
+                                    option.value = cliente.nome;
+                                    option.setAttribute('data-cnpj', cliente.cnpj || '');
+                                    datalist.appendChild(option);
+                                });
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar clientes/empresas:', error);
+                    });
+            }
+            
+            // Função para preencher CNPJ automaticamente
+            function preencherCnpj(clienteInput, cnpjInput) {
+                const nomeCliente = clienteInput.value.trim();
+                
+                if (!nomeCliente) {
+                    cnpjInput.value = '';
+                    return;
+                }
+                
+                // Buscar cliente via AJAX
+                fetch(`/solicitacoes/buscar-clientes-empresas/?q=${encodeURIComponent(nomeCliente)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.clientes_empresas) {
+                            // Procurar cliente exato
+                            const cliente = data.clientes_empresas.find(c => 
+                                c.nome.toLowerCase() === nomeCliente.toLowerCase()
+                            );
+                            
+                            if (cliente) {
+                                cnpjInput.value = cliente.cnpj || '';
+                            } else {
+                                // Se não encontrar exato, tentar o primeiro resultado
+                                if (data.clientes_empresas.length > 0) {
+                                    cnpjInput.value = data.clientes_empresas[0].cnpj || '';
+                                } else {
+                                    cnpjInput.value = '';
+                                }
+                            }
+                        } else {
+                            cnpjInput.value = '';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar CNPJ:', error);
+                        cnpjInput.value = '';
+                    });
+            }
+            
+            // Adicionar event listeners para campos de cliente/empresa
+            function configurarClientesEmpresas() {
+                // Para campos estáticos (ID 1 e 2)
+                for (let i = 1; i <= 2; i++) {
+                    const clienteInput = document.getElementById(`routeClienteEmpresa${i}`);
+                    const cnpjInput = document.getElementById(`routeCnpj${i}`);
+                    
+                    if (clienteInput && cnpjInput) {
+                        clienteInput.addEventListener('input', function() {
+                            preencherCnpj(this, cnpjInput);
+                        });
+                        
+                        clienteInput.addEventListener('change', function() {
+                            preencherCnpj(this, cnpjInput);
+                        });
+                    }
+                }
+                
+                // Para formulário Casual
+                const campaignClienteEmpresa = document.getElementById('campaignClienteEmpresa');
+                const campaignCnpj = document.getElementById('campaignCnpj');
+                
+                if (campaignClienteEmpresa && campaignCnpj) {
+                    campaignClienteEmpresa.addEventListener('input', function() {
+                        preencherCnpj(this, campaignCnpj);
+                    });
+                    
+                    campaignClienteEmpresa.addEventListener('change', function() {
+                        preencherCnpj(this, campaignCnpj);
+                    });
+                }
+                
+                // Para campos dinâmicos (usar event delegation)
+                document.addEventListener('input', function(e) {
+                    if (e.target.classList.contains('cliente-empresa-input')) {
+                        const clienteInput = e.target;
+                        
+                        // Verificar se é campo de rota dinâmico
+                        if (clienteInput.id.startsWith('routeClienteEmpresa')) {
+                            const numeroID = clienteInput.id.replace('routeClienteEmpresa', '');
+                            const cnpjInput = document.getElementById(`routeCnpj${numeroID}`);
+                            
+                            if (cnpjInput) {
+                                preencherCnpj(clienteInput, cnpjInput);
+                            }
+                        }
+                        // Verificar se é campo Casual
+                        else if (clienteInput.id === 'campaignClienteEmpresa') {
+                            const cnpjInput = document.getElementById('campaignCnpj');
+                            if (cnpjInput) {
+                                preencherCnpj(clienteInput, cnpjInput);
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Carregar recebedores e clientes/empresas e configurar quando o DOM estiver pronto
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    carregarRecebedores();
+                    carregarClientesEmpresas();
+                    configurarRecebedores();
+                    configurarClientesEmpresas();
+                });
+            } else {
+                carregarRecebedores();
+                carregarClientesEmpresas();
+                configurarRecebedores();
+                configurarClientesEmpresas();
+            }
+            
+            // Atualizar função criarNovoRouteId para adicionar listeners aos novos campos
+            const criarNovoRouteIdOriginal = window.criarNovoRouteId;
+            if (criarNovoRouteIdOriginal) {
+                window.criarNovoRouteId = function(e) {
+                    const resultado = criarNovoRouteIdOriginal(e);
+                    
+                    // Após criar novo ID, adicionar listeners para recebedor
+                    setTimeout(function() {
+                        const novoNumero = window.routeIdCounter - 1;
+                        const recebedorInput = document.getElementById(`routeRecebedor${novoNumero}`);
+                        const pixInput = document.getElementById(`routePix${novoNumero}`);
+                        
+                        if (recebedorInput && pixInput) {
+                            recebedorInput.addEventListener('input', function() {
+                                preencherChavePix(this, pixInput);
+                            });
+                            
+                            recebedorInput.addEventListener('change', function() {
+                                preencherChavePix(this, pixInput);
+                            });
+                        }
+                    }, 100);
+                    
+                    return resultado;
+                };
+            }
         });
     </script>
 </div>

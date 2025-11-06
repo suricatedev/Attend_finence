@@ -195,7 +195,336 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- ============================================
+                     SEÇÃO DE RECEBEDORES
+                     ============================================ -->
+                <div class="services-container" style="margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #e2e8f0;">
+                    <div class="services-header">
+                        <h2>
+                            <i class="fas fa-user-tie"></i>
+                            Gerenciar Recebedores
+                        </h2>
+                        <div class="header-actions">
+                            <div class="services-stats">
+                                <div class="stat-item">
+                                    <span class="stat-number" id="totalRecebedores">{{ total_recebedores }}</span>
+                                    <span class="stat-label">Total</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number" id="activeRecebedores">{{ recebedores_ativos }}</span>
+                                    <span class="stat-label">Ativos</span>
+                                </div>
+                            </div>
+                            <button class="btn-primary" id="addRecebedorBtn">
+                                <i class="fas fa-plus"></i>
+                                Adicionar Recebedor
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filtros para Recebedores -->
+                    <div class="services-filters">
+                        <div class="filter-group">
+                            <label for="recebedorStatusFilter">
+                                <i class="fas fa-toggle-on"></i>
+                                Status
+                            </label>
+                            <select id="recebedorStatusFilter">
+                                <option value="all">Todos os status</option>
+                                <option value="active">Ativos</option>
+                                <option value="inactive">Inativos</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="recebedorSearchFilter">
+                                <i class="fas fa-search"></i>
+                                Buscar
+                            </label>
+                            <input type="text" id="recebedorSearchFilter" placeholder="Nome ou chave PIX...">
+                        </div>
+                        
+                        <button class="filter-btn" id="applyRecebedorFilters">
+                            <i class="fas fa-search"></i>
+                            Filtrar
+                        </button>
+                        
+                        <button class="filter-btn" id="clearRecebedorFilters">
+                            <i class="fas fa-times"></i>
+                            Limpar
+                        </button>
+                    </div>
+                    
+                    <!-- Lista de Recebedores -->
+                    <div class="services-list-container">
+                        <div class="list-header">
+                            <div class="view-toggle">
+                                <button class="view-btn active" id="recebedorListViewBtn" title="Visualização em lista">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                                <button class="view-btn" id="recebedorGridViewBtn" title="Visualização em grid">
+                                    <i class="fas fa-th"></i>
+                                </button>
+                            </div>
+                            <div class="list-actions">
+                                <button class="btn-secondary" id="refreshRecebedoresBtn">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Atualizar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="services-list" id="recebedoresList">
+                            <!-- Lista de recebedores em modo lista -->
+                            <div class="services-list-view" id="recebedoresListView">
+                                {% if recebedores %}
+                                    {% for recebedor in recebedores %}
+                                    <div class="service-item recebedor-item" data-recebedor-id="{{ recebedor.id }}">
+                                        <div class="service-icon">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div class="service-info">
+                                            <div class="service-main-info">
+                                                <div class="service-name" title="{{ recebedor.nome }}">{{ recebedor.nome }}</div>
+                                                <div class="service-description" title="{{ recebedor.chave_pix }}">
+                                                    <i class="fas fa-qrcode"></i> {{ recebedor.chave_pix }}
+                                                </div>
+                                            </div>
+                                            <div class="service-status {% if recebedor.ativo %}active{% else %}inactive{% endif %}" 
+                                                 title="{% if recebedor.ativo %}Recebedor ativo{% else %}Recebedor inativo{% endif %}">
+                                                {% if recebedor.ativo %}Ativo{% else %}Inativo{% endif %}
+                                            </div>
+                                            <div class="service-actions">
+                                                <button class="btn-edit" data-recebedor-id="{{ recebedor.id }}" title="Editar recebedor">
+                                                    <i class="fas fa-edit"></i>
+                                                    Editar
+                                                </button>
+                                                <button class="btn-delete" data-recebedor-id="{{ recebedor.id }}" title="Excluir recebedor">
+                                                    <i class="fas fa-trash"></i>
+                                                    Excluir
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="no-results">
+                                        <i class="fas fa-user-slash"></i>
+                                        <h3>Nenhum recebedor encontrado</h3>
+                                        <p>Adicione um novo recebedor para começar.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Grid de recebedores em modo grid -->
+                            <div class="services-grid-view" id="recebedoresGridView" style="display: none;">
+                                {% if recebedores %}
+                                    {% for recebedor in recebedores %}
+                                    <div class="service-card recebedor-card" data-recebedor-id="{{ recebedor.id }}">
+                                        <div class="service-icon">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div class="service-info">
+                                            <h3>{{ recebedor.nome }}</h3>
+                                            <p><i class="fas fa-qrcode"></i> {{ recebedor.chave_pix }}</p>
+                                            <div class="service-meta">
+                                                <span class="service-status {% if recebedor.ativo %}active{% else %}inactive{% endif %}">
+                                                    {% if recebedor.ativo %}Ativo{% else %}Inativo{% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="service-actions">
+                                            <button class="btn-edit" data-recebedor-id="{{ recebedor.id }}" title="Editar recebedor">
+                                                <i class="fas fa-edit"></i>
+                                                Editar
+                                            </button>
+                                            <button class="btn-delete" data-recebedor-id="{{ recebedor.id }}" title="Excluir recebedor">
+                                                <i class="fas fa-trash"></i>
+                                                Excluir
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="no-results">
+                                        <i class="fas fa-user-slash"></i>
+                                        <h3>Nenhum recebedor encontrado</h3>
+                                        <p>Adicione um novo recebedor para começar.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ============================================
+                     SEÇÃO DE CLIENTES/EMPRESAS
+                     ============================================ -->
+                <div class="services-container" style="margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #e2e8f0;">
+                    <div class="services-header">
+                        <h2>
+                            <i class="fas fa-building"></i>
+                            Gerenciar Clientes/Empresas
+                        </h2>
+                        <div class="header-actions">
+                            <div class="services-stats">
+                                <div class="stat-item">
+                                    <span class="stat-number" id="totalClientesEmpresas">{{ total_clientes_empresas }}</span>
+                                    <span class="stat-label">Total</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number" id="activeClientesEmpresas">{{ clientes_empresas_ativos }}</span>
+                                    <span class="stat-label">Ativos</span>
+                                </div>
+                            </div>
+                            <button class="btn-primary" id="addClienteEmpresaBtn">
+                                <i class="fas fa-plus"></i>
+                                Adicionar Cliente/Empresa
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filtros para Clientes/Empresas -->
+                    <div class="services-filters">
+                        <div class="filter-group">
+                            <label for="clienteEmpresaStatusFilter">
+                                <i class="fas fa-toggle-on"></i>
+                                Status
+                            </label>
+                            <select id="clienteEmpresaStatusFilter">
+                                <option value="all">Todos os status</option>
+                                <option value="active">Ativos</option>
+                                <option value="inactive">Inativos</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="clienteEmpresaSearchFilter">
+                                <i class="fas fa-search"></i>
+                                Buscar
+                            </label>
+                            <input type="text" id="clienteEmpresaSearchFilter" placeholder="Nome do cliente/empresa...">
+                        </div>
+                        
+                        <button class="filter-btn" id="applyClienteEmpresaFilters">
+                            <i class="fas fa-search"></i>
+                            Filtrar
+                        </button>
+                        
+                        <button class="filter-btn" id="clearClienteEmpresaFilters">
+                            <i class="fas fa-times"></i>
+                            Limpar
+                        </button>
+                    </div>
+                    
+                    <!-- Lista de Clientes/Empresas -->
+                    <div class="services-list-container">
+                        <div class="list-header">
+                            <div class="view-toggle">
+                                <button class="view-btn active" id="clienteEmpresaListViewBtn" title="Visualização em lista">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                                <button class="view-btn" id="clienteEmpresaGridViewBtn" title="Visualização em grid">
+                                    <i class="fas fa-th"></i>
+                                </button>
+                            </div>
+                            <div class="list-actions">
+                                <button class="btn-secondary" id="refreshClientesEmpresasBtn">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Atualizar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="services-list" id="clientesEmpresasList">
+                            <!-- Lista de clientes/empresas em modo lista -->
+                            <div class="services-list-view" id="clientesEmpresasListView">
+                                {% if clientes_empresas %}
+                                    {% for cliente_empresa in clientes_empresas %}
+                                    <div class="service-item cliente-empresa-item" data-cliente-empresa-id="{{ cliente_empresa.id }}">
+                                        <div class="service-icon">
+                                            <i class="fas fa-building"></i>
+                                        </div>
+                                        <div class="service-info">
+                                            <div class="service-main-info">
+                                                <div class="service-name" title="{{ cliente_empresa.nome }}">{{ cliente_empresa.nome }}</div>
+                                                {% if cliente_empresa.cnpj %}
+                                                <div class="service-description" title="{{ cliente_empresa.cnpj }}">
+                                                    <i class="fas fa-id-card"></i> {{ cliente_empresa.cnpj }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="service-status {% if cliente_empresa.ativo %}active{% else %}inactive{% endif %}" 
+                                                 title="{% if cliente_empresa.ativo %}Cliente/Empresa ativo{% else %}Cliente/Empresa inativo{% endif %}">
+                                                {% if cliente_empresa.ativo %}Ativo{% else %}Inativo{% endif %}
+                                            </div>
+                                            <div class="service-actions">
+                                                <button class="btn-edit" data-cliente-empresa-id="{{ cliente_empresa.id }}" title="Editar cliente/empresa">
+                                                    <i class="fas fa-edit"></i>
+                                                    Editar
+                                                </button>
+                                                <button class="btn-delete" data-cliente-empresa-id="{{ cliente_empresa.id }}" title="Excluir cliente/empresa">
+                                                    <i class="fas fa-trash"></i>
+                                                    Excluir
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="no-results">
+                                        <i class="fas fa-building"></i>
+                                        <h3>Nenhum cliente/empresa encontrado</h3>
+                                        <p>Adicione um novo cliente/empresa para começar.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Grid de clientes/empresas em modo grid -->
+                            <div class="services-grid-view" id="clientesEmpresasGridView" style="display: none;">
+                                {% if clientes_empresas %}
+                                    {% for cliente_empresa in clientes_empresas %}
+                                    <div class="service-card cliente-empresa-card" data-cliente-empresa-id="{{ cliente_empresa.id }}">
+                                        <div class="service-icon">
+                                            <i class="fas fa-building"></i>
+                                        </div>
+                                        <div class="service-info">
+                                            <h3>{{ cliente_empresa.nome }}</h3>
+                                            {% if cliente_empresa.cnpj %}
+                                            <p><i class="fas fa-id-card"></i> {{ cliente_empresa.cnpj }}</p>
+                                            {% endif %}
+                                            <div class="service-meta">
+                                                <span class="service-status {% if cliente_empresa.ativo %}active{% else %}inactive{% endif %}">
+                                                    {% if cliente_empresa.ativo %}Ativo{% else %}Inativo{% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="service-actions">
+                                            <button class="btn-edit" data-cliente-empresa-id="{{ cliente_empresa.id }}" title="Editar cliente/empresa">
+                                                <i class="fas fa-edit"></i>
+                                                Editar
+                                            </button>
+                                            <button class="btn-delete" data-cliente-empresa-id="{{ cliente_empresa.id }}" title="Excluir cliente/empresa">
+                                                <i class="fas fa-trash"></i>
+                                                Excluir
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="no-results">
+                                        <i class="fas fa-building"></i>
+                                        <h3>Nenhum cliente/empresa encontrado</h3>
+                                        <p>Adicione um novo cliente/empresa para começar.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+    </div>
 
 
     <!-- Modal para adicionar serviço -->
@@ -359,8 +688,329 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal para adicionar recebedor -->
+    <div class="modal" id="addRecebedorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="addRecebedorTitle">Adicionar Recebedor</h2>
+                <button class="close-btn" id="closeAddRecebedorModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="service-form-container">
+                    <div class="service-form-header">
+                        <h3>
+                            <i class="fas fa-user-plus"></i>
+                            Cadastrar Novo Recebedor
+                        </h3>
+                        <p>Preencha os dados do recebedor que receberá os pagamentos</p>
+                    </div>
+                    <form id="addRecebedorForm" method="POST" action="{% url 'criar_recebedor' %}">
+                        {% csrf_token %}
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="recebedorNome">
+                                    <i class="fas fa-user"></i>
+                                    Nome do Recebedor
+                                </label>
+                                <input type="text" id="recebedorNome" name="nome" required
+                                    placeholder="Ex: Maria Santos">
+                                <small class="form-help">Digite o nome completo do recebedor</small>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="recebedorChavePix">
+                                    <i class="fas fa-qrcode"></i>
+                                    Chave PIX
+                                </label>
+                                <input type="text" id="recebedorChavePix" name="chave_pix" required
+                                    placeholder="Ex: maria.santos@email.com ou 11999999999">
+                                <small class="form-help">Digite a chave PIX (CPF, email, telefone ou chave aleatória)</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="recebedorAtivo">
+                                <i class="fas fa-toggle-on"></i>
+                                Status do Recebedor
+                            </label>
+                            <select id="recebedorAtivo" name="ativo" required>
+                                <option value="true">Ativo - Disponível para seleção</option>
+                                <option value="false">Inativo - Não disponível</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelAddRecebedor">Cancelar</button>
+                <button type="submit" class="btn-primary" form="addRecebedorForm" id="saveRecebedor">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar recebedor -->
+    <div class="modal" id="editRecebedorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="editRecebedorTitle">Editar Recebedor</h2>
+                <button class="close-btn" id="closeEditRecebedorModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="service-form-container">
+                    <div class="service-form-header">
+                        <h3>
+                            <i class="fas fa-user-edit"></i>
+                            Editar Recebedor Existente
+                        </h3>
+                        <p>Modifique os dados do recebedor conforme necessário</p>
+                    </div>
+
+                    <form id="editRecebedorForm">
+                        <input type="hidden" id="editRecebedorId" name="id">
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="editRecebedorNome">
+                                    <i class="fas fa-user"></i>
+                                    Nome do Recebedor
+                                </label>
+                                <input type="text" id="editRecebedorNome" name="nome" required
+                                    placeholder="Ex: Maria Santos">
+                                <small class="form-help">Digite o nome completo do recebedor</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="editRecebedorChavePix">
+                                    <i class="fas fa-qrcode"></i>
+                                    Chave PIX
+                                </label>
+                                <input type="text" id="editRecebedorChavePix" name="chave_pix" required
+                                    placeholder="Ex: maria.santos@email.com ou 11999999999">
+                                <small class="form-help">Digite a chave PIX (CPF, email, telefone ou chave aleatória)</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="editRecebedorAtivo">
+                                    <i class="fas fa-toggle-on"></i>
+                                    Status do Recebedor
+                                </label>
+                                <select id="editRecebedorAtivo" name="ativo" required>
+                                    <option value="true">Ativo - Disponível para seleção</option>
+                                    <option value="false">Inativo - Não disponível</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Informações adicionais do recebedor -->
+                        <div class="service-info-section">
+                            <h4>
+                                <i class="fas fa-info-circle"></i>
+                                Informações do Recebedor
+                            </h4>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">ID do Recebedor:</span>
+                                    <span class="info-value" id="editRecebedorIdDisplay">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Data de Criação:</span>
+                                    <span class="info-value" id="editRecebedorCreatedAt">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Última Atualização:</span>
+                                    <span class="info-value" id="editRecebedorUpdatedAt">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelEditRecebedor">Cancelar</button>
+                <button type="button" class="btn-warning" id="toggleRecebedorStatus">
+                    <i class="fas fa-toggle-on"></i>
+                    <span id="toggleRecebedorStatusText">Alterar Status</span>
+                </button>
+                <button type="submit" class="btn-primary" form="editRecebedorForm" id="updateRecebedor">
+                    <i class="fas fa-save"></i>
+                    Salvar Alterações
+                </button>
+            </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+    <!-- Modal para Adicionar Cliente/Empresa -->
+    <div class="modal" id="addClienteEmpresaModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Adicionar Cliente/Empresa</h2>
+                <button class="close-btn" id="closeAddClienteEmpresaModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="service-form-container">
+                    <div class="service-form-header">
+                        <h3>
+                            <i class="fas fa-building"></i>
+                            Adicionar Novo Cliente/Empresa
+                        </h3>
+                        <p>Preencha os dados do cliente/empresa</p>
+                    </div>
+                    <form id="addClienteEmpresaForm" method="POST" action="{% url 'criar_cliente_empresa' %}">
+                        {% csrf_token %}
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="addClienteEmpresaNome">
+                                    <i class="fas fa-building"></i>
+                                    Nome do Cliente/Empresa
+                                </label>
+                                <input type="text" id="addClienteEmpresaNome" name="nome" required
+                                    placeholder="Ex: Empresa ABC Ltda">
+                                <small class="form-help">Digite o nome completo do cliente ou empresa</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="addClienteEmpresaCnpj">
+                                    <i class="fas fa-id-card"></i>
+                                    CNPJ
+                                </label>
+                                <input type="text" id="addClienteEmpresaCnpj" name="cnpj"
+                                    placeholder="Ex: 12.345.678/0001-90" maxlength="18">
+                                <small class="form-help">Digite o CNPJ da empresa (opcional)</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="addClienteEmpresaAtivo">
+                                <i class="fas fa-toggle-on"></i>
+                                Status do Cliente/Empresa
+                            </label>
+                            <select id="addClienteEmpresaAtivo" name="ativo" required>
+                                <option value="true">Ativo - Disponível para seleção</option>
+                                <option value="false">Inativo - Não disponível</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelAddClienteEmpresa">Cancelar</button>
+                <button type="submit" class="btn-primary" form="addClienteEmpresaForm" id="saveClienteEmpresa">Salvar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para Editar Cliente/Empresa -->
+    <div class="modal" id="editClienteEmpresaModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="editClienteEmpresaTitle">Editar Cliente/Empresa</h2>
+                <button class="close-btn" id="closeEditClienteEmpresaModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="service-form-container">
+                    <div class="service-form-header">
+                        <h3>
+                            <i class="fas fa-building"></i>
+                            Editar Cliente/Empresa Existente
+                        </h3>
+                        <p>Modifique os dados do cliente/empresa conforme necessário</p>
+                    </div>
+                    <form id="editClienteEmpresaForm">
+                        <input type="hidden" id="editClienteEmpresaId" name="id">
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="editClienteEmpresaNome">
+                                    <i class="fas fa-building"></i>
+                                    Nome do Cliente/Empresa
+                                </label>
+                                <input type="text" id="editClienteEmpresaNome" name="nome" required
+                                    placeholder="Ex: Empresa ABC Ltda">
+                                <small class="form-help">Digite o nome completo do cliente ou empresa</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="editClienteEmpresaCnpj">
+                                    <i class="fas fa-id-card"></i>
+                                    CNPJ
+                                </label>
+                                <input type="text" id="editClienteEmpresaCnpj" name="cnpj"
+                                    placeholder="Ex: 12.345.678/0001-90" maxlength="18">
+                                <small class="form-help">Digite o CNPJ da empresa (opcional)</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="editClienteEmpresaAtivo">
+                                    <i class="fas fa-toggle-on"></i>
+                                    Status do Cliente/Empresa
+                                </label>
+                                <select id="editClienteEmpresaAtivo" name="ativo" required>
+                                    <option value="true">Ativo - Disponível para seleção</option>
+                                    <option value="false">Inativo - Não disponível</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Informações adicionais do cliente/empresa -->
+                        <div class="service-info-section">
+                            <h4>
+                                <i class="fas fa-info-circle"></i>
+                                Informações do Cliente/Empresa
+                            </h4>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">ID do Cliente/Empresa:</span>
+                                    <span class="info-value" id="editClienteEmpresaIdDisplay">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Data de Criação:</span>
+                                    <span class="info-value" id="editClienteEmpresaCreatedAt">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Última Atualização:</span>
+                                    <span class="info-value" id="editClienteEmpresaUpdatedAt">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelEditClienteEmpresa">Cancelar</button>
+                <button type="submit" class="btn-primary" form="editClienteEmpresaForm" id="updateClienteEmpresa">
+                    <i class="fas fa-save"></i>
+                    Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block extra_js %}
     <script src="{% static 'js/servicos.js' %}" defer></script>
+    <script src="{% static 'js/recebedores.js' %}" defer></script>
+    <script src="{% static 'js/clientes-empresas.js' %}" defer></script>
 {% endblock %}

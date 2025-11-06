@@ -231,12 +231,36 @@
 
 .filters-main {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 15px;
-    align-items: end;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    align-items: start;
     width: 100%;
     box-sizing: border-box;
     max-width: 100%;
+}
+
+/* Grupos de filtros específicos */
+.filter-group-buttons {
+    grid-column: span 1;
+}
+
+.filter-group-dates {
+    grid-column: span 1;
+}
+
+/* Em telas maiores, agrupar melhor */
+@media (min-width: 1200px) {
+    .filters-main {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .filter-group-buttons {
+        grid-column: span 2;
+    }
+    
+    .filter-group-dates {
+        grid-column: span 2;
+    }
 }
 
 .filter-group {
@@ -248,27 +272,41 @@
 .filter-group label {
     font-weight: 600;
     color: #1C1C1C;
-    font-size: 0.75rem; /* Reduzido de 0.8rem */
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.filter-group label i {
+    color: #FFCB57;
+    font-size: 0.85rem;
 }
 
 .status-filters {
     display: flex;
-    gap: 4px; /* Reduzido de 6px */
+    gap: 6px;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .status-btn {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     color: #544350;
-    padding: 4px 8px; /* Reduzido de 6px 10px */
-    border-radius: 3px; /* Reduzido de 4px */
+    padding: 8px 12px;
+    border-radius: 6px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 3px; /* Reduzido de 4px */
-    font-size: 0.7rem; /* Reduzido de 0.75rem */
+    gap: 6px;
+    font-size: 0.8rem;
     transition: all 0.2s ease;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
 }
 
 .status-btn:hover {
@@ -288,14 +326,18 @@
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     color: #544350;
-    padding: 4px 8px;
-    border-radius: 3px;
+    padding: 8px 12px;
+    border-radius: 6px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 3px;
-    font-size: 0.7rem;
+    gap: 6px;
+    font-size: 0.8rem;
     transition: all 0.2s ease;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
 }
 
 .type-btn:hover {
@@ -312,17 +354,32 @@
 .date-range {
     display: flex;
     align-items: center;
-    gap: 6px; /* Reduzido de 8px */
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.date-separator {
+    color: #544350;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
 }
 
 .date-input {
-    padding: 6px 8px; /* Reduzido de 8px 10px */
+    padding: 8px 12px;
     border: 1px solid #e2e8f0;
-    border-radius: 3px; /* Reduzido de 4px */
-    font-size: 0.75rem; /* Reduzido de 0.8rem */
+    border-radius: 6px;
+    font-size: 0.8rem;
     background: white;
     color: #1C1C1C;
-    transition: border-color 0.2s ease;
+    transition: all 0.2s ease;
+    flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.date-input:hover {
+    border-color: #cbd5e1;
 }
 
 .date-input:focus {
@@ -332,20 +389,26 @@
 }
 
 .select-input {
-    padding: 6px 8px; /* Reduzido de 8px 10px */
+    padding: 8px 12px;
     border: 1px solid #e2e8f0;
-    border-radius: 3px; /* Reduzido de 4px */
-    font-size: 0.75rem; /* Reduzido de 0.8rem */
+    border-radius: 6px;
+    font-size: 0.8rem;
     background: white;
     color: #1C1C1C;
     cursor: pointer;
-    transition: border-color 0.2s ease;
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.select-input:hover {
+    border-color: #cbd5e1;
 }
 
 .select-input:focus {
     outline: none;
     border-color: #FFCB57;
-    box-shadow: 0 0 0 2px rgba(255, 203, 87, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.1);
 }
 
 .filters-actions {
@@ -1546,7 +1609,16 @@
 
 @media (max-width: 1200px) {
     .filters-main {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+    
+    .filter-group-buttons {
+        grid-column: span 3;
+    }
+    
+    .filter-group-dates {
+        grid-column: span 3;
     }
     
     .stats-grid {
@@ -1556,9 +1628,7 @@
     .data-table {
         min-width: 1000px;
     }
-}
-
-@media (max-width: 1200px) {
+    
     .reports-header {
         padding: 12px 20px;
         gap: 15px;
@@ -1575,6 +1645,21 @@
     .btn-export {
         padding: 8px 14px;
         font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .filters-main {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .filter-group-buttons {
+        grid-column: span 2;
+    }
+    
+    .filter-group-dates {
+        grid-column: span 2;
     }
 }
 
@@ -1605,7 +1690,8 @@
     .btn-export {
         flex: 1;
         min-width: 80px;
-        justify-content: center;    }
+        justify-content: center;
+    }
     
     .page-title h1 {
         font-size: 1.2rem;
@@ -1617,6 +1703,35 @@
     
     .filters-main {
         grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .filter-group-buttons {
+        grid-column: span 1;
+    }
+    
+    .filter-group-dates {
+        grid-column: span 1;
+    }
+    
+    .status-filters {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    
+    .date-range {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .date-separator {
+        text-align: center;
+        padding: 4px 0;
+    }
+    
+    .date-input {
+        width: 100%;
     }
     
     .filters-actions {
@@ -1626,6 +1741,18 @@
     
     .search-group {
         max-width: none;
+        width: 100%;
+    }
+    
+    .action-buttons {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+        justify-content: center;
     }
     
     .stats-section {
@@ -1684,6 +1811,32 @@
         padding: 10px 12px;
     }
     
+    .filters-main {
+        gap: 12px;
+    }
+    
+    .filter-group label {
+        font-size: 0.75rem;
+    }
+    
+    .status-filters {
+        gap: 4px;
+    }
+    
+    .status-btn,
+    .type-btn {
+        padding: 6px 10px;
+        font-size: 0.7rem;
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .select-input,
+    .date-input {
+        font-size: 0.7rem;
+        padding: 8px 10px;
+    }
+    
     .stats-section {
         padding: 8px 12px;
     }
@@ -1692,31 +1845,14 @@
         padding: 10px 12px;
     }
     
-    .status-filters {
-        flex-direction: column;
-    }
-    
-    .status-btn {
-        justify-content: center;
-    }
-    
-    .date-range {
-        flex-direction: column;
-        gap: 6px;
-    }
-    
-    .action-buttons {
-        flex-direction: column;
-        gap: 6px;
-    }
-    
-    .btn-primary,
-    .btn-secondary {
-        justify-content: center;
-    }
-    
     .data-table {
         min-width: 600px;
+        font-size: 0.7rem;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 4px 2px;
     }
 }
 
