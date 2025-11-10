@@ -51,86 +51,107 @@
             
             <!-- Conteúdo dos filtros -->
             <div class="filters-content" id="filtersContent">
-                <!-- Filtros Principais -->
+                <!-- Filtros Principais - Organizados em grupos lógicos -->
                 <div class="filters-main">
-                <div class="filter-group">
-                    <label>Status</label>
-                    <div class="status-filters">
-                        <button class="status-btn active" data-status="all">
-                            <i class="fas fa-list"></i>
-                            Todos
-                        </button>
-                        <button class="status-btn" data-status="pendente">
-                            <i class="fas fa-clock"></i>
-                            Pendente
-                        </button>
-                        <button class="status-btn" data-status="aprovado">
-                            <i class="fas fa-check"></i>
-                            Aprovado
-                        </button>
-                        <button class="status-btn" data-status="recusado">
-                            <i class="fas fa-times"></i>
-                            Recusado
-                        </button>
-                        <button class="status-btn" data-status="concluido">
-                            <i class="fas fa-check-circle"></i>
-                            Concluído
-                        </button>
+                    <!-- Grupo 1: Status e Tipo (Botões) -->
+                    <div class="filter-group filter-group-buttons">
+                        <label><i class="fas fa-filter"></i> Status</label>
+                        <div class="status-filters">
+                            <button class="status-btn active" data-status="all">
+                                <i class="fas fa-list"></i>
+                                Todos
+                            </button>
+                            <button class="status-btn" data-status="pendente">
+                                <i class="fas fa-clock"></i>
+                                Pendente
+                            </button>
+                            <button class="status-btn" data-status="aprovado">
+                                <i class="fas fa-check"></i>
+                                Aprovado
+                            </button>
+                            <button class="status-btn" data-status="recusado">
+                                <i class="fas fa-times"></i>
+                                Recusado
+                            </button>
+                            <button class="status-btn" data-status="concluido">
+                                <i class="fas fa-check-circle"></i>
+                                Concluído
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="filter-group filter-group-buttons">
+                        <label><i class="fas fa-tag"></i> Tipo</label>
+                        <div class="status-filters">
+                            <button class="type-btn active" data-type="all">
+                                <i class="fas fa-list"></i>
+                                Todos
+                            </button>
+                            <button class="type-btn" data-type="casual">
+                                <i class="fas fa-file-invoice"></i>
+                                Individual
+                            </button>
+                            <button class="type-btn" data-type="em_rota">
+                                <i class="fas fa-route"></i>
+                                Agrupados
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Grupo 2: Período -->
+                    <div class="filter-group filter-group-dates">
+                        <label><i class="fas fa-calendar-alt"></i> Período</label>
+                        <div class="date-range">
+                            <input type="date" id="dateFrom" class="date-input">
+                            <span class="date-separator">até</span>
+                            <input type="date" id="dateTo" class="date-input">
+                        </div>
+                    </div>
+
+                    <!-- Grupo 3: Serviço e Prioridade (Selects) -->
+                    <div class="filter-group">
+                        <label><i class="fas fa-briefcase"></i> Serviço</label>
+                        <select id="serviceFilter" class="select-input">
+                            <option value="">Todos os serviços</option>
+                            {% for servico in servicos_disponiveis %}
+                            <option value="{{ servico.id }}">{{ servico.nome }}</option>
+                            {% empty %}
+                            <option value="" disabled>Nenhum serviço disponível</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label><i class="fas fa-exclamation-circle"></i> Prioridade</label>
+                        <select id="priorityFilter" class="select-input">
+                            <option value="">Todas as prioridades</option>
+                            <option value="baixa">Baixa</option>
+                            <option value="media">Média</option>
+                            <option value="alta">Alta</option>
+                        </select>
+                    </div>
+
+                    <!-- Grupo 4: Cliente/Empresa, CNPJ e Chave PIX -->
+                    <div class="filter-group">
+                        <label><i class="fas fa-building"></i> Cliente/Empresa</label>
+                        <input type="text" id="clienteEmpresaFilter" class="select-input" placeholder="Buscar cliente/empresa...">
+                    </div>
+
+                    <div class="filter-group">
+                        <label><i class="fas fa-id-card"></i> CNPJ</label>
+                        <input type="text" id="cnpjFilter" class="select-input" placeholder="Buscar CNPJ...">
+                    </div>
+
+                    <div class="filter-group">
+                        <label><i class="fas fa-key"></i> Chave PIX</label>
+                        <input type="text" id="chavePixFilter" class="select-input" placeholder="Buscar chave PIX...">
                     </div>
                 </div>
-
-                <div class="filter-group">
-                    <label>Tipo</label>
-                    <div class="status-filters">
-                        <button class="type-btn active" data-type="all">
-                            <i class="fas fa-list"></i>
-                            Todos
-                        </button>
-                        <button class="type-btn" data-type="casual">
-                            <i class="fas fa-file-invoice"></i>
-                            Individual
-                        </button>
-                        <button class="type-btn" data-type="em_rota">
-                            <i class="fas fa-route"></i>
-                            Agrupados
-                        </button>
-                    </div>
-                </div>
-
-                <div class="filter-group">                    <label>Período</label>
-                    <div class="date-range">
-                        <input type="date" id="dateFrom" class="date-input">
-                        <span>até</span>
-                        <input type="date" id="dateTo" class="date-input">
-                    </div>
-                </div>
-
-                <div class="filter-group">
-                    <label>Serviço</label>
-                    <select id="serviceFilter" class="select-input">
-                        <option value="">Todos os serviços</option>
-                        {% for servico in servicos_disponiveis %}
-                        <option value="{{ servico.id }}">{{ servico.nome }}</option>
-                        {% empty %}
-                        <option value="" disabled>Nenhum serviço disponível</option>
-                        {% endfor %}                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Prioridade</label>
-                    <select id="priorityFilter" class="select-input">
-                        <option value="">Todas as prioridades</option>
-                        <option value="baixa">Baixa</option>
-                        <option value="media">Média</option>
-                        <option value="alta">Alta</option>
-                    </select>
-                </div>
-            </div>
 
             <!-- Busca e Ações -->
             <div class="filters-actions">
                 <div class="search-group">
-                    <input type="text" id="searchInput" placeholder="Buscar por ID, título, solicitante..." class="search-input">
+                    <input type="text" id="searchInput" placeholder="Buscar por ID, título, solicitante, recebedor, cliente/empresa, CNPJ, PIX..." class="search-input">
                     <button class="btn-search" id="applySearch">
                         <i class="fas fa-search"></i>
                     </button>
@@ -233,6 +254,15 @@
                         <th class="sortable" data-column="recebedor">
                             Recebedor <i class="fas fa-sort"></i>
                         </th>
+                        <th class="sortable" data-column="chave_pix">
+                            Chave PIX <i class="fas fa-sort"></i>
+                        </th>
+                        <th class="sortable" data-column="cliente_empresa">
+                            Cliente/Empresa <i class="fas fa-sort"></i>
+                        </th>
+                        <th class="sortable" data-column="cnpj">
+                            CNPJ <i class="fas fa-sort"></i>
+                        </th>
                         <th class="sortable" data-column="service">
                             Serviço <i class="fas fa-sort"></i>
                         </th>
@@ -287,7 +317,10 @@
                         <td>{{ solicitacao.ticket }}</td>
                         <td title="{{ solicitacao.titulo }}">{{ solicitacao.titulo }}</td>
                         <td>{{ solicitacao.nome_solicitante }}</td>
-                        <td>{{ solicitacao.nome_do_recebedor }}</td>
+                        <td>{{ solicitacao.nome_do_recebedor|default:"-" }}</td>
+                        <td>{{ solicitacao.chave_pix|default:"-" }}</td>
+                        <td>{{ solicitacao.cliente_empresa|default:"-" }}</td>
+                        <td>{{ solicitacao.cnpj|default:"-" }}</td>
                         <td>{{ solicitacao.servico.nome|default:"N/A" }}</td>
                         <td><strong>R$ {{ solicitacao.valor|floatformat:2 }}</strong></td>
                         <td class="valores-detalhados-toggle-cell" style="display: none;"></td>
@@ -332,7 +365,7 @@
                     </tr>
                     {% empty %}
                     <tr class="empty-state">
-                        <td colspan="18" style="text-align: center; padding: 3rem;">
+                        <td colspan="21" style="text-align: center; padding: 3rem;">
                             <i class="fas fa-inbox" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
                             <p style="color: #999; font-size: 1.1rem;">Nenhuma solicitação encontrada</p>
                             <p style="color: #ccc; font-size: 0.9rem;">Crie uma nova solicitação para começar</p>

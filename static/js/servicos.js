@@ -381,6 +381,8 @@ function handleServiceSubmit(e) {
         if (data.success) {
             showNotification(data.message || 'Serviço criado com sucesso!', 'success');
             closeServiceModal();
+            // Atualizar estatísticas antes de recarregar
+            updateStats();
             // Recarregar a página para mostrar o novo serviço
             setTimeout(() => {
                 window.location.reload();
@@ -443,6 +445,8 @@ function handleServiceUpdate(e) {
         if (data.success) {
             showNotification(data.message || 'Serviço atualizado com sucesso!', 'success');
             closeEditServiceModal();
+            // Atualizar estatísticas antes de recarregar
+            updateStats();
             // Recarregar a página para mostrar as alterações
             setTimeout(() => {
                 window.location.reload();
@@ -499,6 +503,9 @@ function toggleServiceStatusFromModal() {
                 // Atualizar informações no modal
                 document.getElementById('editServiceUpdatedAt').textContent = 
                     new Date().toLocaleDateString('pt-BR');
+                
+                // Atualizar estatísticas após mudança de status
+                updateStats();
                 
                 showNotification(
                     `Serviço ${newStatus ? 'ativado' : 'desativado'} com sucesso!`, 
@@ -666,24 +673,24 @@ function updateStats() {
     const totalServicesEl = document.getElementById('totalServices');
     const activeServicesEl = document.getElementById('activeServices');
     
-    // Contar serviços visíveis do HTML (não ocultos por filtros)
+    // Contar TODOS os serviços do HTML (independente de filtros)
     const allServiceItems = document.querySelectorAll('.service-item, .service-card');
-    const visibleServiceItems = Array.from(allServiceItems).filter(item => {
-        return item.style.display !== 'none' && window.getComputedStyle(item).display !== 'none';
-    });
     
-    // Contar apenas os ativos visíveis
-    const visibleActiveItems = Array.from(visibleServiceItems).filter(item => {
+    // Contar todos os serviços (total)
+    const totalCount = allServiceItems.length;
+    
+    // Contar todos os ativos (independente de visibilidade)
+    const activeCount = Array.from(allServiceItems).filter(item => {
         const statusEl = item.querySelector('.service-status');
         return statusEl && statusEl.classList.contains('active');
-    });
+    }).length;
     
     if (totalServicesEl) {
-        totalServicesEl.textContent = visibleServiceItems.length;
+        totalServicesEl.textContent = totalCount;
     }
     
     if (activeServicesEl) {
-        activeServicesEl.textContent = visibleActiveItems.length;
+        activeServicesEl.textContent = activeCount;
     }
 }
 
@@ -756,8 +763,8 @@ function applyServiceFilters() {
     // Mostrar mensagem se não houver resultados
     showFilterResults(visibleCount, allItems.length);
     
-    // Atualizar estatísticas
-    updateStats();
+    // NÃO atualizar estatísticas aqui - elas devem mostrar o total real, não os filtrados
+    // updateStats(); // Removido - estatísticas devem sempre mostrar todos os itens
 }
 
 // Função para mostrar resultado dos filtros
@@ -840,7 +847,7 @@ function setupFilters() {
             }
         });
         
-        // Atualizar estatísticas
+        // Atualizar estatísticas (sempre mostra todos os itens, não apenas os visíveis)
         updateStats();
         
         showNotification('Filtros limpos!', 'success');

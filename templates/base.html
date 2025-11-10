@@ -56,8 +56,9 @@
             display: block !important;
             background: #F4F7F5 !important;
             border-radius: 12px;
-            width: 90%;
-            max-width: 600px;
+            width: 95%;
+            max-width: 1400px;
+            min-width: 900px;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 20px 60px rgba(28, 28, 28, 0.5);
@@ -66,6 +67,83 @@
             z-index: 100000 !important;
             visibility: visible !important;
             opacity: 1 !important;
+        }
+        
+        /* Ajustar campos do formulário para não cortar texto */
+        #createCampaignModal .route-id-inputs {
+            display: grid;
+            grid-template-columns: 1.5fr 1.2fr 1.8fr 1.8fr 1.8fr 1.5fr 1.2fr;
+            gap: 1rem;
+            align-items: start;
+        }
+        
+        #createCampaignModal .route-id-field,
+        #createCampaignModal .route-valor-field,
+        #createCampaignModal .route-servico-field,
+        #createCampaignModal .route-recebedor-field,
+        #createCampaignModal .route-pix-field,
+        #createCampaignModal .route-cliente-empresa-field,
+        #createCampaignModal .route-cnpj-field {
+            min-width: 0; /* Permite que o grid funcione corretamente */
+        }
+        
+        #createCampaignModal .route-id-field input,
+        #createCampaignModal .route-valor-field input,
+        #createCampaignModal .route-servico-field select {
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+        
+        #createCampaignModal .route-servico-field select {
+            overflow: visible;
+            text-overflow: clip;
+        }
+        
+        #createCampaignModal .route-recebedor-field input,
+        #createCampaignModal .route-pix-field input {
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            overflow: visible;
+        }
+        
+        /* Responsivo para telas menores */
+        @media (max-width: 1200px) {
+            #createCampaignModal .modal-content {
+                width: 98%;
+                max-width: 1200px;
+                min-width: 800px;
+            }
+            
+            #createCampaignModal .route-id-inputs {
+                grid-template-columns: 1.2fr 1fr 1.5fr 1.5fr 1.5fr 1.2fr 1fr;
+                gap: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            #createCampaignModal .modal-content {
+                width: 98%;
+                max-width: 100%;
+                min-width: auto;
+            }
+            
+            #createCampaignModal .route-id-inputs {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            #createCampaignModal .route-servico-field,
+            #createCampaignModal .route-recebedor-field,
+            #createCampaignModal .route-pix-field,
+            #createCampaignModal .route-cliente-empresa-field,
+            #createCampaignModal .route-cnpj-field {
+                grid-column: 1 / -1;
+            }
         }
     </style>
     

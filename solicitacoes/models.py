@@ -14,6 +14,38 @@ PRIORIDADE_CHOICES = [
     ('alta', 'Alta'),
 ]
 
+class Recebedor(models.Model):
+    """Modelo para armazenar recebedores e suas chaves PIX"""
+    nome = models.CharField(max_length=100, unique=True, verbose_name="Nome do Recebedor")
+    chave_pix = models.CharField(max_length=255, verbose_name="Chave PIX")
+    ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    data_criacao = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
+    data_atualizacao = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
+    
+    class Meta:
+        verbose_name = "Recebedor"
+        verbose_name_plural = "Recebedores"
+        ordering = ['nome']
+    
+    def __str__(self):
+        return f"{self.nome} - {self.chave_pix}"
+
+class ClienteEmpresa(models.Model):
+    """Modelo para armazenar clientes/empresas"""
+    nome = models.CharField(max_length=200, unique=True, verbose_name="Nome do Cliente/Empresa")
+    cnpj = models.CharField(max_length=18, blank=True, null=True, verbose_name="CNPJ")
+    ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    data_criacao = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
+    data_atualizacao = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
+    
+    class Meta:
+        verbose_name = "Cliente/Empresa"
+        verbose_name_plural = "Clientes/Empresas"
+        ordering = ['nome']
+    
+    def __str__(self):
+        return self.nome
+
 # Create your models here.
 class Solicitacoes(models.Model):
     TIPO_CHOICES = [
@@ -25,6 +57,9 @@ class Solicitacoes(models.Model):
     titulo = models.CharField(max_length = 70) 
     nome_solicitante = models.ForeignKey(User, on_delete=models.CASCADE) 
     nome_do_recebedor = models.CharField(max_length = 30)
+    chave_pix = models.CharField(max_length=255, blank=True, null=True, verbose_name="Chave PIX")
+    cliente_empresa = models.CharField(max_length=200, blank=True, null=True, verbose_name="Cliente/Empresa")
+    cnpj = models.CharField(max_length=18, blank=True, null=True, verbose_name="CNPJ")
     valor = models.FloatField()
     descricao = models.TextField()
     data_de_pagamento = models.DateField()
@@ -57,6 +92,12 @@ class SolicitacaoRotaItem(models.Model):
     valor = models.FloatField(verbose_name="Valor")
     servico = models.ForeignKey('servicos.Servico', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Serviço")
     ordem = models.IntegerField(default=1, verbose_name="Ordem")
+    
+    # Campos de recebedor e chave PIX para cada ID
+    recebedor = models.CharField(max_length=100, blank=True, null=True, verbose_name="Nome do Recebedor")
+    chave_pix = models.CharField(max_length=255, blank=True, null=True, verbose_name="Chave PIX")
+    cliente_empresa = models.CharField(max_length=200, blank=True, null=True, verbose_name="Cliente/Empresa")
+    cnpj = models.CharField(max_length=18, blank=True, null=True, verbose_name="CNPJ")
     
     # Campos de valores detalhados (para cada ID em Em Rota)
     valor_km = models.FloatField(default=0.0, verbose_name="Valor KM")

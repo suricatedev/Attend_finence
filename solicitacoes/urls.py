@@ -7,4 +7,6 @@ urlpatterns = [
     path("obter-itens-rota/<int:solicitacao_id>/", views.obter_itens_rota, name='obter_itens_rota'),
     path("obter-valores-casual/<int:solicitacao_id>/", views.obter_valores_detalhados_casual, name='obter_valores_casual'),
     path("obter-detalhes-completos/<int:solicitacao_id>/", views.obter_detalhes_completos, name='obter_detalhes_completos'),
+    path("buscar-recebedores/", views.buscar_recebedores, name='buscar_recebedores'),
+    path("buscar-clientes-empresas/", views.buscar_clientes_empresas, name='buscar_clientes_empresas'),
 ]
