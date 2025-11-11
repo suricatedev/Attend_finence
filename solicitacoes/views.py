@@ -1014,15 +1014,23 @@ def obter_detalhes_completos(request, solicitacao_id):
             'data_criacao_iso': solicitacao.data_de_criacao.isoformat() if solicitacao.data_de_criacao else '',
             'data_pagamento_iso': solicitacao.data_de_pagamento.isoformat() if solicitacao.data_de_pagamento else '',
             'valor_total': f'R$ {solicitacao.valor:.2f}',
+            'valor_total_raw': float(solicitacao.valor or 0),
             'valor_receita': f'R$ {solicitacao.valor_receita:.2f}',
+            'valor_receita_raw': float(solicitacao.valor_receita or 0),
             'valor_em_rota': f'R$ {solicitacao.valor_em_rota:.2f}',
+            'valor_em_rota_raw': float(solicitacao.valor_em_rota or 0),
             'descricao_em_rota': solicitacao.descricao_em_rota or '',
             # Valores detalhados (sempre presentes)
             'valor_km': f'R$ {solicitacao.valor_km:.2f}',
+            'valor_km_raw': float(solicitacao.valor_km or 0),
             'valor_pedagio': f'R$ {solicitacao.valor_pedagio:.2f}',
+            'valor_pedagio_raw': float(solicitacao.valor_pedagio or 0),
             'valor_hospedagem': f'R$ {solicitacao.valor_hospedagem:.2f}',
+            'valor_hospedagem_raw': float(solicitacao.valor_hospedagem or 0),
             'valor_fluvial': f'R$ {solicitacao.valor_fluvial:.2f}',
+            'valor_fluvial_raw': float(solicitacao.valor_fluvial or 0),
             'valor_outros': f'R$ {solicitacao.valor_outros:.2f}',
+            'valor_outros_raw': float(solicitacao.valor_outros or 0),
         }
         
         # Se for "Em Rota", incluir itens da rota
@@ -1040,11 +1048,17 @@ def obter_detalhes_completos(request, solicitacao_id):
                     'cliente_empresa': item.cliente_empresa or '',
                     'cnpj': item.cnpj or '',
                     'valor': f'R$ {item.valor:.2f}',
+                    'valor_raw': float(item.valor or 0),
                     'valor_km': f'R$ {item.valor_km:.2f}',
+                    'valor_km_raw': float(item.valor_km or 0),
                     'valor_pedagio': f'R$ {item.valor_pedagio:.2f}',
+                    'valor_pedagio_raw': float(item.valor_pedagio or 0),
                     'valor_hospedagem': f'R$ {item.valor_hospedagem:.2f}',
+                    'valor_hospedagem_raw': float(item.valor_hospedagem or 0),
                     'valor_fluvial': f'R$ {item.valor_fluvial:.2f}',
+                    'valor_fluvial_raw': float(item.valor_fluvial or 0),
                     'valor_outros': f'R$ {item.valor_outros:.2f}',
+                    'valor_outros_raw': float(item.valor_outros or 0),
                 })
         
         return JsonResponse({

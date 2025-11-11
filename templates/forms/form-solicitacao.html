@@ -315,10 +315,16 @@
                 </div>
                 
                     <div class="form-group" id="campaignValorGroup">
-                    <label for="campaignValor">Valor Total <span class="required">*</span></label>
+                    <label for="casualValorAtividade">Valor Atividade</label>
+                        <input type="text" id="casualValorAtividade" name="casual_valor_atividade" class="valor-detalhado-casual" placeholder="R$ 0,00">
+                        <small class="form-help">Somado automaticamente na Receita</small>
+                    </div>
+
+                    <div class="form-group" id="campaignValorGroupDetalhados">
+                    <label for="campaignValor">Total Detalhados</label>
                         <input type="text" id="campaignValor" placeholder="R$ 0,00" readonly style="background-color: #f0f0f0; cursor: not-allowed; font-weight: 700; font-size: 1.1rem; color: #28a745;">
                         <input type="hidden" id="casual_valor_hidden" name="casual_valor" value="0">
-                    <small class="form-help">Valor calculado automaticamente a partir dos valores detalhados + receita</small>
+                    <small class="form-help">Soma de KM, Pedágio, Hospedagem, Fluvial e Outros</small>
                 </div>
 
                     <div class="form-group" id="campaignServiceGroup">
@@ -798,6 +804,16 @@
         // FIM DA DEFINIÇÃO GLOBAL
         // ============================================
 
+        const routeValorReceitaInicial = document.getElementById('routeValorReceita');
+        if (routeValorReceitaInicial) {
+            if (!routeValorReceitaInicial.dataset.manual) {
+                routeValorReceitaInicial.dataset.manual = '0';
+            }
+            if (!routeValorReceitaInicial.dataset.auto) {
+                routeValorReceitaInicial.dataset.auto = '0';
+            }
+        }
+
         window.isEditingSolicitacao = false;
         
         // Preencher automaticamente a data de criação com a data de hoje
@@ -1051,13 +1067,14 @@
                 const elementoGrupo = document.querySelector(`[data-route-id="${numeroID}"]`);
                 if (!elementoGrupo) {
                     console.warn(`⚠️ Grupo ID ${numeroID} não encontrado no DOM`);
-                    return 0;
+                    return { detalhados: 0, atividade: 0 };
                 }
                 
                 // Incluir o campo "Valor Atividade" no cálculo
                 const campoValorAtividade = document.getElementById(`routeValor${numeroID}`);
+                const valorAtividade = campoValorAtividade ? parseValorMonetario(campoValorAtividade.value) : 0;
                 const campos = [
-                    campoValorAtividade, // Valor Atividade (opcional)
+                    // Valor atividade não entra nos detalhados
                     document.getElementById(`routeValorKm${numeroID}`),
                     document.getElementById(`routeValorPedagio${numeroID}`),
                     document.getElementById(`routeValorHospedagem${numeroID}`),
@@ -1065,13 +1082,13 @@
                     document.getElementById(`routeValorOutros${numeroID}`)
                 ];
                 
-                let total = 0;
+                let totalDetalhados = 0;
                 let camposEncontrados = 0;
                 campos.forEach(campo => {
                     if (campo) {
                         camposEncontrados++;
                         const valor = parseValorMonetario(campo.value);
-                        total += valor;
+                        totalDetalhados += valor;
                         console.log(`🔍 ID ${numeroID} - Campo ${campo.id}: "${campo.value}" -> ${valor}`);
                     }
                 });
@@ -1079,31 +1096,33 @@
                 // Se nenhum campo foi encontrado, pode ser que o elemento ainda não esteja no DOM
                 if (camposEncontrados === 0) {
                     console.warn(`⚠️ Nenhum campo de valor encontrado para ID ${numeroID}`);
-                    return 0;
+                    return { detalhados: 0, atividade: valorAtividade };
                 }
                 
                 const campoTotal = document.getElementById(`routeValorTotal${numeroID}`);
                 if (campoTotal) {
-                    campoTotal.value = formatarValorMonetario(total);
-                    console.log(`✅ Total ID ${numeroID}: ${formatarValorMonetario(total)}`);
+                    campoTotal.value = formatarValorMonetario(totalDetalhados);
+                    console.log(`✅ Total ID ${numeroID} (detalhados): ${formatarValorMonetario(totalDetalhados)} | Valor atividade: ${valorAtividade}`);
                 } else {
                     console.warn(`⚠️ Campo routeValorTotal${numeroID} não encontrado`);
                 }
                 
-                return total;
+                return { detalhados: totalDetalhados, atividade: valorAtividade };
             };
             
             // Função para calcular total de todos os IDs
             // Tornar global para acesso de outras funções
             window.calcularTotalTodosIDs = function() {
-                let totalTodos = 0;
+                let totalDetalhados = 0;
+                let totalAtividades = 0;
                 
                 // Calcular IDs fixos (1 e 2)
                 for (let i = 1; i <= 2; i++) {
                     if (window.calcularTotalID) {
-                        const totalID = window.calcularTotalID(i);
-                        totalTodos += totalID;
-                        console.log(`🔍 Total ID ${i}: ${totalID}`);
+                        const resultadoID = window.calcularTotalID(i);
+                        totalDetalhados += resultadoID.detalhados;
+                        totalAtividades += resultadoID.atividade;
+                        console.log(`🔍 Total ID ${i}: detalhados=${resultadoID.detalhados} | atividade=${resultadoID.atividade}`);
                     }
                 }
                 
@@ -1119,9 +1138,10 @@
                         if (routeId && window.calcularTotalID) {
                             const numeroID = parseInt(routeId);
                             // Sempre calcular, independente da visibilidade (elementos podem estar ocultos mas ainda no DOM)
-                            const totalID = window.calcularTotalID(numeroID);
-                            totalTodos += totalID;
-                            console.log(`🔍 Total ID dinâmico ${routeId}: ${totalID}`);
+                            const resultadoID = window.calcularTotalID(numeroID);
+                            totalDetalhados += resultadoID.detalhados;
+                            totalAtividades += resultadoID.atividade;
+                            console.log(`🔍 Total ID dinâmico ${routeId}: detalhados=${resultadoID.detalhados} | atividade=${resultadoID.atividade}`);
                         }
                     });
                 } else {
@@ -1130,14 +1150,41 @@
                 
                 const campoTotalTodos = document.getElementById('routeValorTotalTodos');
                 if (campoTotalTodos) {
-                    campoTotalTodos.value = formatarValorMonetario(totalTodos);
-                    console.log(`✅ Total Geral: ${formatarValorMonetario(totalTodos)}`);
+                    campoTotalTodos.value = formatarValorMonetario(totalDetalhados);
+                    console.log(`✅ Total Geral (detalhados): ${formatarValorMonetario(totalDetalhados)}`);
                 } else {
                     console.warn('⚠️ Campo routeValorTotalTodos não encontrado');
                 }
                 
-                return totalTodos;
+                const receitaField = document.getElementById('routeValorReceita');
+                if (receitaField) {
+                    let manualExtra = parseFloat(receitaField.dataset.manual || '0');
+                    if (Number.isNaN(manualExtra)) manualExtra = 0;
+                    const totalReceita = totalAtividades + manualExtra;
+                    receitaField.value = formatarValorMonetario(totalReceita);
+                    receitaField.dataset.auto = totalAtividades.toFixed(2);
+                    console.log(`✅ Valor Receita atualizado: atividades=${totalAtividades} | manual=${manualExtra} | total=${totalReceita}`);
+                }
+                
+                return { detalhados: totalDetalhados, atividades: totalAtividades };
             };
+
+            const routeValorReceitaInput = document.getElementById('routeValorReceita');
+            if (routeValorReceitaInput) {
+                routeValorReceitaInput.addEventListener('input', function(e) {
+                    const total = parseValorMonetario(e.target.value);
+                    const auto = parseFloat(routeValorReceitaInput.dataset.auto || '0') || 0;
+                    const manual = total - auto;
+                    routeValorReceitaInput.dataset.manual = manual.toFixed(2);
+                });
+                routeValorReceitaInput.addEventListener('blur', function(e) {
+                    const total = parseValorMonetario(e.target.value);
+                    e.target.value = formatarValorMonetario(total);
+                    const auto = parseFloat(routeValorReceitaInput.dataset.auto || '0') || 0;
+                    const manual = total - auto;
+                    routeValorReceitaInput.dataset.manual = manual.toFixed(2);
+                });
+            }
             
             // Adicionar event listeners para TODOS os campos de valor (Em Rota) - IDs fixos 1 e 2
             // Incluindo o campo "Valor Atividade" que estava faltando
@@ -1270,53 +1317,63 @@
             // Função para calcular valor total do Casual (valores detalhados + receita)
             // Tornar global para acesso do FormManager
             window.calcularValorTotalCasual = function() {
-                const campos = [
+                const campoValorAtividade = document.getElementById('casualValorAtividade');
+                const valorAtividade = campoValorAtividade ? parseValorMonetario(campoValorAtividade.value) : 0;
+                
+                const camposDetalhados = [
                     { id: 'casualValorKm', nome: 'KM' },
                     { id: 'casualValorPedagio', nome: 'Pedágio' },
                     { id: 'casualValorHospedagem', nome: 'Hospedagem' },
                     { id: 'casualValorFluvial', nome: 'Fluvial' },
-                    { id: 'casualValorOutros', nome: 'Outros' },
-                    { id: 'casualValorReceita', nome: 'Receita' }
+                    { id: 'casualValorOutros', nome: 'Outros' }
                 ];
                 
-                let total = 0;
+                let totalDetalhados = 0;
                 const valoresDetalhados = {};
                 
-                campos.forEach(campoInfo => {
+                camposDetalhados.forEach(campoInfo => {
                     const campo = document.getElementById(campoInfo.id);
                     if (campo) {
                         const valor = parseValorMonetario(campo.value);
                         valoresDetalhados[campoInfo.nome] = valor;
-                        total += valor;
+                        totalDetalhados += valor;
                         console.log(`  - ${campoInfo.nome}: "${campo.value}" -> ${valor}`);
                     } else {
                         console.warn(`⚠️ Campo ${campoInfo.id} não encontrado`);
                     }
                 });
                 
-                console.log(`📊 Total calculado: ${total}`);
-                console.log(`📋 Valores detalhados:`, valoresDetalhados);
-                
-                // Atualizar o campo visual (readonly)
+                // Atualizar o campo visual (readonly) apenas com os detalhados
                 const campoValorTotal = document.getElementById('campaignValor');
                 if (campoValorTotal) {
-                    campoValorTotal.value = formatarValorMonetario(total);
+                    campoValorTotal.value = formatarValorMonetario(totalDetalhados);
                 }
                 
-                // Atualizar o campo hidden que será enviado no formulário
+                // Atualizar o hidden com total geral (detalhados + receita)
                 const campoValorHidden = document.getElementById('casual_valor_hidden');
                 if (campoValorHidden) {
-                    // Enviar o valor numérico no formato brasileiro (vírgula)
-                    campoValorHidden.value = total.toFixed(2).replace('.', ',');
-                    console.log('✅ Valor Casual calculado:', total, 'Enviado como:', campoValorHidden.value);
+                    const receitaInput = document.getElementById('casualValorReceita');
+                    let receitaManual = receitaInput?.dataset.manual ? parseFloat(receitaInput.dataset.manual) : 0;
+                    if (Number.isNaN(receitaManual)) receitaManual = 0;
+                    receitaInput.dataset.auto = valorAtividade.toFixed(2);
+                    receitaInput.dataset.manual = receitaManual.toFixed(2);
+                    const receitaTotal = valorAtividade + receitaManual;
+                    if (receitaInput) {
+                        receitaInput.value = formatarValorMonetario(receitaTotal);
+                        receitaInput.dataset.total = receitaTotal.toFixed(2);
+                    }
+                    const totalGeral = totalDetalhados + receitaTotal;
+                    campoValorHidden.value = totalGeral.toFixed(2).replace('.', ',');
+                    console.log('✅ Valor Casual calculado:', { totalDetalhados, valorAtividade, receitaManual, totalGeral });
                 } else {
                     console.error('❌ Campo hidden casual_valor_hidden não encontrado!');
                 }
                 
-                return total;
+                return totalDetalhados + valorAtividade;
             }
             
             window.preencherFormularioEdicao = function(dados) {
+                console.log('🟢 Preenchendo formulário em modo edição', dados);
                 if (!dados || typeof dados !== 'object') {
                     console.error('❌ Dados inválidos para preencher formulário de edição:', dados);
                     return;
@@ -1361,13 +1418,24 @@
                         submitBtn.textContent = 'Salvar Alterações';
                     }
                     
-                    const formatarValor = (valor) => {
-                        if (!valor) return 'R$ 0,00';
+                    const formatarValor = (valor, valorRaw) => {
+                        if (typeof valorRaw === 'number') {
+                            return formatarValorMonetario(valorRaw);
+                        }
+                        if (!valor && valor !== 0) return 'R$ 0,00';
                         const valorStr = valor.toString();
                         if (valorStr.includes('R$')) {
-                            return valorStr;
+                            const limpo = parseValorMonetario(valorStr);
+                            return formatarValorMonetario(limpo);
                         }
                         return formatarValorMonetario(parseValorMonetario(valorStr));
+                    };
+                    
+                    const obterValorNumerico = (valorRaw, valorFormatado) => {
+                        if (typeof valorRaw === 'number') {
+                            return valorRaw;
+                        }
+                        return parseValorMonetario(valorFormatado || 'R$ 0,00');
                     };
                     
                     const routeEmRotaRadio = document.getElementById('routeEmRota');
@@ -1396,12 +1464,9 @@
                         }
                         const valorEmRotaField = document.getElementById('routeValorEmRota');
                         if (valorEmRotaField) {
-                            valorEmRotaField.value = formatarValor(dados.valor_em_rota);
+                            valorEmRotaField.value = formatarValor(dados.valor_em_rota, dados.valor_em_rota_raw);
                         }
-                        const valorReceitaField = document.getElementById('routeValorReceita');
-                        if (valorReceitaField) {
-                            valorReceitaField.value = formatarValor(dados.valor_receita);
-                        }
+                        const valorReceitaFieldElement = document.getElementById('routeValorReceita');
                         const descricaoEmRotaField = document.getElementById('routeDescricaoEmRota');
                         if (descricaoEmRotaField) {
                             descricaoEmRotaField.value = dados.descricao_em_rota || '';
@@ -1409,20 +1474,21 @@
                         
                         const valorTotalTodos = document.getElementById('routeValorTotalTodos');
                         if (valorTotalTodos) {
-                            valorTotalTodos.value = formatarValor(dados.valor_total);
+                            valorTotalTodos.value = formatarValor(dados.valor_total, dados.valor_total_raw);
                         }
                         
                         const itens = Array.isArray(dados.itens_rota) ? dados.itens_rota : [];
+                        let somaAtividades = 0;
                         itens.forEach((item, index) => {
                             const numero = index + 1;
                             if (numero > 2 && window.criarNovoRouteId) {
                                 window.criarNovoRouteId();
                             }
                             
-                            const setValorCampo = (campoId, valor) => {
+                            const setValorCampo = (campoId, valorFormatado, valorRaw) => {
                                 const campo = document.getElementById(campoId);
                                 if (campo) {
-                                    campo.value = formatarValor(valor);
+                                    campo.value = formatarValor(valorFormatado, valorRaw);
                                 }
                             };
                             
@@ -1430,9 +1496,13 @@
                             if (idField) {
                                 idField.value = item.ticket_item || '';
                             }
+                            const detalhadosSoma = (item.valor_km_raw || 0) + (item.valor_pedagio_raw || 0) + (item.valor_hospedagem_raw || 0) + (item.valor_fluvial_raw || 0) + (item.valor_outros_raw || 0);
+                            const valorAtividadeCalc = Math.max(0, (item.valor_raw || 0) - detalhadosSoma);
+                            somaAtividades += valorAtividadeCalc;
                             const valorField = document.getElementById(`routeValor${numero}`);
                             if (valorField) {
-                                valorField.value = formatarValor(item.valor);
+                                valorField.value = formatarValorMonetario(valorAtividadeCalc);
+                                valorField.dataset.valorAtividade = valorAtividadeCalc.toFixed(2);
                             }
                             const servicoSelect = document.getElementById(`routeServico${numero}`);
                             if (servicoSelect) {
@@ -1455,16 +1525,30 @@
                                 cnpjField.value = item.cnpj || '';
                             }
                             
-                            setValorCampo(`routeValorKm${numero}`, item.valor_km);
-                            setValorCampo(`routeValorPedagio${numero}`, item.valor_pedagio);
-                            setValorCampo(`routeValorHospedagem${numero}`, item.valor_hospedagem);
-                            setValorCampo(`routeValorFluvial${numero}`, item.valor_fluvial);
-                            setValorCampo(`routeValorOutros${numero}`, item.valor_outros);
+                            setValorCampo(`routeValorKm${numero}`, item.valor_km, item.valor_km_raw);
+                            setValorCampo(`routeValorPedagio${numero}`, item.valor_pedagio, item.valor_pedagio_raw);
+                            setValorCampo(`routeValorHospedagem${numero}`, item.valor_hospedagem, item.valor_hospedagem_raw);
+                            setValorCampo(`routeValorFluvial${numero}`, item.valor_fluvial, item.valor_fluvial_raw);
+                            setValorCampo(`routeValorOutros${numero}`, item.valor_outros, item.valor_outros_raw);
                             
                             if (window.calcularTotalID) {
                                 window.calcularTotalID(numero);
                             }
+                            
+                            console.log(`🟢 Item ${numero} preenchido`, {
+                                ticket: item.ticket_item,
+                                valor: item.valor,
+                                valor_raw: item.valor_raw
+                            });
                         });
+                        
+                        if (valorReceitaFieldElement) {
+                            const receitaManual = Math.max(0, (dados.valor_receita_raw || 0) - somaAtividades);
+                            valorReceitaFieldElement.dataset.manual = receitaManual.toFixed(2);
+                            valorReceitaFieldElement.dataset.auto = somaAtividades.toFixed(2);
+                            valorReceitaFieldElement.value = formatarValorMonetario(somaAtividades + receitaManual);
+                            console.log('🟢 Receita auto preenchida', { somaAtividades, receitaManual });
+                        }
                         
                         if (window.calcularTotalTodosIDs) {
                             window.calcularTotalTodosIDs();
@@ -1519,31 +1603,50 @@
                             servicoSelect.value = dados.servico_id ? String(dados.servico_id) : '';
                         }
                         
-                        const setCasualValor = (campoId, valor) => {
+                        const setCasualValor = (campoId, valor, valorRaw) => {
                             const campo = document.getElementById(campoId);
                             if (campo) {
-                                campo.value = formatarValor(valor);
+                                campo.value = formatarValor(valor, valorRaw);
                             }
                         };
+                        const atividadeInput = document.getElementById('casualValorAtividade');
+                        if (atividadeInput) {
+                            atividadeInput.value = formatarValorMonetario(dados.valor_receita_raw || 0);
+                        }
                         
-                        setCasualValor('casualValorKm', dados.valor_km);
-                        setCasualValor('casualValorPedagio', dados.valor_pedagio);
-                        setCasualValor('casualValorHospedagem', dados.valor_hospedagem);
-                        setCasualValor('casualValorFluvial', dados.valor_fluvial);
-                        setCasualValor('casualValorOutros', dados.valor_outros);
-                        setCasualValor('casualValorReceita', dados.valor_receita);
+                        setCasualValor('casualValorKm', dados.valor_km, dados.valor_km_raw);
+                        setCasualValor('casualValorPedagio', dados.valor_pedagio, dados.valor_pedagio_raw);
+                        setCasualValor('casualValorHospedagem', dados.valor_hospedagem, dados.valor_hospedagem_raw);
+                        setCasualValor('casualValorFluvial', dados.valor_fluvial, dados.valor_fluvial_raw);
+                        setCasualValor('casualValorOutros', dados.valor_outros, dados.valor_outros_raw);
+                        const receitaInput = document.getElementById('casualValorReceita');
+                        if (receitaInput) {
+                            const receitaManual = Math.max(0, (dados.valor_receita_raw || 0) - (dados.valor_receita_raw || 0));
+                            receitaInput.dataset.manual = receitaManual.toFixed(2);
+                            receitaInput.dataset.auto = (dados.valor_receita_raw || 0).toFixed(2);
+                            receitaInput.value = formatarValorMonetario(dados.valor_receita_raw || 0);
+                        }
                         
                         const valorTotalCampo = document.getElementById('campaignValor');
                         if (valorTotalCampo) {
-                            valorTotalCampo.value = formatarValor(dados.valor_total);
+                            valorTotalCampo.value = formatarValor(dados.valor_total, dados.valor_total_raw);
                         }
                         const valorHidden = document.getElementById('casual_valor_hidden');
                         if (valorHidden) {
-                            valorHidden.value = dados.valor_total || '0';
+                            valorHidden.value = obterValorNumerico(dados.valor_total_raw, dados.valor_total).toFixed(2).replace('.', ',');
                         }
                         
                         if (window.calcularValorTotalCasual) {
                             window.calcularValorTotalCasual();
+                        }
+                    }
+                    
+                    if (routeCasualRadio && routeCasualRadio.checked) {
+                        // Para casual, nenhum ajuste extra
+                    } else {
+                        // Em Rota: recalcular totais após preenchimento para garantir que receita e totais reflitam alterações
+                        if (window.calcularTotalTodosIDs) {
+                            window.calcularTotalTodosIDs();
                         }
                     }
                     

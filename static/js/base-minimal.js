@@ -121,6 +121,12 @@ window.addEventListener('DOMContentLoaded', function() {
             if (submitBtn) {
                 submitBtn.textContent = 'Criar Solicitação';
             }
+            const receitaField = document.getElementById('routeValorReceita');
+            if (receitaField) {
+                receitaField.dataset.manual = '0';
+                receitaField.dataset.auto = '0';
+                receitaField.value = 'R$ 0,00';
+            }
             console.log('✅ Formulário limpo e resetado para o estado padrão (Casual).');
         }
     }

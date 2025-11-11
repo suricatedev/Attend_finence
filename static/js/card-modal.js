@@ -2,6 +2,8 @@
 // MODAL DE DETALHES DO CARD
 // ========================================
 
+console.log('card-modal.js v20251111-3');
+
 // Flag para evitar registrar listeners duplicados
 let modalListenersSetup = false;
 // Função para calcular tempo na fila (a partir da entrada no status atual)
@@ -960,20 +962,24 @@ function setupModalEventListeners() {
         }
         editCardBtn.parentNode.replaceChild(newEditBtn, editCardBtn);
         newEditBtn.addEventListener('click', function(e) {
+            console.log('🟠 Botão Editar clicado');
             e.preventDefault();
             e.stopPropagation();
             const currentModal = document.getElementById('cardDetailModal');
             if (!currentModal) {
+                console.error('❌ Modal de detalhes não encontrado ao iniciar edição');
                 showNotification('Não foi possível localizar o modal de detalhes.', 'error');
                 return false;
             }
             const isEditable = currentModal.getAttribute('data-editable') === 'true';
             if (!isEditable) {
+                console.warn('⚠️ Tentativa de editar solicitação fora da coluna pendente');
                 showNotification('Somente solicitações pendentes podem ser editadas.', 'warning');
                 return false;
             }
             const solicitacaoId = currentModal.getAttribute('data-card-id');
             if (!solicitacaoId) {
+                console.error('❌ card-id não encontrado no modal');
                 showNotification('Não foi possível identificar a solicitação para edição.', 'error');
                 return false;
             }
