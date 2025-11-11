@@ -3,10 +3,55 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
 from .models import Solicitacoes, SolicitacaoRotaItem, Recebedor, ClienteEmpresa
 from servicos.models import Servico
 from django.utils import timezone
 import json
+
+STATUS_VALIDOS = {choice[0] for choice in Solicitacoes._meta.get_field('status').choices}
+
+
+def normalizar_status(valor):
+    """
+    Normaliza o valor do status para garantir consistência com os choices do modelo.
+    Retorna 'pendente' como fallback seguro quando o valor for inválido.
+    """
+    if not valor:
+        return 'pendente'
+    valor_normalizado = valor.strip().lower()
+    if valor_normalizado not in STATUS_VALIDOS:
+        return 'pendente'
+    return valor_normalizado
+
+
+def registrar_recebedor(nome, chave_pix=None):
+    """
+    Garante que o recebedor esteja registrado na tabela Recebedor.
+    Retorna o objeto criado/atualizado ou None quando não foi possível registrar.
+    """
+    if not nome:
+        return None
+    
+    chave_pix_normalizada = (chave_pix or "").strip()
+    if not chave_pix_normalizada:
+        chave_pix_normalizada = ""
+    
+    try:
+        recebedor_obj, created = Recebedor.objects.update_or_create(
+            nome=nome.strip(),
+            defaults={
+                'chave_pix': chave_pix_normalizada,
+                'ativo': True,
+            }
+        )
+        if created:
+            print(f"✅ Recebedor '{recebedor_obj.nome}' registrado automaticamente.")
+        return recebedor_obj
+    except Exception as e:
+        print(f"⚠️ Erro ao registrar recebedor '{nome}': {e}")
+        return None
+
 
 def limpar_valor_monetario(valor_raw):
     """Função auxiliar para limpar e converter valores monetários formatados"""
@@ -29,6 +74,9 @@ def garantir_migracao_campos():
         from django.db import connection
         cursor = connection.cursor()
         
+        campos_adicionados = False
+        alteracoes_0007 = False
+
         # Verificar e criar tabela ClienteEmpresa se não existir
         cursor.execute("""
             SELECT name FROM sqlite_master 
@@ -48,6 +96,7 @@ def garantir_migracao_campos():
                     );
                 """)
                 print("✅ Tabela solicitacoes_clienteempresa criada automaticamente!")
+                campos_adicionados = True
             except Exception as e:
                 if "already exists" not in str(e).lower() and "duplicate" not in str(e).lower():
                     print(f"⚠️ Erro ao criar tabela ClienteEmpresa: {e}")
@@ -59,9 +108,34 @@ def garantir_migracao_campos():
                 try:
                     cursor.execute("ALTER TABLE solicitacoes_clienteempresa ADD COLUMN cnpj VARCHAR(18) DEFAULT NULL;")
                     print("✅ Campo cnpj adicionado à tabela solicitacoes_clienteempresa")
+                    campos_adicionados = True
                 except Exception as e:
                     if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
                         print(f"⚠️ Erro ao adicionar campo cnpj na tabela ClienteEmpresa: {e}")
+
+        # Verificar e criar tabela Recebedor se não existir
+        cursor.execute("""
+            SELECT name FROM sqlite_master 
+            WHERE type='table' AND name='solicitacoes_recebedor';
+        """)
+        tabela_recebedor = cursor.fetchone()
+        if not tabela_recebedor:
+            try:
+                cursor.execute("""
+                    CREATE TABLE solicitacoes_recebedor (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        nome VARCHAR(100) NOT NULL UNIQUE,
+                        chave_pix VARCHAR(255) NOT NULL,
+                        ativo BOOLEAN NOT NULL DEFAULT 1,
+                        data_criacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        data_atualizacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    );
+                """)
+                print("✅ Tabela solicitacoes_recebedor criada automaticamente!")
+                alteracoes_0007 = True
+            except Exception as e:
+                if "already exists" not in str(e).lower() and "duplicate" not in str(e).lower():
+                    print(f"⚠️ Erro ao criar tabela Recebedor: {e}")
         
         cursor.execute("PRAGMA table_info(solicitacoes_solicitacoes)")
         columns = [row[1] for row in cursor.fetchall()]
@@ -109,6 +183,25 @@ def garantir_migracao_campos():
             except Exception as e:
                 if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
                     print(f"⚠️ Erro ao adicionar campo cnpj na tabela de itens: {e}")
+
+        # Verificar campos de recebedor na tabela de itens de rota (migração 0007)
+        if 'recebedor' not in columns_rota:
+            try:
+                cursor.execute("ALTER TABLE solicitacoes_solicitacaorotaitem ADD COLUMN recebedor VARCHAR(100) DEFAULT NULL;")
+                print("✅ Campo recebedor adicionado à tabela solicitacoes_solicitacaorotaitem")
+                alteracoes_0007 = True
+            except Exception as e:
+                if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
+                    print(f"⚠️ Erro ao adicionar campo recebedor na tabela de itens: {e}")
+
+        if 'chave_pix' not in columns_rota:
+            try:
+                cursor.execute("ALTER TABLE solicitacoes_solicitacaorotaitem ADD COLUMN chave_pix VARCHAR(255) DEFAULT NULL;")
+                print("✅ Campo chave_pix adicionado à tabela solicitacoes_solicitacaorotaitem")
+                alteracoes_0007 = True
+            except Exception as e:
+                if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
+                    print(f"⚠️ Erro ao adicionar campo chave_pix na tabela de itens: {e}")
         
         # Verificar se campo CNPJ existe na tabela principal
         if 'cnpj' not in columns:
@@ -143,9 +236,18 @@ def garantir_migracao_campos():
                     "INSERT OR IGNORE INTO django_migrations (app, name, applied) VALUES (?, ?, ?)",
                     ['solicitacoes', '0006_add_data_entrada_status', timezone.now()]
                 )
-                print("✅ Migração registrada no Django")
+                print("✅ Migração 0006 registrada no Django")
             except Exception as e:
                 print(f"⚠️ Erro ao registrar migração (pode ser ignorado): {e}")
+        if alteracoes_0007:
+            try:
+                cursor.execute(
+                    "INSERT OR IGNORE INTO django_migrations (app, name, applied) VALUES (?, ?, ?)",
+                    ['solicitacoes', '0007_recebedor_solicitacaorotaitem_chave_pix_and_more', timezone.now()]
+                )
+                print("✅ Migração 0007 registrada no Django")
+            except Exception as e:
+                print(f"⚠️ Erro ao registrar migração 0007 (pode ser ignorado): {e}")
     except Exception as e:
         print(f"⚠️ Erro ao verificar/aplicar migração: {e}")
 
@@ -155,6 +257,21 @@ def receber_dados(request):
     
     if request.method == 'POST':
         try:
+            solicitacao_id_raw = (request.POST.get('solicitacao_id') or '').strip()
+            solicitacao_existente = None
+            if solicitacao_id_raw:
+                try:
+                    solicitacao_existente = Solicitacoes.objects.select_related('servico').prefetch_related('itens_rota').get(id=int(solicitacao_id_raw))
+                except (ValueError, Solicitacoes.DoesNotExist):
+                    messages.error(request, 'Solicitação para edição não foi encontrada ou já foi removida.')
+                    return redirect('/solicitacoes/home/')
+                
+                if normalizar_status(solicitacao_existente.status) != 'pendente':
+                    messages.error(request, 'Somente solicitações pendentes podem ser editadas.')
+                    return redirect('/solicitacoes/home/')
+            
+            is_edit_mode = solicitacao_existente is not None
+            success_message = 'Solicitação atualizada com sucesso!' if is_edit_mode else 'Solicitação criada com sucesso!'
             
             # Verificar tipo de solicitação
             tipo_raw = request.POST.get('route', 'Casual')
@@ -166,12 +283,14 @@ def receber_dados(request):
             
             print(f"🔍 DEBUG: Tipo recebido do formulário: '{tipo_raw}' -> processado como: '{tipo}'")
             
-                # Capturar dados comuns do POST baseado no tipo
-            status = request.POST.get('status', 'pendente')
+            # Capturar dados comuns
+            status = normalizar_status(request.POST.get('status') or 'pendente')
+            if is_edit_mode:
+                status = normalizar_status(solicitacao_existente.status)
+            nome_do_recebedor = ''
             
             # Dados são capturados com prefixos diferentes baseado no tipo
             if tipo == 'em_rota':
-                nome_do_recebedor = request.POST.get('route_recebedor', '').strip()
                 descricao = request.POST.get('route_description', '').strip()
                 data_de_pagamento_str = request.POST.get('route_dataPagamento', '').strip()
                 prioridade = request.POST.get('route_priority', 'baixa')
@@ -202,12 +321,15 @@ def receber_dados(request):
                 valor_fluvial = limpar_valor_monetario(request.POST.get('casual_valor_fluvial', '').strip())
                 valor_outros = limpar_valor_monetario(request.POST.get('casual_valor_outros', '').strip())
                 valor_receita = limpar_valor_monetario(request.POST.get('casual_valor_receita', '').strip())
+                
+                # Registrar recebedor no catálogo principal para reaproveitamento
+                registrar_recebedor(nome_do_recebedor, chave_pix_casual)
             
             print(f"🔍 DEBUG Campos - Tipo: '{tipo}', Recebedor: '{nome_do_recebedor}', Descrição: '{descricao[:50]}...', Data: '{data_de_pagamento_str}', Prioridade: '{prioridade}'")
             
             # Validação básica dos campos obrigatórios (apenas para feedback do backend)
             # A validação principal deve ser feita no frontend
-            if not nome_do_recebedor:
+            if tipo == 'casual' and not nome_do_recebedor:
                 messages.error(request, 'O campo "Nome do Recebedor" é obrigatório.')
                 return redirect('/solicitacoes/home/')
             
@@ -261,6 +383,10 @@ def receber_dados(request):
                 print(f"🔍 DEBUG Em Rota - IDs encontrados: {route_ids_encontrados}")
                 
                 ordem_atual = 1
+                recebedor_principal = ''
+                chave_pix_principal = ''
+                cliente_empresa_principal = ''
+                cnpj_principal = ''
                 for i in route_ids_encontrados:
                     route_id = request.POST.get(f'route_id_{i}', '').strip()
                     route_valor_raw = request.POST.get(f'route_valor_{i}', '').strip()
@@ -269,6 +395,23 @@ def receber_dados(request):
                     route_pix = request.POST.get(f'route_pix_{i}', '').strip()
                     route_cliente_empresa = request.POST.get(f'route_cliente_empresa_{i}', '').strip()
                     route_cnpj = request.POST.get(f'route_cnpj_{i}', '').strip()
+                    
+                    if route_id and not route_recebedor:
+                        messages.error(request, f'Informe o recebedor para o ID {route_id}.')
+                        return redirect('/solicitacoes/home/')
+                    
+                    if not recebedor_principal and route_recebedor:
+                        recebedor_principal = route_recebedor
+                    if not chave_pix_principal and route_pix:
+                        chave_pix_principal = route_pix
+                    if not cliente_empresa_principal and route_cliente_empresa:
+                        cliente_empresa_principal = route_cliente_empresa
+                    if not cnpj_principal and route_cnpj:
+                        cnpj_principal = route_cnpj
+                    
+                    # Registrar recebedor para uso futuro
+                    if route_recebedor:
+                        registrar_recebedor(route_recebedor, route_pix)
                     
                     # Capturar valores detalhados para cada ID
                     valor_km = limpar_valor_monetario(request.POST.get(f'route_valor_km_{i}', '').strip())
@@ -340,6 +483,11 @@ def receber_dados(request):
                     messages.error(request, 'Solicitação Em Rota precisa de no mínimo 1 item preenchido.')
                     return redirect('/solicitacoes/home/')
                 
+                nome_do_recebedor = recebedor_principal.strip()
+                if not nome_do_recebedor:
+                    messages.error(request, 'Informe pelo menos um recebedor nos itens da solicitação Em Rota.')
+                    return redirect('/solicitacoes/home/')
+                
                 if not ticket_principal:
                     ticket_principal = itens_rota[0]['ticket']
                 
@@ -347,21 +495,30 @@ def receber_dados(request):
                 tickets_rota = [item['ticket'] for item in itens_rota if item['ticket']]
                 tickets_existentes = []
                 for ticket in tickets_rota:
-                    # Verificar se existe como ticket principal em Solicitacoes
-                    if Solicitacoes.objects.filter(ticket=ticket).exists():
-                        solicitacao_existente = Solicitacoes.objects.filter(ticket=ticket).first()
-                        if solicitacao_existente:
+                    consulta_solic = Solicitacoes.objects.filter(ticket=ticket)
+                    if is_edit_mode:
+                        consulta_solic = consulta_solic.exclude(id=solicitacao_existente.id)
+                    if consulta_solic.exists():
+                        solicitacao_conflitante = consulta_solic.first()
+                        if solicitacao_conflitante:
                             tipo_dict = dict(Solicitacoes.TIPO_CHOICES)
-                            tipo_existente = tipo_dict.get(solicitacao_existente.tipo, solicitacao_existente.tipo)
+                            tipo_existente = tipo_dict.get(solicitacao_conflitante.tipo, solicitacao_conflitante.tipo)
                             tickets_existentes.append(f"{ticket} (Solicitação {tipo_existente})")
+                        else:
+                            tickets_existentes.append(f"{ticket} (Solicitação)")
+                        continue
                     
-                    # Verificar se existe como ticket_item em SolicitacaoRotaItem
-                    elif SolicitacaoRotaItem.objects.filter(ticket_item=ticket).exists():
-                        item_existente = SolicitacaoRotaItem.objects.filter(ticket_item=ticket).first()
+                    consulta_itens = SolicitacaoRotaItem.objects.filter(ticket_item=ticket)
+                    if is_edit_mode:
+                        consulta_itens = consulta_itens.exclude(solicitacao=solicitacao_existente)
+                    if consulta_itens.exists():
+                        item_existente = consulta_itens.first()
                         if item_existente and item_existente.solicitacao:
                             tipo_dict = dict(Solicitacoes.TIPO_CHOICES)
                             tipo_existente = tipo_dict.get(item_existente.solicitacao.tipo, item_existente.solicitacao.tipo)
                             tickets_existentes.append(f"{ticket} (Item de rota {tipo_existente})")
+                        else:
+                            tickets_existentes.append(f"{ticket} (Item de rota)")
                 
                 if tickets_existentes:
                     tickets_str = ", ".join(tickets_existentes)
@@ -373,83 +530,24 @@ def receber_dados(request):
                     print(f"❌ ERRO: IDs já existem no banco de dados: {tickets_existentes}")
                     return redirect('/solicitacoes/home/')
                 
-                # Verificar se o ticket principal já existe (verificação adicional)
-                if Solicitacoes.objects.filter(ticket=ticket_principal).exists():
-                    solicitacao_existente = Solicitacoes.objects.filter(ticket=ticket_principal).first()
-                    if solicitacao_existente:
-                        tipo_dict = dict(Solicitacoes.TIPO_CHOICES)
-                        tipo_existente = tipo_dict.get(solicitacao_existente.tipo, solicitacao_existente.tipo)
-                        messages.error(
-                            request, 
-                            f'⚠️ O ID principal "{ticket_principal}" já está cadastrado no sistema como solicitação "{tipo_existente}"! '
-                            f'Por favor, use um ID diferente.'
-                        )
-                    else:
-                        messages.error(
-                            request, 
-                            f'⚠️ O ID principal "{ticket_principal}" já está cadastrado no sistema! '
-                            f'Por favor, use um ID diferente.'
-                        )
-                    print(f"❌ ERRO: Ticket principal '{ticket_principal}' já existe no banco de dados!")
-                    return redirect('/solicitacoes/home/')
-                
-                # Verificar se ticket principal existe como item de rota
-                if SolicitacaoRotaItem.objects.filter(ticket_item=ticket_principal).exists():
-                    item_existente = SolicitacaoRotaItem.objects.filter(ticket_item=ticket_principal).first()
-                    if item_existente and item_existente.solicitacao:
-                        tipo_dict = dict(Solicitacoes.TIPO_CHOICES)
-                        tipo_existente = tipo_dict.get(item_existente.solicitacao.tipo, item_existente.solicitacao.tipo)
-                        messages.error(
-                            request, 
-                            f'⚠️ O ID principal "{ticket_principal}" já está cadastrado como item de rota em uma solicitação "{tipo_existente}"! '
-                            f'Por favor, use um ID diferente.'
-                        )
-                        print(f"❌ ERRO: Ticket principal '{ticket_principal}' já existe como item de rota!")
-                        return redirect('/solicitacoes/home/')
-                
-                # Gerar título automaticamente baseado nos IDs da rota
                 route_tickets = [item['ticket'] for item in itens_rota]
                 titulo = f"Solicitação Em Rota - {', '.join(route_tickets)}"
                 
-                # Criar solicitação principal
-                print(f"🔍 DEBUG Criando solicitação Em Rota:")
-                print(f"   - Ticket: {ticket_principal}")
+                ticket_fallback = f"ROTA-{timezone.now().timestamp()}"
+                if is_edit_mode and solicitacao_existente.ticket:
+                    ticket_fallback = solicitacao_existente.ticket
+                ticket_final = ticket_principal or ticket_fallback
+                
+                print(f"🔍 DEBUG Salvando solicitação Em Rota:")
+                print(f"   - Ticket final: {ticket_final}")
                 print(f"   - Valor Total: {valor_total}")
                 print(f"   - Itens: {len(itens_rota)}")
+                print(f"   - Modo edição: {is_edit_mode}")
                 
-                solicitacao = Solicitacoes.objects.create(
-                    ticket=ticket_principal or 'ROTA-' + str(timezone.now().timestamp()),
-                    status=status,
-                    titulo=titulo,
-                    nome_solicitante=request.user,
-                    nome_do_recebedor=nome_do_recebedor,
-                    valor=valor_total,
-                    descricao=descricao,
-                    data_de_pagamento=data_de_pagamento,
-                    data_de_criacao=timezone.now().date(),
-                    anexo=anexo,
-                    tempo_criacao=tempo_criacao_auto,
-                    tempo_fila=tempo_fila_inicial,
-                    data_entrada_status=timezone.now(),  # Data de entrada no status inicial
-                    prioridade=prioridade,
-                    servico=itens_rota[0]['servico'],  # Serviço principal (primeiro item)
-                    tipo='em_rota',
-                    valor_km=valor_km,
-                    valor_pedagio=valor_pedagio,
-                    valor_hospedagem=valor_hospedagem,
-                    valor_fluvial=valor_fluvial,
-                    valor_outros=valor_outros,
-                    valor_receita=valor_receita,
-                    valor_em_rota=valor_em_rota,
-                    descricao_em_rota=descricao_em_rota
-                )
-                
-                print(f"✅ Solicitação Em Rota criada com sucesso! ID: {solicitacao.id}")
-                
-                # Criar itens da rota
+                itens_para_criar = []
                 for item in itens_rota:
-                    SolicitacaoRotaItem.objects.create(
-                        solicitacao=solicitacao,
+                    itens_para_criar.append(SolicitacaoRotaItem(
+                        solicitacao=None,  # Definido após obter a solicitação
                         ticket_item=item['ticket'],
                         valor=item['valor'],
                         servico=item['servico'],
@@ -463,7 +561,69 @@ def receber_dados(request):
                         valor_hospedagem=item.get('valor_hospedagem', 0.0),
                         valor_fluvial=item.get('valor_fluvial', 0.0),
                         valor_outros=item.get('valor_outros', 0.0)
-                    )
+                    ))
+                
+                with transaction.atomic():
+                    if is_edit_mode:
+                        solicitacao = solicitacao_existente
+                        solicitacao.ticket = ticket_final
+                        solicitacao.titulo = titulo
+                        solicitacao.nome_do_recebedor = nome_do_recebedor
+                        solicitacao.valor = valor_total
+                        solicitacao.descricao = descricao
+                        solicitacao.data_de_pagamento = data_de_pagamento
+                        solicitacao.prioridade = prioridade
+                        solicitacao.servico = itens_rota[0]['servico']
+                        solicitacao.tipo = 'em_rota'
+                        solicitacao.valor_km = valor_km
+                        solicitacao.valor_pedagio = valor_pedagio
+                        solicitacao.valor_hospedagem = valor_hospedagem
+                        solicitacao.valor_fluvial = valor_fluvial
+                        solicitacao.valor_outros = valor_outros
+                        solicitacao.valor_receita = valor_receita
+                        solicitacao.valor_em_rota = valor_em_rota
+                        solicitacao.descricao_em_rota = descricao_em_rota
+                        solicitacao.chave_pix = chave_pix_principal or None
+                        solicitacao.cliente_empresa = cliente_empresa_principal or None
+                        solicitacao.cnpj = cnpj_principal or None
+                        if anexo:
+                            solicitacao.anexo = anexo
+                        solicitacao.save()
+                        solicitacao.itens_rota.all().delete()
+                    else:
+                        solicitacao = Solicitacoes.objects.create(
+                            ticket=ticket_final,
+                            status=status,
+                            titulo=titulo,
+                            nome_solicitante=request.user,
+                            nome_do_recebedor=nome_do_recebedor,
+                            chave_pix=chave_pix_principal or None,
+                            cliente_empresa=cliente_empresa_principal or None,
+                            cnpj=cnpj_principal or None,
+                            valor=valor_total,
+                            descricao=descricao,
+                            data_de_pagamento=data_de_pagamento,
+                            data_de_criacao=timezone.now().date(),
+                            anexo=anexo,
+                            tempo_criacao=tempo_criacao_auto,
+                            tempo_fila=tempo_fila_inicial,
+                            data_entrada_status=timezone.now(),
+                            prioridade=prioridade,
+                            servico=itens_rota[0]['servico'],
+                            tipo='em_rota',
+                            valor_km=valor_km,
+                            valor_pedagio=valor_pedagio,
+                            valor_hospedagem=valor_hospedagem,
+                            valor_fluvial=valor_fluvial,
+                            valor_outros=valor_outros,
+                            valor_receita=valor_receita,
+                            valor_em_rota=valor_em_rota,
+                            descricao_em_rota=descricao_em_rota
+                        )
+                    
+                    for item in itens_para_criar:
+                        item.solicitacao = solicitacao
+                    SolicitacaoRotaItem.objects.bulk_create(itens_para_criar)
                 
             else:
                 # Processar solicitação Casual (original)
@@ -475,13 +635,14 @@ def receber_dados(request):
                 
                 # ⚠️ VALIDAÇÃO: Verificar se o ID (ticket) já existe no banco de dados
                 if id:
-                    # Verificar se já existe uma solicitação (de qualquer tipo) com esse ticket
-                    ticket_existente = Solicitacoes.objects.filter(ticket=id).exists()
-                    if ticket_existente:
-                        solicitacao_existente = Solicitacoes.objects.filter(ticket=id).first()
-                        if solicitacao_existente:
+                    consulta_solic = Solicitacoes.objects.filter(ticket=id)
+                    if is_edit_mode:
+                        consulta_solic = consulta_solic.exclude(id=solicitacao_existente.id)
+                    if consulta_solic.exists():
+                        solicitacao_conf = consulta_solic.first()
+                        if solicitacao_conf:
                             tipo_dict = dict(Solicitacoes.TIPO_CHOICES)
-                            tipo_existente = tipo_dict.get(solicitacao_existente.tipo, solicitacao_existente.tipo)
+                            tipo_existente = tipo_dict.get(solicitacao_conf.tipo, solicitacao_conf.tipo)
                             messages.error(
                                 request, 
                                 f'⚠️ O ID "{id}" já está cadastrado no sistema como solicitação "{tipo_existente}"! '
@@ -496,9 +657,11 @@ def receber_dados(request):
                         print(f"❌ ERRO: ID '{id}' já existe no banco de dados!")
                         return redirect('/solicitacoes/home/')
                     
-                    # Verificar se existe como item de rota
-                    if SolicitacaoRotaItem.objects.filter(ticket_item=id).exists():
-                        item_existente = SolicitacaoRotaItem.objects.filter(ticket_item=id).first()
+                    consulta_item = SolicitacaoRotaItem.objects.filter(ticket_item=id)
+                    if is_edit_mode:
+                        consulta_item = consulta_item.exclude(solicitacao=solicitacao_existente)
+                    if consulta_item.exists():
+                        item_existente = consulta_item.first()
                         if item_existente and item_existente.solicitacao:
                             tipo_dict = dict(Solicitacoes.TIPO_CHOICES)
                             tipo_existente = tipo_dict.get(item_existente.solicitacao.tipo, item_existente.solicitacao.tipo)
@@ -507,8 +670,14 @@ def receber_dados(request):
                                 f'⚠️ O ID "{id}" já está cadastrado como item de rota em uma solicitação "{tipo_existente}"! '
                                 f'Por favor, use um ID diferente.'
                             )
-                            print(f"❌ ERRO: ID '{id}' já existe como item de rota!")
-                            return redirect('/solicitacoes/home/')
+                        else:
+                            messages.error(
+                                request, 
+                                f'⚠️ O ID "{id}" já está cadastrado como item de rota em outra solicitação! '
+                                f'Por favor, use um ID diferente.'
+                            )
+                        print(f"❌ ERRO: ID '{id}' já existe como item de rota!")
+                        return redirect('/solicitacoes/home/')
                 
                 # Limpar valor usando função auxiliar
                 valor = limpar_valor_monetario(valor_raw)
@@ -548,55 +717,87 @@ def receber_dados(request):
                     except Servico.DoesNotExist:
                         messages.warning(request, f'Serviço selecionado não encontrado ou inativo.')
                 
-                # Gerar título automaticamente para solicitação Casual
+                # Gerar título e ticket
                 titulo = f"Solicitação Casual - {id}" if id else "Solicitação Casual"
+                ticket_fallback = f'CASUAL-{timezone.now().timestamp()}'
+                if is_edit_mode and solicitacao_existente.ticket:
+                    ticket_fallback = solicitacao_existente.ticket
+                ticket_final = id if id else ticket_fallback
                 
-                # Gerar ticket único se não fornecido
-                ticket_final = id if id else f'CASUAL-{timezone.now().timestamp()}'
-                
-                # Criar e salvar no banco
-                print(f"🔍 DEBUG Criando solicitação Casual:")
+                print(f"🔍 DEBUG Salvando solicitação Casual:")
                 print(f"   - ID/Ticket: {ticket_final}")
                 print(f"   - Valor: {valor}")
                 print(f"   - Serviço: {servico_obj}")
                 print(f"   - Tipo: casual")
+                print(f"   - Modo edição: {is_edit_mode}")
                 
                 try:
-                    solicitacao = Solicitacoes.objects.create(
-                        ticket=ticket_final,
-                        status=status,
-                        titulo=titulo,
-                        nome_solicitante=request.user,
-                        nome_do_recebedor=nome_do_recebedor,
-                        chave_pix=chave_pix_casual,
-                        cliente_empresa=cliente_empresa_casual,
-                        cnpj=cnpj_casual,
-                        valor=valor,
-                        descricao=descricao,
-                        data_de_pagamento=data_de_pagamento,
-                        data_de_criacao=timezone.now().date(),
-                        anexo=anexo,
-                        tempo_criacao=tempo_criacao_auto,
-                        tempo_fila=tempo_fila_inicial,
-                        data_entrada_status=timezone.now(),  # Data de entrada no status inicial
-                        prioridade=prioridade,
-                        servico=servico_obj,
-                        tipo='casual',
-                        valor_km=valor_km,
-                        valor_pedagio=valor_pedagio,
-                        valor_hospedagem=valor_hospedagem,
-                        valor_fluvial=valor_fluvial,
-                        valor_outros=valor_outros,
-                        valor_receita=valor_receita
-                    )
+                    with transaction.atomic():
+                        if is_edit_mode:
+                            solicitacao = solicitacao_existente
+                            solicitacao.ticket = ticket_final
+                            solicitacao.titulo = titulo
+                            solicitacao.nome_do_recebedor = nome_do_recebedor
+                            solicitacao.chave_pix = chave_pix_casual or None
+                            solicitacao.cliente_empresa = cliente_empresa_casual or None
+                            solicitacao.cnpj = cnpj_casual or None
+                            solicitacao.valor = valor
+                            solicitacao.descricao = descricao
+                            solicitacao.data_de_pagamento = data_de_pagamento
+                            solicitacao.prioridade = prioridade
+                            solicitacao.servico = servico_obj
+                            solicitacao.tipo = 'casual'
+                            solicitacao.valor_km = valor_km
+                            solicitacao.valor_pedagio = valor_pedagio
+                            solicitacao.valor_hospedagem = valor_hospedagem
+                            solicitacao.valor_fluvial = valor_fluvial
+                            solicitacao.valor_outros = valor_outros
+                            solicitacao.valor_receita = valor_receita
+                            solicitacao.valor_em_rota = 0.0
+                            solicitacao.descricao_em_rota = ''
+                            if anexo:
+                                solicitacao.anexo = anexo
+                            solicitacao.save()
+                            # Garantir que itens anteriores (se existirem) sejam removidos
+                            solicitacao.itens_rota.all().delete()
+                        else:
+                            solicitacao = Solicitacoes.objects.create(
+                                ticket=ticket_final,
+                                status=status,
+                                titulo=titulo,
+                                nome_solicitante=request.user,
+                                nome_do_recebedor=nome_do_recebedor,
+                                chave_pix=chave_pix_casual or None,
+                                cliente_empresa=cliente_empresa_casual or None,
+                                cnpj=cnpj_casual or None,
+                                valor=valor,
+                                descricao=descricao,
+                                data_de_pagamento=data_de_pagamento,
+                                data_de_criacao=timezone.now().date(),
+                                anexo=anexo,
+                                tempo_criacao=tempo_criacao_auto,
+                                tempo_fila=tempo_fila_inicial,
+                                data_entrada_status=timezone.now(),
+                                prioridade=prioridade,
+                                servico=servico_obj,
+                                tipo='casual',
+                                valor_km=valor_km,
+                                valor_pedagio=valor_pedagio,
+                                valor_hospedagem=valor_hospedagem,
+                                valor_fluvial=valor_fluvial,
+                                valor_outros=valor_outros,
+                                valor_receita=valor_receita,
+                                valor_em_rota=0.0,
+                                descricao_em_rota=''
+                            )
                     
-                    print(f"✅ Solicitação Casual criada com sucesso! ID: {solicitacao.id}, Ticket: {solicitacao.ticket}")
+                    print(f"✅ Solicitação Casual salva com sucesso! ID: {solicitacao.id}, Ticket: {solicitacao.ticket}")
                 except Exception as e:
-                    print(f"❌ ERRO ao criar solicitação Casual: {e}")
-                    messages.error(request, f'Erro ao criar solicitação Casual: {str(e)}')
+                    print(f"❌ ERRO ao salvar solicitação Casual: {e}")
+                    messages.error(request, f'Erro ao salvar solicitação Casual: {str(e)}')
                     return redirect('/solicitacoes/home/')
             
-            messages.success(request, 'Solicitação criada com sucesso!')
+            messages.success(request, success_message)
             # Redirect para a mesma página para recarregar e mostrar o novo card
             return redirect('/solicitacoes/home/')
             
@@ -621,11 +822,32 @@ def receber_dados(request):
                 # e usar select_related e prefetch_related para otimizar queries
                 todas_solicitacoes = Solicitacoes.objects.select_related('nome_solicitante', 'servico').prefetch_related('itens_rota__servico').all()
                 
-                # Filtrar em memória ao invés de fazer múltiplas queries
-                solicitacoes_pendentes = [s for s in todas_solicitacoes if s.status == "pendente"]
-                solicitacoes_recusados = [s for s in todas_solicitacoes if s.status == "recusado"]
-                solicitacoes_aprovado = [s for s in todas_solicitacoes if s.status == "aprovado"]
-                solicitacoes_concluido = [s for s in todas_solicitacoes if s.status == "concluido"]
+                solicitacoes_por_status = {
+                    'pendente': [],
+                    'recusado': [],
+                    'aprovado': [],
+                    'concluido': [],
+                }
+                
+                objetos_para_corrigir = []
+                for solicitacao in todas_solicitacoes:
+                    status_normalizado = normalizar_status(solicitacao.status)
+                    
+                    # Ajustar o objeto em memória para manter consistência na renderização
+                    if solicitacao.status != status_normalizado:
+                        print(f"⚠️ Normalizando status da solicitação {solicitacao.id} ({solicitacao.ticket}): '{solicitacao.status}' -> '{status_normalizado}'")
+                        solicitacao.status = status_normalizado
+                        objetos_para_corrigir.append(solicitacao)
+                    
+                    solicitacoes_por_status.setdefault(status_normalizado, []).append(solicitacao)
+                
+                if objetos_para_corrigir:
+                    Solicitacoes.objects.bulk_update(objetos_para_corrigir, ['status'])
+                
+                solicitacoes_pendentes = solicitacoes_por_status['pendente']
+                solicitacoes_recusados = solicitacoes_por_status['recusado']
+                solicitacoes_aprovado = solicitacoes_por_status['aprovado']
+                solicitacoes_concluido = solicitacoes_por_status['concluido']
                 
                 return render(request, 'home/index.html', {
                     'solicitacoes_pendentes': solicitacoes_pendentes,
@@ -782,12 +1004,15 @@ def obter_detalhes_completos(request, solicitacao_id):
             'cliente_empresa': solicitacao.cliente_empresa or '',
             'cnpj': solicitacao.cnpj or '',
             'servico': solicitacao.servico.nome if solicitacao.servico else 'N/A',
+            'servico_id': solicitacao.servico.id if solicitacao.servico else None,
             'tipo': solicitacao.tipo,
             'status': solicitacao.status,
             'prioridade': solicitacao.prioridade,
             'descricao': solicitacao.descricao or 'N/A',
             'data_criacao': solicitacao.data_de_criacao.strftime('%d/%m/%Y') if solicitacao.data_de_criacao else 'N/A',
             'data_pagamento': solicitacao.data_de_pagamento.strftime('%d/%m/%Y') if solicitacao.data_de_pagamento else 'N/A',
+            'data_criacao_iso': solicitacao.data_de_criacao.isoformat() if solicitacao.data_de_criacao else '',
+            'data_pagamento_iso': solicitacao.data_de_pagamento.isoformat() if solicitacao.data_de_pagamento else '',
             'valor_total': f'R$ {solicitacao.valor:.2f}',
             'valor_receita': f'R$ {solicitacao.valor_receita:.2f}',
             'valor_em_rota': f'R$ {solicitacao.valor_em_rota:.2f}',
@@ -809,6 +1034,7 @@ def obter_detalhes_completos(request, solicitacao_id):
                     'ordem': item.ordem,
                     'ticket_item': item.ticket_item,
                     'servico': item.servico.nome if item.servico else 'N/A',
+                    'servico_id': item.servico.id if item.servico else None,
                     'recebedor': item.recebedor or '',
                     'chave_pix': item.chave_pix or '',
                     'cliente_empresa': item.cliente_empresa or '',
@@ -880,7 +1106,7 @@ def atualizar_status(request):
             }, status=400)
         
         # Converter fila para status
-        status_db = status_mapping.get(new_status, new_status)
+        status_db = normalizar_status(status_mapping.get(new_status, new_status))
         
         # Buscar e atualizar solicitação
         from django.utils import timezone

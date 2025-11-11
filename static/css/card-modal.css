@@ -684,6 +684,16 @@
     gap: 8px;
 }
 
+.btn-secondary.is-disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.btn-secondary.is-disabled:hover {
+    background: #6c757d;
+    transform: none;
+}
+
 .btn-secondary:hover {
     background: #5a6268;
     transform: translateY(-1px);
