@@ -8,42 +8,50 @@ from django.utils import timezone
 from datetime import timedelta
 from django.core.mail import send_mail
 from django.conf import settings
+from django.utils.http import url_has_allowed_host_and_scheme
 from .models import PasswordResetToken
 
 class LoginUsuarios(View):
 
     def get(self, request):
-        return render(request, "usuarios/login/login.html")
+        next_url = request.GET.get('next', '')
+        return render(request, "usuarios/login/login.html", {"next": next_url})
     
     def post(self, request):
         # Verificar se os campos existem no POST
         name = request.POST.get("name")
         password = request.POST.get("password")
+        next_url = request.POST.get("next", "")
 
         if not name or not password:
             return render(request, "usuarios/login/login.html", {
-                "erro": "Por favor, preencha todos os campos."
+                "erro": "Por favor, preencha todos os campos.",
+                "next": next_url
             })
 
-        return LoginUsuarios.autenticacao_usuario(self, request, name, password)
+        return LoginUsuarios.autenticacao_usuario(self, request, name, password, next_url)
 
-    def autenticacao_usuario(self, request, name, password):    
+    def autenticacao_usuario(self, request, name, password, next_url):    
         try:
             user = authenticate(request, username=name, password=password)
 
             if user is not None:               
-                login(request, user)        
-                return redirect('home')   
+                login(request, user)
+                if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+                    return redirect(next_url)
+                return redirect('home')
                           
             else:
                 return render(request, "usuarios/login/login.html", {
-                    "erro": "Senha ou nome de usuario incorreto"
+                    "erro": "Senha ou nome de usuario incorreto",
+                    "next": next_url
                 })
             
         except Exception as e:
             print(f'Erro ao autenticar usuario: {e}')
             return render(request, "usuarios/login/login.html", {
-                "erro": f"Erro ao fazer login: {str(e)}"
+                "erro": f"Erro ao fazer login: {str(e)}",
+                "next": next_url
             })
 
 
