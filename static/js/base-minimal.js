@@ -62,6 +62,23 @@ window.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('createCampaignForm');
         if (form) {
             form.reset();
+            form.dataset.mode = 'create';
+
+            const solicitacaoIdField = document.getElementById('solicitacaoId');
+            if (solicitacaoIdField) {
+                solicitacaoIdField.value = '';
+            }
+            const formModeField = document.getElementById('formMode');
+            if (formModeField) {
+                formModeField.value = 'create';
+            }
+
+            const dinamicos = document.getElementById('route-ids-dinamicos');
+            if (dinamicos) {
+                dinamicos.innerHTML = '';
+            }
+            window.routeIdCounter = 3;
+            window.isEditingSolicitacao = false;
 
             // Remover classes e mensagens de erro
             form.querySelectorAll('.form-group.error').forEach(group => group.classList.remove('error'));
@@ -94,6 +111,15 @@ window.addEventListener('DOMContentLoaded', function() {
                         field.removeAttribute('required');
                     }
                 });
+            }
+
+            const tituloModal = document.getElementById('modalSolicitacaoTitulo');
+            if (tituloModal) {
+                tituloModal.textContent = 'Nova Solicitação Financeira';
+            }
+            const submitBtn = document.getElementById('submitSolicitacaoBtn');
+            if (submitBtn) {
+                submitBtn.textContent = 'Criar Solicitação';
             }
             console.log('✅ Formulário limpo e resetado para o estado padrão (Casual).');
         }

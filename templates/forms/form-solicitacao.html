@@ -2,7 +2,7 @@
 <div class="modal" id="createCampaignModal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>Nova Solicitação Financeira</h2>
+            <h2 id="modalSolicitacaoTitulo">Nova Solicitação Financeira</h2>
             <button class="close-btn" id="closeModal" aria-label="Fechar modal">
                 <i class="fas fa-times"></i>
             </button>
@@ -10,6 +10,8 @@
         <div class="modal-body">
             <form id="createCampaignForm" method="POST" enctype="multipart/form-data" action="/solicitacoes/home/" novalidate>
                 {% csrf_token %}
+                <input type="hidden" id="solicitacaoId" name="solicitacao_id" value="">
+                <input type="hidden" id="formMode" name="form_mode" value="create">
                 
                 <!-- Seletor de Tipo de Solicitação -->
                 <div class="route-classic">
@@ -67,7 +69,7 @@
                             </div>
                             <div class="form-group route-recebedor-field">
                                 <label for="routeRecebedor1">Recebedor</label>
-                                <input type="text" id="routeRecebedor1" name="route_recebedor_1" class="recebedor-input" list="recebedores-list-1" placeholder="Digite ou selecione o recebedor" autocomplete="off">
+                                <input type="text" id="routeRecebedor1" name="route_recebedor_1" class="recebedor-input" list="recebedores-list-1" placeholder="Digite ou selecione o recebedor" autocomplete="off" required>
                                 <datalist id="recebedores-list-1" class="recebedores-datalist"></datalist>
                                 <small class="form-help">Digite o nome do recebedor</small>
                             </div>
@@ -148,7 +150,7 @@
                             </div>
                             <div class="form-group route-recebedor-field">
                                 <label for="routeRecebedor2">Recebedor</label>
-                                <input type="text" id="routeRecebedor2" name="route_recebedor_2" class="recebedor-input" list="recebedores-list-2" placeholder="Digite ou selecione o recebedor" autocomplete="off">
+                                <input type="text" id="routeRecebedor2" name="route_recebedor_2" class="recebedor-input" list="recebedores-list-2" placeholder="Digite ou selecione o recebedor" autocomplete="off" required>
                                 <datalist id="recebedores-list-2" class="recebedores-datalist"></datalist>
                                 <small class="form-help">Digite o nome do recebedor</small>
                             </div>
@@ -243,14 +245,6 @@
                                 <label for="routeValorReceita">Valor de Receita <span class="required">*</span></label>
                                 <input type="text" id="routeValorReceita" name="route_valor_receita" class="valor-receita" placeholder="R$ 0,00" required>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Campos comuns para "Em Rota" -->
-                    <div class="form-row" style="margin-top: 2rem;">
-                        <div class="form-group">
-                            <label for="routeRecebedor">Nome do Recebedor</label>
-                            <input type="text" id="routeRecebedor" name="route_recebedor" placeholder="Ex: Maria Santos" required>
                         </div>
                     </div>
                     
@@ -404,7 +398,7 @@
             <button type="button" class="btn-secondary" id="cancelCreate">
                 Cancelar
             </button>
-            <button type="submit" class="btn-primary" form="createCampaignForm">
+            <button type="submit" class="btn-primary" form="createCampaignForm" id="submitSolicitacaoBtn">
                 Criar Solicitação
             </button>
         </div>
@@ -803,6 +797,8 @@
         // ============================================
         // FIM DA DEFINIÇÃO GLOBAL
         // ============================================
+
+        window.isEditingSolicitacao = false;
         
         // Preencher automaticamente a data de criação com a data de hoje
         document.addEventListener('DOMContentLoaded', function() {                const hoje = new Date();
@@ -1319,6 +1315,243 @@
                 
                 return total;
             }
+            
+            window.preencherFormularioEdicao = function(dados) {
+                if (!dados || typeof dados !== 'object') {
+                    console.error('❌ Dados inválidos para preencher formulário de edição:', dados);
+                    return;
+                }
+                
+                const form = document.getElementById('createCampaignForm');
+                if (!form) {
+                    console.error('❌ Formulário createCampaignForm não encontrado.');
+                    return;
+                }
+                
+                try {
+                    window.isEditingSolicitacao = true;
+                    form.dataset.mode = 'edit';
+                    
+                    // Resetar e limpar estado visual
+                    form.reset();
+                    form.querySelectorAll('.form-group.error').forEach(group => group.classList.remove('error'));
+                    form.querySelectorAll('.error-message').forEach(error => error.remove());
+                    
+                    const containerDinamicos = document.getElementById('route-ids-dinamicos');
+                    if (containerDinamicos) {
+                        containerDinamicos.innerHTML = '';
+                    }
+                    window.routeIdCounter = 3;
+                    
+                    const solicitacaoIdField = document.getElementById('solicitacaoId');
+                    if (solicitacaoIdField) {
+                        solicitacaoIdField.value = dados.id || '';
+                    }
+                    const formModeField = document.getElementById('formMode');
+                    if (formModeField) {
+                        formModeField.value = 'edit';
+                    }
+                    
+                    const tituloModal = document.getElementById('modalSolicitacaoTitulo');
+                    if (tituloModal) {
+                        tituloModal.textContent = 'Editar Solicitação Financeira';
+                    }
+                    const submitBtn = document.getElementById('submitSolicitacaoBtn');
+                    if (submitBtn) {
+                        submitBtn.textContent = 'Salvar Alterações';
+                    }
+                    
+                    const formatarValor = (valor) => {
+                        if (!valor) return 'R$ 0,00';
+                        const valorStr = valor.toString();
+                        if (valorStr.includes('R$')) {
+                            return valorStr;
+                        }
+                        return formatarValorMonetario(parseValorMonetario(valorStr));
+                    };
+                    
+                    const routeEmRotaRadio = document.getElementById('routeEmRota');
+                    const routeCasualRadio = document.getElementById('routeCasual');
+                    
+                    if (dados.tipo === 'em_rota') {
+                        if (routeEmRotaRadio) {
+                            routeEmRotaRadio.checked = true;
+                            routeEmRotaRadio.dispatchEvent(new Event('change'));
+                        }
+                        if (routeCasualRadio) {
+                            routeCasualRadio.checked = false;
+                        }
+                        
+                        const dataCriacao = document.getElementById('routeDataCriacao');
+                        if (dataCriacao && dados.data_criacao_iso) {
+                            dataCriacao.value = dados.data_criacao_iso;
+                        }
+                        const dataPagamento = document.getElementById('routeDataPagamento');
+                        if (dataPagamento && dados.data_pagamento_iso) {
+                            dataPagamento.value = dados.data_pagamento_iso;
+                        }
+                        const prioridadeField = document.getElementById('routePriority');
+                        if (prioridadeField) {
+                            prioridadeField.value = dados.prioridade || 'baixa';
+                        }
+                        const valorEmRotaField = document.getElementById('routeValorEmRota');
+                        if (valorEmRotaField) {
+                            valorEmRotaField.value = formatarValor(dados.valor_em_rota);
+                        }
+                        const valorReceitaField = document.getElementById('routeValorReceita');
+                        if (valorReceitaField) {
+                            valorReceitaField.value = formatarValor(dados.valor_receita);
+                        }
+                        const descricaoEmRotaField = document.getElementById('routeDescricaoEmRota');
+                        if (descricaoEmRotaField) {
+                            descricaoEmRotaField.value = dados.descricao_em_rota || '';
+                        }
+                        
+                        const valorTotalTodos = document.getElementById('routeValorTotalTodos');
+                        if (valorTotalTodos) {
+                            valorTotalTodos.value = formatarValor(dados.valor_total);
+                        }
+                        
+                        const itens = Array.isArray(dados.itens_rota) ? dados.itens_rota : [];
+                        itens.forEach((item, index) => {
+                            const numero = index + 1;
+                            if (numero > 2 && window.criarNovoRouteId) {
+                                window.criarNovoRouteId();
+                            }
+                            
+                            const setValorCampo = (campoId, valor) => {
+                                const campo = document.getElementById(campoId);
+                                if (campo) {
+                                    campo.value = formatarValor(valor);
+                                }
+                            };
+                            
+                            const idField = document.getElementById(`routeId${numero}`);
+                            if (idField) {
+                                idField.value = item.ticket_item || '';
+                            }
+                            const valorField = document.getElementById(`routeValor${numero}`);
+                            if (valorField) {
+                                valorField.value = formatarValor(item.valor);
+                            }
+                            const servicoSelect = document.getElementById(`routeServico${numero}`);
+                            if (servicoSelect) {
+                                servicoSelect.value = item.servico_id ? String(item.servico_id) : '';
+                            }
+                            const recebedorField = document.getElementById(`routeRecebedor${numero}`);
+                            if (recebedorField) {
+                                recebedorField.value = item.recebedor || '';
+                            }
+                            const pixField = document.getElementById(`routePix${numero}`);
+                            if (pixField) {
+                                pixField.value = item.chave_pix || '';
+                            }
+                            const clienteField = document.getElementById(`routeClienteEmpresa${numero}`);
+                            if (clienteField) {
+                                clienteField.value = item.cliente_empresa || '';
+                            }
+                            const cnpjField = document.getElementById(`routeCnpj${numero}`);
+                            if (cnpjField) {
+                                cnpjField.value = item.cnpj || '';
+                            }
+                            
+                            setValorCampo(`routeValorKm${numero}`, item.valor_km);
+                            setValorCampo(`routeValorPedagio${numero}`, item.valor_pedagio);
+                            setValorCampo(`routeValorHospedagem${numero}`, item.valor_hospedagem);
+                            setValorCampo(`routeValorFluvial${numero}`, item.valor_fluvial);
+                            setValorCampo(`routeValorOutros${numero}`, item.valor_outros);
+                            
+                            if (window.calcularTotalID) {
+                                window.calcularTotalID(numero);
+                            }
+                        });
+                        
+                        if (window.calcularTotalTodosIDs) {
+                            window.calcularTotalTodosIDs();
+                        }
+                    } else {
+                        if (routeCasualRadio) {
+                            routeCasualRadio.checked = true;
+                            routeCasualRadio.dispatchEvent(new Event('change'));
+                        }
+                        if (routeEmRotaRadio) {
+                            routeEmRotaRadio.checked = false;
+                        }
+                        
+                        const idField = document.getElementById('campaignId');
+                        if (idField) {
+                            idField.value = dados.ticket || '';
+                        }
+                        const recebedorField = document.getElementById('campaignRecebedor');
+                        if (recebedorField) {
+                            recebedorField.value = dados.recebedor || '';
+                        }
+                        const pixField = document.getElementById('campaignPix');
+                        if (pixField) {
+                            pixField.value = dados.chave_pix || '';
+                        }
+                        const clienteField = document.getElementById('campaignClienteEmpresa');
+                        if (clienteField) {
+                            clienteField.value = dados.cliente_empresa || '';
+                        }
+                        const cnpjField = document.getElementById('campaignCnpj');
+                        if (cnpjField) {
+                            cnpjField.value = dados.cnpj || '';
+                        }
+                        const descricaoField = document.getElementById('campaignDescription');
+                        if (descricaoField) {
+                            descricaoField.value = dados.descricao && dados.descricao !== 'N/A' ? dados.descricao : '';
+                        }
+                        const dataPagamento = document.getElementById('campaignDataPagamento');
+                        if (dataPagamento && dados.data_pagamento_iso) {
+                            dataPagamento.value = dados.data_pagamento_iso;
+                        }
+                        const dataCriacao = document.getElementById('campaignDataCriacao');
+                        if (dataCriacao && dados.data_criacao_iso) {
+                            dataCriacao.value = dados.data_criacao_iso;
+                        }
+                        const prioridadeField = document.getElementById('campaignPriority');
+                        if (prioridadeField) {
+                            prioridadeField.value = dados.prioridade || 'baixa';
+                        }
+                        const servicoSelect = document.getElementById('campaignService');
+                        if (servicoSelect) {
+                            servicoSelect.value = dados.servico_id ? String(dados.servico_id) : '';
+                        }
+                        
+                        const setCasualValor = (campoId, valor) => {
+                            const campo = document.getElementById(campoId);
+                            if (campo) {
+                                campo.value = formatarValor(valor);
+                            }
+                        };
+                        
+                        setCasualValor('casualValorKm', dados.valor_km);
+                        setCasualValor('casualValorPedagio', dados.valor_pedagio);
+                        setCasualValor('casualValorHospedagem', dados.valor_hospedagem);
+                        setCasualValor('casualValorFluvial', dados.valor_fluvial);
+                        setCasualValor('casualValorOutros', dados.valor_outros);
+                        setCasualValor('casualValorReceita', dados.valor_receita);
+                        
+                        const valorTotalCampo = document.getElementById('campaignValor');
+                        if (valorTotalCampo) {
+                            valorTotalCampo.value = formatarValor(dados.valor_total);
+                        }
+                        const valorHidden = document.getElementById('casual_valor_hidden');
+                        if (valorHidden) {
+                            valorHidden.value = dados.valor_total || '0';
+                        }
+                        
+                        if (window.calcularValorTotalCasual) {
+                            window.calcularValorTotalCasual();
+                        }
+                    }
+                    
+                    console.log('✅ Formulário preenchido para edição da solicitação:', dados.id);
+                } catch (error) {
+                    console.error('❌ Erro ao preencher formulário para edição:', error);
+                }
+            };
             
             // Formatação para Valor de Receita (Casual)
             const casualValorReceita = document.getElementById('casualValorReceita');

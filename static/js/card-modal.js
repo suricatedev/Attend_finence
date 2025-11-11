@@ -126,6 +126,20 @@ async function openCardDetailModal(card) {    const modal = document.getElementB
     const columnEl = card.closest('.kanban-column');
     const columnLabel = columnEl ? columnEl.querySelector('.column-title span:nth-child(2)') : null;
     const statusText = columnLabel ? columnLabel.textContent.trim().toLowerCase() : '';
+    const columnType = columnEl ? columnEl.getAttribute('data-column') || '' : '';
+    modal.setAttribute('data-card-column', columnType);
+    const isEditable = columnType === 'planning';
+    modal.setAttribute('data-editable', isEditable ? 'true' : 'false');
+    const editButton = modal.querySelector('#editCardBtn');
+    if (editButton) {
+        editButton.classList.toggle('is-disabled', !isEditable);
+        editButton.setAttribute('aria-disabled', (!isEditable).toString());
+        if (isEditable) {
+            editButton.removeAttribute('title');
+        } else {
+            editButton.setAttribute('title', 'Somente solicitações pendentes podem ser editadas.');
+        }
+    }
     if (statusText.includes('pendente')) header.classList.add('status-pendente');
     else if (statusText.includes('aprovado')) header.classList.add('status-aprovado');
     else if (statusText.includes('recusado')) header.classList.add('status-recusado');
@@ -934,6 +948,39 @@ function setupModalEventListeners() {
             }
         });
     }
+
+    const editCardBtn = document.getElementById('editCardBtn');
+    if (editCardBtn) {
+        const newEditBtn = editCardBtn.cloneNode(true);
+        const isEditable = modal.getAttribute('data-editable') === 'true';
+        newEditBtn.classList.toggle('is-disabled', !isEditable);
+        newEditBtn.setAttribute('aria-disabled', (!isEditable).toString());
+        if (!isEditable) {
+            newEditBtn.setAttribute('title', 'Somente solicitações pendentes podem ser editadas.');
+        }
+        editCardBtn.parentNode.replaceChild(newEditBtn, editCardBtn);
+        newEditBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const currentModal = document.getElementById('cardDetailModal');
+            if (!currentModal) {
+                showNotification('Não foi possível localizar o modal de detalhes.', 'error');
+                return false;
+            }
+            const isEditable = currentModal.getAttribute('data-editable') === 'true';
+            if (!isEditable) {
+                showNotification('Somente solicitações pendentes podem ser editadas.', 'warning');
+                return false;
+            }
+            const solicitacaoId = currentModal.getAttribute('data-card-id');
+            if (!solicitacaoId) {
+                showNotification('Não foi possível identificar a solicitação para edição.', 'error');
+                return false;
+            }
+            iniciarEdicaoSolicitacao(solicitacaoId);
+            return false;
+        });
+    }
 }
 
 // Função para mover card entre filas
@@ -1101,6 +1148,51 @@ function showNotification(message, type = 'info') {
         notification.classList.remove('show');
         setTimeout(() => notification.remove(), 300);
     }, 3000);
+}
+
+async function iniciarEdicaoSolicitacao(solicitacaoId) {
+    console.log('🟡 Iniciando edição da solicitação', solicitacaoId);
+    try {
+        const response = await fetch(`/solicitacoes/obter-detalhes-completos/${solicitacaoId}/`);
+        if (!response.ok) {
+            throw new Error(`Erro ${response.status}`);
+        }
+        const resultado = await response.json();
+        if (!resultado.success || !resultado.dados) {
+            showNotification(resultado.message || 'Erro ao carregar dados da solicitação.', 'error');
+            return;
+        }
+        
+        if (typeof window.preencherFormularioEdicao === 'function') {
+            window.preencherFormularioEdicao(resultado.dados);
+        } else {
+            console.error('⚠️ Função window.preencherFormularioEdicao não encontrada.');
+            showNotification('Não foi possível preparar o formulário de edição.', 'error');
+            return;
+        }
+        
+        closeCardDetailModal();
+        abrirModalEdicaoSolicitacao();
+    } catch (error) {
+        console.error('❌ Erro ao iniciar edição da solicitação:', error);
+        showNotification('Erro ao carregar dados para edição.', 'error');
+    }
+}
+
+function abrirModalEdicaoSolicitacao() {
+    const modalCriacao = document.getElementById('createCampaignModal');
+    if (modalCriacao) {
+        modalCriacao.style.display = 'flex';
+        modalCriacao.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        
+        const primeiroCampo = modalCriacao.querySelector('input[required]:not([disabled])');
+        if (primeiroCampo) {
+            setTimeout(() => primeiroCampo.focus(), 100);
+        }
+    } else {
+        console.error('⚠️ Modal de criação não encontrado ao tentar abrir para edição.');
+    }
 }
 
 // Função para fechar modal de detalhes
