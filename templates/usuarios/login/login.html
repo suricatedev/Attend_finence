@@ -28,15 +28,33 @@
                     <h1 class="header">Bem-vindo de volta</h1>
                     <p class="subtitle">Por favor, insira seus dados.</p>
                     
+                    {% if erro %}
+                    <div class="alert alert-error" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 8px; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;">
+                        <i class="fas fa-exclamation-circle"></i> {{ erro }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 8px; background: {% if message.tags == 'error' %}#f8d7da{% elif message.tags == 'success' %}#d4edda{% else %}#d1ecf1{% endif %}; color: {% if message.tags == 'error' %}#721c24{% elif message.tags == 'success' %}#155724{% else %}#0c5460{% endif %}; border: 1px solid {% if message.tags == 'error' %}#f5c6cb{% elif message.tags == 'success' %}#c3e6cb{% else %}#bee5eb{% endif %};">
+                                <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %}"></i> {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
                     <div class="input-group">
                         <label class="input-label">Usuário</label>
-                        <input name="name" type="name" placeholder="Nome de Usuário" class="input" required />
+                        <input name="name" type="text" placeholder="Nome de Usuário" class="input" required 
+                               maxlength="150" autocomplete="username" 
+                               pattern="[a-zA-Z0-9_@.+-]+" 
+                               title="Apenas letras, números e caracteres especiais (@, _, ., +, -) são permitidos" />
                     </div>
                     
                     <div class="input-group">
                         <label class="input-label">Senha</label>
                         <div class="password-input-wrapper">
-                            <input type="password" name="password" id="passwordInput" placeholder="Senha" class="input" required />
+                            <input type="password" name="password" id="passwordInput" placeholder="Senha" class="input" required 
+                                   maxlength="128" autocomplete="current-password" />
                             <button type="button" class="password-toggle" id="togglePassword" aria-label="Mostrar/Ocultar senha">
                                 <i class="fas fa-eye" id="eyeIcon"></i>
                             </button>
@@ -263,6 +281,85 @@
                     eyeIcon.classList.remove('fa-eye-slash');
                     eyeIcon.classList.add('fa-eye');
                     togglePasswordBtn.setAttribute('aria-label', 'Mostrar senha');
+                }
+            });
+        }
+        
+        // 6. Validação de segurança adicional no frontend
+        const loginForm = document.querySelector('.form');
+        const usernameInput = document.querySelector('input[name="name"]');
+        const passwordInputField = document.getElementById('passwordInput');
+        
+        if (loginForm && usernameInput && passwordInputField) {
+            loginForm.addEventListener('submit', function(e) {
+                // Validar tamanho dos campos antes de enviar
+                const username = usernameInput.value.trim();
+                const password = passwordInputField.value;
+                
+                // Limitar tamanho (mesmo que maxlength esteja definido, validar aqui também)
+                if (username.length > 150) {
+                    e.preventDefault();
+                    alert('O nome de usuário não pode ter mais de 150 caracteres.');
+                    usernameInput.focus();
+                    return false;
+                }
+                
+                if (password.length > 128) {
+                    e.preventDefault();
+                    alert('A senha não pode ter mais de 128 caracteres.');
+                    passwordInputField.focus();
+                    return false;
+                }
+                
+                // Validar que não está vazio após trim
+                if (!username || username.length === 0) {
+                    e.preventDefault();
+                    alert('Por favor, preencha o nome de usuário.');
+                    usernameInput.focus();
+                    return false;
+                }
+                
+                if (!password || password.length === 0) {
+                    e.preventDefault();
+                    alert('Por favor, preencha a senha.');
+                    passwordInputField.focus();
+                    return false;
+                }
+                
+                // Sanitizar username (remover espaços extras e caracteres perigosos)
+                const sanitizedUsername = username.replace(/\s+/g, ' ').trim();
+                if (sanitizedUsername !== username) {
+                    usernameInput.value = sanitizedUsername;
+                }
+            });
+            
+            // Prevenir colar texto muito longo
+            usernameInput.addEventListener('paste', function(e) {
+                setTimeout(function() {
+                    if (usernameInput.value.length > 150) {
+                        usernameInput.value = usernameInput.value.substring(0, 150);
+                    }
+                }, 0);
+            });
+            
+            passwordInputField.addEventListener('paste', function(e) {
+                setTimeout(function() {
+                    if (passwordInputField.value.length > 128) {
+                        passwordInputField.value = passwordInputField.value.substring(0, 128);
+                    }
+                }, 0);
+            });
+            
+            // Limitar digitação em tempo real
+            usernameInput.addEventListener('input', function(e) {
+                if (this.value.length > 150) {
+                    this.value = this.value.substring(0, 150);
+                }
+            });
+            
+            passwordInputField.addEventListener('input', function(e) {
+                if (this.value.length > 128) {
+                    this.value = this.value.substring(0, 128);
                 }
             });
         }

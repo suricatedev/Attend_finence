@@ -68,7 +68,7 @@
                                 </select>
                             </div>
                             <div class="form-group route-recebedor-field">
-                                <label for="routeRecebedor1">Recebedor</label>
+                                <label for="routeRecebedor1">Recebedor <span class="required">*</span></label>
                                 <input type="text" id="routeRecebedor1" name="route_recebedor_1" class="recebedor-input" list="recebedores-list-1" placeholder="Digite ou selecione o recebedor" autocomplete="off" required>
                                 <datalist id="recebedores-list-1" class="recebedores-datalist"></datalist>
                                 <small class="form-help">Digite o nome do recebedor</small>
@@ -149,7 +149,7 @@
                                 </select>
                             </div>
                             <div class="form-group route-recebedor-field">
-                                <label for="routeRecebedor2">Recebedor</label>
+                                <label for="routeRecebedor2">Recebedor <span class="required">*</span></label>
                                 <input type="text" id="routeRecebedor2" name="route_recebedor_2" class="recebedor-input" list="recebedores-list-2" placeholder="Digite ou selecione o recebedor" autocomplete="off" required>
                                 <datalist id="recebedores-list-2" class="recebedores-datalist"></datalist>
                                 <small class="form-help">Digite o nome do recebedor</small>
@@ -250,12 +250,13 @@
                     
                     <div class="form-group">
                         <label for="routeDescription">Descrição</label>
-                        <textarea id="routeDescription" name="route_description" rows="4" placeholder="Descreva detalhadamente a solicitação financeira..." required></textarea>
+                        <textarea id="routeDescription" name="route_description" rows="4" placeholder="Descreva detalhadamente a solicitação financeira..."></textarea>
+                        <small class="form-help">Campo opcional</small>
                     </div>
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="routeDataPagamento">Data de Pagamento</label>
+                            <label for="routeDataPagamento">Data de Pagamento <span class="required">*</span></label>
                             <input type="date" id="routeDataPagamento" name="route_dataPagamento" required>
                         </div>
                         <div class="form-group">
@@ -272,7 +273,7 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="routePriority">Prioridade</label>
+                        <label for="routePriority">Prioridade <span class="required">*</span></label>
                         <select id="routePriority" name="route_priority" required>
                             <option value="baixa">Baixa</option>
                             <option value="media">Média</option>
@@ -291,7 +292,7 @@
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="campaignRecebedor">Nome do Recebedor</label>
+                        <label for="campaignRecebedor">Nome do Recebedor <span class="required">*</span></label>
                         <input type="text" id="campaignRecebedor" name="casual_recebedor" class="recebedor-input" list="recebedores-list-casual" placeholder="Digite ou selecione o recebedor" autocomplete="off" required>
                         <datalist id="recebedores-list-casual" class="recebedores-datalist"></datalist>
                         <small class="form-help">Digite o nome do recebedor</small>
@@ -328,7 +329,7 @@
                 </div>
 
                     <div class="form-group" id="campaignServiceGroup">
-                    <label for="campaignService">Serviço</label>
+                    <label for="campaignService">Serviço <span class="required">*</span></label>
                         <select id="campaignService" name="casual_service" required>                        <option value="">Selecione o tipo de serviço</option>
                         {% for servico in servicos_disponiveis %}
                         <option value="{{ servico.id }}">{{ servico.nome }}</option>
@@ -373,11 +374,13 @@
                 
                 <div class="form-group">
                     <label for="campaignDescription">Descrição</label>
-                        <textarea id="campaignDescription" name="casual_description" rows="4" placeholder="Descreva detalhadamente a solicitação financeira..." required></textarea>                </div>
+                        <textarea id="campaignDescription" name="casual_description" rows="4" placeholder="Descreva detalhadamente a solicitação financeira..."></textarea>
+                        <small class="form-help">Campo opcional</small>
+                </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="campaignDataPagamento">Data de Pagamento</label>
+                        <label for="campaignDataPagamento">Data de Pagamento <span class="required">*</span></label>
                             <input type="date" id="campaignDataPagamento" name="casual_dataPagamento" required>
                     </div>
                     <div class="form-group">
@@ -392,7 +395,7 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="campaignPriority">Prioridade</label>
+                    <label for="campaignPriority">Prioridade <span class="required">*</span></label>
                         <select id="campaignPriority" name="casual_priority" required>                        <option value="baixa">Baixa</option>
                         <option value="media">Média</option>
                         <option value="alta">Alta</option>

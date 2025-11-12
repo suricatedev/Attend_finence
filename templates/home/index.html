@@ -222,7 +222,7 @@
                         <div class="info-item">
                             <i class="fas fa-dollar-sign"></i>
                             <span class="info-label">VALOR</span>
-                            <span class="info-value">R$ {{ solicitacao.valor|floatformat:2 }}</span>
+                            <span class="info-value">R$ {{ solicitacao.get_valor_detalhados|floatformat:2 }}</span>
                         </div>
                         <div class="info-item">
                             <i class="fas fa-calendar-plus"></i>
@@ -304,7 +304,7 @@
                         <div class="info-item">
                             <i class="fas fa-dollar-sign"></i>
                             <span class="info-label">VALOR</span>
-                            <span class="info-value">R$ {{ solicitacao.valor|floatformat:2 }}</span>
+                            <span class="info-value">R$ {{ solicitacao.get_valor_detalhados|floatformat:2 }}</span>
                         </div>
                         <div class="info-item">
                             <i class="fas fa-calendar-plus"></i>
@@ -386,7 +386,7 @@
                         <div class="info-item">
                             <i class="fas fa-dollar-sign"></i>
                             <span class="info-label">VALOR</span>
-                            <span class="info-value">R$ {{ solicitacao.valor|floatformat:2 }}</span>
+                            <span class="info-value">R$ {{ solicitacao.get_valor_detalhados|floatformat:2 }}</span>
                         </div>
                         <div class="info-item">
                             <i class="fas fa-calendar-plus"></i>
@@ -468,7 +468,7 @@
                         <div class="info-item">
                             <i class="fas fa-dollar-sign"></i>
                             <span class="info-label">VALOR</span>
-                            <span class="info-value">R$ {{ solicitacao.valor|floatformat:2 }}</span>
+                            <span class="info-value">R$ {{ solicitacao.get_valor_detalhados|floatformat:2 }}</span>
                         </div>
                         <div class="info-item">
                             <i class="fas fa-calendar-plus"></i>
@@ -543,9 +543,15 @@
                         <i class="fas fa-dollar-sign"></i>
                         Valores e Status
                     </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Valor</div>
-                        <div class="detail-value highlight" id="modal-valor">R$ 0,00</div>
+                    <div class="detail-item detail-item-row">
+                        <div class="detail-item-half">
+                            <div class="detail-label">Valor Total</div>
+                            <div class="detail-value highlight" id="modal-valor">R$ 0,00</div>
+                        </div>
+                        <div class="detail-item-half">
+                            <div class="detail-label">Valor da Receita</div>
+                            <div class="detail-value highlight" id="modal-valor-receita" style="color: #FFCB57;">R$ 0,00</div>
+                        </div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">Prioridade</div>

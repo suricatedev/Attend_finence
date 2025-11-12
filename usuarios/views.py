@@ -10,6 +10,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.http import url_has_allowed_host_and_scheme
 from .models import PasswordResetToken
+import re
 
 class LoginUsuarios(View):
 
@@ -19,15 +20,60 @@ class LoginUsuarios(View):
     
     def post(self, request):
         # Verificar se os campos existem no POST
-        name = request.POST.get("name")
-        password = request.POST.get("password")
+        name_raw = request.POST.get("name", "")
+        password_raw = request.POST.get("password", "")
         next_url = request.POST.get("next", "")
 
-        if not name or not password:
+        # Validação de segurança: verificar se os campos estão preenchidos
+        if not name_raw or not password_raw:
             return render(request, "usuarios/login/login.html", {
                 "erro": "Por favor, preencha todos os campos.",
                 "next": next_url
             })
+        
+        # Validação de segurança: limitar tamanho dos dados recebidos
+        # Django User model tem limite de 150 caracteres para username
+        MAX_USERNAME_LENGTH = 150
+        MAX_PASSWORD_LENGTH = 128  # Limite seguro para senha
+        
+        # Sanitizar e validar username
+        name = name_raw.strip()
+        if len(name) > MAX_USERNAME_LENGTH:
+            return render(request, "usuarios/login/login.html", {
+                "erro": f"O nome de usuário não pode ter mais de {MAX_USERNAME_LENGTH} caracteres.",
+                "next": next_url
+            })
+        
+        if len(name) == 0:
+            return render(request, "usuarios/login/login.html", {
+                "erro": "Por favor, preencha o nome de usuário.",
+                "next": next_url
+            })
+        
+        # Validar senha
+        if len(password_raw) > MAX_PASSWORD_LENGTH:
+            return render(request, "usuarios/login/login.html", {
+                "erro": f"A senha não pode ter mais de {MAX_PASSWORD_LENGTH} caracteres.",
+                "next": next_url
+            })
+        
+        if len(password_raw) == 0:
+            return render(request, "usuarios/login/login.html", {
+                "erro": "Por favor, preencha a senha.",
+                "next": next_url
+            })
+        
+        # Sanitização adicional: remover caracteres de controle e espaços extras
+        # Manter apenas caracteres alfanuméricos e alguns especiais permitidos
+        # Permitir apenas letras, números e caracteres especiais comuns para username
+        name_sanitized = re.sub(r'[^\w@.+-]', '', name)
+        if name_sanitized != name:
+            # Se houve alteração, usar a versão sanitizada mas manter o original para validação
+            name = name_sanitized
+        
+        # Limitar tamanho após sanitização
+        name = name[:MAX_USERNAME_LENGTH]
+        password = password_raw[:MAX_PASSWORD_LENGTH]
 
         return LoginUsuarios.autenticacao_usuario(self, request, name, password, next_url)
 

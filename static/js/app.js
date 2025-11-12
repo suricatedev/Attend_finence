@@ -631,6 +631,7 @@ class FormManager {
         let isValid = true;
         let errorCount = 0;
         const errors = [];
+        const errorFields = []; // Armazenar referências dos campos com erro
         
         console.log(`🔍 Formulário ativo: ${isEmRotaActive ? 'Em Rota' : 'Casual'}`);
         console.log(`🔍 Total de campos required no formulário ativo (habilitados): ${requiredFields.length}`);
@@ -817,6 +818,7 @@ class FormManager {
                                 isValid = false;
                                 errorCount++;
                                 errors.push(fieldName || 'Campo sem nome');
+                                errorFields.push(field); // Armazenar referência do campo
                             }
                         } else {
                             // Campo está habilitado mas vazio - mostrar erro
@@ -827,6 +829,7 @@ class FormManager {
                             isValid = false;
                             errorCount++;
                             errors.push(fieldName || 'Campo sem nome');
+                            errorFields.push(field); // Armazenar referência do campo
                         }
                     } else {
                         // Valor encontrado após verificação
@@ -842,6 +845,7 @@ class FormManager {
                     isValid = false;
                     errorCount++;
                     errors.push(fieldName || 'Campo sem nome');
+                    errorFields.push(field); // Armazenar referência do campo
                 }
             } else {
                 // Validação específica para campos de tempo
@@ -879,6 +883,7 @@ class FormManager {
         if (form.action && (form.action.includes('/solicitacoes/') || form.action.includes('/Solicitacoes/') || form.action.includes('/home/'))) {
             if (!isValid) {
                 e.preventDefault();
+                e.stopPropagation(); // Evitar que o evento se propague e feche o modal
                 
                 // Log detalhado para debug
                 console.error('❌ VALIDAÇÃO FALHOU:', {
@@ -911,17 +916,45 @@ class FormManager {
                 
                 console.error('❌ Campos que falharam na validação:', failedFields);
                 
+                // Fazer scroll até o primeiro campo com erro
+                if (errorFields.length > 0) {
+                    const firstErrorField = errorFields[0];
+                    const formGroup = firstErrorField.closest('.form-group');
+                    
+                    // Tentar fazer scroll até o campo ou o grupo do formulário
+                    const scrollTarget = formGroup || firstErrorField;
+                    
+                    setTimeout(() => {
+                        try {
+                            scrollTarget.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'center',
+                                inline: 'nearest'
+                            });
+                            
+                            // Focar no campo após o scroll
+                            setTimeout(() => {
+                                if (firstErrorField && !firstErrorField.disabled) {
+                                    firstErrorField.focus();
+                                }
+                            }, 300);
+                        } catch (scrollError) {
+                            console.warn('⚠️ Erro ao fazer scroll:', scrollError);
+                        }
+                    }, 100);
+                }
+                
                 const message = errorCount === 1 
                     ? 'Por favor, preencha o campo obrigatório' 
                     : `Por favor, preencha todos os campos obrigatórios (${errorCount} campos faltando)`;
                 
                 // Mostrar notificação usando Utils (não usar alert para não bloquear)
                 if (typeof Utils !== 'undefined' && Utils.showNotification) {
-                    Utils.showNotification(message + ' Verifique o console (F12) para detalhes.', 'error');
+                    Utils.showNotification(message, 'error');
                 } else {
                     // Fallback apenas se Utils não existir
                     console.error('⚠️ Utils.showNotification não está disponível, usando alert como fallback');
-                    alert(message + '\n\nVerifique o console do navegador (F12) para detalhes dos campos.');
+                    alert(message);
                 }
                 
                 return false;
@@ -944,6 +977,11 @@ class FormManager {
             const routeRadioChecked = form.querySelector('[name="route"]:checked');
             const routeValue = routeRadioChecked ? routeRadioChecked.value : 'não encontrado';
             
+            // Verificar se está em modo de edição
+            const solicitacaoIdField = form.querySelector('#solicitacaoId');
+            const formModeField = form.querySelector('#formMode');
+            const isEditMode = solicitacaoIdField && solicitacaoIdField.value && solicitacaoIdField.value.trim() !== '';
+            
             console.log('📋 Dados do formulário antes do submit:', {
                 action: form.action,
                 method: form.method,
@@ -951,7 +989,10 @@ class FormManager {
                 tipo: isEmRotaActive ? 'Em Rota' : 'Casual',
                 routeRadioFound: !!routeRadioChecked,
                 formId: form.id,
-                formName: form.name
+                formName: form.name,
+                isEditMode: isEditMode,
+                solicitacaoId: solicitacaoIdField ? solicitacaoIdField.value : 'não encontrado',
+                formMode: formModeField ? formModeField.value : 'não encontrado'
             });
             
             // Garantir que o campo 'route' está presente no formulário antes de submeter
@@ -964,6 +1005,19 @@ class FormManager {
                 hiddenRoute.value = isEmRotaActive ? 'Em Rota' : 'Casual';
                 form.appendChild(hiddenRoute);
                 console.log('✅ Campo "route" criado dinamicamente:', hiddenRoute.value);
+            }
+            
+            // Garantir que o campo solicitacao_id está presente e com valor se estiver em modo de edição
+            if (isEditMode && solicitacaoIdField) {
+                const solicitacaoIdValue = solicitacaoIdField.value.trim();
+                if (!solicitacaoIdValue) {
+                    console.error('❌ ERRO: Modo de edição ativado mas solicitacao_id está vazio!');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    Utils.showNotification('Erro: ID da solicitação não encontrado. Recarregue a página e tente novamente.', 'error');
+                    return false;
+                }
+                console.log('✅ Campo solicitacao_id verificado e presente:', solicitacaoIdValue);
             }
             
             // ⚠️ ÚLTIMA VERIFICAÇÃO: Garantir que campos ocultos não têm 'required'
