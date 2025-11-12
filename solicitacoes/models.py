@@ -84,6 +84,26 @@ class Solicitacoes(models.Model):
 
     def __str__(self):
         return f"{self.titulo} - {self.status}"
+    
+    def get_valor_detalhados(self):
+        """
+        Retorna a soma apenas dos valores detalhados (sem incluir valor da atividade/receita).
+        Para Em Rota: soma os valores detalhados de todos os itens
+        Para Casual: soma apenas os valores detalhados do próprio modelo
+        """
+        if self.tipo == 'em_rota':
+            # Para Em Rota, somar valores detalhados de todos os itens
+            total = 0.0
+            for item in self.itens_rota.all():
+                total += (item.valor_km or 0.0) + (item.valor_pedagio or 0.0) + \
+                         (item.valor_hospedagem or 0.0) + (item.valor_fluvial or 0.0) + \
+                         (item.valor_outros or 0.0)
+            return total
+        else:
+            # Para Casual, somar apenas os valores detalhados do próprio modelo
+            return (self.valor_km or 0.0) + (self.valor_pedagio or 0.0) + \
+                   (self.valor_hospedagem or 0.0) + (self.valor_fluvial or 0.0) + \
+                   (self.valor_outros or 0.0)
 
 class SolicitacaoRotaItem(models.Model):
     """Modelo para armazenar os itens de uma solicitação Em Rota"""

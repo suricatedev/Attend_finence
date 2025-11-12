@@ -258,19 +258,25 @@ def receber_dados(request):
     if request.method == 'POST':
         try:
             solicitacao_id_raw = (request.POST.get('solicitacao_id') or '').strip()
+            print(f"🔍 DEBUG EDIÇÃO - solicitacao_id recebido: '{solicitacao_id_raw}'")
+            print(f"🔍 DEBUG EDIÇÃO - Todos os campos POST recebidos: {list(request.POST.keys())}")
             solicitacao_existente = None
             if solicitacao_id_raw:
                 try:
                     solicitacao_existente = Solicitacoes.objects.select_related('servico').prefetch_related('itens_rota').get(id=int(solicitacao_id_raw))
-                except (ValueError, Solicitacoes.DoesNotExist):
+                    print(f"✅ DEBUG EDIÇÃO - Solicitação encontrada: ID={solicitacao_existente.id}, Ticket={solicitacao_existente.ticket}, Status={solicitacao_existente.status}")
+                except (ValueError, Solicitacoes.DoesNotExist) as e:
+                    print(f"❌ DEBUG EDIÇÃO - Erro ao buscar solicitação: {e}")
                     messages.error(request, 'Solicitação para edição não foi encontrada ou já foi removida.')
                     return redirect('/solicitacoes/home/')
                 
                 if normalizar_status(solicitacao_existente.status) != 'pendente':
+                    print(f"❌ DEBUG EDIÇÃO - Status não permite edição: {solicitacao_existente.status}")
                     messages.error(request, 'Somente solicitações pendentes podem ser editadas.')
                     return redirect('/solicitacoes/home/')
             
             is_edit_mode = solicitacao_existente is not None
+            print(f"🔍 DEBUG EDIÇÃO - Modo edição ativado: {is_edit_mode}")
             success_message = 'Solicitação atualizada com sucesso!' if is_edit_mode else 'Solicitação criada com sucesso!'
             
             # Verificar tipo de solicitação
@@ -315,12 +321,28 @@ def receber_dados(request):
                 prioridade = request.POST.get('casual_priority', 'baixa')
                 anexo = request.FILES.get('casual_anexos')
                 # Capturar valores detalhados para Casual
-                valor_km = limpar_valor_monetario(request.POST.get('casual_valor_km', '').strip())
-                valor_pedagio = limpar_valor_monetario(request.POST.get('casual_valor_pedagio', '').strip())
-                valor_hospedagem = limpar_valor_monetario(request.POST.get('casual_valor_hospedagem', '').strip())
-                valor_fluvial = limpar_valor_monetario(request.POST.get('casual_valor_fluvial', '').strip())
-                valor_outros = limpar_valor_monetario(request.POST.get('casual_valor_outros', '').strip())
-                valor_receita = limpar_valor_monetario(request.POST.get('casual_valor_receita', '').strip())
+                valor_km_raw = request.POST.get('casual_valor_km', '').strip()
+                valor_pedagio_raw = request.POST.get('casual_valor_pedagio', '').strip()
+                valor_hospedagem_raw = request.POST.get('casual_valor_hospedagem', '').strip()
+                valor_fluvial_raw = request.POST.get('casual_valor_fluvial', '').strip()
+                valor_outros_raw = request.POST.get('casual_valor_outros', '').strip()
+                valor_receita_raw = request.POST.get('casual_valor_receita', '').strip()
+                
+                valor_km = limpar_valor_monetario(valor_km_raw)
+                valor_pedagio = limpar_valor_monetario(valor_pedagio_raw)
+                valor_hospedagem = limpar_valor_monetario(valor_hospedagem_raw)
+                valor_fluvial = limpar_valor_monetario(valor_fluvial_raw)
+                valor_outros = limpar_valor_monetario(valor_outros_raw)
+                valor_receita = limpar_valor_monetario(valor_receita_raw)
+                
+                if is_edit_mode:
+                    print(f"🔍 DEBUG EDIÇÃO CASUAL - Valores capturados do formulário:")
+                    print(f"   - casual_valor_km: '{valor_km_raw}' -> {valor_km}")
+                    print(f"   - casual_valor_pedagio: '{valor_pedagio_raw}' -> {valor_pedagio}")
+                    print(f"   - casual_valor_hospedagem: '{valor_hospedagem_raw}' -> {valor_hospedagem}")
+                    print(f"   - casual_valor_fluvial: '{valor_fluvial_raw}' -> {valor_fluvial}")
+                    print(f"   - casual_valor_outros: '{valor_outros_raw}' -> {valor_outros}")
+                    print(f"   - casual_valor_receita: '{valor_receita_raw}' -> {valor_receita}")
                 
                 # Registrar recebedor no catálogo principal para reaproveitamento
                 registrar_recebedor(nome_do_recebedor, chave_pix_casual)
@@ -566,6 +588,10 @@ def receber_dados(request):
                 with transaction.atomic():
                     if is_edit_mode:
                         solicitacao = solicitacao_existente
+                        print(f"🔍 DEBUG EDIÇÃO EM ROTA - Valores antes do save:")
+                        print(f"   - Valor Total: {valor_total} (anterior: {solicitacao.valor})")
+                        print(f"   - Valor Receita: {valor_receita} (anterior: {solicitacao.valor_receita})")
+                        print(f"   - Número de itens: {len(itens_rota)}")
                         solicitacao.ticket = ticket_final
                         solicitacao.titulo = titulo
                         solicitacao.nome_do_recebedor = nome_do_recebedor
@@ -589,6 +615,7 @@ def receber_dados(request):
                         if anexo:
                             solicitacao.anexo = anexo
                         solicitacao.save()
+                        print(f"✅ DEBUG EDIÇÃO EM ROTA - Solicitação salva com sucesso! ID: {solicitacao.id}")
                         solicitacao.itens_rota.all().delete()
                     else:
                         solicitacao = Solicitacoes.objects.create(
@@ -735,6 +762,11 @@ def receber_dados(request):
                     with transaction.atomic():
                         if is_edit_mode:
                             solicitacao = solicitacao_existente
+                            print(f"🔍 DEBUG EDIÇÃO CASUAL - Valores antes do save:")
+                            print(f"   - Valor: {valor} (anterior: {solicitacao.valor})")
+                            print(f"   - Valor Receita: {valor_receita} (anterior: {solicitacao.valor_receita})")
+                            print(f"   - Valor KM: {valor_km} (anterior: {solicitacao.valor_km})")
+                            print(f"   - Recebedor: {nome_do_recebedor} (anterior: {solicitacao.nome_do_recebedor})")
                             solicitacao.ticket = ticket_final
                             solicitacao.titulo = titulo
                             solicitacao.nome_do_recebedor = nome_do_recebedor
@@ -758,6 +790,8 @@ def receber_dados(request):
                             if anexo:
                                 solicitacao.anexo = anexo
                             solicitacao.save()
+                            print(f"✅ DEBUG EDIÇÃO CASUAL - Solicitação salva com sucesso! ID: {solicitacao.id}")
+                            print(f"✅ DEBUG EDIÇÃO CASUAL - Valores após save: Valor={solicitacao.valor}, Receita={solicitacao.valor_receita}")
                             # Garantir que itens anteriores (se existirem) sejam removidos
                             solicitacao.itens_rota.all().delete()
                         else:
@@ -798,6 +832,9 @@ def receber_dados(request):
                     return redirect('/solicitacoes/home/')
             
             messages.success(request, success_message)
+            print(f"✅ DEBUG EDIÇÃO - Mensagem de sucesso enviada: {success_message}")
+            if is_edit_mode:
+                print(f"✅ DEBUG EDIÇÃO - Redirecionando após edição. Solicitação ID: {solicitacao_existente.id if solicitacao_existente else 'N/A'}")
             # Redirect para a mesma página para recarregar e mostrar o novo card
             return redirect('/solicitacoes/home/')
             
@@ -920,10 +957,13 @@ def obter_itens_rota(request, solicitacao_id):
                 'valor_total_item': f'R$ {item.valor:.2f}'
             })
         
+        # Calcular valor total apenas com valores detalhados (sem atividade)
+        valor_total_detalhados = solicitacao.get_valor_detalhados()
+        
         return JsonResponse({
             'success': True,
             'itens': itens_data,
-            'valor_total': f'R$ {solicitacao.valor:.2f}',
+            'valor_total': f'R$ {valor_total_detalhados:.2f}',
             'valor_em_rota': f'R$ {solicitacao.valor_em_rota:.2f}',
             'descricao_em_rota': solicitacao.descricao_em_rota or ''
         })
@@ -955,6 +995,9 @@ def obter_valores_detalhados_casual(request, solicitacao_id):
                 'message': 'Esta solicitação não é do tipo "Casual"'
             }, status=400)
         
+        # Calcular valor total apenas com valores detalhados (sem atividade)
+        valor_total_detalhados = solicitacao.get_valor_detalhados()
+        
         # Serializar os valores detalhados
         valores_detalhados = {
             'valor_km': f'R$ {solicitacao.valor_km:.2f}',
@@ -963,7 +1006,7 @@ def obter_valores_detalhados_casual(request, solicitacao_id):
             'valor_fluvial': f'R$ {solicitacao.valor_fluvial:.2f}',
             'valor_outros': f'R$ {solicitacao.valor_outros:.2f}',
             'valor_receita': f'R$ {solicitacao.valor_receita:.2f}',
-            'valor_total': f'R$ {solicitacao.valor:.2f}',
+            'valor_total': f'R$ {valor_total_detalhados:.2f}',
             'servico': solicitacao.servico.nome if solicitacao.servico else 'N/A'
         }
         

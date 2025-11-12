@@ -622,6 +622,28 @@
     margin-bottom: 0;
 }
 
+/* Estilo para campos lado a lado (Valor Total e Valor da Receita) */
+.detail-item-row {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.detail-item-half {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+@media (max-width: 768px) {
+    .detail-item-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+}
+
 .detail-label {
     font-size: 0.8rem;
     font-weight: 600;

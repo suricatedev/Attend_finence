@@ -276,28 +276,86 @@ async function extractCardData(card) {
                         
                         if (result.success && result.itens && result.itens.length > 0) {
                             console.log('✅ Itens obtidos via AJAX:', result.itens);
-                            data.itensRota = result.itens.map(item => ({
-                                ordem: item.ordem,
-                                id: item.id,
-                                valor: item.valor,
-                                servico: item.servico,
-                                recebedor: item.recebedor || '',
-                                chave_pix: item.chave_pix || '',
-                                cliente_empresa: item.cliente_empresa || '',
-                                cnpj: item.cnpj || '',
-                                valor_km: item.valor_km || 'R$ 0,00',
-                                valor_pedagio: item.valor_pedagio || 'R$ 0,00',
-                                valor_hospedagem: item.valor_hospedagem || 'R$ 0,00',
-                                valor_fluvial: item.valor_fluvial || 'R$ 0,00',
-                                valor_outros: item.valor_outros || 'R$ 0,00',
-                                valor_total_item: item.valor_total_item || item.valor
-                            }));
+                            // Função auxiliar para parsear valor monetário
+                            const parseValorMonetario = (valorStr) => {
+                                if (!valorStr || valorStr === 'R$ 0,00' || valorStr === '0,00') return 0;
+                                const valorLimpo = valorStr.replace(/[R$\s.]/g, '').replace(',', '.');
+                                return parseFloat(valorLimpo) || 0;
+                            };
+                            
+                            // Função auxiliar para formatar valor monetário
+                            const formatarValorMonetario = (valor) => {
+                                return `R$ ${valor.toFixed(2).replace('.', ',')}`;
+                            };
+                            
+                            let somaAtividades = 0;
+                            
+                            data.itensRota = result.itens.map(item => {
+                                // Calcular valores detalhados
+                                const valorKm = parseValorMonetario(item.valor_km || 'R$ 0,00');
+                                const valorPedagio = parseValorMonetario(item.valor_pedagio || 'R$ 0,00');
+                                const valorHospedagem = parseValorMonetario(item.valor_hospedagem || 'R$ 0,00');
+                                const valorFluvial = parseValorMonetario(item.valor_fluvial || 'R$ 0,00');
+                                const valorOutros = parseValorMonetario(item.valor_outros || 'R$ 0,00');
+                                const valorItem = parseValorMonetario(item.valor || 'R$ 0,00');
+                                
+                                // Calcular soma dos valores detalhados
+                                const somaDetalhados = valorKm + valorPedagio + valorHospedagem + valorFluvial + valorOutros;
+                                
+                                // Calcular valor da atividade
+                                // item.valor pode ser:
+                                // 1. O valor de atividade informado (se foi informado) - neste caso, item.valor > somaDetalhados
+                                // 2. A soma dos detalhados (se não foi informado valor de atividade) - neste caso, item.valor <= somaDetalhados
+                                // 
+                                // Se item.valor > somaDetalhados, então valorAtividade = item.valor - somaDetalhados
+                                // Se item.valor <= somaDetalhados, então valorAtividade = 0 (porque item.valor é apenas a soma dos detalhados)
+                                let valorAtividade = 0;
+                                if (valorItem > somaDetalhados) {
+                                    // item.valor contém atividade + detalhados, então atividade = item.valor - detalhados
+                                    valorAtividade = valorItem - somaDetalhados;
+                                } else if (valorItem > 0 && valorItem === somaDetalhados) {
+                                    // item.valor é apenas a soma dos detalhados, não há atividade
+                                    valorAtividade = 0;
+                                } else if (valorItem > 0 && valorItem < somaDetalhados) {
+                                    // Caso especial: item.valor é menor que a soma dos detalhados (não deveria acontecer, mas vamos tratar)
+                                    valorAtividade = 0;
+                                }
+                                // Se valorItem == 0, valorAtividade já é 0
+                                
+                                console.log(`🔍 Item ${item.ordem || 'N/A'}: valor_item=${valorItem}, soma_detalhados=${somaDetalhados}, valor_atividade=${valorAtividade}`);
+                                
+                                // Somar ao total de atividades (valor da receita é a soma de todas as atividades)
+                                somaAtividades += valorAtividade;
+                                
+                                return {
+                                    ordem: item.ordem,
+                                    id: item.id,
+                                    valor: item.valor,
+                                    servico: item.servico,
+                                    recebedor: item.recebedor || '',
+                                    chave_pix: item.chave_pix || '',
+                                    cliente_empresa: item.cliente_empresa || '',
+                                    cnpj: item.cnpj || '',
+                                    valor_km: item.valor_km || 'R$ 0,00',
+                                    valor_pedagio: item.valor_pedagio || 'R$ 0,00',
+                                    valor_hospedagem: item.valor_hospedagem || 'R$ 0,00',
+                                    valor_fluvial: item.valor_fluvial || 'R$ 0,00',
+                                    valor_outros: item.valor_outros || 'R$ 0,00',
+                                    valor_total_item: item.valor_total_item || item.valor,
+                                    valor_atividade: formatarValorMonetario(valorAtividade)
+                                };
+                            });
                             console.log('✅ data.itensRota configurado com', data.itensRota.length, 'itens:', data.itensRota);
                             
                             // Atualizar valor total também
                             if (result.valor_total) {
                                 data.valor = result.valor_total;
                             }
+                            
+                            // Calcular valor da receita como soma das atividades de todos os itens
+                            data.valorReceita = formatarValorMonetario(somaAtividades);
+                            console.log('✅ Valor da Receita calculado (soma das atividades de todos os itens):', data.valorReceita, 'Total atividades:', somaAtividades);
+                            console.log('🔍 Debug - Número de itens processados:', result.itens.length);
                             
                             // Adicionar valor EM ROTA e descrição se disponível
                             if (result.valor_em_rota) {
@@ -311,15 +369,27 @@ async function extractCardData(card) {
                         } else {
                             console.warn('⚠️ Nenhum item retornado na resposta AJAX ou success=false');
                             if (!data.itensRota) data.itensRota = [];
+                            // Garantir que valorReceita seja definido mesmo sem itens
+                            if (!data.valorReceita) {
+                                data.valorReceita = 'R$ 0,00';
+                            }
                         }
                     } else {
                         const errorText = await response.text();
                         console.warn('⚠️ Erro ao buscar itens via AJAX:', response.status, errorText);
                         if (!data.itensRota) data.itensRota = [];
+                        // Garantir que valorReceita seja definido mesmo com erro
+                        if (!data.valorReceita) {
+                            data.valorReceita = 'R$ 0,00';
+                        }
                     }
                 } catch (error) {
                     console.error('❌ Erro na requisição AJAX:', error);
                     if (!data.itensRota) data.itensRota = [];
+                    // Garantir que valorReceita seja definido mesmo com erro
+                    if (!data.valorReceita) {
+                        data.valorReceita = 'R$ 0,00';
+                    }
                 }
             } else {
                 console.warn('⚠️ ID da solicitação não encontrado, não é possível buscar itens via AJAX');
@@ -405,6 +475,57 @@ async function extractCardData(card) {
         // Ordenar por ordem (apenas se tiver itens)
         if (data.itensRota && data.itensRota.length > 0) {
             data.itensRota.sort((a, b) => a.ordem - b.ordem);
+            
+            // Se não temos valorReceita calculado via AJAX, calcular a partir dos itens do DOM
+            // Nota: itens do DOM podem não ter todos os valores detalhados, então tentamos calcular se possível
+            if (!data.valorReceita && data.itensRota.length > 0) {
+                // Função auxiliar para parsear valor monetário
+                const parseValorMonetario = (valorStr) => {
+                    if (!valorStr || valorStr === 'R$ 0,00' || valorStr === '0,00') return 0;
+                    const valorLimpo = valorStr.replace(/[R$\s.]/g, '').replace(',', '.');
+                    return parseFloat(valorLimpo) || 0;
+                };
+                
+                // Função auxiliar para formatar valor monetário
+                const formatarValorMonetario = (valor) => {
+                    return `R$ ${valor.toFixed(2).replace('.', ',')}`;
+                };
+                
+                let somaAtividades = 0;
+                
+                // Tentar calcular a partir dos itens que temos
+                data.itensRota.forEach(item => {
+                    // Se o item tem valores detalhados, calcular atividade
+                    if (item.valor_km || item.valor_pedagio || item.valor_hospedagem || 
+                        item.valor_fluvial || item.valor_outros) {
+                        const valorKm = parseValorMonetario(item.valor_km || 'R$ 0,00');
+                        const valorPedagio = parseValorMonetario(item.valor_pedagio || 'R$ 0,00');
+                        const valorHospedagem = parseValorMonetario(item.valor_hospedagem || 'R$ 0,00');
+                        const valorFluvial = parseValorMonetario(item.valor_fluvial || 'R$ 0,00');
+                        const valorOutros = parseValorMonetario(item.valor_outros || 'R$ 0,00');
+                        const valorItem = parseValorMonetario(item.valor_total_item || item.valor || 'R$ 0,00');
+                        
+                        const somaDetalhados = valorKm + valorPedagio + valorHospedagem + valorFluvial + valorOutros;
+                        
+                        // Calcular valor da atividade usando a mesma lógica do AJAX
+                        let valorAtividade = 0;
+                        if (valorItem > somaDetalhados) {
+                            valorAtividade = valorItem - somaDetalhados;
+                        }
+                        // Se valorItem <= somaDetalhados, valorAtividade = 0
+                        
+                        somaAtividades += valorAtividade;
+                    }
+                });
+                
+                data.valorReceita = formatarValorMonetario(somaAtividades);
+                console.log('✅ Valor da Receita calculado a partir do DOM (soma das atividades):', data.valorReceita, 'Total atividades:', somaAtividades);
+            }
+        }
+        
+        // Garantir que valorReceita sempre tenha um valor
+        if (!data.valorReceita) {
+            data.valorReceita = 'R$ 0,00';
         }
         
         console.log('✅ Itens extraídos (DOM):', data.itensRota);
@@ -441,12 +562,18 @@ async function extractCardData(card) {
                     const result = await response.json();
                     console.log('📦 Valores Casual recebidos:', result);
                     
-                    if (result.success && result.valores) {
+                        if (result.success && result.valores) {
                         console.log('✅ Valores detalhados Casual obtidos via AJAX');
                         data.valoresDetalhados = result.valores;
                         // Atualizar valor total também
                         if (result.valores.valor_total) {
                             data.valor = result.valores.valor_total;
+                        }
+                        // No Casual, o valor_receita já é o valor da atividade
+                        // Usar valor_receita como valor da receita (que é a soma das atividades)
+                        if (result.valores.valor_receita) {
+                            data.valorReceita = result.valores.valor_receita;
+                            console.log('✅ Valor da Receita Casual (valor atividade):', data.valorReceita);
                         }
                     } else {
                         console.warn('⚠️ Nenhum valor retornado na resposta AJAX');
@@ -529,6 +656,18 @@ function populateCardDetails(data) {
             console.log('✅ Campo Valor Total configurado:', data.valor);
         } else {
             console.warn('⚠️ valorContainer ou valorElement não encontrado');
+        }
+        
+        // Preencher campo de Valor da Receita
+        const valorReceitaElement = document.getElementById('modal-valor-receita');
+        if (valorReceitaElement) {
+            const valorReceitaFinal = data.valorReceita || 'R$ 0,00';
+            valorReceitaElement.textContent = valorReceitaFinal;
+            console.log('✅ Campo Valor da Receita configurado:', valorReceitaFinal);
+            console.log('🔍 Debug - data.valorReceita:', data.valorReceita);
+            console.log('🔍 Debug - data.itensRota length:', data.itensRota?.length);
+        } else {
+            console.error('❌ Campo modal-valor-receita não encontrado no DOM!');
         }
         
         // Remover seção anterior se existir
@@ -722,6 +861,14 @@ function populateCardDetails(data) {
             console.log('✅ Campo Valor Total configurado:', data.valoresDetalhados.valor_total);
         }
         
+        // Preencher campo de Valor da Receita
+        const valorReceitaElement = document.getElementById('modal-valor-receita');
+        if (valorReceitaElement) {
+            const receitaValue = data.valoresDetalhados.valor_receita || data.valorReceita || 'R$ 0,00';
+            valorReceitaElement.textContent = receitaValue;
+            console.log('✅ Campo Valor da Receita Casual configurado:', receitaValue);
+        }
+        
         // Remover seção anterior se existir
         let casualValoresSection = document.getElementById('modal-casual-valores');
         if (casualValoresSection) {
@@ -828,6 +975,12 @@ function populateCardDetails(data) {
                 valorElement.textContent = data.valor || 'R$ 0,00';
                 valorElement.style.display = '';
             }
+        }
+        
+        // Preencher campo de Valor da Receita no caso padrão
+        const valorReceitaElement = document.getElementById('modal-valor-receita');
+        if (valorReceitaElement) {
+            valorReceitaElement.textContent = data.valorReceita || 'R$ 0,00';
         }
         
         // Remover seções de valores detalhados se existirem
