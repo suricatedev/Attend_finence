@@ -35,12 +35,22 @@ def servicos(request):
         
         # Buscar recebedores
         # Verificar se o campo supervisor existe antes de ordenar
+        from django.db import connection
+        
+        supervisor_exists = False
         try:
-            # Tentar ordenar por supervisor primeiro
-            recebedores_list = Recebedor.objects.all().order_by('supervisor', 'nome')
+            with connection.cursor() as cursor:
+                cursor.execute("PRAGMA table_info(solicitacoes_recebedor)")
+                columns = [row[1] for row in cursor.fetchall()]
+                supervisor_exists = 'supervisor' in columns
         except Exception as e:
-            # Se o campo supervisor não existir, ordenar apenas por nome
-            print(f"⚠️ Campo supervisor não encontrado, ordenando apenas por nome: {e}")
+            print(f"⚠️ Erro ao verificar colunas: {e}")
+            supervisor_exists = False
+        
+        # Ordenar baseado na existência do campo
+        if supervisor_exists:
+            recebedores_list = Recebedor.objects.all().order_by('supervisor', 'nome')
+        else:
             recebedores_list = Recebedor.objects.all().order_by('nome')
         
         total_recebedores = recebedores_list.count()

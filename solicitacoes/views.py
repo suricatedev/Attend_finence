@@ -136,6 +136,21 @@ def garantir_migracao_campos():
             except Exception as e:
                 if "already exists" not in str(e).lower() and "duplicate" not in str(e).lower():
                     print(f"⚠️ Erro ao criar tabela Recebedor: {e}")
+        else:
+            # Se a tabela Recebedor existe, verificar se tem o campo supervisor
+            cursor.execute("PRAGMA table_info(solicitacoes_recebedor)")
+            columns_recebedor = [row[1] for row in cursor.fetchall()]
+            if 'supervisor' not in columns_recebedor:
+                try:
+                    cursor.execute("""
+                        ALTER TABLE solicitacoes_recebedor 
+                        ADD COLUMN supervisor VARCHAR(50) DEFAULT NULL;
+                    """)
+                    print("✅ Campo supervisor adicionado à tabela solicitacoes_recebedor")
+                    campos_adicionados = True
+                except Exception as e:
+                    if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
+                        print(f"⚠️ Erro ao adicionar campo supervisor na tabela Recebedor: {e}")
         
         cursor.execute("PRAGMA table_info(solicitacoes_solicitacoes)")
         columns = [row[1] for row in cursor.fetchall()]
