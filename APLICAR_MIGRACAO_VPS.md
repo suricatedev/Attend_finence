@@ -1,108 +1,90 @@
-# Como Aplicar a Migração na VPS
+# Como Aplicar Migrações no VPS
 
 ## Problema
-O erro `no such column: solicitacoes_solicitacoes.data_entrada_status` ocorre porque o campo foi adicionado ao modelo, mas a migração não foi aplicada no banco de dados da VPS.
+A tabela `solicitacoes_clienteempresa` já existe no banco de dados, mas a migração está tentando criá-la novamente.
 
-## Solução
+## Solução Rápida
 
-### Opção 1: Usar o Script Python (Recomendado)
+Execute os seguintes comandos no VPS:
 
-1. **Conecte-se à VPS via SSH:**
-```bash
-ssh seu_usuario@161.97.95.90
-```
-
-2. **Navegue até o diretório do projeto:**
 ```bash
 cd /home/attendgean/sistema_financeiro/attend_finence
-```
 
-3. **Ative o ambiente virtual:**
-```bash
+# Ativar ambiente virtual
 source venv/bin/activate
+
+# Marcar a migração 0008 como aplicada (sem executá-la)
+python manage.py migrate solicitacoes 0008 --fake
+
+# Aplicar migrações restantes
+python manage.py migrate
 ```
 
-4. **Execute o script de migração:**
-```bash
-python aplicar_migracao_data_entrada_status.py
-```
+## Solução Automatizada
 
-### Opção 2: Usar Django Migrate (Método Padrão)
+Execute o script de correção:
 
-1. **Conecte-se à VPS via SSH:**
-```bash
-ssh seu_usuario@161.97.95.90
-```
-
-2. **Navegue até o diretório do projeto:**
 ```bash
 cd /home/attendgean/sistema_financeiro/attend_finence
-```
-
-3. **Ative o ambiente virtual:**
-```bash
 source venv/bin/activate
+python fix_migrations.py
 ```
 
-4. **Aplique as migrações:**
+## Verificar Estado das Migrações
+
+Para ver quais migrações foram aplicadas:
+
 ```bash
-python manage.py migrate solicitacoes
+python manage.py showmigrations solicitacoes
 ```
 
-### Opção 3: Aplicar SQL Manualmente
+## Se Ainda Der Erro
 
-Se as opções acima não funcionarem, você pode executar o SQL diretamente:
+Se ainda houver problemas, você pode marcar manualmente a migração no banco:
 
-1. **Conecte-se à VPS e acesse o banco SQLite:**
 ```bash
-cd /home/attendgean/sistema_financeiro/attend_finence
-sqlite3 db.sqlite3
+python manage.py shell
 ```
 
-2. **Execute os comandos SQL:**
-```sql
-ALTER TABLE solicitacoes_solicitacoes ADD COLUMN data_entrada_status DATETIME DEFAULT NULL;
-ALTER TABLE solicitacoes_solicitacoes ADD COLUMN valor_em_rota REAL DEFAULT 0.0;
-ALTER TABLE solicitacoes_solicitacoes ADD COLUMN descricao_em_rota TEXT DEFAULT NULL;
+No shell do Django:
+```python
+from django.db import connection
+from django.utils import timezone
+from django.db import transaction
 
--- Atualizar registros existentes
-UPDATE solicitacoes_solicitacoes 
-SET data_entrada_status = datetime(data_de_criacao || ' ' || time(tempo_criacao))
-WHERE data_entrada_status IS NULL;
-
--- Registrar a migração
-INSERT INTO django_migrations (app, name, applied) 
-VALUES ('solicitacoes', '0006_add_data_entrada_status', datetime('now'));
-
-.quit
+with transaction.atomic():
+    cursor = connection.cursor()
+    # Verificar se a migração já está registrada
+    cursor.execute("""
+        SELECT * FROM django_migrations 
+        WHERE app = 'solicitacoes' AND name = '0008_clienteempresa_alter_recebedor_options_and_more'
+    """)
+    
+    if not cursor.fetchone():
+        # Registrar a migração como aplicada
+        cursor.execute("""
+            INSERT INTO django_migrations (app, name, applied)
+            VALUES ('solicitacoes', '0008_clienteempresa_alter_recebedor_options_and_more', ?)
+        """, [timezone.now()])
+        print("✅ Migração registrada!")
+    else:
+        print("✅ Migração já estava registrada!")
 ```
 
-3. **Reinicie o servidor:**
+## Verificar Tabelas Existentes
+
+Para verificar quais tabelas existem:
+
 ```bash
-# Se estiver usando systemd
-sudo systemctl restart seu_servico
-
-# Ou se estiver usando gunicorn/supervisor
-sudo supervisorctl restart seu_app
+python manage.py shell
 ```
 
-## Verificação
+```python
+from django.db import connection
 
-Após aplicar a migração, verifique se funcionou:
-
-1. **Acesse o site:** `http://161.97.95.90:5000/solicitacoes/home/`
-2. **O erro não deve mais aparecer**
-
-## Arquivos Necessários
-
-Certifique-se de que os seguintes arquivos estão na VPS:
-
-- `solicitacoes/migrations/0006_add_data_entrada_status.py` (novo arquivo de migração)
-- `aplicar_migracao_data_entrada_status.py` (script auxiliar)
-
-## Notas Importantes
-
-- ⚠️ **Faça backup do banco de dados antes de aplicar migrações em produção**
-- O script é seguro e não apaga dados existentes
-- Se algum campo já existir, o script apenas informa e continua
-
+cursor = connection.cursor()
+cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'solicitacoes_%'")
+tables = cursor.fetchall()
+for table in tables:
+    print(table[0])
+```
