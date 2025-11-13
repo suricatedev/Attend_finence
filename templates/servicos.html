@@ -220,6 +220,10 @@
                                 <i class="fas fa-plus"></i>
                                 Adicionar Recebedor
                             </button>
+                            <button class="btn-import" id="importRecebedoresBtn" title="Importar recebedores de planilha">
+                                <i class="fas fa-file-upload"></i>
+                                Importar
+                            </button>
                         </div>
                     </div>
                     
@@ -276,9 +280,153 @@
                         </div>
                         
                         <div class="services-list" id="recebedoresList">
-                            <!-- Lista de recebedores em modo lista -->
+                            <!-- Lista de recebedores em modo lista - Agrupados por Supervisor em Colunas -->
                             <div class="services-list-view" id="recebedoresListView">
-                                {% if recebedores %}
+                                {% if recebedores_por_supervisor %}
+                                    <div class="supervisors-columns-container">
+                                        <!-- Coluna Nayron Januario -->
+                                        <div class="supervisor-column">
+                                            <div class="supervisor-group-header">
+                                                <h3>
+                                                    <i class="fas fa-user-tie"></i>
+                                                    Nayron Januario
+                                                    <span class="group-count">({{ recebedores_por_supervisor.supervisor1|length|default:0 }})</span>
+                                                </h3>
+                                            </div>
+                                            <div class="supervisor-group-content">
+                                                {% if recebedores_por_supervisor.supervisor1 %}
+                                                    {% for recebedor in recebedores_por_supervisor.supervisor1 %}
+                                                    <div class="service-item recebedor-item" data-recebedor-id="{{ recebedor.id }}">
+                                                        <div class="service-icon">
+                                                            <i class="fas fa-user"></i>
+                                                        </div>
+                                                        <div class="service-info">
+                                                            <div class="service-main-info">
+                                                                <div class="service-name" title="{{ recebedor.nome }}">{{ recebedor.nome }}</div>
+                                                                <div class="service-description" title="{{ recebedor.chave_pix }}">
+                                                                    <i class="fas fa-qrcode"></i> {{ recebedor.chave_pix }}
+                                                                </div>
+                                                            </div>
+                                                            <div class="service-status {% if recebedor.ativo %}active{% else %}inactive{% endif %}" 
+                                                                 title="{% if recebedor.ativo %}Recebedor ativo{% else %}Recebedor inativo{% endif %}">
+                                                                {% if recebedor.ativo %}Ativo{% else %}Inativo{% endif %}
+                                                            </div>
+                                                            <div class="service-actions">
+                                                                <button class="btn-edit" data-recebedor-id="{{ recebedor.id }}" title="Editar recebedor">
+                                                                    <i class="fas fa-edit"></i>
+                                                                    Editar
+                                                                </button>
+                                                                <button class="btn-delete" data-recebedor-id="{{ recebedor.id }}" title="Excluir recebedor">
+                                                                    <i class="fas fa-trash"></i>
+                                                                    Excluir
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <div class="no-recebedores">
+                                                        <i class="fas fa-user-slash"></i>
+                                                        <p>Nenhum recebedor</p>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <!-- Coluna Flavio Medina -->
+                                        <div class="supervisor-column">
+                                            <div class="supervisor-group-header">
+                                                <h3>
+                                                    <i class="fas fa-user-tie"></i>
+                                                    Flavio Medina
+                                                    <span class="group-count">({{ recebedores_por_supervisor.supervisor2|length|default:0 }})</span>
+                                                </h3>
+                                            </div>
+                                            <div class="supervisor-group-content">
+                                                {% if recebedores_por_supervisor.supervisor2 %}
+                                                    {% for recebedor in recebedores_por_supervisor.supervisor2 %}
+                                                    <div class="service-item recebedor-item" data-recebedor-id="{{ recebedor.id }}">
+                                                        <div class="service-icon">
+                                                            <i class="fas fa-user"></i>
+                                                        </div>
+                                                        <div class="service-info">
+                                                            <div class="service-main-info">
+                                                                <div class="service-name" title="{{ recebedor.nome }}">{{ recebedor.nome }}</div>
+                                                                <div class="service-description" title="{{ recebedor.chave_pix }}">
+                                                                    <i class="fas fa-qrcode"></i> {{ recebedor.chave_pix }}
+                                                                </div>
+                                                            </div>
+                                                            <div class="service-status {% if recebedor.ativo %}active{% else %}inactive{% endif %}" 
+                                                                 title="{% if recebedor.ativo %}Recebedor ativo{% else %}Recebedor inativo{% endif %}">
+                                                                {% if recebedor.ativo %}Ativo{% else %}Inativo{% endif %}
+                                                            </div>
+                                                            <div class="service-actions">
+                                                                <button class="btn-edit" data-recebedor-id="{{ recebedor.id }}" title="Editar recebedor">
+                                                                    <i class="fas fa-edit"></i>
+                                                                    Editar
+                                                                </button>
+                                                                <button class="btn-delete" data-recebedor-id="{{ recebedor.id }}" title="Excluir recebedor">
+                                                                    <i class="fas fa-trash"></i>
+                                                                    Excluir
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <div class="no-recebedores">
+                                                        <i class="fas fa-user-slash"></i>
+                                                        <p>Nenhum recebedor</p>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Grupo Sem Supervisor (se houver) -->
+                                    {% if recebedores_por_supervisor.sem_supervisor %}
+                                    <div class="supervisor-group" style="margin-top: 30px;">
+                                        <div class="supervisor-group-header">
+                                            <h3>
+                                                <i class="fas fa-user-tie"></i>
+                                                Sem Supervisor
+                                                <span class="group-count">({{ recebedores_por_supervisor.sem_supervisor|length }})</span>
+                                            </h3>
+                                        </div>
+                                        <div class="supervisor-group-content">
+                                            {% for recebedor in recebedores_por_supervisor.sem_supervisor %}
+                                            <div class="service-item recebedor-item" data-recebedor-id="{{ recebedor.id }}">
+                                                <div class="service-icon">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                                <div class="service-info">
+                                                    <div class="service-main-info">
+                                                        <div class="service-name" title="{{ recebedor.nome }}">{{ recebedor.nome }}</div>
+                                                        <div class="service-description" title="{{ recebedor.chave_pix }}">
+                                                            <i class="fas fa-qrcode"></i> {{ recebedor.chave_pix }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="service-status {% if recebedor.ativo %}active{% else %}inactive{% endif %}" 
+                                                         title="{% if recebedor.ativo %}Recebedor ativo{% else %}Recebedor inativo{% endif %}">
+                                                        {% if recebedor.ativo %}Ativo{% else %}Inativo{% endif %}
+                                                    </div>
+                                                    <div class="service-actions">
+                                                        <button class="btn-edit" data-recebedor-id="{{ recebedor.id }}" title="Editar recebedor">
+                                                            <i class="fas fa-edit"></i>
+                                                            Editar
+                                                        </button>
+                                                        <button class="btn-delete" data-recebedor-id="{{ recebedor.id }}" title="Excluir recebedor">
+                                                            <i class="fas fa-trash"></i>
+                                                            Excluir
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% elif recebedores %}
                                     {% for recebedor in recebedores %}
                                     <div class="service-item recebedor-item" data-recebedor-id="{{ recebedor.id }}">
                                         <div class="service-icon">
@@ -317,9 +465,55 @@
                                 {% endif %}
                             </div>
                             
-                            <!-- Grid de recebedores em modo grid -->
+                            <!-- Grid de recebedores em modo grid - Agrupados por Supervisor -->
                             <div class="services-grid-view" id="recebedoresGridView" style="display: none;">
-                                {% if recebedores %}
+                                {% if recebedores_por_supervisor %}
+                                    {% for supervisor_key, recebedores_grupo in recebedores_por_supervisor.items %}
+                                    <div class="supervisor-group">
+                                        <div class="supervisor-group-header">
+                                            <h3>
+                                                <i class="fas fa-user-tie"></i>
+                                                {% if supervisor_key == 'supervisor1' %}
+                                                    Nayron Januario
+                                                {% elif supervisor_key == 'supervisor2' %}
+                                                    Flavio Medina
+                                                {% else %}
+                                                    Sem Supervisor
+                                                {% endif %}
+                                                <span class="group-count">({{ recebedores_grupo|length }})</span>
+                                            </h3>
+                                        </div>
+                                        <div class="supervisor-group-grid">
+                                            {% for recebedor in recebedores_grupo %}
+                                            <div class="service-card recebedor-card" data-recebedor-id="{{ recebedor.id }}">
+                                                <div class="service-icon">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                                <div class="service-info">
+                                                    <h3>{{ recebedor.nome }}</h3>
+                                                    <p><i class="fas fa-qrcode"></i> {{ recebedor.chave_pix }}</p>
+                                                    <div class="service-meta">
+                                                        <span class="service-status {% if recebedor.ativo %}active{% else %}inactive{% endif %}">
+                                                            {% if recebedor.ativo %}Ativo{% else %}Inativo{% endif %}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="service-actions">
+                                                    <button class="btn-edit" data-recebedor-id="{{ recebedor.id }}" title="Editar recebedor">
+                                                        <i class="fas fa-edit"></i>
+                                                        Editar
+                                                    </button>
+                                                    <button class="btn-delete" data-recebedor-id="{{ recebedor.id }}" title="Excluir recebedor">
+                                                        <i class="fas fa-trash"></i>
+                                                        Excluir
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% elif recebedores %}
                                     {% for recebedor in recebedores %}
                                     <div class="service-card recebedor-card" data-recebedor-id="{{ recebedor.id }}">
                                         <div class="service-icon">
@@ -733,6 +927,21 @@
                             </div>
                         </div>
 
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="recebedorSupervisor">
+                                    <i class="fas fa-user-tie"></i>
+                                    Supervisor
+                                </label>
+                                <select id="recebedorSupervisor" name="supervisor">
+                                    <option value="">Selecione o Supervisor</option>
+                                    <option value="supervisor1">Nayron Januario</option>
+                                    <option value="supervisor2">Flavio Medina</option>
+                                </select>
+                                <small class="form-help">Selecione o supervisor responsável por este recebedor</small>
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label for="recebedorAtivo">
                                 <i class="fas fa-toggle-on"></i>
@@ -798,6 +1007,21 @@
                                 <small class="form-help">Digite a chave PIX (CPF, email, telefone ou chave aleatória)</small>
                             </div>
                         </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="editRecebedorSupervisor">
+                                    <i class="fas fa-user-tie"></i>
+                                    Supervisor
+                                </label>
+                                <select id="editRecebedorSupervisor" name="supervisor">
+                                    <option value="">Selecione o Supervisor</option>
+                                    <option value="supervisor1">Nayron Januario</option>
+                                    <option value="supervisor2">Flavio Medina</option>
+                                </select>
+                                <small class="form-help">Selecione o supervisor responsável por este recebedor</small>
+                            </div>
+                        </div>
                         
                         <div class="form-row">
                             <div class="form-group">
@@ -850,6 +1074,66 @@
                     </div>
                 </div>
             </div>
+    </div>
+
+    <!-- Modal para importar recebedores -->
+    <div class="modal" id="importRecebedoresModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>
+                    <i class="fas fa-file-upload"></i>
+                    Importar Recebedores
+                </h2>
+                <button class="close-btn" id="closeImportRecebedoresModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="import-form-container">
+                    <div class="import-form-header">
+                        <h3>
+                            <i class="fas fa-file-excel"></i>
+                            Importar de Planilha
+                        </h3>
+                        <p>Faça upload de uma planilha Excel (.xlsx) ou CSV (.csv) com os recebedores</p>
+                    </div>
+                    <form id="importRecebedoresForm" method="POST" action="{% url 'importar_recebedores' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="form-group full-width">
+                            <label for="importFile">
+                                <i class="fas fa-file"></i>
+                                Selecionar Arquivo
+                            </label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="importFile" name="arquivo" accept=".xlsx,.xls,.csv" required>
+                                <div class="file-upload-info">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span class="file-name">Nenhum arquivo selecionado</span>
+                                </div>
+                            </div>
+                            <small class="form-help">
+                                <strong>Formato esperado:</strong> A planilha deve ter as colunas "Nome", "Chave PIX" (ou "PIX") e "Supervisor" (opcional).<br>
+                                <strong>Coluna Supervisor:</strong> Use "Nayron Januario", "Flavio Medina", "Supervisor 1", "Supervisor 2", "1" ou "2".<br>
+                                Formatos aceitos: Excel (.xlsx, .xls) ou CSV (.csv)
+                            </small>
+                        </div>
+                        <div class="form-group full-width">
+                            <div class="import-preview" id="importPreview" style="display: none;">
+                                <h4><i class="fas fa-eye"></i> Pré-visualização</h4>
+                                <div id="previewContent"></div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelImportRecebedores">Cancelar</button>
+                <button type="submit" class="btn-import-submit" form="importRecebedoresForm" id="submitImportRecebedores">
+                    <i class="fas fa-upload"></i>
+                    Importar Recebedores
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Modal para Adicionar Cliente/Empresa -->

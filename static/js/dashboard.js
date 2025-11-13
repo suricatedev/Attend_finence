@@ -784,57 +784,68 @@ const chartConfig = {
             }
         },
         scales: {
-            x: {
-                grid: {
-                    color: 'rgba(255, 203, 87, 0.2)',
-                    drawBorder: false,
-                    lineWidth: 1
-                },
-                ticks: {
-                    color: '#F4F7F5',
-                    font: {
-                        size: 13,
-                        weight: 'bold'
+                x: {
+                    grid: {
+                        color: 'rgba(255, 203, 87, 0.2)',
+                        drawBorder: false,
+                        lineWidth: 1
                     },
-                    maxRotation: 45,
-                    minRotation: 0
+                    ticks: {
+                        color: '#F4F7F5',
+                        font: {
+                            size: 13,
+                            weight: 'bold'
+                        },
+                        maxRotation: 45,
+                        minRotation: 0,
+                        padding: 15
+                    },
+                    title: {
+                        display: true,
+                        text: 'Meses',
+                        color: '#FFCB57',
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        padding: {
+                            top: 15,
+                            bottom: 15
+                        }
+                    }
                 },
-                title: {
-                    display: true,
-                    text: 'Meses',
-                    color: '#FFCB57',
-                    font: {
-                        size: 14,
-                        weight: 'bold'
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 203, 87, 0.2)',
+                        drawBorder: false,
+                        lineWidth: 1
+                    },
+                    ticks: {
+                        color: '#F4F7F5',
+                        font: {
+                            size: 13,
+                            weight: 'bold'
+                        },
+                        callback: function(value) {
+                            return value + ' solicitações';
+                        },
+                        padding: 15
+                    },
+                    title: {
+                        display: true,
+                        text: 'Número de Solicitações',
+                        color: '#FFCB57',
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        padding: {
+                            top: 15,
+                            bottom: 15
+                        }
                     }
                 }
-            },
-            y: {
-                grid: {
-                    color: 'rgba(255, 203, 87, 0.2)',
-                    drawBorder: false,
-                    lineWidth: 1
-                },
-                ticks: {
-                    color: '#F4F7F5',
-                    font: {
-                        size: 13,
-                        weight: 'bold'
-                    },
-                    callback: function(value) {
-                        return value + ' solicitações';
-                    }
-                },
-                title: {
-                    display: true,
-                    text: 'Número de Solicitações',
-                    color: '#FFCB57',
-                    font: {
-                        size: 14,
-                        weight: 'bold'
-                    }
-                }
-            }
         },
         interaction: {
             intersect: false,
@@ -847,7 +858,13 @@ const chartConfig = {
     }
 };
 
-function initializeLineChart() {
+// Variável global para armazenar filtro de data customizado
+let customDateFilter = {
+    dateFrom: null,
+    dateTo: null
+};
+
+function initializeLineChart(period = '3months', customDates = null) {
     const ctx = document.getElementById('lineChart');
     if (!ctx) return;
     if (lineChart) lineChart.destroy();
@@ -856,10 +873,88 @@ function initializeLineChart() {
     let dataToUse = chartData;
     if (window.dashboardData && window.dashboardData.solicitacoesPorMesDetalhado) {
         // Usar dados detalhados com status separado
-        const meses = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.mes);
-        const criadas = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.criadas || 0);
-        const aprovadas = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.aprovadas || 0);
-        const recusadas = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.recusadas || 0);
+        let meses = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.mes);
+        let criadas = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.criadas || 0);
+        let aprovadas = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.aprovadas || 0);
+        let recusadas = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.recusadas || 0);
+        
+        // Se há filtro de data customizado, usar ele
+        if (customDates && (customDates.dateFrom || customDates.dateTo)) {
+            // Filtrar por datas específicas
+            const dateFrom = customDates.dateFrom ? new Date(customDates.dateFrom + 'T00:00:00') : null;
+            const dateTo = customDates.dateTo ? new Date(customDates.dateTo + 'T23:59:59') : null;
+            
+            const mesesFiltrados = [];
+            const criadasFiltradas = [];
+            const aprovadasFiltradas = [];
+            const recusadasFiltradas = [];
+            
+            // Usar dados detalhados que têm informações de data
+            window.dashboardData.solicitacoesPorMesDetalhado.forEach((item, index) => {
+                let incluir = true;
+                
+                // Se temos data_inicio e data_fim nos dados, usar eles
+                if (item.data_inicio && item.data_fim) {
+                    const mesInicio = new Date(item.data_inicio + 'T00:00:00');
+                    const mesFim = new Date(item.data_fim + 'T00:00:00');
+                    
+                    if (dateFrom && mesFim < dateFrom) {
+                        incluir = false;
+                    }
+                    if (dateTo && mesInicio > dateTo) {
+                        incluir = false;
+                    }
+                } else {
+                    // Fallback: calcular data do mês baseado no índice
+                    const hoje = new Date();
+                    const mesDate = new Date(hoje);
+                    mesDate.setMonth(hoje.getMonth() - (11 - index));
+                    mesDate.setDate(1);
+                    
+                    if (dateFrom && mesDate < dateFrom) {
+                        incluir = false;
+                    }
+                    if (dateTo) {
+                        const mesFim = new Date(mesDate);
+                        mesFim.setMonth(mesFim.getMonth() + 1);
+                        if (mesFim > dateTo) {
+                            incluir = false;
+                        }
+                    }
+                }
+                
+                if (incluir) {
+                    mesesFiltrados.push(item.mes);
+                    criadasFiltradas.push(item.criadas || 0);
+                    aprovadasFiltradas.push(item.aprovadas || 0);
+                    recusadasFiltradas.push(item.recusadas || 0);
+                }
+            });
+            
+            meses = mesesFiltrados;
+            criadas = criadasFiltradas;
+            aprovadas = aprovadasFiltradas;
+            recusadas = recusadasFiltradas;
+        } else {
+            // Filtrar por período padrão
+            if (period === '3months') {
+                meses = meses.slice(0, 3);
+                criadas = criadas.slice(0, 3);
+                aprovadas = aprovadas.slice(0, 3);
+                recusadas = recusadas.slice(0, 3);
+            } else if (period === '6months') {
+                meses = meses.slice(0, 6);
+                criadas = criadas.slice(0, 6);
+                aprovadas = aprovadas.slice(0, 6);
+                recusadas = recusadas.slice(0, 6);
+            } else if (period === '12months') {
+                meses = meses.slice(0, 12);
+                criadas = criadas.slice(0, 12);
+                aprovadas = aprovadas.slice(0, 12);
+                recusadas = recusadas.slice(0, 12);
+            }
+            // 'all' mantém todos os dados
+        }
         
         dataToUse = {
             labels: meses,
@@ -883,8 +978,8 @@ function initializeLineChart() {
         };
     } else if (window.dashboardData && window.dashboardData.solicitacoesPorMes) {
         // Fallback para dados simples se detalhado não estiver disponível
-        const meses = window.dashboardData.solicitacoesPorMes.map(item => item.mes);
-        const counts = window.dashboardData.solicitacoesPorMes.map(item => item.count);
+        let meses = window.dashboardData.solicitacoesPorMes.map(item => item.mes);
+        let counts = window.dashboardData.solicitacoesPorMes.map(item => item.count);
         
         const totalAprovadas = window.dashboardData.aprovadas || 0;
         const totalRecusadas = window.dashboardData.recusadas || 0;
@@ -893,8 +988,26 @@ function initializeLineChart() {
         const proporcaoAprovadas = totalCriadas > 0 ? totalAprovadas / totalCriadas : 0;
         const proporcaoRecusadas = totalCriadas > 0 ? totalRecusadas / totalCriadas : 0;
         
-        const approvedData = counts.map(count => Math.round(count * proporcaoAprovadas));
-        const rejectedData = counts.map(count => Math.round(count * proporcaoRecusadas));
+        let approvedData = counts.map(count => Math.round(count * proporcaoAprovadas));
+        let rejectedData = counts.map(count => Math.round(count * proporcaoRecusadas));
+        
+        // Filtrar por período
+        if (period === '3months') {
+            meses = meses.slice(0, 3);
+            counts = counts.slice(0, 3);
+            approvedData = approvedData.slice(0, 3);
+            rejectedData = rejectedData.slice(0, 3);
+        } else if (period === '6months') {
+            meses = meses.slice(0, 6);
+            counts = counts.slice(0, 6);
+            approvedData = approvedData.slice(0, 6);
+            rejectedData = rejectedData.slice(0, 6);
+        } else if (period === '12months') {
+            meses = meses.slice(0, 12);
+            counts = counts.slice(0, 12);
+            approvedData = approvedData.slice(0, 12);
+            rejectedData = rejectedData.slice(0, 12);
+        }
         
         dataToUse = {
             labels: meses,
@@ -918,113 +1031,245 @@ function initializeLineChart() {
         };
     }
     
+    // Calcular o máximo dos dados para ajustar a escala
+    const allData = dataToUse.datasets.flatMap(d => d.data);
+    const maxValue = Math.max(...allData, 0);
+    const suggestedMax = maxValue > 0 ? Math.ceil(maxValue * 1.2) : 10;
+    
     const configToUse = {
         ...chartConfig,
-        data: dataToUse
+        data: dataToUse,
+        options: {
+            ...chartConfig.options,
+            scales: {
+                ...chartConfig.options.scales,
+                x: {
+                    ...chartConfig.options.scales.x,
+                    offset: true,
+                    bounds: 'ticks',
+                    ticks: {
+                        ...chartConfig.options.scales.x.ticks,
+                        padding: 15,
+                        maxRotation: 45,
+                        minRotation: 0
+                    }
+                },
+                y: {
+                    ...chartConfig.options.scales.y,
+                    beginAtZero: true,
+                    suggestedMax: suggestedMax,
+                    offset: true,
+                    ticks: {
+                        ...chartConfig.options.scales.y.ticks,
+                        padding: 15
+                    }
+                }
+            },
+            layout: {
+                padding: {
+                    top: 60,
+                    right: 60,
+                    bottom: 60,
+                    left: 70
+                }
+            },
+            plugins: {
+                ...chartConfig.options.plugins,
+                legend: {
+                    ...chartConfig.options.plugins.legend,
+                    padding: 30
+                }
+            },
+            elements: {
+                point: {
+                    radius: 6,
+                    hoverRadius: 10,
+                    borderWidth: 3
+                },
+                line: {
+                    borderWidth: 3,
+                    tension: 0.4
+                }
+            },
+            plugins: {
+                ...chartConfig.options.plugins,
+                legend: {
+                    ...chartConfig.options.plugins.legend,
+                    padding: 25
+                }
+            }
+        }
     };
     
     lineChart = new Chart(ctx, configToUse);
 }
 
 function changePeriod(period) {
-    if (!lineChart) return;
+    // Reconstruir o gráfico com o período correto
+    if (lineChart) {
+        lineChart.destroy();
+    }
+    initializeLineChart(period);
     
-    // Se temos dados reais, usar eles
-    if (window.dashboardData && window.dashboardData.solicitacoesPorMesDetalhado) {
-        // Usar dados detalhados
+    // Atualizar gráfico de fluxo também
+    if (flowChart && window.dashboardData && window.dashboardData.solicitacoesPorMesDetalhado) {
         let meses = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.mes);
         let criadas = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.criadas || 0);
         let aprovadas = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.aprovadas || 0);
-        let recusadas = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.recusadas || 0);
+        
+        // Calcular taxa de aprovação por mês
+        const taxas = meses.map((_, i) => {
+            const total = criadas[i] || 1;
+            const aprov = aprovadas[i] || 0;
+            return Math.round((aprov / total) * 100);
+        });
         
         // Filtrar dados baseado no período
-        if (period === '6months') {
-            meses = meses.slice(-6);
-            criadas = criadas.slice(-6);
-            aprovadas = aprovadas.slice(-6);
-            recusadas = recusadas.slice(-6);
+        if (period === '3months') {
+            meses = meses.slice(0, 3);
+            criadas = criadas.slice(0, 3);
+            aprovadas = aprovadas.slice(0, 3);
+            const taxasFiltradas = taxas.slice(0, 3);
+            
+            flowChart.data.labels = meses;
+            flowChart.data.datasets[0].data = criadas;
+            flowChart.data.datasets[1].data = aprovadas;
+            flowChart.data.datasets[2].data = taxasFiltradas;
+        } else if (period === '6months') {
+            meses = meses.slice(0, 6);
+            criadas = criadas.slice(0, 6);
+            aprovadas = aprovadas.slice(0, 6);
+            const taxasFiltradas = taxas.slice(0, 6);
+            
+            flowChart.data.labels = meses;
+            flowChart.data.datasets[0].data = criadas;
+            flowChart.data.datasets[1].data = aprovadas;
+            flowChart.data.datasets[2].data = taxasFiltradas;
+        } else if (period === '12months') {
+            meses = meses.slice(0, 12);
+            criadas = criadas.slice(0, 12);
+            aprovadas = aprovadas.slice(0, 12);
+            const taxasFiltradas = taxas.slice(0, 12);
+            
+            flowChart.data.labels = meses;
+            flowChart.data.datasets[0].data = criadas;
+            flowChart.data.datasets[1].data = aprovadas;
+            flowChart.data.datasets[2].data = taxasFiltradas;
+        } else {
+            // 'all' - todos os dados
+            flowChart.data.labels = meses;
+            flowChart.data.datasets[0].data = criadas;
+            flowChart.data.datasets[1].data = aprovadas;
+            flowChart.data.datasets[2].data = taxas;
         }
         
-        lineChart.data.labels = meses;
-        lineChart.data.datasets[0].data = criadas;
-        lineChart.data.datasets[1].data = aprovadas;
-        lineChart.data.datasets[2].data = recusadas;
-        lineChart.update('active');
-    } else if (window.dashboardData && window.dashboardData.solicitacoesPorMes) {
-        // Fallback para dados simples
-        let meses = window.dashboardData.solicitacoesPorMes.map(item => item.mes);
-        let counts = window.dashboardData.solicitacoesPorMes.map(item => item.count);
-        
-        const totalAprovadas = window.dashboardData.aprovadas || 0;
-        const totalRecusadas = window.dashboardData.recusadas || 0;
-        const totalCriadas = window.dashboardData.totalSolicitacoes || 0;
-        
-        const proporcaoAprovadas = totalCriadas > 0 ? totalAprovadas / totalCriadas : 0;
-        const proporcaoRecusadas = totalCriadas > 0 ? totalRecusadas / totalCriadas : 0;
-        
-        let approvedData = counts.map(count => Math.round(count * proporcaoAprovadas));
-        let rejectedData = counts.map(count => Math.round(count * proporcaoRecusadas));
-        
-        // Filtrar dados baseado no período
-        if (period === '6months') {
-            meses = meses.slice(-6);
-            counts = counts.slice(-6);
-            approvedData = approvedData.slice(-6);
-            rejectedData = rejectedData.slice(-6);
-        }
-        
-        lineChart.data.labels = meses;
-        lineChart.data.datasets[0].data = counts;
-        lineChart.data.datasets[1].data = approvedData;
-        lineChart.data.datasets[2].data = rejectedData;
-        lineChart.update('active');
-    } else {
-        // Fallback para dados simulados se não houver dados reais
-        const periods = {
-            '6months': { 
-                labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho'], 
-                data: { 
-                    created: [180, 220, 280, 195, 240, 310], 
-                    approved: [150, 180, 220, 160, 200, 250],
-                    rejected: [25, 35, 45, 30, 35, 50]
-                } 
-            },
-            '12months': { 
-                labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'], 
-                data: { 
-                    created: [180, 220, 280, 195, 240, 310, 275, 290, 320, 265, 285, 240], 
-                    approved: [150, 180, 220, 160, 200, 250, 220, 230, 260, 210, 230, 190],
-                    rejected: [25, 35, 45, 30, 35, 50, 40, 45, 50, 40, 45, 35]
-                } 
-            }
-        };
-        const selected = periods[period];
-        if (!selected) return;
-        lineChart.data.labels = selected.labels;
-        lineChart.data.datasets[0].data = selected.data.created;
-        lineChart.data.datasets[1].data = selected.data.approved;
-        lineChart.data.datasets[2].data = selected.data.rejected;
-        lineChart.update('active');
+        flowChart.update('active');
     }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    initializeLineChart();
-    initializeSecondaryCharts();
+    // Aguardar um pouco para garantir que window.dashboardData esteja disponível
     setTimeout(() => {
-        if (lineChart) lineChart.update('show');
-        if (flowChart) flowChart.update('show');
-        if (preferencesChart) preferencesChart.update('show');
-        if (statusAnalysisChart) statusAnalysisChart.update('show');
-        if (departmentChart) departmentChart.update('show');
-    }, 500);
-    document.querySelectorAll('.period-button').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.period-button').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            changePeriod(this.getAttribute('data-period'));
+        // Verificar se os dados estão disponíveis
+        if (typeof window.dashboardData === 'undefined') {
+            console.warn('Dados do dashboard não encontrados. Usando dados simulados.');
+            window.dashboardData = {};
+        }
+        
+        // Inicializar gráficos com período padrão de 3 meses
+        initializeLineChart('3months');
+        initializeSecondaryCharts();
+        
+        // Atualizar gráficos após inicialização
+        setTimeout(() => {
+            if (lineChart) lineChart.update('show');
+            if (flowChart) flowChart.update('show');
+            if (preferencesChart) preferencesChart.update('show');
+            if (statusAnalysisChart) statusAnalysisChart.update('show');
+            if (departmentChart) departmentChart.update('show');
+        }, 300);
+        
+        // Configurar botões de período
+        document.querySelectorAll('.period-button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Limpar filtros de data customizados
+                document.getElementById('dateFrom').value = '';
+                document.getElementById('dateTo').value = '';
+                customDateFilter = { dateFrom: null, dateTo: null };
+                
+                // Remover active de todos os botões
+                document.querySelectorAll('.period-button').forEach(b => b.classList.remove('active'));
+                // Adicionar active ao botão clicado
+                this.classList.add('active');
+                const period = this.getAttribute('data-period');
+                // Atualizar gráfico com o período selecionado
+                changePeriod(period);
+            });
         });
-    });
+        
+        // Configurar filtro de data customizado
+        const applyDateBtn = document.getElementById('applyDateFilter');
+        const clearDateBtn = document.getElementById('clearDateFilter');
+        const dateFromInput = document.getElementById('dateFrom');
+        const dateToInput = document.getElementById('dateTo');
+        
+        if (applyDateBtn) {
+            applyDateBtn.addEventListener('click', function() {
+                const dateFrom = dateFromInput.value;
+                const dateTo = dateToInput.value;
+                
+                if (!dateFrom && !dateTo) {
+                    alert('Por favor, selecione pelo menos uma data.');
+                    return;
+                }
+                
+                if (dateFrom && dateTo && dateFrom > dateTo) {
+                    alert('A data inicial não pode ser maior que a data final.');
+                    return;
+                }
+                
+                // Remover active dos botões de período
+                document.querySelectorAll('.period-button').forEach(b => b.classList.remove('active'));
+                
+                // Aplicar filtro de data
+                customDateFilter = {
+                    dateFrom: dateFrom || null,
+                    dateTo: dateTo || null
+                };
+                
+                // Reconstruir gráfico com filtro de data
+                if (lineChart) {
+                    lineChart.destroy();
+                }
+                initializeLineChart('custom', customDateFilter);
+            });
+        }
+        
+        if (clearDateBtn) {
+            clearDateBtn.addEventListener('click', function() {
+                dateFromInput.value = '';
+                dateToInput.value = '';
+                customDateFilter = { dateFrom: null, dateTo: null };
+                
+                // Voltar para período padrão (3 meses)
+                const defaultButton = document.querySelector('.period-button[data-period="3months"]');
+                if (defaultButton) {
+                    document.querySelectorAll('.period-button').forEach(b => b.classList.remove('active'));
+                    defaultButton.classList.add('active');
+                    if (lineChart) {
+                        lineChart.destroy();
+                    }
+                    initializeLineChart('3months');
+                }
+            });
+        }
+        
+        // Garantir que o botão padrão (3 meses) esteja ativo
+        const defaultButton = document.querySelector('.period-button[data-period="3months"]');
+        if (defaultButton) {
+            defaultButton.classList.add('active');
+        }
+    }, 100);
 });
 
 
@@ -1248,33 +1493,205 @@ const departmentConfig = {
     }
 };
 
-// Funções de inicialização
+// Funções de inicialização com dados reais
 function initializeFlowChart() {
     const ctx = document.getElementById('flowChart');
     if (!ctx) return;
     if (flowChart) flowChart.destroy();
-    flowChart = new Chart(ctx, flowChartConfig);
+    
+    // Usar dados reais se disponíveis
+    let dataToUse = flowChartData;
+    if (window.dashboardData && window.dashboardData.solicitacoesPorMesDetalhado) {
+        const meses = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.mes);
+        const criadas = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.criadas || 0);
+        const aprovadas = window.dashboardData.solicitacoesPorMesDetalhado.map(item => item.aprovadas || 0);
+        
+        // Calcular taxa de aprovação por mês
+        const taxas = meses.map((_, i) => {
+            const total = criadas[i] || 1;
+            const aprov = aprovadas[i] || 0;
+            return Math.round((aprov / total) * 100);
+        });
+        
+        dataToUse = {
+            labels: meses,
+            datasets: [
+                {
+                    ...flowChartData.datasets[0],
+                    label: 'Solicitações Criadas',
+                    data: criadas
+                },
+                {
+                    ...flowChartData.datasets[1],
+                    label: 'Solicitações Aprovadas',
+                    data: aprovadas
+                },
+                {
+                    ...flowChartData.datasets[2],
+                    label: 'Taxa de Aprovação (%)',
+                    data: taxas
+                }
+            ]
+        };
+    }
+    
+    flowChart = new Chart(ctx, {
+        ...flowChartConfig,
+        data: dataToUse
+    });
 }
 
 function initializePreferencesChart() {
     const ctx = document.getElementById('preferencesChart');
     if (!ctx) return;
     if (preferencesChart) preferencesChart.destroy();
-    preferencesChart = new Chart(ctx, preferencesChartConfig);
+    
+    // Usar dados reais se disponíveis
+    let dataToUse = preferencesChartData;
+    if (window.dashboardData && window.dashboardData.solicitacoesPorDia) {
+        const dias = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+        const counts = [0, 0, 0, 0, 0, 0, 0];
+        
+        // Mapear dias da semana
+        const diaMap = {
+            'Segunda': 0, 'Terça': 1, 'Quarta': 2, 'Quinta': 3,
+            'Sexta': 4, 'Sábado': 5, 'Domingo': 6
+        };
+        
+        window.dashboardData.solicitacoesPorDia.forEach(item => {
+            const diaIndex = diaMap[item.dia] !== undefined ? diaMap[item.dia] : -1;
+            if (diaIndex >= 0) {
+                counts[diaIndex] = item.count || 0;
+            }
+        });
+        
+        dataToUse = {
+            labels: dias,
+            datasets: [{
+                ...preferencesChartData.datasets[0],
+                data: counts
+            }]
+        };
+    }
+    
+    preferencesChart = new Chart(ctx, {
+        ...preferencesChartConfig,
+        data: dataToUse
+    });
 }
 
 function initializeStatusAnalysisChart() {
     const ctx = document.getElementById('statusAnalysisChart');
     if (!ctx) return;
     if (statusAnalysisChart) statusAnalysisChart.destroy();
-    statusAnalysisChart = new Chart(ctx, statusAnalysisConfig);
+    
+    // Usar dados reais se disponíveis
+    let dataToUse = statusAnalysisData;
+    if (window.dashboardData && window.dashboardData.solicitacoesPorServico) {
+        const servicos = window.dashboardData.solicitacoesPorServico.slice(0, 5);
+        const labels = servicos.map(s => s.servico__nome || 'Sem serviço');
+        const processadas = servicos.map(s => s.total || 0);
+        
+        // Calcular pendentes (aproximação baseada na taxa geral)
+        const taxaProcessamento = window.dashboardData.totalSolicitacoes > 0 
+            ? (window.dashboardData.aprovadas + window.dashboardData.recusadas + window.dashboardData.concluidas) / window.dashboardData.totalSolicitacoes 
+            : 0;
+        const pendentes = processadas.map(p => Math.round(p * (1 - taxaProcessamento)));
+        
+        dataToUse = {
+            labels: labels,
+            datasets: [
+                {
+                    ...statusAnalysisData.datasets[0],
+                    label: 'Processadas',
+                    data: processadas
+                },
+                {
+                    ...statusAnalysisData.datasets[1],
+                    label: 'Pendentes',
+                    data: pendentes
+                }
+            ]
+        };
+    } else if (window.dashboardData && window.dashboardData.statusData) {
+        // Usar dados de status se disponíveis
+        const statusLabels = ['Aprovadas', 'Concluídas', 'Recusadas', 'Pendentes'];
+        const processadas = [
+            window.dashboardData.statusData.aprovado || 0,
+            window.dashboardData.statusData.concluido || 0,
+            window.dashboardData.statusData.recusado || 0,
+            window.dashboardData.statusData.pendente || 0
+        ];
+        
+        dataToUse = {
+            labels: statusLabels,
+            datasets: [
+                {
+                    ...statusAnalysisData.datasets[0],
+                    label: 'Quantidade',
+                    data: processadas
+                }
+            ]
+        };
+    }
+    
+    statusAnalysisChart = new Chart(ctx, {
+        ...statusAnalysisConfig,
+        data: dataToUse
+    });
 }
 
 function initializeDepartmentChart() {
     const ctx = document.getElementById('departmentChart');
     if (!ctx) return;
     if (departmentChart) departmentChart.destroy();
-    departmentChart = new Chart(ctx, departmentConfig);
+    
+    // Usar dados reais se disponíveis
+    let dataToUse = departmentData;
+    if (window.dashboardData && window.dashboardData.solicitacoesPorServico) {
+        const servicos = window.dashboardData.solicitacoesPorServico.slice(0, 4);
+        const labels = servicos.map(s => s.servico__nome || 'Sem serviço');
+        const values = servicos.map(s => s.total || 0);
+        
+        // Cores para os gráficos
+        const colors = ['#3b82f6', '#10b981', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899'];
+        
+        dataToUse = {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: colors.slice(0, labels.length),
+                borderColor: '#1C1C1C',
+                borderWidth: 2,
+                cutout: '60%'
+            }]
+        };
+    } else if (window.dashboardData && window.dashboardData.statusData) {
+        // Fallback para dados de status
+        const labels = ['Aprovadas', 'Concluídas', 'Recusadas', 'Pendentes'];
+        const values = [
+            window.dashboardData.statusData.aprovado || 0,
+            window.dashboardData.statusData.concluido || 0,
+            window.dashboardData.statusData.recusado || 0,
+            window.dashboardData.statusData.pendente || 0
+        ];
+        
+        dataToUse = {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: ['#10b981', '#3b82f6', '#ef4444', '#f59e0b'],
+                borderColor: '#1C1C1C',
+                borderWidth: 2,
+                cutout: '60%'
+            }]
+        };
+    }
+    
+    departmentChart = new Chart(ctx, {
+        ...departmentConfig,
+        data: dataToUse
+    });
 }
 
 function initializeSecondaryCharts() {

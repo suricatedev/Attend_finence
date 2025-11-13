@@ -16,8 +16,14 @@ PRIORIDADE_CHOICES = [
 
 class Recebedor(models.Model):
     """Modelo para armazenar recebedores e suas chaves PIX"""
+    SUPERVISOR_CHOICES = [
+        ('supervisor1', 'Nayron Januario'),
+        ('supervisor2', 'Flavio Medina'),
+    ]
+    
     nome = models.CharField(max_length=100, unique=True, verbose_name="Nome do Recebedor")
     chave_pix = models.CharField(max_length=255, verbose_name="Chave PIX")
+    supervisor = models.CharField(max_length=50, choices=SUPERVISOR_CHOICES, blank=True, null=True, verbose_name="Supervisor")
     ativo = models.BooleanField(default=True, verbose_name="Ativo")
     data_criacao = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     data_atualizacao = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
@@ -25,10 +31,16 @@ class Recebedor(models.Model):
     class Meta:
         verbose_name = "Recebedor"
         verbose_name_plural = "Recebedores"
-        ordering = ['nome']
+        ordering = ['supervisor', 'nome']
     
     def __str__(self):
         return f"{self.nome} - {self.chave_pix}"
+    
+    def get_supervisor_display_name(self):
+        """Retorna o nome do supervisor formatado"""
+        if self.supervisor:
+            return dict(self.SUPERVISOR_CHOICES).get(self.supervisor, self.supervisor)
+        return "Sem Supervisor"
 
 class ClienteEmpresa(models.Model):
     """Modelo para armazenar clientes/empresas"""

@@ -1049,11 +1049,28 @@
                 if (!valor) return 0;
                 // Converter para string se necessário
                 const valorStr = valor.toString().trim();
-                if (!valorStr || valorStr === '' || valorStr === 'R$ 0,00' || valorStr === '0,00') return 0;
-                // Remove "R$ ", espaços, pontos de milhar e substitui vírgula por ponto
-                const limpo = valorStr.replace(/R\$\s?/g, '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.').trim();
-                const resultado = parseFloat(limpo) || 0;
-                console.log(`🔍 parseValorMonetario: "${valorStr}" -> "${limpo}" -> ${resultado}`);
+                if (!valorStr || valorStr === '' || valorStr === 'R$ 0,00' || valorStr === '0,00' || valorStr === 'R$ 0.00' || valorStr === '0.00') return 0;
+                
+                // Remove R$, espaços e trata tanto vírgula quanto ponto como separador decimal
+                let valorLimpo = valorStr.replace(/[R$\s]/g, '');
+                
+                // Se tem vírgula, assume formato brasileiro (1.234,56)
+                if (valorLimpo.includes(',')) {
+                    // Remove pontos (separadores de milhares) e substitui vírgula por ponto
+                    valorLimpo = valorLimpo.replace(/\./g, '').replace(',', '.');
+                } else if (valorLimpo.includes('.')) {
+                    // Se tem ponto mas não vírgula, verifica se é formato americano (1234.56) ou brasileiro (1.234)
+                    // Se tem mais de um ponto, assume formato brasileiro (1.234.567)
+                    const pontos = (valorLimpo.match(/\./g) || []).length;
+                    if (pontos > 1) {
+                        // Formato brasileiro com pontos como separadores de milhares - remove todos os pontos
+                        valorLimpo = valorLimpo.replace(/\./g, '');
+                    }
+                    // Se tem apenas um ponto, assume formato americano (1234.56) - mantém o ponto
+                }
+                
+                const resultado = parseFloat(valorLimpo) || 0;
+                console.log(`🔍 parseValorMonetario: "${valorStr}" -> "${valorLimpo}" -> ${resultado}`);
                 return resultado;
             }
             
@@ -1073,11 +1090,8 @@
                     return { detalhados: 0, atividade: 0 };
                 }
                 
-                // Incluir o campo "Valor Atividade" no cálculo
-                const campoValorAtividade = document.getElementById(`routeValor${numeroID}`);
-                const valorAtividade = campoValorAtividade ? parseValorMonetario(campoValorAtividade.value) : 0;
+                // Buscar campos de valores detalhados
                 const campos = [
-                    // Valor atividade não entra nos detalhados
                     document.getElementById(`routeValorKm${numeroID}`),
                     document.getElementById(`routeValorPedagio${numeroID}`),
                     document.getElementById(`routeValorHospedagem${numeroID}`),
@@ -1095,6 +1109,19 @@
                         console.log(`🔍 ID ${numeroID} - Campo ${campo.id}: "${campo.value}" -> ${valor}`);
                     }
                 });
+                
+                // Buscar campo "Valor Atividade"
+                // Este campo deve conter apenas o valor da atividade (não o valor total do item)
+                const campoValorAtividade = document.getElementById(`routeValor${numeroID}`);
+                let valorAtividade = 0;
+                
+                if (campoValorAtividade) {
+                    valorAtividade = parseValorMonetario(campoValorAtividade.value);
+                    // Log para depuração - avisar se o valor parece ser o valor total em vez de apenas atividade
+                    if (valorAtividade > totalDetalhados && totalDetalhados > 0) {
+                        console.log(`ℹ️ ID ${numeroID} - Valor atividade: ${valorAtividade} | Detalhados: ${totalDetalhados} | Total item seria: ${valorAtividade + totalDetalhados}`);
+                    }
+                }
                 
                 // Se nenhum campo foi encontrado, pode ser que o elemento ainda não esteja no DOM
                 if (camposEncontrados === 0) {
@@ -1161,12 +1188,11 @@
                 
                 const receitaField = document.getElementById('routeValorReceita');
                 if (receitaField) {
-                    let manualExtra = parseFloat(receitaField.dataset.manual || '0');
-                    if (Number.isNaN(manualExtra)) manualExtra = 0;
-                    const totalReceita = totalAtividades + manualExtra;
-                    receitaField.value = formatarValorMonetario(totalReceita);
+                    // Valor da receita é SOMENTE o valor das atividades (sem manual extra)
+                    receitaField.value = formatarValorMonetario(totalAtividades);
                     receitaField.dataset.auto = totalAtividades.toFixed(2);
-                    console.log(`✅ Valor Receita atualizado: atividades=${totalAtividades} | manual=${manualExtra} | total=${totalReceita}`);
+                    receitaField.dataset.manual = '0'; // Sempre zerar manual extra
+                    console.log(`✅ Valor Receita atualizado: SOMENTE atividades=${totalAtividades}`);
                 }
                 
                 return { detalhados: totalDetalhados, atividades: totalAtividades };
@@ -1174,18 +1200,18 @@
 
             const routeValorReceitaInput = document.getElementById('routeValorReceita');
             if (routeValorReceitaInput) {
+                // Desabilitar edição manual - o valor da receita é SOMENTE a soma das atividades
                 routeValorReceitaInput.addEventListener('input', function(e) {
-                    const total = parseValorMonetario(e.target.value);
+                    // Se o usuário tentar editar, restaurar o valor automático
                     const auto = parseFloat(routeValorReceitaInput.dataset.auto || '0') || 0;
-                    const manual = total - auto;
-                    routeValorReceitaInput.dataset.manual = manual.toFixed(2);
+                    e.target.value = formatarValorMonetario(auto);
+                    routeValorReceitaInput.dataset.manual = '0';
                 });
                 routeValorReceitaInput.addEventListener('blur', function(e) {
-                    const total = parseValorMonetario(e.target.value);
-                    e.target.value = formatarValorMonetario(total);
+                    // Garantir que sempre seja o valor automático
                     const auto = parseFloat(routeValorReceitaInput.dataset.auto || '0') || 0;
-                    const manual = total - auto;
-                    routeValorReceitaInput.dataset.manual = manual.toFixed(2);
+                    e.target.value = formatarValorMonetario(auto);
+                    routeValorReceitaInput.dataset.manual = '0';
                 });
             }
             
@@ -1356,18 +1382,16 @@
                 const campoValorHidden = document.getElementById('casual_valor_hidden');
                 if (campoValorHidden) {
                     const receitaInput = document.getElementById('casualValorReceita');
-                    let receitaManual = receitaInput?.dataset.manual ? parseFloat(receitaInput.dataset.manual) : 0;
-                    if (Number.isNaN(receitaManual)) receitaManual = 0;
-                    receitaInput.dataset.auto = valorAtividade.toFixed(2);
-                    receitaInput.dataset.manual = receitaManual.toFixed(2);
-                    const receitaTotal = valorAtividade + receitaManual;
+                    // Valor da receita é SOMENTE o valor da atividade (sem manual extra)
                     if (receitaInput) {
-                        receitaInput.value = formatarValorMonetario(receitaTotal);
-                        receitaInput.dataset.total = receitaTotal.toFixed(2);
+                        receitaInput.value = formatarValorMonetario(valorAtividade);
+                        receitaInput.dataset.auto = valorAtividade.toFixed(2);
+                        receitaInput.dataset.manual = '0'; // Sempre zerar manual extra
+                        receitaInput.dataset.total = valorAtividade.toFixed(2);
                     }
-                    const totalGeral = totalDetalhados + receitaTotal;
+                    const totalGeral = totalDetalhados + valorAtividade;
                     campoValorHidden.value = totalGeral.toFixed(2).replace('.', ',');
-                    console.log('✅ Valor Casual calculado:', { totalDetalhados, valorAtividade, receitaManual, totalGeral });
+                    console.log('✅ Valor Casual calculado:', { totalDetalhados, valorAtividade, totalGeral });
                 } else {
                     console.error('❌ Campo hidden casual_valor_hidden não encontrado!');
                 }
@@ -1546,11 +1570,11 @@
                         });
                         
                         if (valorReceitaFieldElement) {
-                            const receitaManual = Math.max(0, (dados.valor_receita_raw || 0) - somaAtividades);
-                            valorReceitaFieldElement.dataset.manual = receitaManual.toFixed(2);
+                            // Valor da receita é SOMENTE a soma das atividades (sem manual extra)
+                            valorReceitaFieldElement.dataset.manual = '0';
                             valorReceitaFieldElement.dataset.auto = somaAtividades.toFixed(2);
-                            valorReceitaFieldElement.value = formatarValorMonetario(somaAtividades + receitaManual);
-                            console.log('🟢 Receita auto preenchida', { somaAtividades, receitaManual });
+                            valorReceitaFieldElement.value = formatarValorMonetario(somaAtividades);
+                            console.log('🟢 Receita auto preenchida (SOMENTE atividades):', { somaAtividades });
                         }
                         
                         if (window.calcularTotalTodosIDs) {
@@ -1624,10 +1648,12 @@
                         setCasualValor('casualValorOutros', dados.valor_outros, dados.valor_outros_raw);
                         const receitaInput = document.getElementById('casualValorReceita');
                         if (receitaInput) {
-                            const receitaManual = Math.max(0, (dados.valor_receita_raw || 0) - (dados.valor_receita_raw || 0));
-                            receitaInput.dataset.manual = receitaManual.toFixed(2);
-                            receitaInput.dataset.auto = (dados.valor_receita_raw || 0).toFixed(2);
-                            receitaInput.value = formatarValorMonetario(dados.valor_receita_raw || 0);
+                            // Valor da receita é SOMENTE o valor da atividade (sem manual extra)
+                            const valorAtividade = dados.valor_receita_raw || 0;
+                            receitaInput.dataset.manual = '0';
+                            receitaInput.dataset.auto = valorAtividade.toFixed(2);
+                            receitaInput.value = formatarValorMonetario(valorAtividade);
+                            console.log('🟢 Receita Casual auto preenchida (SOMENTE atividade):', { valorAtividade });
                         }
                         
                         const valorTotalCampo = document.getElementById('campaignValor');
@@ -1663,22 +1689,19 @@
             const casualValorReceita = document.getElementById('casualValorReceita');
             if (casualValorReceita) {
                 casualValorReceita.addEventListener('input', function(e) {
-                    let value = e.target.value.replace(/\D/g, '');
-                    if (value) {
-                        value = value.replace(/^0+/, '');
-                        if (!value) value = '0';
-                        const numericValue = parseFloat(value) / 100;
-                        e.target.value = formatarValorMonetario(numericValue);
-                    } else {
-                        e.target.value = '';
-                    }
+                    // Se o usuário tentar editar, restaurar o valor automático (valor da atividade)
+                    const auto = parseFloat(casualValorReceita.dataset.auto || '0') || 0;
+                    e.target.value = formatarValorMonetario(auto);
+                    casualValorReceita.dataset.manual = '0';
                     // Recalcular valor total
                     calcularValorTotalCasual();
                 });
                 
                 casualValorReceita.addEventListener('blur', function(e) {
-                    const valor = parseValorMonetario(e.target.value);
-                    e.target.value = formatarValorMonetario(valor);
+                    // Garantir que sempre seja o valor automático (valor da atividade)
+                    const auto = parseFloat(casualValorReceita.dataset.auto || '0') || 0;
+                    e.target.value = formatarValorMonetario(auto);
+                    casualValorReceita.dataset.manual = '0';
                     // Recalcular valor total
                     calcularValorTotalCasual();
                 });

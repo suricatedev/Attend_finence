@@ -68,14 +68,39 @@ def dashboard(request):
             if processadas > 0:
                 taxa_aprovacao = (aprovadas / processadas) * 100
         
-        # Solicitações por mês (últimos 6 meses) com status separado
+        # Solicitações por mês (últimos 12 meses) com status separado
         hoje = timezone.now().date()
         solicitacoes_por_mes = []
         solicitacoes_por_mes_detalhado = []
         
-        for i in range(6):
-            mes_inicio = hoje - timedelta(days=30*(i+1))
-            mes_fim = hoje - timedelta(days=30*i)
+        # Gerar dados para os últimos 12 meses para suportar ambos os filtros
+        from datetime import date
+        
+        for i in range(12):
+            # Calcular data do início do mês (mais preciso)
+            # i=0 é o mês mais antigo (11 meses atrás), i=11 é o mês atual
+            # Começar do primeiro dia do mês atual e retroceder
+            primeiro_dia_mes_atual = hoje.replace(day=1)
+            
+            # Retroceder i+1 meses (i=0 retrocede 1 mês, i=11 retrocede 12 meses)
+            meses_retroceder = i + 1
+            
+            # Calcular mês e ano
+            mes_calcular = primeiro_dia_mes_atual.month - meses_retroceder
+            ano_calcular = primeiro_dia_mes_atual.year
+            
+            # Ajustar para ano anterior se necessário
+            while mes_calcular <= 0:
+                mes_calcular += 12
+                ano_calcular -= 1
+            
+            mes_inicio = date(ano_calcular, mes_calcular, 1)
+            
+            # Próximo mês
+            if mes_inicio.month == 12:
+                mes_fim = date(mes_inicio.year + 1, 1, 1)
+            else:
+                mes_fim = date(mes_inicio.year, mes_inicio.month + 1, 1)
             
             mes_solicitacoes = todas_solicitacoes.filter(
                 data_de_criacao__gte=mes_inicio,
@@ -88,17 +113,31 @@ def dashboard(request):
             count_recusadas = mes_solicitacoes.filter(status='recusado').count()
             count_concluidas = mes_solicitacoes.filter(status='concluido').count()
             
+            # Nome do mês em português
+            meses_pt = {
+                1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun',
+                7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'
+            }
+            
             solicitacoes_por_mes.append({
-                'mes': mes_inicio.strftime('%b'),
-                'count': count_total
+                'mes': meses_pt[mes_inicio.month],
+                'count': count_total,
+                'ano': mes_inicio.year,
+                'mes_numero': mes_inicio.month,
+                'data_inicio': mes_inicio.isoformat(),
+                'data_fim': mes_fim.isoformat()
             })
             
             solicitacoes_por_mes_detalhado.append({
-                'mes': mes_inicio.strftime('%b'),
+                'mes': meses_pt[mes_inicio.month],
                 'criadas': count_criadas,
                 'aprovadas': count_aprovadas,
                 'recusadas': count_recusadas,
-                'concluidas': count_concluidas
+                'concluidas': count_concluidas,
+                'ano': mes_inicio.year,
+                'mes_numero': mes_inicio.month,
+                'data_inicio': mes_inicio.isoformat(),
+                'data_fim': mes_fim.isoformat()
             })
         
         solicitacoes_por_mes.reverse()
@@ -210,25 +249,93 @@ def relatorio(request):
             return redirect('home')
         
         # Buscar todas as solicitações do banco de dados
-        solicitacoes = Solicitacoes.objects.all().order_by('-data_de_criacao')
+        solicitacoes_originais = Solicitacoes.objects.prefetch_related('itens_rota__servico').all().order_by('-data_de_criacao')
         
-        # Estatísticas
-        total_solicitacoes = solicitacoes.count()
+        # Adicionar supervisor do recebedor e expandir solicitações "Em Rota"
+        from solicitacoes.models import Recebedor
+        solicitacoes_expandidas = []
         
-        # Calcular valor total
-        valor_total = sum(s.valor for s in solicitacoes)
+        for solicitacao in solicitacoes_originais:
+            supervisor_nome = None
+            if solicitacao.nome_do_recebedor:
+                try:
+                    recebedor = Recebedor.objects.filter(nome__iexact=solicitacao.nome_do_recebedor).first()
+                    if recebedor and recebedor.supervisor:
+                        supervisor_nome = recebedor.get_supervisor_display_name()
+                except Exception:
+                    pass
+            solicitacao.supervisor_recebedor = supervisor_nome
+            
+            # Se for "Em Rota", expandir em múltiplas linhas (uma para cada item)
+            if solicitacao.tipo == 'em_rota' and solicitacao.itens_rota.exists():
+                itens = solicitacao.itens_rota.all().order_by('ordem')
+                for item in itens:
+                    # Calcular valor total do item (atividade + detalhados)
+                    soma_detalhados_item = (item.valor_km or 0.0) + (item.valor_pedagio or 0.0) + \
+                                           (item.valor_hospedagem or 0.0) + (item.valor_fluvial or 0.0) + \
+                                           (item.valor_outros or 0.0)
+                    valor_atividade_item = item.valor or 0.0
+                    valor_total_item = valor_atividade_item + soma_detalhados_item
+                    
+                    # Criar uma classe simples para representar o item
+                    class SolicitacaoItem:
+                        def __init__(self):
+                            self.id = solicitacao.id
+                            self.ticket = item.ticket_item  # ID do item
+                            self.titulo = f"Solicitação Em Rota - {item.ticket_item}"
+                            self.nome_solicitante = solicitacao.nome_solicitante
+                            self.supervisor_recebedor = supervisor_nome
+                            self.nome_do_recebedor = item.recebedor or solicitacao.nome_do_recebedor
+                            self.chave_pix = item.chave_pix or solicitacao.chave_pix
+                            self.cliente_empresa = item.cliente_empresa or solicitacao.cliente_empresa
+                            self.cnpj = item.cnpj or solicitacao.cnpj
+                            self.servico = item.servico or solicitacao.servico
+                            self.valor = valor_total_item  # Valor total do item (atividade + detalhados)
+                            self.valor_receita = valor_atividade_item  # Valor da atividade do item
+                            self.valor_em_rota = 0.0  # Não aplicável para itens individuais
+                            self.valor_km = item.valor_km or 0.0
+                            self.valor_pedagio = item.valor_pedagio or 0.0
+                            self.valor_hospedagem = item.valor_hospedagem or 0.0
+                            self.valor_fluvial = item.valor_fluvial or 0.0
+                            self.valor_outros = item.valor_outros or 0.0
+                            self.status = solicitacao.status
+                            self.prioridade = solicitacao.prioridade
+                            self.data_de_criacao = solicitacao.data_de_criacao
+                            self.data_de_pagamento = solicitacao.data_de_pagamento
+                            self.tipo = 'em_rota'
+                            self.is_item = True  # Flag para identificar que é um item
+                            self.solicitacao_original_id = solicitacao.id  # ID da solicitação original
+                            self.ticket_original = solicitacao.ticket  # Ticket da solicitação original
+                        
+                        def get_status_display(self):
+                            return solicitacao.get_status_display()
+                        
+                        def get_prioridade_display(self):
+                            return solicitacao.get_prioridade_display()
+                    
+                    solicitacao_item = SolicitacaoItem()
+                    solicitacoes_expandidas.append(solicitacao_item)
+            else:
+                # Para solicitações "Casual" ou "Em Rota" sem itens, adicionar normalmente
+                solicitacoes_expandidas.append(solicitacao)
         
-        # Contar por status
-        aprovadas = solicitacoes.filter(status='aprovado').count()
-        pendentes = solicitacoes.filter(status='pendente').count()
-        recusadas = solicitacoes.filter(status='recusado').count()
-        concluidas = solicitacoes.filter(status='concluido').count()
+        # Estatísticas (usar solicitações originais, não expandidas)
+        total_solicitacoes = solicitacoes_originais.count()
+        
+        # Calcular valor total (usar solicitações originais)
+        valor_total = sum(s.valor for s in solicitacoes_originais)
+        
+        # Contar por status (usar solicitações originais)
+        aprovadas = solicitacoes_originais.filter(status='aprovado').count()
+        pendentes = solicitacoes_originais.filter(status='pendente').count()
+        recusadas = solicitacoes_originais.filter(status='recusado').count()
+        concluidas = solicitacoes_originais.filter(status='concluido').count()
         
         # Buscar serviços disponíveis para o filtro
         servicos_disponiveis = Servico.objects.all().order_by('nome')
         
         context = {
-            'solicitacoes': solicitacoes,
+            'solicitacoes': solicitacoes_expandidas,
             'total_solicitacoes': total_solicitacoes,
             'valor_total': valor_total,
             'aprovadas': aprovadas,

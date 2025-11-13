@@ -355,6 +355,189 @@
     transform: translateY(-1px);
 }
 
+/* Filtro de período customizado */
+.custom-period-selector {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 2px solid rgba(255, 203, 87, 0.3);
+    background: rgba(28, 28, 28, 0.4);
+    padding: 1rem;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+}
+
+.date-range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.date-range-inputs label {
+    color: #F4F7F5;
+    font-size: 0.9rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    min-width: 50px;
+}
+
+.date-range-inputs label i {
+    color: #FFCB57;
+    font-size: 1rem;
+    filter: drop-shadow(0 2px 4px rgba(255, 203, 87, 0.3));
+}
+
+.date-input {
+    background: linear-gradient(135deg, rgba(84, 67, 80, 0.4) 0%, rgba(84, 67, 80, 0.2) 100%);
+    border: 2px solid rgba(255, 203, 87, 0.4);
+    color: #F4F7F5;
+    padding: 0.75rem 1.25rem;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 160px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+.date-input::placeholder {
+    color: rgba(244, 247, 245, 0.5);
+    font-weight: 500;
+}
+
+.date-input:hover {
+    background: linear-gradient(135deg, rgba(84, 67, 80, 0.6) 0%, rgba(84, 67, 80, 0.4) 100%);
+    border-color: rgba(255, 203, 87, 0.6);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 203, 87, 0.3);
+}
+
+.date-input:focus {
+    outline: none;
+    background: linear-gradient(135deg, rgba(84, 67, 80, 0.7) 0%, rgba(84, 67, 80, 0.5) 100%);
+    border-color: #FFCB57;
+    box-shadow: 0 0 0 4px rgba(255, 203, 87, 0.3), 0 4px 16px rgba(255, 203, 87, 0.4);
+    transform: translateY(-2px);
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(1.2);
+    cursor: pointer;
+    opacity: 0.9;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.date-input::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+    background: rgba(255, 203, 87, 0.2);
+    transform: scale(1.1);
+}
+
+.apply-date-btn,
+.clear-date-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    white-space: nowrap;
+    border: 2px solid transparent;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.apply-date-btn::before,
+.clear-date-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.apply-date-btn:hover::before,
+.clear-date-btn:hover::before {
+    left: 100%;
+}
+
+.apply-date-btn {
+    background: linear-gradient(135deg, #FFCB57 0%, #FFD700 100%);
+    border-color: #FFCB57;
+    color: #1C1C1C;
+    box-shadow: 0 4px 15px rgba(255, 203, 87, 0.4);
+}
+
+.apply-date-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(255, 203, 87, 0.5);
+    background: linear-gradient(135deg, #FFD700 0%, #FFCB57 100%);
+}
+
+.apply-date-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(255, 203, 87, 0.4);
+}
+
+.apply-date-btn i {
+    font-size: 1rem;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.clear-date-btn {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(220, 38, 38, 0.2) 100%);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #F4F7F5;
+}
+
+.clear-date-btn:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.5) 0%, rgba(220, 38, 38, 0.4) 100%);
+    border-color: rgba(239, 68, 68, 0.7);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+}
+
+.clear-date-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(239, 68, 68, 0.2);
+}
+
+.clear-date-btn i {
+    font-size: 1rem;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.apply-date-btn i,
+.clear-date-btn i {
+    position: relative;
+    z-index: 1;
+}
+
+.apply-date-btn span,
+.clear-date-btn span {
+    position: relative;
+    z-index: 1;
+}
+
 .chart-container {
     width: 100%;
     position: relative;
@@ -584,6 +767,33 @@
         min-width: 100px;
     }
     
+    .custom-period-selector {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        padding: 0.75rem;
+    }
+    
+    .date-range-inputs {
+        gap: 0.75rem;
+    }
+    
+    .date-range-inputs label {
+        font-size: 0.85rem;
+        min-width: 45px;
+    }
+    
+    .date-input {
+        min-width: 140px;
+        font-size: 0.85rem;
+        padding: 0.65rem 1rem;
+    }
+    
+    .apply-date-btn,
+    .clear-date-btn {
+        padding: 0.65rem 1.25rem;
+        font-size: 0.85rem;
+    }
+    
     .chart-period-btn {
         flex: 1;
         text-align: center;
@@ -633,6 +843,39 @@
         font-size: 0.75rem;
         min-width: auto;
         width: 100%;
+    }
+    
+    .custom-period-selector {
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        padding: 0.75rem;
+    }
+    
+    .date-range-inputs {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    
+    .date-range-inputs label {
+        font-size: 0.85rem;
+        min-width: auto;
+        justify-content: flex-start;
+    }
+    
+    .date-input {
+        width: 100%;
+        min-width: auto;
+        font-size: 0.85rem;
+        padding: 0.65rem 1rem;
+    }
+    
+    .apply-date-btn,
+    .clear-date-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.65rem 1rem;
+        font-size: 0.85rem;
     }
     
     .main-chart-container {

@@ -29,6 +29,10 @@ class RelatoriosOptimized {
     async init() {
         // Carregar dados de forma assíncrona
         await this.loadDataAsync();
+        
+        console.log('🔍 Debug - Dados carregados:', this.data.length, 'itens');
+        console.log('🔍 Debug - Dados filtrados:', this.filteredData.length, 'itens');
+        
         this.setupEventListeners();
         this.setDefaultDates();
         this.initValoresDetalhados();
@@ -42,8 +46,15 @@ class RelatoriosOptimized {
             filtersContent.classList.remove('collapsed');
         }
         
-        // ✅ NÃO renderizar inicialmente - usar dados do Django
-        // Apenas atualizar estatísticas e info
+        // Renderizar tabela inicialmente com todos os dados
+        // Isso garante que os dados estejam visíveis e os filtros funcionem
+        if (this.data.length > 0) {
+            this.filteredData = [...this.data];
+            console.log('🔍 Debug - Renderizando tabela inicial com', this.filteredData.length, 'itens');
+            this.renderTableOptimized();
+        } else {
+            console.warn('⚠️ Nenhum dado carregado da tabela!');
+        }
         this.updateTableInfo();
         // this.updateStats(); // Deixar as estatísticas do Django
     }
@@ -78,6 +89,7 @@ class RelatoriosOptimized {
     loadRealDataFromTable() {
         // Ler dados reais da tabela HTML renderizada pelo Django
         const rows = document.querySelectorAll('#reportsTableBody tr:not(.empty-state)');
+        console.log('🔍 Debug - Linhas encontradas na tabela:', rows.length);
         const data = [];
         
         rows.forEach(row => {
@@ -110,7 +122,7 @@ class RelatoriosOptimized {
                 }
                 
                 // Encontrar índice correto das células (considerando colunas adicionais)
-                // Estrutura: ID(0), Título(1), Solicitante(2), Recebedor(3), Chave PIX(4), Cliente/Empresa(5), CNPJ(6), Serviço(7), Valor(8), 
+                // Estrutura: ID(0), Título(1), Solicitante(2), Supervisor(3), Recebedor(4), Chave PIX(5), Cliente/Empresa(6), CNPJ(7), Serviço(8), Valor(9), 
                 // [Toggle Cell(9)], [Receita(10)], [EM ROTA(11)], [KM(12)], [Pedágio(13)], [Hospedagem(14)], [Fluvial(15)], [Outros(16)], 
                 // Status(17), Prioridade(18), Criação(19), Pagamento(20), Ações(21)
                 let statusIdx = 17, priorityIdx = 18, dataCriacaoIdx = 19, dataPagamentoIdx = 20;
@@ -124,11 +136,12 @@ class RelatoriosOptimized {
                 }
                 
                 // Extrair novos campos
-                const recebedor = cells[3]?.textContent.trim() || '';
-                const chavePix = cells[4]?.textContent.trim() || '';
-                const clienteEmpresa = cells[5]?.textContent.trim() || '';
-                const cnpj = cells[6]?.textContent.trim() || '';
-                const serviceText = cells[7]?.textContent.trim() || '';
+                const supervisor = cells[3]?.textContent.trim() || '-';
+                const recebedor = cells[4]?.textContent.trim() || '';
+                const chavePix = cells[5]?.textContent.trim() || '';
+                const clienteEmpresa = cells[6]?.textContent.trim() || '';
+                const cnpj = cells[7]?.textContent.trim() || '';
+                const serviceText = cells[8]?.textContent.trim() || '';
                 
                 const statusBadge = cells[statusIdx]?.querySelector('.status-badge');
                 if (!status && statusBadge) {
@@ -149,15 +162,18 @@ class RelatoriosOptimized {
                 }
                 
                 // Extrair serviço do data attribute (usa ID do serviço)
+                // IMPORTANTE: O filtro compara por ID, então precisamos usar o ID do serviço
                 let service = row.dataset.service || '';
-                if (!service && serviceText) {
-                    const serviceMap = {
-                        'Consultoria em TI': 'consultoria_TI',
-                        'Desenvolvimento de Software': 'desenvolvimento',
-                        'Manutenção de Equipamentos': 'manutencao_equipamentos',
-                        'Treinamento Corporativo': 'treinamento_corporativo'
-                    };
-                    service = serviceMap[serviceText] || serviceText.toLowerCase().replace(/\s+/g, '_');
+                // Se não tiver no data attribute e houver texto do serviço, tentar extrair
+                // Mas normalmente deve vir do data-service do template
+                if (!service && serviceText && serviceText !== 'N/A') {
+                    // Se não tiver data-service, deixar vazio (será filtrado se necessário)
+                    // O ideal é que sempre venha do data-service do template
+                    service = '';
+                }
+                // Garantir que service seja string vazia se não houver
+                if (!service) {
+                    service = '';
                 }
                 
                 // Extrair tipo do data attribute
@@ -177,17 +193,22 @@ class RelatoriosOptimized {
                 const rowId = row.getAttribute('data-id') || row.dataset.id || '';
                 const ticket = cells[0]?.textContent.trim() || '';
                 
+                // Verificar se é um item expandido
+                const isItem = row.classList.contains('item-expandido');
+                const itemId = row.dataset.itemId || '';
+                
                 data.push({
                     id: rowId || ticket, // Usar ID numérico se disponível, senão usar ticket
                     ticket: ticket, // Manter ticket separado para exibição
                     title: cells[1]?.textContent.trim() || '',
                     solicitante: cells[2]?.textContent.trim() || '',
+                    supervisor: supervisor,
                     recebedor: recebedor,
                     chavePix: chavePix,
                     clienteEmpresa: clienteEmpresa,
                     cnpj: cnpj,
-                    service: service,
-                    valor: cells[8]?.textContent.trim() || '',
+                    service: service, // ID do serviço (string vazia se não houver)
+                    valor: cells[9]?.textContent.trim() || '',
                     valorReceita: valorReceita,
                     valorEmRota: valorEmRota,
                     valorKm: valorKm,
@@ -201,12 +222,25 @@ class RelatoriosOptimized {
                     tipo: tipo.toLowerCase(),
                     dataCriacao: parseDate(cells[dataCriacaoIdx]?.textContent.trim() || ''),
                     dataPagamento: parseDate(cells[dataPagamentoIdx]?.textContent.trim() || ''),
+                    isItem: isItem, // Flag para identificar itens expandidos
+                    itemId: itemId, // ID do item (ticket do item)
                 });
             }
         });
         
         console.log(`✅ Carregadas ${data.length} solicitações reais do banco de dados`);
-        console.log('📊 Dados carregados:', data);
+        if (data.length > 0) {
+            console.log('📊 Primeiro item de exemplo:', {
+                id: data[0].id,
+                ticket: data[0].ticket,
+                status: data[0].status,
+                tipo: data[0].tipo,
+                dataCriacao: data[0].dataCriacao,
+                service: data[0].service
+            });
+        } else {
+            console.warn('⚠️ Nenhum dado foi carregado da tabela! Verifique se a tabela tem linhas.');
+        }
         return data;
     }
 
@@ -432,15 +466,32 @@ class RelatoriosOptimized {
     applyFilters() {
         const startTime = performance.now();
         
+        console.log('🔍 Debug - Aplicando filtros:', this.currentFilters);
+        console.log('🔍 Debug - Total de dados:', this.data.length);
+        
+        // Se não houver dados, não aplicar filtros
+        if (this.data.length === 0) {
+            console.warn('⚠️ Nenhum dado disponível para filtrar!');
+            this.filteredData = [];
+            this.renderTableOptimized();
+            this.updateTableInfo();
+            return;
+        }
+        
+        let filteredCount = 0;
         this.filteredData = this.data.filter(item => {
+            let passes = true;
+            
             // Filtro de status
             if (this.currentFilters.status !== 'all') {
                 const itemStatus = (item.status || '').toLowerCase();
                 const filterStatus = (this.currentFilters.status || '').toLowerCase();
                 if (itemStatus !== filterStatus) {
-                    return false;
+                    passes = false;
                 }
             }
+            
+            if (!passes) return false;
 
             // Filtro de tipo
             if (this.currentFilters.tipo !== 'all') {
@@ -452,26 +503,46 @@ class RelatoriosOptimized {
             }
             // Filtro de data
             if (this.currentFilters.dateFrom && item.dataCriacao) {
-                const itemDate = new Date(item.dataCriacao);
-                const filterDateFrom = new Date(this.currentFilters.dateFrom);
-                if (isNaN(itemDate.getTime()) || itemDate < filterDateFrom) {
+                // Garantir que a data do item está no formato correto
+                const itemDateStr = item.dataCriacao.includes('T') ? item.dataCriacao.split('T')[0] : item.dataCriacao;
+                const itemDate = new Date(itemDateStr + 'T00:00:00');
+                const filterDateFrom = new Date(this.currentFilters.dateFrom + 'T00:00:00');
+                
+                if (isNaN(itemDate.getTime()) || isNaN(filterDateFrom.getTime())) {
+                    // Se a data não for válida, pular o filtro de data para este item
+                    console.warn('⚠️ Data inválida no filtro:', { 
+                        itemDate: item.dataCriacao, 
+                        filterDate: this.currentFilters.dateFrom,
+                        itemId: item.id 
+                    });
+                } else if (itemDate < filterDateFrom) {
                     return false;
                 }
             }
             if (this.currentFilters.dateTo && item.dataCriacao) {
-                const itemDate = new Date(item.dataCriacao);
-                const filterDateTo = new Date(this.currentFilters.dateTo);
-                // Adicionar 1 dia para incluir o dia final completo
-                filterDateTo.setHours(23, 59, 59, 999);
-                if (isNaN(itemDate.getTime()) || itemDate > filterDateTo) {
+                // Garantir que a data do item está no formato correto
+                const itemDateStr = item.dataCriacao.includes('T') ? item.dataCriacao.split('T')[0] : item.dataCriacao;
+                const itemDate = new Date(itemDateStr + 'T00:00:00');
+                const filterDateTo = new Date(this.currentFilters.dateTo + 'T23:59:59');
+                
+                if (isNaN(itemDate.getTime()) || isNaN(filterDateTo.getTime())) {
+                    // Se a data não for válida, pular o filtro de data para este item
+                    console.warn('⚠️ Data inválida no filtro:', { 
+                        itemDate: item.dataCriacao, 
+                        filterDate: this.currentFilters.dateTo,
+                        itemId: item.id 
+                    });
+                } else if (itemDate > filterDateTo) {
                     return false;
                 }
             }
 
             // Filtro de serviço
-            if (this.currentFilters.service && item.service) {
-                const itemService = (item.service || '').toLowerCase().trim();
-                const filterService = (this.currentFilters.service || '').toLowerCase().trim();
+            // IMPORTANTE: Comparar IDs diretamente (sem toLowerCase) pois são números/strings
+            if (this.currentFilters.service && this.currentFilters.service !== '') {
+                const itemService = String(item.service || '').trim();
+                const filterService = String(this.currentFilters.service || '').trim();
+                // Comparar como strings (IDs são strings)
                 if (itemService !== filterService) {
                     return false;
                 }
@@ -513,7 +584,7 @@ class RelatoriosOptimized {
             // Filtro de busca (inclui novos campos)
             if (this.currentFilters.search) {
                 const searchTerm = this.currentFilters.search;
-                const searchableText = `${item.id} ${item.title} ${item.solicitante} ${item.recebedor} ${item.service || ''} ${item.clienteEmpresa || ''} ${item.cnpj || ''} ${item.chavePix || ''}`.toLowerCase();
+                const searchableText = `${item.id} ${item.title} ${item.solicitante} ${item.supervisor || ''} ${item.recebedor} ${item.service || ''} ${item.clienteEmpresa || ''} ${item.cnpj || ''} ${item.chavePix || ''}`.toLowerCase();
                 if (!searchableText.includes(searchTerm)) {
                     return false;
                 }
@@ -523,6 +594,9 @@ class RelatoriosOptimized {
         });
 
         this.currentPage = 1;
+        
+        console.log('🔍 Debug - Dados após filtro:', this.filteredData.length, 'itens');
+        
         this.renderTableOptimized();
         this.updateStats();
         
@@ -622,7 +696,12 @@ class RelatoriosOptimized {
             row.setAttribute('data-priority', item.priority || '');
             row.setAttribute('data-service', item.service || '');
             row.setAttribute('data-tipo', item.tipo || '');
-            row.setAttribute('data-id', item.id || '');            row.innerHTML = this.getRowHTML(item);
+            row.setAttribute('data-id', item.id || '');
+            if (item.isItem) {
+                row.classList.add('item-expandido');
+                row.setAttribute('data-item-id', item.itemId || '');
+            }
+            row.innerHTML = this.getRowHTML(item);
             fragment.appendChild(row);
         });
 
@@ -662,6 +741,7 @@ class RelatoriosOptimized {
             <td>${item.ticket || item.id}</td>
             <td>${item.title}</td>
             <td>${item.solicitante}</td>
+            <td>${item.supervisor || '-'}</td>
             <td>${item.recebedor || '-'}</td>
             <td>${item.chavePix || '-'}</td>
             <td>${item.clienteEmpresa || '-'}</td>
@@ -747,6 +827,10 @@ class RelatoriosOptimized {
     updateTableInfo() {
         const totalRecords = document.getElementById('totalRecords');
         const filteredRecords = document.getElementById('filteredRecords');
+        
+        // Atualizar contadores com dados reais
+        const total = this.data.length;
+        const filtered = this.filteredData.length;
         
         if (totalRecords) totalRecords.textContent = `Total: ${this.data.length}`;
         if (filteredRecords) filteredRecords.textContent = `Filtrados: ${this.filteredData.length}`;
@@ -1363,8 +1447,8 @@ class RelatoriosOptimized {
             doc.text(`Gerado em: ${dateStr}`, 148.5, 32, { align: 'center' });
 
             // Headers da tabela
-            const headers = ['ID', 'Título', 'Solicitante', 'Recebedor', 'Serviço', 'Valor', 'Status', 'Prioridade', 'Criação', 'Pagamento'];
-            const colWidths = [20, 40, 30, 30, 30, 25, 20, 20, 25, 25];
+            const headers = ['ID', 'Título', 'Solicitante', 'Supervisor', 'Recebedor', 'Serviço', 'Valor', 'Status', 'Prioridade', 'Criação', 'Pagamento'];
+            const colWidths = [20, 40, 30, 30, 30, 30, 25, 20, 20, 25, 25];
             
             let startY = 40;
             let currentY = startY;
@@ -1494,11 +1578,12 @@ class RelatoriosOptimized {
     }
 
     generateCSV() {
-        const headers = ['ID', 'Título', 'Solicitante', 'Recebedor', 'Serviço', 'Valor', 'Status', 'Prioridade', 'Data Criação', 'Data Pagamento'];
+        const headers = ['ID', 'Título', 'Solicitante', 'Supervisor', 'Recebedor', 'Serviço', 'Valor', 'Status', 'Prioridade', 'Data Criação', 'Data Pagamento'];
         const rows = this.filteredData.map(item => [
             item.id,
             item.title,
             item.solicitante,
+            item.supervisor || '-',
             item.recebedor,
             this.getServiceName(item.service),
             item.valor,

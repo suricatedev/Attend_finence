@@ -10,6 +10,7 @@ urlpatterns = [
     path("recebedores/criar/", views.criar_recebedor, name="criar_recebedor"),
     path("recebedores/editar/<int:recebedor_id>/", views.editar_recebedor, name="editar_recebedor"),
     path("recebedores/deletar/<int:recebedor_id>/", views.deletar_recebedor, name="deletar_recebedor"),
+    path("recebedores/importar/", views.importar_recebedores, name="importar_recebedores"),
     # URLs para Clientes/Empresas
     path("clientes-empresas/criar/", views.criar_cliente_empresa, name="criar_cliente_empresa"),
     path("clientes-empresas/editar/<int:cliente_empresa_id>/", views.editar_cliente_empresa, name="editar_cliente_empresa"),
