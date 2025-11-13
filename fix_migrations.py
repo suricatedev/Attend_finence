@@ -37,14 +37,19 @@ def fix_migrations():
     print("🔍 Verificando estado do banco de dados...")
     
     # Verificar se a tabela ClienteEmpresa existe
-    if table_exists('solicitacoes_clienteempresa'):
+    cliente_empresa_exists = table_exists('solicitacoes_clienteempresa')
+    if cliente_empresa_exists:
         print("✅ Tabela solicitacoes_clienteempresa já existe")
     else:
         print("⚠️ Tabela solicitacoes_clienteempresa não existe")
     
     # Verificar se a coluna supervisor existe na tabela Recebedor
-    if table_exists('solicitacoes_recebedor'):
-        if column_exists('solicitacoes_recebedor', 'supervisor'):
+    recebedor_table_exists = table_exists('solicitacoes_recebedor')
+    supervisor_column_exists = False
+    
+    if recebedor_table_exists:
+        supervisor_column_exists = column_exists('solicitacoes_recebedor', 'supervisor')
+        if supervisor_column_exists:
             print("✅ Coluna supervisor já existe na tabela solicitacoes_recebedor")
         else:
             print("⚠️ Coluna supervisor NÃO existe na tabela solicitacoes_recebedor")
@@ -56,26 +61,56 @@ def fix_migrations():
                         ADD COLUMN supervisor VARCHAR(50) NULL
                     """)
                 print("✅ Coluna supervisor adicionada com sucesso!")
+                supervisor_column_exists = True
             except Exception as e:
                 print(f"❌ Erro ao adicionar coluna supervisor: {e}")
     else:
         print("⚠️ Tabela solicitacoes_recebedor não existe")
     
+    # Verificar outras colunas que podem estar faltando
+    if recebedor_table_exists:
+        # Verificar colunas da migração 0008
+        campos_verificar = ['cliente_empresa', 'cnpj']
+        for campo in campos_verificar:
+            if table_exists('solicitacoes_solicitacoes'):
+                if not column_exists('solicitacoes_solicitacoes', campo):
+                    print(f"⚠️ Coluna {campo} não existe em solicitacoes_solicitacoes")
+                    try:
+                        with connection.cursor() as cursor:
+                            if campo == 'cliente_empresa':
+                                cursor.execute("""
+                                    ALTER TABLE solicitacoes_solicitacoes 
+                                    ADD COLUMN cliente_empresa VARCHAR(200) NULL
+                                """)
+                            elif campo == 'cnpj':
+                                cursor.execute("""
+                                    ALTER TABLE solicitacoes_solicitacoes 
+                                    ADD COLUMN cnpj VARCHAR(18) NULL
+                                """)
+                        print(f"✅ Coluna {campo} adicionada com sucesso!")
+                    except Exception as e:
+                        print(f"❌ Erro ao adicionar coluna {campo}: {e}")
+    
     print("\n📦 Aplicando migrações...")
+    
+    # Se a tabela ClienteEmpresa já existe, marcar a migração como fake
+    if cliente_empresa_exists:
+        print("💡 Tabela ClienteEmpresa já existe, marcando migração 0008 como aplicada...")
+        try:
+            call_command('migrate', 'solicitacoes', '0008', '--fake', verbosity=2)
+            print("✅ Migração 0008 marcada como aplicada!")
+        except Exception as e:
+            print(f"⚠️ Não foi possível marcar migração como fake: {e}")
+    
+    # Aplicar migrações restantes
     try:
-        # Aplicar migrações com --fake se necessário
         call_command('migrate', 'solicitacoes', verbosity=2)
         print("✅ Migrações aplicadas com sucesso!")
     except Exception as e:
         print(f"❌ Erro ao aplicar migrações: {e}")
-        print("\n💡 Tentando aplicar migrações com --fake-initial...")
-        try:
-            call_command('migrate', 'solicitacoes', '--fake-initial', verbosity=2)
-            print("✅ Migrações aplicadas com --fake-initial!")
-        except Exception as e2:
-            print(f"❌ Erro ao aplicar migrações com --fake-initial: {e2}")
-            print("\n⚠️ Você pode precisar aplicar as migrações manualmente:")
-            print("   python manage.py migrate solicitacoes --fake 0008")
+        print("\n💡 Se o erro persistir, tente:")
+        print("   python manage.py migrate solicitacoes 0008 --fake")
+        print("   python manage.py migrate solicitacoes")
 
 if __name__ == '__main__':
     fix_migrations()
