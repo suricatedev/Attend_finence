@@ -940,6 +940,10 @@ def obter_itens_rota(request, solicitacao_id):
         # Serializar os itens com valores detalhados
         itens_data = []
         for item in itens:
+            # Calcular valor da atividade para cada item
+            # IMPORTANTE: item.valor já é o valor da atividade (não o valor total)
+            valor_atividade_item = item.valor or 0.0
+            
             itens_data.append({
                 'ordem': item.ordem,
                 'id': item.ticket_item,
@@ -954,16 +958,27 @@ def obter_itens_rota(request, solicitacao_id):
                 'valor_hospedagem': f'R$ {item.valor_hospedagem:.2f}',
                 'valor_fluvial': f'R$ {item.valor_fluvial:.2f}',
                 'valor_outros': f'R$ {item.valor_outros:.2f}',
-                'valor_total_item': f'R$ {item.valor:.2f}'
+                'valor_total_item': f'R$ {item.valor:.2f}',
+                'valor_atividade': f'R$ {valor_atividade_item:.2f}'  # Adicionar valor da atividade calculado
             })
         
         # Calcular valor total apenas com valores detalhados (sem atividade)
         valor_total_detalhados = solicitacao.get_valor_detalhados()
         
+        # Calcular valor da receita como soma das atividades de todos os itens
+        # IMPORTANTE: item.valor já é o valor da atividade (não o valor total)
+        # Então basta somar todos os item.valor
+        valor_receita_calculado = 0.0
+        for item in itens:
+            # item.valor já é o valor da atividade, não precisa subtrair nada
+            valor_atividade_item = item.valor or 0.0
+            valor_receita_calculado += valor_atividade_item
+        
         return JsonResponse({
             'success': True,
             'itens': itens_data,
             'valor_total': f'R$ {valor_total_detalhados:.2f}',
+            'valor_receita': f'R$ {valor_receita_calculado:.2f}',
             'valor_em_rota': f'R$ {solicitacao.valor_em_rota:.2f}',
             'descricao_em_rota': solicitacao.descricao_em_rota or ''
         })
@@ -998,6 +1013,16 @@ def obter_valores_detalhados_casual(request, solicitacao_id):
         # Calcular valor total apenas com valores detalhados (sem atividade)
         valor_total_detalhados = solicitacao.get_valor_detalhados()
         
+        # Calcular valor da receita como valor da atividade (valor_total - soma_detalhados)
+        # O valor da receita é SOMENTE o valor da atividade, não o valor salvo no banco
+        soma_detalhados_casual = (solicitacao.valor_km or 0.0) + (solicitacao.valor_pedagio or 0.0) + \
+                                 (solicitacao.valor_hospedagem or 0.0) + (solicitacao.valor_fluvial or 0.0) + \
+                                 (solicitacao.valor_outros or 0.0)
+        valor_total_casual = solicitacao.valor or 0.0
+        valor_receita_calculado = 0.0
+        if valor_total_casual > soma_detalhados_casual:
+            valor_receita_calculado = valor_total_casual - soma_detalhados_casual
+        
         # Serializar os valores detalhados
         valores_detalhados = {
             'valor_km': f'R$ {solicitacao.valor_km:.2f}',
@@ -1005,7 +1030,7 @@ def obter_valores_detalhados_casual(request, solicitacao_id):
             'valor_hospedagem': f'R$ {solicitacao.valor_hospedagem:.2f}',
             'valor_fluvial': f'R$ {solicitacao.valor_fluvial:.2f}',
             'valor_outros': f'R$ {solicitacao.valor_outros:.2f}',
-            'valor_receita': f'R$ {solicitacao.valor_receita:.2f}',
+            'valor_receita': f'R$ {valor_receita_calculado:.2f}',  # Usar valor calculado, não o salvo
             'valor_total': f'R$ {valor_total_detalhados:.2f}',
             'servico': solicitacao.servico.nome if solicitacao.servico else 'N/A'
         }
@@ -1058,8 +1083,9 @@ def obter_detalhes_completos(request, solicitacao_id):
             'data_pagamento_iso': solicitacao.data_de_pagamento.isoformat() if solicitacao.data_de_pagamento else '',
             'valor_total': f'R$ {solicitacao.valor:.2f}',
             'valor_total_raw': float(solicitacao.valor or 0),
-            'valor_receita': f'R$ {solicitacao.valor_receita:.2f}',
-            'valor_receita_raw': float(solicitacao.valor_receita or 0),
+            # Calcular valor_receita a partir das atividades (não usar o valor salvo)
+            'valor_receita': '',  # Será calculado abaixo
+            'valor_receita_raw': 0.0,  # Será calculado abaixo
             'valor_em_rota': f'R$ {solicitacao.valor_em_rota:.2f}',
             'valor_em_rota_raw': float(solicitacao.valor_em_rota or 0),
             'descricao_em_rota': solicitacao.descricao_em_rota or '',
@@ -1076,9 +1102,19 @@ def obter_detalhes_completos(request, solicitacao_id):
             'valor_outros_raw': float(solicitacao.valor_outros or 0),
         }
         
-        # Se for "Em Rota", incluir itens da rota
+        # Calcular valor_receita a partir das atividades (não usar o valor salvo no banco)
+        # Se for "Em Rota", incluir itens da rota e calcular receita
         if solicitacao.tipo == 'em_rota':
+            # Para Em Rota: soma das atividades de todos os itens
+            # IMPORTANTE: item.valor já é o valor da atividade (não o valor total)
+            valor_receita_calculado = 0.0
             itens_rota = solicitacao.itens_rota.all().order_by('ordem')
+            for item in itens_rota:
+                # item.valor já é o valor da atividade, não precisa subtrair nada
+                valor_atividade_item = item.valor or 0.0
+                valor_receita_calculado += valor_atividade_item
+            dados['valor_receita'] = f'R$ {valor_receita_calculado:.2f}'
+            dados['valor_receita_raw'] = float(valor_receita_calculado)
             dados['itens_rota'] = []
             for item in itens_rota:
                 dados['itens_rota'].append({
@@ -1103,6 +1139,17 @@ def obter_detalhes_completos(request, solicitacao_id):
                     'valor_outros': f'R$ {item.valor_outros:.2f}',
                     'valor_outros_raw': float(item.valor_outros or 0),
                 })
+        else:
+            # Para Casual: valor_total - soma_detalhados
+            soma_detalhados_casual = (solicitacao.valor_km or 0.0) + (solicitacao.valor_pedagio or 0.0) + \
+                                     (solicitacao.valor_hospedagem or 0.0) + (solicitacao.valor_fluvial or 0.0) + \
+                                     (solicitacao.valor_outros or 0.0)
+            valor_total_casual = solicitacao.valor or 0.0
+            valor_receita_calculado = 0.0
+            if valor_total_casual > soma_detalhados_casual:
+                valor_receita_calculado = valor_total_casual - soma_detalhados_casual
+            dados['valor_receita'] = f'R$ {valor_receita_calculado:.2f}'
+            dados['valor_receita_raw'] = float(valor_receita_calculado)
         
         return JsonResponse({
             'success': True,
@@ -1120,6 +1167,78 @@ def obter_detalhes_completos(request, solicitacao_id):
             'success': False,
             'message': f'Erro ao obter detalhes: {str(e)}'
         }, status=500)
+
+@require_http_methods(["GET"])
+def exportar_relatorio_card(request, solicitacao_id):
+    """
+    View para exportar relatório detalhado de uma solicitação em nova guia
+    """
+    try:
+        solicitacao = Solicitacoes.objects.prefetch_related('itens_rota__servico').get(id=solicitacao_id)
+        
+        # Calcular valores
+        valor_total_detalhados = solicitacao.get_valor_detalhados()
+        valor_receita_calculado = 0.0
+        
+        # Se for Em Rota, calcular receita e preparar itens
+        itens_rota_data = []
+        if solicitacao.tipo == 'em_rota':
+            itens = solicitacao.itens_rota.all().order_by('ordem')
+            for item in itens:
+                # IMPORTANTE: item.valor já é o valor da atividade (não o valor total)
+                valor_atividade_item = item.valor or 0.0
+                valor_receita_calculado += valor_atividade_item
+                
+                # Calcular soma dos detalhados apenas para exibição
+                soma_detalhados_item = (item.valor_km or 0.0) + (item.valor_pedagio or 0.0) + \
+                                       (item.valor_hospedagem or 0.0) + (item.valor_fluvial or 0.0) + \
+                                       (item.valor_outros or 0.0)
+                valor_total_item = valor_atividade_item + soma_detalhados_item
+                
+                itens_rota_data.append({
+                    'ordem': item.ordem,
+                    'ticket_item': item.ticket_item,
+                    'servico': item.servico.nome if item.servico else 'N/A',
+                    'recebedor': item.recebedor or '',
+                    'chave_pix': item.chave_pix or '',
+                    'cliente_empresa': item.cliente_empresa or '',
+                    'cnpj': item.cnpj or '',
+                    'valor_total': valor_total_item,
+                    'valor_km': item.valor_km or 0.0,
+                    'valor_pedagio': item.valor_pedagio or 0.0,
+                    'valor_hospedagem': item.valor_hospedagem or 0.0,
+                    'valor_fluvial': item.valor_fluvial or 0.0,
+                    'valor_outros': item.valor_outros or 0.0,
+                    'soma_detalhados': soma_detalhados_item,
+                    'valor_atividade': valor_atividade_item,
+                })
+        else:
+            # Para Casual, calcular receita como valor da atividade (valor_total - soma_detalhados)
+            # O valor da receita é SOMENTE o valor da atividade, não o valor salvo no banco
+            soma_detalhados_casual = (solicitacao.valor_km or 0.0) + (solicitacao.valor_pedagio or 0.0) + \
+                                     (solicitacao.valor_hospedagem or 0.0) + (solicitacao.valor_fluvial or 0.0) + \
+                                     (solicitacao.valor_outros or 0.0)
+            valor_total_casual = solicitacao.valor or 0.0
+            if valor_total_casual > soma_detalhados_casual:
+                valor_receita_calculado = valor_total_casual - soma_detalhados_casual
+        
+        context = {
+            'solicitacao': solicitacao,
+            'valor_total_detalhados': valor_total_detalhados,
+            'valor_receita': valor_receita_calculado,  # Usar valor calculado, não o salvo
+            'itens_rota': itens_rota_data,
+            'data_exportacao': timezone.now(),
+        }
+        
+        return render(request, 'solicitacoes/relatorio_card.html', context)
+        
+    except Solicitacoes.DoesNotExist:
+        messages.error(request, 'Solicitação não encontrada')
+        return redirect('/solicitacoes/home/')
+        
+    except Exception as e:
+        messages.error(request, f'Erro ao gerar relatório: {str(e)}')
+        return redirect('/solicitacoes/home/')
  
 @require_http_methods(["POST"])
 def atualizar_status(request):
@@ -1217,6 +1336,7 @@ def buscar_recebedores(request):
                     'id': recebedor.id,
                     'nome': recebedor.nome,
                     'chave_pix': recebedor.chave_pix,
+                    'supervisor': recebedor.supervisor or '',
                     'ativo': recebedor.ativo
                 }]
             except (Recebedor.DoesNotExist, ValueError):
@@ -1236,6 +1356,7 @@ def buscar_recebedores(request):
                     'id': r.id,
                     'nome': r.nome,
                     'chave_pix': r.chave_pix,
+                    'supervisor': r.supervisor or '',
                     'ativo': r.ativo
                 }
                 for r in recebedores[:20]  # Limitar a 20 resultados

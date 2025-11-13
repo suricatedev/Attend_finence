@@ -9,4 +9,5 @@ urlpatterns = [
     path("obter-detalhes-completos/<int:solicitacao_id>/", views.obter_detalhes_completos, name='obter_detalhes_completos'),
     path("buscar-recebedores/", views.buscar_recebedores, name='buscar_recebedores'),
     path("buscar-clientes-empresas/", views.buscar_clientes_empresas, name='buscar_clientes_empresas'),
+    path("exportar-relatorio-card/<int:solicitacao_id>/", views.exportar_relatorio_card, name='exportar_relatorio_card'),
 ]

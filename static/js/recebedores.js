@@ -28,6 +28,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearRecebedorFilters = document.getElementById('clearRecebedorFilters');
     const refreshRecebedoresBtn = document.getElementById('refreshRecebedoresBtn');
     
+    // Importar recebedores
+    const importRecebedoresBtn = document.getElementById('importRecebedoresBtn');
+    const importRecebedoresModal = document.getElementById('importRecebedoresModal');
+    const closeImportRecebedoresModal = document.getElementById('closeImportRecebedoresModal');
+    const cancelImportRecebedores = document.getElementById('cancelImportRecebedores');
+    const importRecebedoresForm = document.getElementById('importRecebedoresForm');
+    const importFile = document.getElementById('importFile');
+    const submitImportRecebedores = document.getElementById('submitImportRecebedores');
+    
     // ============================================
     // FUNÇÕES AUXILIARES
     // ============================================
@@ -192,6 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('editRecebedorId').value = recebedorId;
                     document.getElementById('editRecebedorNome').value = recebedor.nome;
                     document.getElementById('editRecebedorChavePix').value = recebedor.chave_pix;
+                    document.getElementById('editRecebedorSupervisor').value = recebedor.supervisor || '';
                     document.getElementById('editRecebedorAtivo').value = recebedor.ativo ? 'true' : 'false';
                     document.getElementById('editRecebedorIdDisplay').textContent = recebedorId;
                     
@@ -226,6 +236,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('editRecebedorId').value = recebedorId;
                     document.getElementById('editRecebedorNome').value = nome;
                     document.getElementById('editRecebedorChavePix').value = chavePix;
+                    // Supervisor não pode ser obtido do DOM, será buscado do servidor
+                    document.getElementById('editRecebedorSupervisor').value = '';
                     document.getElementById('editRecebedorAtivo').value = ativo ? 'true' : 'false';
                     document.getElementById('editRecebedorIdDisplay').textContent = recebedorId;
                     
@@ -261,6 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = {
                 nome: document.getElementById('editRecebedorNome').value,
                 chave_pix: document.getElementById('editRecebedorChavePix').value,
+                supervisor: document.getElementById('editRecebedorSupervisor').value || null,
                 ativo: document.getElementById('editRecebedorAtivo').value
             };
             
@@ -449,6 +462,100 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.target === editRecebedorModal) {
                 editRecebedorModal.classList.remove('show');
             }
+        });
+    }
+    
+    // ============================================
+    // MODAL IMPORTAR RECEBEDORES
+    // ============================================
+    
+    if (importRecebedoresBtn) {
+        importRecebedoresBtn.addEventListener('click', function() {
+            if (importRecebedoresModal) {
+                importRecebedoresModal.classList.add('show');
+                importRecebedoresForm.reset();
+                document.querySelector('.file-name').textContent = 'Nenhum arquivo selecionado';
+                document.getElementById('importPreview').style.display = 'none';
+            }
+        });
+    }
+    
+    if (closeImportRecebedoresModal) {
+        closeImportRecebedoresModal.addEventListener('click', function() {
+            if (importRecebedoresModal) {
+                importRecebedoresModal.classList.remove('show');
+            }
+        });
+    }
+    
+    if (cancelImportRecebedores) {
+        cancelImportRecebedores.addEventListener('click', function() {
+            if (importRecebedoresModal) {
+                importRecebedoresModal.classList.remove('show');
+            }
+        });
+    }
+    
+    if (importRecebedoresModal) {
+        importRecebedoresModal.addEventListener('click', function(e) {
+            if (e.target === importRecebedoresModal) {
+                importRecebedoresModal.classList.remove('show');
+            }
+        });
+    }
+    
+    // Atualizar nome do arquivo quando selecionado
+    if (importFile) {
+        importFile.addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || 'Nenhum arquivo selecionado';
+            document.querySelector('.file-name').textContent = fileName;
+        });
+    }
+    
+    // Submeter formulário de importação
+    if (importRecebedoresForm) {
+        importRecebedoresForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!importFile.files.length) {
+                showMessage('Por favor, selecione um arquivo para importar', 'error');
+                return;
+            }
+            
+            const formData = new FormData(importRecebedoresForm);
+            const submitBtn = submitImportRecebedores;
+            const originalText = submitBtn.innerHTML;
+            
+            // Desabilitar botão e mostrar loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
+            
+            fetch(importRecebedoresForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCsrfToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showMessage(data.error || 'Erro ao importar recebedores', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                showMessage('Erro ao importar recebedores. Tente novamente.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
         });
     }
 });

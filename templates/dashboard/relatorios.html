@@ -251,6 +251,9 @@
                         <th class="sortable" data-column="solicitante">
                             Solicitante <i class="fas fa-sort"></i>
                         </th>
+                        <th class="sortable" data-column="supervisor">
+                            Supervisor <i class="fas fa-sort"></i>
+                        </th>
                         <th class="sortable" data-column="recebedor">
                             Recebedor <i class="fas fa-sort"></i>
                         </th>
@@ -313,15 +316,22 @@
                 </thead>
                 <tbody id="reportsTableBody">
                     {% for solicitacao in solicitacoes %}
-                    <tr data-id="{{ solicitacao.id }}" data-status="{{ solicitacao.status }}" data-priority="{{ solicitacao.prioridade }}" data-service="{% if solicitacao.servico %}{{ solicitacao.servico.id }}{% endif %}" data-tipo="{{ solicitacao.tipo }}">
+                    <tr data-id="{% if solicitacao.is_item %}{{ solicitacao.solicitacao_original_id }}{% else %}{{ solicitacao.id }}{% endif %}" data-status="{{ solicitacao.status }}" data-priority="{{ solicitacao.prioridade }}" data-service="{% if solicitacao.servico %}{{ solicitacao.servico.id }}{% endif %}" data-tipo="{{ solicitacao.tipo }}" {% if solicitacao.is_item %}class="item-expandido" data-item-id="{{ solicitacao.ticket }}"{% endif %}>
                         <td>{{ solicitacao.ticket }}</td>
                         <td title="{{ solicitacao.titulo }}">{{ solicitacao.titulo }}</td>
                         <td>{{ solicitacao.nome_solicitante }}</td>
+                        <td>
+                            {% if solicitacao.supervisor_recebedor %}
+                                {{ solicitacao.supervisor_recebedor }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
                         <td>{{ solicitacao.nome_do_recebedor|default:"-" }}</td>
                         <td>{{ solicitacao.chave_pix|default:"-" }}</td>
                         <td>{{ solicitacao.cliente_empresa|default:"-" }}</td>
                         <td>{{ solicitacao.cnpj|default:"-" }}</td>
-                        <td>{{ solicitacao.servico.nome|default:"N/A" }}</td>
+                        <td>{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% else %}N/A{% endif %}</td>
                         <td><strong>R$ {{ solicitacao.valor|floatformat:2 }}</strong></td>
                         <td class="valores-detalhados-toggle-cell" style="display: none;"></td>
                         <td class="valores-detalhados-col" style="display: none;">
@@ -358,14 +368,14 @@
                         <td>{{ solicitacao.data_de_criacao|date:"d/m/Y" }}</td>
                         <td>{{ solicitacao.data_de_pagamento|date:"d/m/Y" }}</td>
                         <td class="actions-cell">
-                            <button class="btn-action btn-view" title="Ver detalhes" data-id="{{ solicitacao.id }}">
+                            <button class="btn-action btn-view" title="Ver detalhes" data-id="{% if solicitacao.is_item %}{{ solicitacao.solicitacao_original_id }}{% else %}{{ solicitacao.id }}{% endif %}">
                                 <i class="fas fa-eye"></i>
                             </button>
                         </td>
                     </tr>
                     {% empty %}
                     <tr class="empty-state">
-                        <td colspan="21" style="text-align: center; padding: 3rem;">
+                        <td colspan="22" style="text-align: center; padding: 3rem;">
                             <i class="fas fa-inbox" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
                             <p style="color: #999; font-size: 1.1rem;">Nenhuma solicitação encontrada</p>
                             <p style="color: #ccc; font-size: 0.9rem;">Crie uma nova solicitação para começar</p>

@@ -278,9 +278,26 @@ async function extractCardData(card) {
                             console.log('✅ Itens obtidos via AJAX:', result.itens);
                             // Função auxiliar para parsear valor monetário
                             const parseValorMonetario = (valorStr) => {
-                                if (!valorStr || valorStr === 'R$ 0,00' || valorStr === '0,00') return 0;
-                                const valorLimpo = valorStr.replace(/[R$\s.]/g, '').replace(',', '.');
-                                return parseFloat(valorLimpo) || 0;
+                                if (!valorStr || valorStr === 'R$ 0,00' || valorStr === '0,00' || valorStr === 'R$ 0.00' || valorStr === '0.00') return 0;
+                                // Remove R$, espaços e trata tanto vírgula quanto ponto como separador decimal
+                                let valorLimpo = valorStr.replace(/[R$\s]/g, '');
+                                // Se tem vírgula, assume formato brasileiro (1.234,56)
+                                if (valorLimpo.includes(',')) {
+                                    // Remove pontos (separadores de milhares) e substitui vírgula por ponto
+                                    valorLimpo = valorLimpo.replace(/\./g, '').replace(',', '.');
+                                } else if (valorLimpo.includes('.')) {
+                                    // Se tem ponto mas não vírgula, verifica se é formato americano (1234.56) ou brasileiro (1.234)
+                                    // Se tem mais de um ponto, assume formato brasileiro (1.234.567)
+                                    const pontos = (valorLimpo.match(/\./g) || []).length;
+                                    if (pontos > 1) {
+                                        // Formato brasileiro com pontos como separadores de milhares - remove todos os pontos
+                                        valorLimpo = valorLimpo.replace(/\./g, '');
+                                    }
+                                    // Se tem apenas um ponto, assume formato americano (1234.56) - mantém o ponto
+                                }
+                                const resultado = parseFloat(valorLimpo) || 0;
+                                console.log(`🔍 parseValorMonetario: "${valorStr}" -> "${valorLimpo}" -> ${resultado}`);
+                                return resultado;
                             };
                             
                             // Função auxiliar para formatar valor monetário
@@ -297,32 +314,23 @@ async function extractCardData(card) {
                                 const valorHospedagem = parseValorMonetario(item.valor_hospedagem || 'R$ 0,00');
                                 const valorFluvial = parseValorMonetario(item.valor_fluvial || 'R$ 0,00');
                                 const valorOutros = parseValorMonetario(item.valor_outros || 'R$ 0,00');
-                                const valorItem = parseValorMonetario(item.valor || 'R$ 0,00');
                                 
                                 // Calcular soma dos valores detalhados
                                 const somaDetalhados = valorKm + valorPedagio + valorHospedagem + valorFluvial + valorOutros;
                                 
                                 // Calcular valor da atividade
-                                // item.valor pode ser:
-                                // 1. O valor de atividade informado (se foi informado) - neste caso, item.valor > somaDetalhados
-                                // 2. A soma dos detalhados (se não foi informado valor de atividade) - neste caso, item.valor <= somaDetalhados
-                                // 
-                                // Se item.valor > somaDetalhados, então valorAtividade = item.valor - somaDetalhados
-                                // Se item.valor <= somaDetalhados, então valorAtividade = 0 (porque item.valor é apenas a soma dos detalhados)
+                                // IMPORTANTE: item.valor já é o valor da atividade (não o valor total)
+                                // PRIORIDADE: Se o backend retornou valor_atividade, usar ele diretamente (mais confiável)
                                 let valorAtividade = 0;
-                                if (valorItem > somaDetalhados) {
-                                    // item.valor contém atividade + detalhados, então atividade = item.valor - detalhados
-                                    valorAtividade = valorItem - somaDetalhados;
-                                } else if (valorItem > 0 && valorItem === somaDetalhados) {
-                                    // item.valor é apenas a soma dos detalhados, não há atividade
-                                    valorAtividade = 0;
-                                } else if (valorItem > 0 && valorItem < somaDetalhados) {
-                                    // Caso especial: item.valor é menor que a soma dos detalhados (não deveria acontecer, mas vamos tratar)
-                                    valorAtividade = 0;
+                                if (item.valor_atividade) {
+                                    // Usar valor_atividade do backend (já calculado corretamente)
+                                    valorAtividade = parseValorMonetario(item.valor_atividade);
+                                    console.log(`🔍 Item ${item.ordem || 'N/A'}: usando valor_atividade do backend = ${valorAtividade}`);
+                                } else {
+                                    // Fallback: item.valor já é a atividade, não precisa subtrair nada
+                                    valorAtividade = parseValorMonetario(item.valor || 'R$ 0,00');
+                                    console.log(`🔍 Item ${item.ordem || 'N/A'}: usando item.valor como atividade = ${valorAtividade}`);
                                 }
-                                // Se valorItem == 0, valorAtividade já é 0
-                                
-                                console.log(`🔍 Item ${item.ordem || 'N/A'}: valor_item=${valorItem}, soma_detalhados=${somaDetalhados}, valor_atividade=${valorAtividade}`);
                                 
                                 // Somar ao total de atividades (valor da receita é a soma de todas as atividades)
                                 somaAtividades += valorAtividade;
@@ -341,7 +349,7 @@ async function extractCardData(card) {
                                     valor_hospedagem: item.valor_hospedagem || 'R$ 0,00',
                                     valor_fluvial: item.valor_fluvial || 'R$ 0,00',
                                     valor_outros: item.valor_outros || 'R$ 0,00',
-                                    valor_total_item: item.valor_total_item || item.valor,
+                                    valor_total_item: item.valor_total_item || formatarValorMonetario(valorAtividade + somaDetalhados),
                                     valor_atividade: formatarValorMonetario(valorAtividade)
                                 };
                             });
@@ -353,8 +361,16 @@ async function extractCardData(card) {
                             }
                             
                             // Calcular valor da receita como soma das atividades de todos os itens
-                            data.valorReceita = formatarValorMonetario(somaAtividades);
-                            console.log('✅ Valor da Receita calculado (soma das atividades de todos os itens):', data.valorReceita, 'Total atividades:', somaAtividades);
+                            // SEMPRE usar o valor_receita do backend (mais confiável e já calculado corretamente)
+                            if (result.valor_receita) {
+                                data.valorReceita = result.valor_receita;
+                                console.log('✅ Valor da Receita obtido do backend:', data.valorReceita);
+                                console.log('🔍 Debug - somaAtividades calculada no frontend:', somaAtividades, '(usado apenas para validação)');
+                            } else {
+                                // Fallback: usar cálculo do frontend apenas se backend não retornar
+                                data.valorReceita = formatarValorMonetario(somaAtividades);
+                                console.warn('⚠️ Backend não retornou valor_receita, usando cálculo do frontend:', data.valorReceita, 'Total atividades:', somaAtividades);
+                            }
                             console.log('🔍 Debug - Número de itens processados:', result.itens.length);
                             
                             // Adicionar valor EM ROTA e descrição se disponível
@@ -481,9 +497,26 @@ async function extractCardData(card) {
             if (!data.valorReceita && data.itensRota.length > 0) {
                 // Função auxiliar para parsear valor monetário
                 const parseValorMonetario = (valorStr) => {
-                    if (!valorStr || valorStr === 'R$ 0,00' || valorStr === '0,00') return 0;
-                    const valorLimpo = valorStr.replace(/[R$\s.]/g, '').replace(',', '.');
-                    return parseFloat(valorLimpo) || 0;
+                    if (!valorStr || valorStr === 'R$ 0,00' || valorStr === '0,00' || valorStr === 'R$ 0.00' || valorStr === '0.00') return 0;
+                    // Remove R$, espaços e trata tanto vírgula quanto ponto como separador decimal
+                    let valorLimpo = valorStr.replace(/[R$\s]/g, '');
+                    // Se tem vírgula, assume formato brasileiro (1.234,56)
+                    if (valorLimpo.includes(',')) {
+                        // Remove pontos (separadores de milhares) e substitui vírgula por ponto
+                        valorLimpo = valorLimpo.replace(/\./g, '').replace(',', '.');
+                    } else if (valorLimpo.includes('.')) {
+                        // Se tem ponto mas não vírgula, verifica se é formato americano (1234.56) ou brasileiro (1.234)
+                        // Se tem mais de um ponto, assume formato brasileiro (1.234.567)
+                        const pontos = (valorLimpo.match(/\./g) || []).length;
+                        if (pontos > 1) {
+                            // Formato brasileiro com pontos como separadores de milhares - remove todos os pontos
+                            valorLimpo = valorLimpo.replace(/\./g, '');
+                        }
+                        // Se tem apenas um ponto, assume formato americano (1234.56) - mantém o ponto
+                    }
+                    const resultado = parseFloat(valorLimpo) || 0;
+                    console.log(`🔍 parseValorMonetario: "${valorStr}" -> "${valorLimpo}" -> ${resultado}`);
+                    return resultado;
                 };
                 
                 // Função auxiliar para formatar valor monetário
@@ -494,27 +527,18 @@ async function extractCardData(card) {
                 let somaAtividades = 0;
                 
                 // Tentar calcular a partir dos itens que temos
+                // IMPORTANTE: item.valor já é o valor da atividade (não o valor total)
                 data.itensRota.forEach(item => {
-                    // Se o item tem valores detalhados, calcular atividade
-                    if (item.valor_km || item.valor_pedagio || item.valor_hospedagem || 
-                        item.valor_fluvial || item.valor_outros) {
-                        const valorKm = parseValorMonetario(item.valor_km || 'R$ 0,00');
-                        const valorPedagio = parseValorMonetario(item.valor_pedagio || 'R$ 0,00');
-                        const valorHospedagem = parseValorMonetario(item.valor_hospedagem || 'R$ 0,00');
-                        const valorFluvial = parseValorMonetario(item.valor_fluvial || 'R$ 0,00');
-                        const valorOutros = parseValorMonetario(item.valor_outros || 'R$ 0,00');
-                        const valorItem = parseValorMonetario(item.valor_total_item || item.valor || 'R$ 0,00');
-                        
-                        const somaDetalhados = valorKm + valorPedagio + valorHospedagem + valorFluvial + valorOutros;
-                        
-                        // Calcular valor da atividade usando a mesma lógica do AJAX
-                        let valorAtividade = 0;
-                        if (valorItem > somaDetalhados) {
-                            valorAtividade = valorItem - somaDetalhados;
-                        }
-                        // Se valorItem <= somaDetalhados, valorAtividade = 0
-                        
+                    // Se o item já tem valor_atividade calculado, usar ele diretamente
+                    if (item.valor_atividade) {
+                        const valorAtividade = parseValorMonetario(item.valor_atividade);
                         somaAtividades += valorAtividade;
+                        console.log(`🔍 Item ${item.ordem || 'N/A'}: usando valor_atividade direto = ${valorAtividade}`);
+                    } else {
+                        // IMPORTANTE: item.valor já é o valor da atividade, não precisa subtrair nada
+                        const valorAtividade = parseValorMonetario(item.valor || 'R$ 0,00');
+                        somaAtividades += valorAtividade;
+                        console.log(`🔍 Item ${item.ordem || 'N/A'}: usando item.valor como atividade = ${valorAtividade}`);
                     }
                 });
                 
@@ -1102,6 +1126,62 @@ function setupModalEventListeners() {
                 moveCardToFila(currentCard, selectedFila);
             }
         });
+    }
+
+    // Event listener para botão de detalhamento
+    const exportCardBtn = document.getElementById('exportCardBtn');
+    console.log('🔍 Procurando botão exportCardBtn:', !!exportCardBtn);
+    if (exportCardBtn) {
+        // Remover listeners anteriores clonando o botão
+        const newExportBtn = exportCardBtn.cloneNode(true);
+        exportCardBtn.parentNode.replaceChild(newExportBtn, exportCardBtn);
+        
+        // Adicionar listener ao novo botão
+        newExportBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('📄 Botão Detalhamento clicado');
+            
+            const currentModal = document.getElementById('cardDetailModal');
+            if (!currentModal) {
+                console.error('❌ Modal de detalhes não encontrado');
+                showNotification('Não foi possível localizar o modal de detalhes.', 'error');
+                return false;
+            }
+            
+            const solicitacaoId = currentModal.getAttribute('data-card-id');
+            console.log('🔍 ID da solicitação encontrado:', solicitacaoId);
+            
+            if (!solicitacaoId) {
+                console.error('❌ card-id não encontrado no modal');
+                showNotification('Não foi possível identificar a solicitação para visualizar detalhamento.', 'error');
+                return false;
+            }
+            
+            // Abrir relatório em nova guia
+            const url = `/solicitacoes/exportar-relatorio-card/${solicitacaoId}/`;
+            console.log('🌐 Abrindo URL:', url);
+            
+            try {
+                const newWindow = window.open(url, '_blank');
+                if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                    // Popup bloqueado - tentar abrir na mesma janela
+                    console.warn('⚠️ Popup bloqueado, tentando abrir na mesma janela');
+                    window.location.href = url;
+                } else {
+                    console.log('✅ Detalhamento aberto em nova guia:', url);
+                }
+            } catch (error) {
+                console.error('❌ Erro ao abrir nova guia:', error);
+                // Fallback: abrir na mesma janela
+                window.location.href = url;
+            }
+            
+            return false;
+        });
+        console.log('✅ Listener do botão Detalhamento adicionado com sucesso');
+    } else {
+        console.warn('⚠️ Botão exportCardBtn não encontrado no DOM');
     }
 
     const editCardBtn = document.getElementById('editCardBtn');

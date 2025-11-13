@@ -3,7 +3,14 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.db import transaction
 import json
+from io import StringIO
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
 from .models import Servico
 from usuarios.decorators import user_can_view_services
 from solicitacoes.models import Recebedor, ClienteEmpresa
@@ -27,9 +34,22 @@ def servicos(request):
         servicos_ativos = servicos_list.filter(ativo=True).count()
         
         # Buscar recebedores
-        recebedores_list = Recebedor.objects.all().order_by('nome')
+        recebedores_list = Recebedor.objects.all().order_by('supervisor', 'nome')
         total_recebedores = recebedores_list.count()
         recebedores_ativos = recebedores_list.filter(ativo=True).count()
+        
+        # Agrupar recebedores por supervisor
+        recebedores_por_supervisor = {}
+        try:
+            for recebedor in recebedores_list:
+                supervisor_key = recebedor.supervisor if recebedor.supervisor else 'sem_supervisor'
+                if supervisor_key not in recebedores_por_supervisor:
+                    recebedores_por_supervisor[supervisor_key] = []
+                recebedores_por_supervisor[supervisor_key].append(recebedor)
+        except Exception as e:
+            # Se houver erro (campo supervisor não existe ainda), usar lista simples
+            print(f"⚠️ Erro ao agrupar por supervisor: {e}")
+            recebedores_por_supervisor = {}
         
         # Buscar clientes/empresas
         clientes_empresas_list = ClienteEmpresa.objects.all().order_by('nome')
@@ -41,6 +61,7 @@ def servicos(request):
             'total_servicos': total_servicos,
             'servicos_ativos': servicos_ativos,
             'recebedores': recebedores_list,
+            'recebedores_por_supervisor': recebedores_por_supervisor,
             'total_recebedores': total_recebedores,
             'recebedores_ativos': recebedores_ativos,
             'clientes_empresas': clientes_empresas_list,
@@ -199,11 +220,13 @@ def criar_recebedor(request):
             data = json.loads(request.body)
             nome = data.get('nome', '').strip()
             chave_pix = data.get('chave_pix', '').strip()
+            supervisor = data.get('supervisor', '').strip() or None
             ativo_str = data.get('ativo', 'true')
         else:
             # FormData
             nome = request.POST.get('nome', '').strip()
             chave_pix = request.POST.get('chave_pix', '').strip()
+            supervisor = request.POST.get('supervisor', '').strip() or None
             ativo_str = request.POST.get('ativo', 'true')
         
         ativo = ativo_str.lower() == 'true' if isinstance(ativo_str, str) else bool(ativo_str)
@@ -221,6 +244,7 @@ def criar_recebedor(request):
         recebedor = Recebedor.objects.create(
             nome=nome,
             chave_pix=chave_pix,
+            supervisor=supervisor,
             ativo=ativo
         )
         
@@ -231,6 +255,7 @@ def criar_recebedor(request):
                 'id': recebedor.id,
                 'nome': recebedor.nome,
                 'chave_pix': recebedor.chave_pix,
+                'supervisor': recebedor.supervisor or '',
                 'ativo': recebedor.ativo
             }
         })
@@ -253,11 +278,13 @@ def editar_recebedor(request, recebedor_id):
             data = json.loads(request.body)
             nome = data.get('nome', '').strip()
             chave_pix = data.get('chave_pix', '').strip()
+            supervisor = data.get('supervisor', '').strip() or None
             ativo_str = data.get('ativo', 'true')
         else:
             # FormData
             nome = request.POST.get('nome', '').strip()
             chave_pix = request.POST.get('chave_pix', '').strip()
+            supervisor = request.POST.get('supervisor', '').strip() or None
             ativo_str = request.POST.get('ativo', 'true')
         
         ativo = ativo_str.lower() == 'true' if isinstance(ativo_str, str) else bool(ativo_str)
@@ -274,6 +301,7 @@ def editar_recebedor(request, recebedor_id):
         
         recebedor.nome = nome
         recebedor.chave_pix = chave_pix
+        recebedor.supervisor = supervisor
         recebedor.ativo = ativo
         recebedor.save()
         
@@ -284,6 +312,7 @@ def editar_recebedor(request, recebedor_id):
                 'id': recebedor.id,
                 'nome': recebedor.nome,
                 'chave_pix': recebedor.chave_pix,
+                'supervisor': recebedor.supervisor or '',
                 'ativo': recebedor.ativo
             }
         })
@@ -310,6 +339,183 @@ def deletar_recebedor(request, recebedor_id):
         
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@require_http_methods(["POST"])
+def importar_recebedores(request):
+    """View para importar recebedores de uma planilha Excel ou CSV"""
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'Não autenticado'}, status=401)
+    
+    if not PANDAS_AVAILABLE:
+        return JsonResponse({
+            'success': False, 
+            'error': 'Biblioteca pandas não está instalada. Execute: pip install pandas openpyxl'
+        }, status=400)
+    
+    try:
+        if 'arquivo' not in request.FILES:
+            return JsonResponse({'success': False, 'error': 'Nenhum arquivo foi enviado'})
+        
+        arquivo = request.FILES['arquivo']
+        
+        # Verificar extensão do arquivo
+        nome_arquivo = arquivo.name.lower()
+        if not (nome_arquivo.endswith('.xlsx') or nome_arquivo.endswith('.xls') or nome_arquivo.endswith('.csv')):
+            return JsonResponse({'success': False, 'error': 'Formato de arquivo não suportado. Use Excel (.xlsx, .xls) ou CSV (.csv)'})
+        
+        # Ler o arquivo
+        try:
+            if nome_arquivo.endswith('.csv'):
+                # Ler CSV - tentar diferentes encodings comuns para arquivos brasileiros
+                # Lista de encodings para tentar, em ordem de preferência
+                encodings = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1252', 'windows-1252']
+                df = None
+                ultimo_erro = None
+                
+                # Ler o conteúdo do arquivo em bytes primeiro
+                arquivo.seek(0)
+                conteudo_bytes = arquivo.read()
+                arquivo.seek(0)
+                
+                # Tentar cada encoding
+                for encoding in encodings:
+                    try:
+                        # Criar um objeto StringIO a partir do conteúdo em bytes
+                        conteudo_str = conteudo_bytes.decode(encoding)
+                        arquivo_string = StringIO(conteudo_str)
+                        df = pd.read_csv(arquivo_string)
+                        break  # Se conseguiu ler, sair do loop
+                    except (UnicodeDecodeError, UnicodeError) as e:
+                        ultimo_erro = e
+                        continue
+                    except Exception as e:
+                        # Outros erros podem ser de parsing, não de encoding
+                        ultimo_erro = e
+                        continue
+                
+                # Se nenhum encoding funcionou, tentar com errors='ignore' ou 'replace'
+                if df is None:
+                    try:
+                        # Tentar com utf-8 ignorando erros
+                        conteudo_str = conteudo_bytes.decode('utf-8', errors='replace')
+                        arquivo_string = StringIO(conteudo_str)
+                        df = pd.read_csv(arquivo_string)
+                    except Exception:
+                        # Última tentativa com latin-1
+                        try:
+                            conteudo_str = conteudo_bytes.decode('latin-1', errors='replace')
+                            arquivo_string = StringIO(conteudo_str)
+                            df = pd.read_csv(arquivo_string)
+                        except Exception as e:
+                            return JsonResponse({
+                                'success': False, 
+                                'error': f'Erro ao ler arquivo CSV. Não foi possível decodificar o arquivo. Tente salvar o arquivo como UTF-8 ou Excel (.xlsx). Erro: {str(ultimo_erro)}'
+                            })
+            else:
+                # Ler Excel
+                arquivo.seek(0)  # Resetar posição do arquivo
+                df = pd.read_excel(arquivo)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': f'Erro ao ler arquivo: {str(e)}'})
+        
+        if df.empty:
+            return JsonResponse({'success': False, 'error': 'A planilha está vazia'})
+        
+        # Normalizar nomes das colunas (remover espaços, converter para minúsculas)
+        df.columns = df.columns.str.strip().str.lower()
+        
+        # Procurar colunas de nome, chave PIX e supervisor
+        nome_col = None
+        pix_col = None
+        supervisor_col = None
+        
+        # Possíveis nomes de colunas
+        possiveis_nomes = ['nome', 'recebedor', 'name', 'recebedor nome']
+        possiveis_pix = ['chave pix', 'chavepix', 'pix', 'chave_pix', 'chave', 'key pix']
+        possiveis_supervisor = ['supervisor', 'supervisores', 'supervisor nome', 'super']
+        
+        for col in df.columns:
+            col_lower = col.lower().strip()
+            if col_lower in possiveis_nomes and nome_col is None:
+                nome_col = col
+            if col_lower in possiveis_pix and pix_col is None:
+                pix_col = col
+            if col_lower in possiveis_supervisor and supervisor_col is None:
+                supervisor_col = col
+        
+        if nome_col is None:
+            return JsonResponse({'success': False, 'error': 'Coluna "Nome" não encontrada na planilha'})
+        
+        if pix_col is None:
+            return JsonResponse({'success': False, 'error': 'Coluna "Chave PIX" não encontrada na planilha'})
+        
+        # Processar linhas
+        recebedores_criados = 0
+        recebedores_atualizados = 0
+        erros = []
+        
+        with transaction.atomic():
+            for index, row in df.iterrows():
+                try:
+                    nome = str(row[nome_col]).strip() if pd.notna(row[nome_col]) else ''
+                    chave_pix = str(row[pix_col]).strip() if pd.notna(row[pix_col]) else ''
+                    
+                    # Processar supervisor
+                    supervisor = None
+                    if supervisor_col:
+                        supervisor_val = str(row[supervisor_col]).strip() if pd.notna(row[supervisor_col]) else ''
+                        # Normalizar valores de supervisor
+                        supervisor_val_lower = supervisor_val.lower()
+                        # Aceitar tanto os nomes antigos quanto os novos
+                        if ('supervisor 1' in supervisor_val_lower or supervisor_val_lower == '1' or 
+                            supervisor_val_lower == 'supervisor1' or 
+                            'nayron' in supervisor_val_lower or 'januario' in supervisor_val_lower):
+                            supervisor = 'supervisor1'
+                        elif ('supervisor 2' in supervisor_val_lower or supervisor_val_lower == '2' or 
+                              supervisor_val_lower == 'supervisor2' or
+                              'flavio' in supervisor_val_lower or 'medina' in supervisor_val_lower):
+                            supervisor = 'supervisor2'
+                    
+                    # Pular linhas vazias
+                    if not nome or not chave_pix:
+                        continue
+                    
+                    # Criar ou atualizar recebedor
+                    recebedor, created = Recebedor.objects.update_or_create(
+                        nome__iexact=nome,
+                        defaults={
+                            'nome': nome,
+                            'chave_pix': chave_pix,
+                            'supervisor': supervisor,
+                            'ativo': True
+                        }
+                    )
+                    
+                    if created:
+                        recebedores_criados += 1
+                    else:
+                        recebedores_atualizados += 1
+                        
+                except Exception as e:
+                    erros.append(f'Linha {index + 2}: {str(e)}')
+                    continue
+        
+        mensagem = f'Importação concluída! {recebedores_criados} recebedor(es) criado(s), {recebedores_atualizados} atualizado(s).'
+        if erros:
+            mensagem += f' {len(erros)} erro(s) encontrado(s).'
+        
+        return JsonResponse({
+            'success': True,
+            'message': mensagem,
+            'criados': recebedores_criados,
+            'atualizados': recebedores_atualizados,
+            'erros': erros[:10]  # Limitar a 10 erros
+        })
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': f'Erro ao importar recebedores: {str(e)}'}, status=400)
 
 # ============================================
 # VIEWS PARA CLIENTES/EMPRESAS
