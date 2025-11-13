@@ -260,7 +260,7 @@ def relatorio(request):
             if solicitacao.nome_do_recebedor:
                 try:
                     recebedor = Recebedor.objects.filter(nome__iexact=solicitacao.nome_do_recebedor).first()
-                    if recebedor and recebedor.supervisor:
+                    if recebedor and hasattr(recebedor, 'supervisor') and recebedor.supervisor:
                         supervisor_nome = recebedor.get_supervisor_display_name()
                 except Exception:
                     pass

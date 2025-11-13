@@ -34,7 +34,15 @@ def servicos(request):
         servicos_ativos = servicos_list.filter(ativo=True).count()
         
         # Buscar recebedores
-        recebedores_list = Recebedor.objects.all().order_by('supervisor', 'nome')
+        # Verificar se o campo supervisor existe antes de ordenar
+        try:
+            # Tentar ordenar por supervisor primeiro
+            recebedores_list = Recebedor.objects.all().order_by('supervisor', 'nome')
+        except Exception as e:
+            # Se o campo supervisor não existir, ordenar apenas por nome
+            print(f"⚠️ Campo supervisor não encontrado, ordenando apenas por nome: {e}")
+            recebedores_list = Recebedor.objects.all().order_by('nome')
+        
         total_recebedores = recebedores_list.count()
         recebedores_ativos = recebedores_list.filter(ativo=True).count()
         
@@ -42,14 +50,19 @@ def servicos(request):
         recebedores_por_supervisor = {}
         try:
             for recebedor in recebedores_list:
-                supervisor_key = recebedor.supervisor if recebedor.supervisor else 'sem_supervisor'
+                # Verificar se o campo supervisor existe usando hasattr
+                if hasattr(recebedor, 'supervisor'):
+                    supervisor_key = recebedor.supervisor if recebedor.supervisor else 'sem_supervisor'
+                else:
+                    supervisor_key = 'sem_supervisor'
+                
                 if supervisor_key not in recebedores_por_supervisor:
                     recebedores_por_supervisor[supervisor_key] = []
                 recebedores_por_supervisor[supervisor_key].append(recebedor)
         except Exception as e:
             # Se houver erro (campo supervisor não existe ainda), usar lista simples
             print(f"⚠️ Erro ao agrupar por supervisor: {e}")
-            recebedores_por_supervisor = {}
+            recebedores_por_supervisor = {'sem_supervisor': list(recebedores_list)}
         
         # Buscar clientes/empresas
         clientes_empresas_list = ClienteEmpresa.objects.all().order_by('nome')
@@ -241,12 +254,20 @@ def criar_recebedor(request):
         if Recebedor.objects.filter(nome__iexact=nome).exists():
             return JsonResponse({'success': False, 'error': f'Já existe um recebedor com o nome "{nome}"'})
         
-        recebedor = Recebedor.objects.create(
-            nome=nome,
-            chave_pix=chave_pix,
-            supervisor=supervisor,
-            ativo=ativo
-        )
+        # Criar recebedor, verificando se o campo supervisor existe
+        recebedor_data = {
+            'nome': nome,
+            'chave_pix': chave_pix,
+            'ativo': ativo
+        }
+        # Adicionar supervisor apenas se o campo existir
+        try:
+            if 'supervisor' in [f.name for f in Recebedor._meta.get_fields()]:
+                recebedor_data['supervisor'] = supervisor
+        except Exception:
+            pass  # Se não conseguir verificar, não adicionar supervisor
+        
+        recebedor = Recebedor.objects.create(**recebedor_data)
         
         return JsonResponse({
             'success': True,
@@ -255,7 +276,7 @@ def criar_recebedor(request):
                 'id': recebedor.id,
                 'nome': recebedor.nome,
                 'chave_pix': recebedor.chave_pix,
-                'supervisor': recebedor.supervisor or '',
+                'supervisor': getattr(recebedor, 'supervisor', None) or '',
                 'ativo': recebedor.ativo
             }
         })
@@ -301,8 +322,15 @@ def editar_recebedor(request, recebedor_id):
         
         recebedor.nome = nome
         recebedor.chave_pix = chave_pix
-        recebedor.supervisor = supervisor
         recebedor.ativo = ativo
+        
+        # Atualizar supervisor apenas se o campo existir
+        try:
+            if hasattr(recebedor, 'supervisor'):
+                recebedor.supervisor = supervisor
+        except Exception:
+            pass  # Se não conseguir verificar, não atualizar supervisor
+        
         recebedor.save()
         
         return JsonResponse({
@@ -312,7 +340,7 @@ def editar_recebedor(request, recebedor_id):
                 'id': recebedor.id,
                 'nome': recebedor.nome,
                 'chave_pix': recebedor.chave_pix,
-                'supervisor': recebedor.supervisor or '',
+                'supervisor': getattr(recebedor, 'supervisor', None) or '',
                 'ativo': recebedor.ativo
             }
         })
@@ -480,15 +508,23 @@ def importar_recebedores(request):
                     if not nome or not chave_pix:
                         continue
                     
+                    # Preparar defaults, verificando se o campo supervisor existe
+                    defaults = {
+                        'nome': nome,
+                        'chave_pix': chave_pix,
+                        'ativo': True
+                    }
+                    # Adicionar supervisor apenas se o campo existir
+                    try:
+                        if 'supervisor' in [f.name for f in Recebedor._meta.get_fields()]:
+                            defaults['supervisor'] = supervisor
+                    except Exception:
+                        pass  # Se não conseguir verificar, não adicionar supervisor
+                    
                     # Criar ou atualizar recebedor
                     recebedor, created = Recebedor.objects.update_or_create(
                         nome__iexact=nome,
-                        defaults={
-                            'nome': nome,
-                            'chave_pix': chave_pix,
-                            'supervisor': supervisor,
-                            'ativo': True
-                        }
+                        defaults=defaults
                     )
                     
                     if created:
