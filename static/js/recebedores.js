@@ -3,6 +3,8 @@
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔍 Inicializando página de recebedores...');
+    
     // Elementos do DOM
     const addRecebedorBtn = document.getElementById('addRecebedorBtn');
     const addRecebedorModal = document.getElementById('addRecebedorModal');
@@ -73,28 +75,64 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function filterRecebedores() {
         const statusFilter = recebedorStatusFilter.value;
-        const searchFilter = recebedorSearchFilter.value.toLowerCase();
+        const searchFilter = recebedorSearchFilter.value.toLowerCase().trim();
+        
+        // Buscar itens em ambos os modos (lista e grid)
         const recebedorItems = document.querySelectorAll('.recebedor-item, .recebedor-card');
         
+        if (recebedorItems.length === 0) {
+            console.warn('⚠️ Nenhum item de recebedor encontrado para filtrar');
+            return;
+        }
+        
+        let visibleCount = 0;
+        
         recebedorItems.forEach(item => {
-            const nome = item.querySelector('.service-name')?.textContent.toLowerCase() || '';
-            const chavePix = item.querySelector('.service-description')?.textContent.toLowerCase() || '';
-            const status = item.querySelector('.service-status')?.textContent.toLowerCase() || '';
+            // Buscar elementos dentro do item
+            const nomeEl = item.querySelector('.service-name, h3');
+            const chavePixEl = item.querySelector('.service-description, p');
+            const statusEl = item.querySelector('.service-status');
             
-            const matchesStatus = statusFilter === 'all' || 
-                (statusFilter === 'active' && status.includes('ativo')) ||
-                (statusFilter === 'inactive' && status.includes('inativo'));
+            const nome = nomeEl ? nomeEl.textContent.toLowerCase().trim() : '';
+            const chavePix = chavePixEl ? chavePixEl.textContent.toLowerCase().trim() : '';
             
-            const matchesSearch = !searchFilter || 
-                nome.includes(searchFilter) || 
-                chavePix.includes(searchFilter);
+            // Verificar status - pode estar na classe ou no texto
+            let isActive = false;
+            if (statusEl) {
+                const statusText = statusEl.textContent.toLowerCase().trim();
+                const statusClass = statusEl.className.toLowerCase();
+                isActive = statusText.includes('ativo') || statusClass.includes('active');
+            }
             
+            // Aplicar filtro de status
+            let matchesStatus = true;
+            if (statusFilter !== 'all') {
+                if (statusFilter === 'active' && !isActive) {
+                    matchesStatus = false;
+                } else if (statusFilter === 'inactive' && isActive) {
+                    matchesStatus = false;
+                }
+            }
+            
+            // Aplicar filtro de busca
+            let matchesSearch = true;
+            if (searchFilter) {
+                matchesSearch = nome.includes(searchFilter) || chavePix.includes(searchFilter);
+            }
+            
+            // Mostrar ou ocultar item
             if (matchesStatus && matchesSearch) {
                 item.style.display = '';
+                visibleCount++;
             } else {
                 item.style.display = 'none';
             }
         });
+        
+        // Mostrar mensagem se não houver resultados
+        if (visibleCount === 0 && recebedorItems.length > 0) {
+            console.log('⚠️ Nenhum recebedor encontrado com os filtros aplicados');
+        }
         
         // NÃO atualizar estatísticas aqui - elas devem mostrar o total real, não os filtrados
         // As estatísticas devem sempre mostrar todos os itens do banco de dados
@@ -380,24 +418,61 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     
     if (applyRecebedorFilters) {
-        applyRecebedorFilters.addEventListener('click', filterRecebedores);
-    }
-    
-    if (clearRecebedorFilters) {
-        clearRecebedorFilters.addEventListener('click', function() {
-            recebedorStatusFilter.value = 'all';
-            recebedorSearchFilter.value = '';
+        applyRecebedorFilters.addEventListener('click', function(e) {
+            e.preventDefault();
             filterRecebedores();
         });
     }
     
+    if (clearRecebedorFilters) {
+        clearRecebedorFilters.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (recebedorStatusFilter) recebedorStatusFilter.value = 'all';
+            if (recebedorSearchFilter) recebedorSearchFilter.value = '';
+            // Mostrar todos os itens novamente
+            const recebedorItems = document.querySelectorAll('.recebedor-item, .recebedor-card');
+            recebedorItems.forEach(item => {
+                item.style.display = '';
+            });
+            console.log('✅ Filtros limpos, mostrando todos os recebedores');
+        });
+    }
+    
     if (recebedorSearchFilter) {
-        recebedorSearchFilter.addEventListener('input', filterRecebedores);
+        // Não filtrar em tempo real para evitar problemas
+        // Apenas filtrar quando o botão for clicado ou Enter pressionado
+        recebedorSearchFilter.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                filterRecebedores();
+            }
+        });
     }
     
     if (recebedorStatusFilter) {
-        recebedorStatusFilter.addEventListener('change', filterRecebedores);
+        recebedorStatusFilter.addEventListener('change', function() {
+            // Aplicar filtro quando status mudar
+            filterRecebedores();
+        });
     }
+    
+    // Garantir que todos os itens estejam visíveis ao carregar a página
+    // (caso algum filtro tenha sido aplicado anteriormente)
+    setTimeout(function() {
+        const recebedorItems = document.querySelectorAll('.recebedor-item, .recebedor-card');
+        console.log(`🔍 Encontrados ${recebedorItems.length} itens de recebedor`);
+        
+        // Se não há filtros ativos, garantir que todos os itens estejam visíveis
+        const statusValue = recebedorStatusFilter ? recebedorStatusFilter.value : 'all';
+        const searchValue = recebedorSearchFilter ? recebedorSearchFilter.value.trim() : '';
+        
+        if (statusValue === 'all' && !searchValue) {
+            recebedorItems.forEach(item => {
+                item.style.display = '';
+            });
+            console.log('✅ Todos os recebedores estão visíveis');
+        }
+    }, 500);
     
     if (refreshRecebedoresBtn) {
         refreshRecebedoresBtn.addEventListener('click', function() {
