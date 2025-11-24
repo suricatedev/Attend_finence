@@ -3,6 +3,30 @@
 from django.db import migrations, models
 
 
+def ensure_unique_tickets(apps, schema_editor):
+    Solicitacoes = apps.get_model('solicitacoes', 'Solicitacoes')
+    seen = {}
+
+    for sol_id, ticket in Solicitacoes.objects.order_by('id').values_list('id', 'ticket'):
+        if not ticket:
+            continue
+
+        count = seen.get(ticket, 0)
+        if count == 0:
+            seen[ticket] = 1
+            continue
+
+        count += 1
+        seen[ticket] = count
+
+        suffix = f"-{count}"
+        base_length = 25 - len(suffix)
+        sanitized = (ticket or '')[:base_length]
+        new_ticket = f"{sanitized}{suffix}"
+
+        Solicitacoes.objects.filter(id=sol_id).update(ticket=new_ticket)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -36,6 +60,7 @@ class Migration(migrations.Migration):
             name='recebedor',
             field=models.CharField(blank=True, max_length=100, null=True, verbose_name='Nome do Recebedor'),
         ),
+        migrations.RunPython(ensure_unique_tickets, migrations.RunPython.noop),
         migrations.AlterField(
             model_name='solicitacoes',
             name='ticket',

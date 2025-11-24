@@ -6,6 +6,7 @@ console.log('card-modal.js v20251111-3');
 
 // Flag para evitar registrar listeners duplicados
 let modalListenersSetup = false;
+let modalCloseDelegationSetup = false;
 // Função para calcular tempo na fila (a partir da entrada no status atual)
 function calculateQueueTime() {
     // Buscar por data-entry-time (preferencial) ou data-creation-time (fallback)
@@ -151,7 +152,8 @@ async function openCardDetailModal(card) {    const modal = document.getElementB
     // Se o usuário não tem permissão, a seção não será renderizada
     
     // Mostrar modal
-    modal.classList.add('show');
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => modal.classList.add('show'));
     document.body.style.overflow = 'hidden';
     
     // Adicionar event listeners para fechar modal
@@ -1113,6 +1115,26 @@ function setupModalEventListeners() {
         });
         modalListenersSetup = true;
     }
+
+    // Delegar fechamento para qualquer elemento com data-close-modal
+    if (!modalCloseDelegationSetup) {
+        document.addEventListener('click', function(e) {
+            const closeTrigger = e.target.closest('[data-close-modal]');
+            if (!closeTrigger) return;
+
+            const modal = document.getElementById('cardDetailModal');
+            if (!modal) return;
+
+            const isInsideModal = modal.contains(closeTrigger);
+            if (!isInsideModal) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('✅ data-close-modal detectado (delegação única)');
+            closeCardDetailModal();
+        });
+        modalCloseDelegationSetup = true;
+    }
     
     // Event listener para mover card entre filas
     const moverFilaBtn = document.getElementById('moverFilaBtn');
@@ -1440,6 +1462,7 @@ function closeCardDetailModal() {
     const modal = document.getElementById('cardDetailModal');
     if (modal) {
         modal.classList.remove('show');
+        modal.style.display = 'none';
         document.body.style.overflow = '';
         console.log('✅ Modal fechado com sucesso');
     } else {
