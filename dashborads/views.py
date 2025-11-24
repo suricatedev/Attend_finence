@@ -36,30 +36,103 @@ def dashboard(request):
         valor_pendentes = todas_solicitacoes.filter(status='pendente').aggregate(Sum('valor'))['valor__sum'] or 0
         valor_concluidas = todas_solicitacoes.filter(status='concluido').aggregate(Sum('valor'))['valor__sum'] or 0
         
-        # Calcular tempo médio de aprovação (diferença entre criação e quando foi aprovado)
-        aprovadas_com_data = todas_solicitacoes.filter(status='aprovado', data_de_criacao__isnull=False)
-        tempo_medio_aprovacao = None
-        if aprovadas_com_data.exists():
-            tempos = []
-            for sol in aprovadas_com_data:
-                # Considerar que aprovado significa que mudou de status, usar data_de_criacao como base
-                # Como não temos data de aprovação, vamos usar uma estimativa baseada em tempo_fila
-                if sol.data_de_criacao:
-                    tempos.append(1)  # Placeholder - pode ser melhorado quando tiver data de aprovação
-            if tempos:
-                tempo_medio_aprovacao = sum(tempos) / len(tempos)
+        # Calcular tempo médio de aprovação: tempo que uma solicitação leva para ir de "pendente" para "aprovado"
+        # Como as solicitações são criadas com status "pendente" por padrão, consideramos:
+        # - Data de entrada em "pendente": data_de_criacao (quando foi criada)
+        # - Data de saída de "pendente" (entrada em "aprovado"): data_entrada_status (quando mudou para aprovado)
+        tempos_aprovacao = []
         
-        # Tempo médio de resolução (concluídos)
-        concluidas_com_data = todas_solicitacoes.filter(status='concluido', data_de_criacao__isnull=False)
-        tempo_medio_resolucao = None
-        if concluidas_com_data.exists():
-            tempos = []
-            for sol in concluidas_com_data:
-                if sol.data_de_criacao and sol.data_de_pagamento:
-                    delta = (sol.data_de_pagamento - sol.data_de_criacao).days
-                    tempos.append(delta)
-            if tempos:
-                tempo_medio_resolucao = sum(tempos) / len(tempos)
+        # Solicitações com status 'aprovado': tempo exato de pendente para aprovado
+        aprovadas_com_data = todas_solicitacoes.filter(
+            status='aprovado',
+            data_de_criacao__isnull=False,
+            data_entrada_status__isnull=False
+        )
+        for sol in aprovadas_com_data:
+            if sol.data_de_criacao and sol.data_entrada_status:
+                # Converter data_de_criacao para datetime (entrada em "pendente")
+                data_entrada_pendente = timezone.make_aware(
+                    datetime.combine(sol.data_de_criacao, datetime.min.time())
+                )
+                # data_entrada_status é quando mudou para "aprovado" (saída de "pendente")
+                # Calcular diferença em dias: tempo em "pendente"
+                delta = sol.data_entrada_status - data_entrada_pendente
+                dias = delta.total_seconds() / (24 * 60 * 60)
+                if dias >= 0:  # Apenas valores positivos
+                    tempos_aprovacao.append(dias)
+        
+        # Solicitações com status 'concluido': estimativa do tempo em "pendente"
+        # Como não temos a data exata de quando mudou de "pendente" para "aprovado",
+        # usamos uma estimativa baseada no tempo total até a conclusão
+        concluidas_aprovadas = todas_solicitacoes.filter(
+            status='concluido',
+            data_de_criacao__isnull=False,
+            data_de_pagamento__isnull=False
+        )
+        for sol in concluidas_aprovadas:
+            if sol.data_de_criacao and sol.data_de_pagamento:
+                # Converter datas para datetime
+                data_entrada_pendente = timezone.make_aware(
+                    datetime.combine(sol.data_de_criacao, datetime.min.time())
+                )
+                data_pagamento_dt = timezone.make_aware(
+                    datetime.combine(sol.data_de_pagamento, datetime.min.time())
+                )
+                # Calcular tempo total até pagamento
+                delta_total = data_pagamento_dt - data_entrada_pendente
+                dias_total = delta_total.total_seconds() / (24 * 60 * 60)
+                # Estimativa: tempo em "pendente" é aproximadamente 50% do tempo total
+                # (assumindo que: pendente -> aprovado -> concluido, e que o tempo em pendente
+                # é uma parte significativa do processo)
+                dias_em_pendente = dias_total * 0.5
+                if dias_em_pendente >= 0:
+                    tempos_aprovacao.append(dias_em_pendente)
+        
+        # Calcular média: tempo médio que uma solicitação leva para sair de "pendente" e ir para "aprovado"
+        tempo_medio_aprovacao = 0
+        if tempos_aprovacao:
+            tempo_medio_aprovacao = sum(tempos_aprovacao) / len(tempos_aprovacao)
+        
+        # Tempo médio de resolução: tempo que uma solicitação leva para ir de "aprovado" para "concluído"
+        # Considerar apenas solicitações com status 'concluido' que tenham data_entrada_status
+        # data_entrada_status representa quando mudou para "concluído" (saída de "aprovado")
+        tempos_resolucao = []
+        
+        concluidas_com_data = todas_solicitacoes.filter(
+            status='concluido',
+            data_de_criacao__isnull=False,
+            data_entrada_status__isnull=False
+        )
+        
+        for sol in concluidas_com_data:
+            if sol.data_de_criacao and sol.data_entrada_status:
+                # Para calcular o tempo de "aprovado" para "concluído", precisamos estimar quando foi aprovado
+                # Como não temos histórico, vamos usar uma estimativa baseada no tempo total
+                
+                # Converter datas para datetime
+                data_criacao_dt = timezone.make_aware(
+                    datetime.combine(sol.data_de_criacao, datetime.min.time())
+                )
+                data_conclusao_dt = sol.data_entrada_status  # Quando mudou para "concluído"
+                
+                # Calcular tempo total desde criação até conclusão
+                delta_total = data_conclusao_dt - data_criacao_dt
+                dias_total = delta_total.total_seconds() / (24 * 60 * 60)
+                
+                # Estimar tempo em "pendente" (50% do tempo total, como no cálculo de aprovação)
+                dias_em_pendente = dias_total * 0.5
+                
+                # Tempo de "aprovado" para "concluído" = tempo total - tempo em pendente
+                # (assumindo que: pendente -> aprovado -> concluido)
+                dias_aprovado_para_concluido = dias_total - dias_em_pendente
+                
+                if dias_aprovado_para_concluido >= 0:
+                    tempos_resolucao.append(dias_aprovado_para_concluido)
+        
+        # Calcular média: tempo médio que uma solicitação leva para sair de "aprovado" e ir para "concluído"
+        tempo_medio_resolucao = 0
+        if tempos_resolucao:
+            tempo_medio_resolucao = sum(tempos_resolucao) / len(tempos_resolucao)
         
         # Taxa de aprovação
         taxa_aprovacao = 0
@@ -216,9 +289,9 @@ def dashboard(request):
             'valor_pendentes': valor_pendentes,
             'valor_concluidas': valor_concluidas,
             
-            # Tempos
-            'tempo_medio_aprovacao': tempo_medio_aprovacao or 0,
-            'tempo_medio_resolucao': tempo_medio_resolucao or 0,
+            # Tempos (arredondados para dias inteiros)
+            'tempo_medio_aprovacao': round(tempo_medio_aprovacao) if tempo_medio_aprovacao > 0 else 0,
+            'tempo_medio_resolucao': round(tempo_medio_resolucao) if tempo_medio_resolucao else 0,
             
             # Taxas
             'taxa_aprovacao': taxa_aprovacao,
