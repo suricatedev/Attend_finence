@@ -937,24 +937,52 @@ function initializeLineChart(period = '3months', customDates = null) {
             recusadas = recusadasFiltradas;
         } else {
             // Filtrar por período padrão
+            // O array está ordenado do mais antigo para o mais recente
+            // Então pegamos os últimos elementos do array (os meses mais recentes)
+            const totalMeses = meses.length;
+            
             if (period === '3months') {
-                meses = meses.slice(0, 3);
-                criadas = criadas.slice(0, 3);
-                aprovadas = aprovadas.slice(0, 3);
-                recusadas = recusadas.slice(0, 3);
+                // Pegar os últimos 3 meses (mais recentes) - do final do array
+                const inicio = Math.max(0, totalMeses - 3);
+                meses = meses.slice(inicio);
+                criadas = criadas.slice(inicio);
+                aprovadas = aprovadas.slice(inicio);
+                recusadas = recusadas.slice(inicio);
             } else if (period === '6months') {
-                meses = meses.slice(0, 6);
-                criadas = criadas.slice(0, 6);
-                aprovadas = aprovadas.slice(0, 6);
-                recusadas = recusadas.slice(0, 6);
+                // Pegar os últimos 6 meses (mais recentes)
+                const inicio = Math.max(0, totalMeses - 6);
+                meses = meses.slice(inicio);
+                criadas = criadas.slice(inicio);
+                aprovadas = aprovadas.slice(inicio);
+                recusadas = recusadas.slice(inicio);
             } else if (period === '12months') {
-                meses = meses.slice(0, 12);
-                criadas = criadas.slice(0, 12);
-                aprovadas = aprovadas.slice(0, 12);
-                recusadas = recusadas.slice(0, 12);
+                // Pegar os últimos 12 meses (todos)
+                const inicio = Math.max(0, totalMeses - 12);
+                meses = meses.slice(inicio);
+                criadas = criadas.slice(inicio);
+                aprovadas = aprovadas.slice(inicio);
+                recusadas = recusadas.slice(inicio);
             }
             // 'all' mantém todos os dados
         }
+        
+        // Debug: verificar dados antes de criar o gráfico
+        if (window.dashboardData && window.dashboardData.solicitacoesPorMesDetalhado) {
+            const todosMeses = window.dashboardData.solicitacoesPorMesDetalhado.map(m => `${m.mes} ${m.ano}`);
+            console.log('📊 Dados COMPLETOS do backend (todos os meses):', todosMeses);
+            console.log('📊 Primeiro mês (índice 0):', window.dashboardData.solicitacoesPorMesDetalhado[0]);
+            console.log('📊 Último mês (índice final):', window.dashboardData.solicitacoesPorMesDetalhado[window.dashboardData.solicitacoesPorMesDetalhado.length - 1]);
+            console.log('📊 Últimos 3 meses do array completo:', window.dashboardData.solicitacoesPorMesDetalhado.slice(-3).map(m => `${m.mes} ${m.ano}`));
+        }
+        console.log('📊 Dados para o gráfico (após filtro):', {
+            periodo: period,
+            totalMesesDisponiveis: window.dashboardData && window.dashboardData.solicitacoesPorMesDetalhado ? window.dashboardData.solicitacoesPorMesDetalhado.length : 0,
+            mesesAntesFiltro: window.dashboardData && window.dashboardData.solicitacoesPorMesDetalhado ? window.dashboardData.solicitacoesPorMesDetalhado.map(m => `${m.mes} ${m.ano}`) : [],
+            mesesAposFiltro: meses,
+            criadas: criadas,
+            aprovadas: aprovadas,
+            recusadas: recusadas
+        });
         
         dataToUse = {
             labels: meses,
@@ -992,21 +1020,23 @@ function initializeLineChart(period = '3months', customDates = null) {
         let rejectedData = counts.map(count => Math.round(count * proporcaoRecusadas));
         
         // Filtrar por período
+        // Como o array foi invertido no backend (reverse()), os meses mais recentes estão no final
+        // Então pegamos os últimos elementos do array
         if (period === '3months') {
-            meses = meses.slice(0, 3);
-            counts = counts.slice(0, 3);
-            approvedData = approvedData.slice(0, 3);
-            rejectedData = rejectedData.slice(0, 3);
+            meses = meses.slice(-3);
+            counts = counts.slice(-3);
+            approvedData = approvedData.slice(-3);
+            rejectedData = rejectedData.slice(-3);
         } else if (period === '6months') {
-            meses = meses.slice(0, 6);
-            counts = counts.slice(0, 6);
-            approvedData = approvedData.slice(0, 6);
-            rejectedData = rejectedData.slice(0, 6);
+            meses = meses.slice(-6);
+            counts = counts.slice(-6);
+            approvedData = approvedData.slice(-6);
+            rejectedData = rejectedData.slice(-6);
         } else if (period === '12months') {
-            meses = meses.slice(0, 12);
-            counts = counts.slice(0, 12);
-            approvedData = approvedData.slice(0, 12);
-            rejectedData = rejectedData.slice(0, 12);
+            meses = meses.slice(-12);
+            counts = counts.slice(-12);
+            approvedData = approvedData.slice(-12);
+            rejectedData = rejectedData.slice(-12);
         }
         
         dataToUse = {
@@ -1051,7 +1081,9 @@ function initializeLineChart(period = '3months', customDates = null) {
                         ...chartConfig.options.scales.x.ticks,
                         padding: 15,
                         maxRotation: 45,
-                        minRotation: 0
+                        minRotation: 0,
+                        autoSkip: false, // Não pular labels automaticamente
+                        maxTicksLimit: undefined // Sem limite de ticks
                     }
                 },
                 y: {
@@ -1125,31 +1157,33 @@ function changePeriod(period) {
         });
         
         // Filtrar dados baseado no período
+        // Como o array foi invertido no backend (reverse()), os meses mais recentes estão no final
+        // Então pegamos os últimos elementos do array
         if (period === '3months') {
-            meses = meses.slice(0, 3);
-            criadas = criadas.slice(0, 3);
-            aprovadas = aprovadas.slice(0, 3);
-            const taxasFiltradas = taxas.slice(0, 3);
+            meses = meses.slice(-3);
+            criadas = criadas.slice(-3);
+            aprovadas = aprovadas.slice(-3);
+            const taxasFiltradas = taxas.slice(-3);
             
             flowChart.data.labels = meses;
             flowChart.data.datasets[0].data = criadas;
             flowChart.data.datasets[1].data = aprovadas;
             flowChart.data.datasets[2].data = taxasFiltradas;
         } else if (period === '6months') {
-            meses = meses.slice(0, 6);
-            criadas = criadas.slice(0, 6);
-            aprovadas = aprovadas.slice(0, 6);
-            const taxasFiltradas = taxas.slice(0, 6);
+            meses = meses.slice(-6);
+            criadas = criadas.slice(-6);
+            aprovadas = aprovadas.slice(-6);
+            const taxasFiltradas = taxas.slice(-6);
             
             flowChart.data.labels = meses;
             flowChart.data.datasets[0].data = criadas;
             flowChart.data.datasets[1].data = aprovadas;
             flowChart.data.datasets[2].data = taxasFiltradas;
         } else if (period === '12months') {
-            meses = meses.slice(0, 12);
-            criadas = criadas.slice(0, 12);
-            aprovadas = aprovadas.slice(0, 12);
-            const taxasFiltradas = taxas.slice(0, 12);
+            meses = meses.slice(-12);
+            criadas = criadas.slice(-12);
+            aprovadas = aprovadas.slice(-12);
+            const taxasFiltradas = taxas.slice(-12);
             
             flowChart.data.labels = meses;
             flowChart.data.datasets[0].data = criadas;
@@ -1174,6 +1208,16 @@ window.addEventListener('DOMContentLoaded', () => {
         if (typeof window.dashboardData === 'undefined') {
             console.warn('Dados do dashboard não encontrados. Usando dados simulados.');
             window.dashboardData = {};
+        }
+        
+        // Debug: verificar se os dados mensais estão disponíveis
+        if (window.dashboardData && window.dashboardData.solicitacoesPorMesDetalhado) {
+            console.log('📊 Dados mensais detalhados encontrados:', window.dashboardData.solicitacoesPorMesDetalhado);
+            console.log('📈 Total de meses:', window.dashboardData.solicitacoesPorMesDetalhado.length);
+        } else if (window.dashboardData && window.dashboardData.solicitacoesPorMes) {
+            console.log('📊 Dados mensais simples encontrados:', window.dashboardData.solicitacoesPorMes);
+        } else {
+            console.warn('⚠️ Nenhum dado mensal encontrado no dashboardData');
         }
         
         // Inicializar gráficos com período padrão de 3 meses

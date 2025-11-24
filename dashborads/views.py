@@ -146,19 +146,30 @@ def dashboard(request):
         solicitacoes_por_mes = []
         solicitacoes_por_mes_detalhado = []
         
-        # Gerar dados para os últimos 12 meses para suportar ambos os filtros
+        # Gerar dados para os últimos 12 meses
+        # Começar do mês atual e retroceder 11 meses (total de 12 meses)
         from datetime import date
         
+        # Nome do mês em português
+        meses_pt = {
+            1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun',
+            7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'
+        }
+        
+        # Primeiro dia do mês atual
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        
+        # Gerar os últimos 12 meses (do mais antigo para o mais recente)
+        # Começar de 11 meses atrás até o mês atual
         for i in range(12):
-            # Calcular data do início do mês (mais preciso)
-            # i=0 é o mês mais antigo (11 meses atrás), i=11 é o mês atual
-            # Começar do primeiro dia do mês atual e retroceder
-            primeiro_dia_mes_atual = hoje.replace(day=1)
+            # i=0: 11 meses atrás (mais antigo)
+            # i=11: mês atual (mais recente)
+            meses_retroceder = 11 - i
             
-            # Retroceder i+1 meses (i=0 retrocede 1 mês, i=11 retrocede 12 meses)
-            meses_retroceder = i + 1
-            
-            # Calcular mês e ano
+            # Calcular o mês retrocedendo a partir do mês atual
+            # Se estamos em novembro (mês 11) e retrocedemos 0 meses, temos novembro
+            # Se retrocedemos 1 mês, temos outubro
+            # Se retrocedemos 2 meses, temos setembro
             mes_calcular = primeiro_dia_mes_atual.month - meses_retroceder
             ano_calcular = primeiro_dia_mes_atual.year
             
@@ -169,7 +180,7 @@ def dashboard(request):
             
             mes_inicio = date(ano_calcular, mes_calcular, 1)
             
-            # Próximo mês
+            # Próximo mês (fim do período)
             if mes_inicio.month == 12:
                 mes_fim = date(mes_inicio.year + 1, 1, 1)
             else:
@@ -185,12 +196,6 @@ def dashboard(request):
             count_aprovadas = mes_solicitacoes.filter(status='aprovado').count()
             count_recusadas = mes_solicitacoes.filter(status='recusado').count()
             count_concluidas = mes_solicitacoes.filter(status='concluido').count()
-            
-            # Nome do mês em português
-            meses_pt = {
-                1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun',
-                7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'
-            }
             
             solicitacoes_por_mes.append({
                 'mes': meses_pt[mes_inicio.month],
@@ -213,8 +218,25 @@ def dashboard(request):
                 'data_fim': mes_fim.isoformat()
             })
         
-        solicitacoes_por_mes.reverse()
-        solicitacoes_por_mes_detalhado.reverse()
+        # Não precisa fazer reverse() pois já estamos gerando na ordem correta (do mais antigo para o mais recente)
+        
+        # Debug: verificar se todos os 12 meses foram gerados
+        if len(solicitacoes_por_mes_detalhado) != 12:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f'Atenção: Esperado 12 meses, mas foram gerados {len(solicitacoes_por_mes_detalhado)} meses')
+        
+        # Debug: imprimir os meses gerados
+        if solicitacoes_por_mes_detalhado:
+            primeiro_mes = solicitacoes_por_mes_detalhado[0]
+            ultimo_mes = solicitacoes_por_mes_detalhado[-1]
+            print(f"DEBUG: Primeiro mês (mais antigo): {primeiro_mes['mes']} {primeiro_mes['ano']}")
+            print(f"DEBUG: Último mês (mais recente): {ultimo_mes['mes']} {ultimo_mes['ano']}")
+            print(f"DEBUG: Total de meses: {len(solicitacoes_por_mes_detalhado)}")
+            meses_str = [f"{m['mes']} {m['ano']}" for m in solicitacoes_por_mes_detalhado]
+            print(f"DEBUG: Todos os meses gerados: {meses_str}")
+            ultimos_3_str = [f"{m['mes']} {m['ano']}" for m in solicitacoes_por_mes_detalhado[-3:]]
+            print(f"DEBUG: Últimos 3 meses: {ultimos_3_str}")
         
         # Solicitações por status (para gráfico)
         status_data = {
