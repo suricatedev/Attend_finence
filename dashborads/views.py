@@ -3,7 +3,6 @@ from django.contrib import messages
 from django.db.models import Sum, Count, Avg, Q
 from django.utils import timezone
 from django.utils.safestring import mark_safe
-from datetime import timedelta, datetime
 import json
 from solicitacoes.models import Solicitacoes
 from servicos.models import Servico
@@ -35,102 +34,6 @@ def dashboard(request):
         valor_aprovadas = todas_solicitacoes.filter(status='aprovado').aggregate(Sum('valor'))['valor__sum'] or 0
         valor_pendentes = todas_solicitacoes.filter(status='pendente').aggregate(Sum('valor'))['valor__sum'] or 0
         valor_concluidas = todas_solicitacoes.filter(status='concluido').aggregate(Sum('valor'))['valor__sum'] or 0
-        
-        # Calcular tempo médio de aprovação com base no momento registrado em data_aprovacao
-        # Incluir todas as solicitações que têm data_aprovacao preenchida (independente do status atual)
-        tempos_aprovacao = []
-        
-        # Buscar todas as solicitações com data_aprovacao preenchida
-        solicitacoes_com_data_aprovacao = todas_solicitacoes.filter(
-            data_de_criacao__isnull=False,
-            data_aprovacao__isnull=False
-        )
-        
-        for sol in solicitacoes_com_data_aprovacao:
-            if sol.data_de_criacao and sol.data_aprovacao:
-                data_entrada_pendente = timezone.make_aware(
-                    datetime.combine(sol.data_de_criacao, datetime.min.time())
-                )
-                delta = sol.data_aprovacao - data_entrada_pendente
-                dias = delta.total_seconds() / (24 * 60 * 60)
-                if dias >= 0:
-                    tempos_aprovacao.append(dias)
-        
-        # Fallback para solicitações aprovadas sem data_aprovacao (usar data_entrada_status)
-        aprovadas_sem_data = todas_solicitacoes.filter(
-            status='aprovado',
-            data_aprovacao__isnull=True,
-            data_de_criacao__isnull=False,
-            data_entrada_status__isnull=False
-        )
-        for sol in aprovadas_sem_data:
-            data_entrada_pendente = timezone.make_aware(
-                datetime.combine(sol.data_de_criacao, datetime.min.time())
-            )
-            delta = sol.data_entrada_status - data_entrada_pendente
-            dias = delta.total_seconds() / (24 * 60 * 60)
-            if dias >= 0:
-                tempos_aprovacao.append(dias)
-        
-        # Fallback para solicitações concluídas sem data_aprovacao (dados muito antigos)
-        concluidas_sem_data = todas_solicitacoes.filter(
-            status='concluido',
-            data_aprovacao__isnull=True,
-            data_de_criacao__isnull=False,
-            data_de_pagamento__isnull=False
-        )
-        for sol in concluidas_sem_data:
-            data_entrada_pendente = timezone.make_aware(
-                datetime.combine(sol.data_de_criacao, datetime.min.time())
-            )
-            data_pagamento_dt = timezone.make_aware(
-                datetime.combine(sol.data_de_pagamento, datetime.min.time())
-            )
-            delta_total = data_pagamento_dt - data_entrada_pendente
-            dias_total = delta_total.total_seconds() / (24 * 60 * 60)
-            dias_em_pendente = dias_total * 0.5
-            if dias_em_pendente >= 0:
-                tempos_aprovacao.append(dias_em_pendente)
-        
-        # Calcular média: tempo médio que uma solicitação leva para sair de "pendente" e ir para "aprovado"
-        tempo_medio_aprovacao = 0
-        if tempos_aprovacao:
-            tempo_medio_aprovacao = sum(tempos_aprovacao) / len(tempos_aprovacao)
-        
-        # Tempo médio de resolução: tempo que uma solicitação leva para ir de "aprovado" para "concluído"
-        # Considerar apenas solicitações com status 'concluido' que tenham data_entrada_status
-        # data_entrada_status representa quando mudou para "concluído" (saída de "aprovado")
-        tempos_resolucao = []
-        
-        concluidas_com_data = todas_solicitacoes.filter(
-            status='concluido',
-            data_entrada_status__isnull=False
-        )
-        
-        for sol in concluidas_com_data:
-            data_conclusao_dt = sol.data_entrada_status
-            data_aprovacao = sol.data_aprovacao
-            
-            if not data_aprovacao and sol.data_de_criacao:
-                # Fallback (dados antigos): estimar aprovação como 50% do tempo total
-                data_criacao_dt = timezone.make_aware(
-                    datetime.combine(sol.data_de_criacao, datetime.min.time())
-                )
-                delta_total = data_conclusao_dt - data_criacao_dt
-                dias_total = max(delta_total.total_seconds() / (24 * 60 * 60), 0)
-                dias_em_pendente = dias_total * 0.5
-                data_aprovacao = data_criacao_dt + timedelta(days=dias_em_pendente)
-            
-            if data_aprovacao:
-                delta = data_conclusao_dt - data_aprovacao
-                dias_resolucao = delta.total_seconds() / (24 * 60 * 60)
-                if dias_resolucao >= 0:
-                    tempos_resolucao.append(dias_resolucao)
-        
-        # Calcular média: tempo médio que uma solicitação leva para sair de "aprovado" e ir para "concluído"
-        tempo_medio_resolucao = 0
-        if tempos_resolucao:
-            tempo_medio_resolucao = sum(tempos_resolucao) / len(tempos_resolucao)
         
         # Taxa de aprovação
         taxa_aprovacao = 0
@@ -245,51 +148,6 @@ def dashboard(request):
             'concluido': concluidas
         }
         
-        # Solicitações por serviço
-        solicitacoes_por_servico = todas_solicitacoes.values('servico__nome').annotate(
-            total=Count('id'),
-            valor_total=Sum('valor')
-        ).order_by('-total')[:10]
-        
-        # Solicitações por prioridade
-        por_prioridade = todas_solicitacoes.values('prioridade').annotate(
-            total=Count('id')
-        )
-        prioridade_data = {
-            'baixa': 0,
-            'media': 0,
-            'alta': 0
-        }
-        for item in por_prioridade:
-            prioridade = item.get('prioridade')
-            if prioridade:
-                prioridade_data[prioridade] = item['total']
-        
-        # Solicitações por dia da semana (baseado na data de criação)
-        dias_semana_map = {
-            0: 'Segunda',
-            1: 'Terça',
-            2: 'Quarta',
-            3: 'Quinta',
-            4: 'Sexta',
-            5: 'Sábado',
-            6: 'Domingo'
-        }
-        solicitacoes_por_dia_count = {i: 0 for i in range(7)}
-        
-        for sol in todas_solicitacoes.filter(data_de_criacao__isnull=False):
-            if sol.data_de_criacao:
-                dia_semana = sol.data_de_criacao.weekday()  # 0 = segunda, 6 = domingo
-                solicitacoes_por_dia_count[dia_semana] += 1
-        
-        solicitacoes_por_dia = [
-            {
-                'dia': dias_semana_map[i],
-                'count': solicitacoes_por_dia_count[i]
-            }
-            for i in range(7)
-        ]
-        
         # Média mensal
         media_mensal = 0
         if len(solicitacoes_por_mes) > 0:
@@ -310,10 +168,6 @@ def dashboard(request):
             'valor_pendentes': valor_pendentes,
             'valor_concluidas': valor_concluidas,
             
-            # Tempos (arredondados para dias inteiros)
-            'tempo_medio_aprovacao': round(tempo_medio_aprovacao) if tempo_medio_aprovacao > 0 else 0,
-            'tempo_medio_resolucao': round(tempo_medio_resolucao) if tempo_medio_resolucao else 0,
-            
             # Taxas
             'taxa_aprovacao': taxa_aprovacao,
             
@@ -321,9 +175,6 @@ def dashboard(request):
             'solicitacoes_por_mes_json': mark_safe(json.dumps(solicitacoes_por_mes)),
             'solicitacoes_por_mes_detalhado_json': mark_safe(json.dumps(solicitacoes_por_mes_detalhado)),
             'status_data': status_data,
-            'solicitacoes_por_servico_json': mark_safe(json.dumps(list(solicitacoes_por_servico))),
-            'prioridade_data': prioridade_data,
-            'solicitacoes_por_dia_json': mark_safe(json.dumps(solicitacoes_por_dia)),
             'media_mensal': int(media_mensal),
         }
         

@@ -15,28 +15,6 @@
     <div class="dashboard-container">
         <!-- Métricas Principais -->
         <div class="metrics-row">
-            <div class="metric-card metric-card-primary">
-                <div class="metric-icon">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div class="metric-content">
-                    <h3>Tempo Médio de Aprovação</h3>
-                    <div class="metric-value">{{ tempo_medio_aprovacao|floatformat:0 }}d</div>
-                    <div class="metric-change positive">Real</div>
-                </div>
-            </div>
-            
-            <div class="metric-card metric-card-secondary">
-                <div class="metric-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="metric-content">
-                    <h3>Tempo Médio de Resolução</h3>
-                    <div class="metric-value">{{ tempo_medio_resolucao|floatformat:0 }}d</div>
-                    <div class="metric-change positive">Real</div>
-                </div>
-            </div>
-            
             <div class="metric-card metric-card-warning">
                 <div class="metric-icon">
                     <i class="fas fa-exclamation-triangle"></i>
@@ -115,75 +93,6 @@ GRÁFICO DE LINHA PRINCIPAL - SOLICITAÇÕES AO LONGO DO TEMPO
                 <div class="chart-content">
                     <canvas id="lineChart" width="100%" height="400"></canvas>
                 </div>
-                <div class="chart-stats">
-                    <div class="stat-item">
-                        <span class="stat-label">Total de Solicitações</span>
-                        <span class="stat-value">{{ total_solicitacoes }}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Taxa de Aprovação</span>
-                        <span class="stat-value positive">{{ taxa_aprovacao|floatformat:1 }}%</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Média Mensal</span>
-                        <span class="stat-value">{{ media_mensal }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- ========================================
-GRÁFICOS SECUNDÁRIOS - 4 GRÁFICOS EM GRID 2x2
-======================================== -->
-        <div class="secondary-charts-grid">
-            <!-- Gráfico 1: Fluxo de Solicitações por Período (Barras + Linha) -->
-            <div class="chart-card">
-                <div class="chart-header-small">
-                    <h3>Fluxo de Solicitações por Período</h3>
-                </div>
-                <div class="chart-container-small">
-                    <canvas id="flowChart" height="200"></canvas>
-                </div>
-                <div class="chart-info">
-                    <div class="info-item">
-                        <span class="info-label">Solicitações Processadas</span>
-                        <span class="info-value">{{ aprovadas|add:recusadas|add:concluidas }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Taxa de Aprovação</span>
-                        <span class="info-value">{{ taxa_aprovacao|floatformat:1 }}%</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Gráfico 2: Preferências por Dia da Semana (Barras Verticais) -->
-            <div class="chart-card">
-                <div class="chart-header-small">
-                    <h3>Preferências por Dia da Semana</h3>
-                </div>
-                <div class="chart-container-small">
-                    <canvas id="preferencesChart" height="200"></canvas>
-                </div>
-            </div>
-
-            <!-- Gráfico 3: Análise de Status das Solicitações (Barras Horizontais Empilhadas) -->
-            <div class="chart-card">
-                <div class="chart-header-small">
-                    <h3>Análise de Status das Solicitações</h3>
-                </div>
-                <div class="chart-container-small">
-                    <canvas id="statusAnalysisChart" height="200"></canvas>
-                </div>
-            </div>
-
-            <!-- Gráfico 4: Análise por Departamento (Rosca) -->
-            <div class="chart-card">
-                <div class="chart-header-small">
-                    <h3>Análise por Departamento</h3>
-                </div>
-                <div class="chart-container-small">
-                    <canvas id="departmentChart" height="200"></canvas>
-                </div>
             </div>
         </div>
         
@@ -199,19 +108,13 @@ GRÁFICOS SECUNDÁRIOS - 4 GRÁFICOS EM GRID 2x2
          data-recusadas="{{ recusadas|default:0 }}" data-concluidas="{{ concluidas|default:0 }}"
          data-valor-total="{{ valor_total|default:0 }}" data-valor-aprovadas="{{ valor_aprovadas|default:0 }}"
          data-valor-pendentes="{{ valor_pendentes|default:0 }}" data-valor-concluidas="{{ valor_concluidas|default:0 }}"
-         data-tempo-aprovacao="{{ tempo_medio_aprovacao|default:0 }}" data-tempo-resolucao="{{ tempo_medio_resolucao|default:0 }}"
          data-taxa="{{ taxa_aprovacao|default:0|floatformat:2 }}" data-media="{{ media_mensal|default:0 }}"
          data-por-mes='{{ solicitacoes_por_mes_json|safe|default:"[]" }}'
          data-por-mes-detalhado='{{ solicitacoes_por_mes_detalhado_json|safe|default:"[]" }}'
-         data-por-servico='{{ solicitacoes_por_servico_json|safe|default:"[]" }}'
-         data-por-dia='{{ solicitacoes_por_dia_json|safe|default:"[]" }}'
          data-status-pendente="{{ status_data.pendente|default:0 }}"
          data-status-aprovado="{{ status_data.aprovado|default:0 }}"
          data-status-recusado="{{ status_data.recusado|default:0 }}"
-         data-status-concluido="{{ status_data.concluido|default:0 }}"
-         data-prioridade-baixa="{{ prioridade_data.baixa|default:0 }}"
-         data-prioridade-media="{{ prioridade_data.media|default:0 }}"
-         data-prioridade-alta="{{ prioridade_data.alta|default:0 }}"></div>
+         data-status-concluido="{{ status_data.concluido|default:0 }}"></div>
     <script>
         // Parsear dados do dashboard quando o DOM estiver pronto
         document.addEventListener('DOMContentLoaded', function() {
@@ -228,24 +131,15 @@ GRÁFICOS SECUNDÁRIOS - 4 GRÁFICOS EM GRID 2x2
                         valorAprovadas: parseFloat(dataElement.getAttribute('data-valor-aprovadas') || '0'),
                         valorPendentes: parseFloat(dataElement.getAttribute('data-valor-pendentes') || '0'),
                         valorConcluidas: parseFloat(dataElement.getAttribute('data-valor-concluidas') || '0'),
-                        tempoMedioAprovacao: parseFloat(dataElement.getAttribute('data-tempo-aprovacao') || '0'),
-                        tempoMedioResolucao: parseFloat(dataElement.getAttribute('data-tempo-resolucao') || '0'),
                         taxaAprovacao: parseFloat(dataElement.getAttribute('data-taxa') || '0'),
                         mediaMensal: parseFloat(dataElement.getAttribute('data-media') || '0'),
                         solicitacoesPorMes: JSON.parse(dataElement.getAttribute('data-por-mes') || '[]'),
                         solicitacoesPorMesDetalhado: JSON.parse(dataElement.getAttribute('data-por-mes-detalhado') || '[]'),
-                        solicitacoesPorServico: JSON.parse(dataElement.getAttribute('data-por-servico') || '[]'),
-                        solicitacoesPorDia: JSON.parse(dataElement.getAttribute('data-por-dia') || '[]'),
                         statusData: {
                             pendente: parseInt(dataElement.getAttribute('data-status-pendente') || '0'),
                             aprovado: parseInt(dataElement.getAttribute('data-status-aprovado') || '0'),
                             recusado: parseInt(dataElement.getAttribute('data-status-recusado') || '0'),
                             concluido: parseInt(dataElement.getAttribute('data-status-concluido') || '0')
-                        },
-                        prioridadeData: {
-                            baixa: parseInt(dataElement.getAttribute('data-prioridade-baixa') || '0'),
-                            media: parseInt(dataElement.getAttribute('data-prioridade-media') || '0'),
-                            alta: parseInt(dataElement.getAttribute('data-prioridade-alta') || '0')
                         }
                     };
                 } catch (e) {

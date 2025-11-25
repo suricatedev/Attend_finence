@@ -1222,15 +1222,17 @@ window.addEventListener('DOMContentLoaded', () => {
         
         // Inicializar gráficos com período padrão de 3 meses
         initializeLineChart('3months');
-        initializeSecondaryCharts();
+        // Gráficos secundários removidos
+        // initializeSecondaryCharts();
         
         // Atualizar gráficos após inicialização
         setTimeout(() => {
             if (lineChart) lineChart.update('show');
-            if (flowChart) flowChart.update('show');
-            if (preferencesChart) preferencesChart.update('show');
-            if (statusAnalysisChart) statusAnalysisChart.update('show');
-            if (departmentChart) departmentChart.update('show');
+            // Gráficos secundários removidos
+            // if (flowChart) flowChart.update('show');
+            // if (preferencesChart) preferencesChart.update('show');
+            // if (statusAnalysisChart) statusAnalysisChart.update('show');
+            // if (departmentChart) departmentChart.update('show');
         }, 300);
         
         // Configurar botões de período
