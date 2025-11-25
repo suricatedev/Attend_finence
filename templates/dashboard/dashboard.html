@@ -1,5 +1,6 @@
 ﻿{% extends 'base.html' %}
 {% load static %}
+{% load usuarios_tags %}
 
 {% block title %}Dashboard - Sistema de Gestão Financeira{% endblock %}
 
@@ -53,7 +54,7 @@
                 </div>
                 <div class="metric-content">
                     <h3>Valor Total Processado</h3>
-                    <div class="metric-value">R$ {{ valor_total|floatformat:0 }}</div>
+                    <div class="metric-value">{{ valor_total|currency_br }}</div>
                     <div class="metric-change positive">Total</div>
                 </div>
             </div>
