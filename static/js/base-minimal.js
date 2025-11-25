@@ -151,16 +151,9 @@ window.addEventListener('DOMContentLoaded', function() {
     }
     
     // Quando clicar FORA do modal (no overlay escuro), FECHAR
-    if (modal) {
-        modal.addEventListener('click', function(e) {
-            // Só fechar se clicar diretamente no modal (não no conteúdo)
-            if (e.target === modal) {
-                console.log('❌ Clicou fora - fechando...');
-                clearFormCompletely();                modal.style.display = 'none';
-                modal.classList.remove('show');
-            }
-        });
-    }
+    // DESABILITADO COMPLETAMENTE - Modal não fecha mais ao clicar fora
+    // NENHUM CÓDIGO AQUI FECHA O MODAL AO CLICAR FORA
+    // O código original foi completamente removido
     
     // Quando apertar ESC, FECHAR o modal
     document.addEventListener('keydown', function(e) {

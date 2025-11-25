@@ -156,6 +156,62 @@ async function openCardDetailModal(card) {    const modal = document.getElementB
     requestAnimationFrame(() => modal.classList.add('show'));
     document.body.style.overflow = 'hidden';
     
+    // BLOQUEAR fechamento ao clicar fora - ADICIONAR IMEDIATAMENTE E REPETIDAMENTE
+    function blockAllCloseAttempts() {
+        const overlay = modal.querySelector('.modal-overlay');
+        if (overlay) {
+            // Remover todos os listeners anteriores clonando
+            const newOverlay = overlay.cloneNode(true);
+            overlay.parentNode.replaceChild(newOverlay, overlay);
+            
+            // Bloquear completamente com múltiplas camadas
+            newOverlay.addEventListener('click', function(e) {
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                console.log('🚫🚫🚫 BLOQUEIO PERMANENTE: Overlay clicado - FECHAMENTO IMPEDIDO');
+                return false;
+            }, true);
+            
+            newOverlay.addEventListener('mousedown', function(e) {
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                return false;
+            }, true);
+        }
+        
+        // Bloquear cliques no modal fora do conteúdo
+        modal.addEventListener('click', function(e) {
+            const modalContent = modal.querySelector('.modal-content');
+            if (modalContent && !modalContent.contains(e.target)) {
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                console.log('🚫🚫🚫 BLOQUEIO PERMANENTE: Clique no modal (fora do conteúdo) - FECHAMENTO IMPEDIDO');
+                return false;
+            }
+        }, true);
+        
+        // Bloquear também mousedown
+        modal.addEventListener('mousedown', function(e) {
+            const modalContent = modal.querySelector('.modal-content');
+            if (modalContent && !modalContent.contains(e.target)) {
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                return false;
+            }
+        }, true);
+    }
+    
+    // Executar imediatamente e repetidamente para garantir
+    blockAllCloseAttempts();
+    setTimeout(blockAllCloseAttempts, 10);
+    setTimeout(blockAllCloseAttempts, 50);
+    setTimeout(blockAllCloseAttempts, 100);
+    setTimeout(blockAllCloseAttempts, 200);
+    
     // Adicionar event listeners para fechar modal
     setupModalEventListeners();
 }
@@ -1092,17 +1148,58 @@ function setupModalEventListeners() {
         console.warn('⚠️ Botão closeModalBtn não encontrado');
     }
     
-    // Fechar modal clicando no overlay
+    // BLOQUEAR COMPLETAMENTE o fechamento ao clicar fora do modal
+    // Remover qualquer listener anterior do overlay
     if (overlay) {
-        // Remover listeners anteriores
+        // Clonar overlay para remover todos os listeners
         const newOverlay = overlay.cloneNode(true);
         overlay.parentNode.replaceChild(newOverlay, overlay);
+        
+        // Adicionar listener que BLOQUEIA o fechamento
         newOverlay.addEventListener('click', function(e) {
-            if (e.target === newOverlay) {
-                console.log('✅ Overlay clicado, fechando modal');
-                closeCardDetailModal();
-            }
-        });
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            e.preventDefault();
+            console.log('🚫 Overlay clicado - fechamento BLOQUEADO');
+            return false;
+        }, true); // Capture phase - intercepta ANTES de outros listeners
+    }
+    
+    // Bloquear cliques no próprio modal (fora do conteúdo)
+    if (modal) {
+        // Remover listeners anteriores
+        const modalClone = modal.cloneNode(true);
+        modal.parentNode.replaceChild(modalClone, modal);
+        
+        // Re-obter referências após clonar
+        const modalRef = document.getElementById('cardDetailModal');
+        const overlayRef = modalRef ? modalRef.querySelector('.modal-overlay') : null;
+        
+        // Bloquear cliques no modal (mas não no conteúdo)
+        if (modalRef) {
+            modalRef.addEventListener('click', function(e) {
+                const modalContent = modalRef.querySelector('.modal-content');
+                // Se clicou fora do conteúdo (no overlay ou no fundo do modal)
+                if (modalContent && !modalContent.contains(e.target)) {
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                    console.log('🚫 Clique no modal (fora do conteúdo) - BLOQUEADO');
+                    return false;
+                }
+            }, true); // Capture phase - executa ANTES de outros listeners
+        }
+        
+        // Bloquear também no overlay novamente (garantir)
+        if (overlayRef) {
+            overlayRef.addEventListener('click', function(e) {
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                console.log('🚫 Overlay clicado (segunda camada) - BLOQUEADO');
+                return false;
+            }, true);
+        }
     }
     
     // Fechar modal com ESC (apenas uma vez no documento)
@@ -1469,6 +1566,74 @@ function closeCardDetailModal() {
         console.error('❌ Modal não encontrado ao tentar fechar');
     }
 }
+
+// Função para BLOQUEAR fechamento ao clicar fora - executar imediatamente
+(function() {
+    'use strict';
+    // Aguardar DOM estar pronto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', blockModalClose);
+    } else {
+        blockModalClose();
+    }
+    
+    function blockModalClose() {
+        const modal = document.getElementById('cardDetailModal');
+        if (!modal) {
+            // Tentar novamente após um delay se o modal ainda não existir
+            setTimeout(blockModalClose, 100);
+            return;
+        }
+        
+        // Observar quando o modal é exibido e bloquear fechamento
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    if (modal.classList.contains('show')) {
+                        // Modal foi aberto, bloquear fechamento
+                        setTimeout(function() {
+                            const overlay = modal.querySelector('.modal-overlay');
+                            if (overlay) {
+                                // Remover todos os listeners
+                                const newOverlay = overlay.cloneNode(true);
+                                overlay.parentNode.replaceChild(newOverlay, overlay);
+                                
+                                // Bloquear completamente
+                                newOverlay.addEventListener('click', function(e) {
+                                    e.stopPropagation();
+                                    e.stopImmediatePropagation();
+                                    e.preventDefault();
+                                    console.log('🚫🚫🚫 BLOQUEIO ATIVO: Overlay clicado - FECHAMENTO IMPEDIDO');
+                                    return false;
+                                }, true);
+                            }
+                            
+                            // Bloquear cliques no modal
+                            modal.addEventListener('click', function(e) {
+                                const modalContent = modal.querySelector('.modal-content');
+                                if (modalContent && !modalContent.contains(e.target)) {
+                                    e.stopPropagation();
+                                    e.stopImmediatePropagation();
+                                    e.preventDefault();
+                                    console.log('🚫🚫🚫 BLOQUEIO ATIVO: Clique no modal (fora do conteúdo) - FECHAMENTO IMPEDIDO');
+                                    return false;
+                                }
+                            }, true);
+                        }, 50);
+                    }
+                }
+            });
+        });
+        
+        // Observar mudanças no atributo class do modal
+        observer.observe(modal, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+        
+        console.log('🛡️ Sistema de bloqueio de fechamento do modal ativado');
+    }
+})();
 
 // Inicialização quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', function() {
