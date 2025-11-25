@@ -80,6 +80,7 @@ class Solicitacoes(models.Model):
     tempo_criacao = models.TimeField()
     tempo_fila =  models.TimeField()
     data_entrada_status = models.DateTimeField(auto_now_add=True, null=True, blank=True, verbose_name="Data de Entrada no Status Atual")
+    data_aprovacao = models.DateTimeField(null=True, blank=True, verbose_name="Data de Aprovação")
     prioridade = models.CharField(max_length=20, choices=PRIORIDADE_CHOICES, default='baixa')
     servico = models.ForeignKey('servicos.Servico', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Serviço")
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='casual', verbose_name="Tipo de Solicitação")

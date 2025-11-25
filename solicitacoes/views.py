@@ -633,6 +633,12 @@ def receber_dados(request):
                         print(f"✅ DEBUG EDIÇÃO EM ROTA - Solicitação salva com sucesso! ID: {solicitacao.id}")
                         solicitacao.itens_rota.all().delete()
                     else:
+                        # Se criar com status aprovado ou concluido, preencher data_aprovacao
+                        agora = timezone.now()
+                        data_aprovacao_inicial = None
+                        if status in ['aprovado', 'concluido']:
+                            data_aprovacao_inicial = agora
+                        
                         solicitacao = Solicitacoes.objects.create(
                             ticket=ticket_final,
                             status=status,
@@ -649,7 +655,8 @@ def receber_dados(request):
                             anexo=anexo,
                             tempo_criacao=tempo_criacao_auto,
                             tempo_fila=tempo_fila_inicial,
-                            data_entrada_status=timezone.now(),
+                            data_entrada_status=agora,
+                            data_aprovacao=data_aprovacao_inicial,
                             prioridade=prioridade,
                             servico=itens_rota[0]['servico'],
                             tipo='em_rota',
@@ -810,6 +817,12 @@ def receber_dados(request):
                             # Garantir que itens anteriores (se existirem) sejam removidos
                             solicitacao.itens_rota.all().delete()
                         else:
+                            # Se criar com status aprovado ou concluido, preencher data_aprovacao
+                            agora = timezone.now()
+                            data_aprovacao_inicial = None
+                            if status in ['aprovado', 'concluido']:
+                                data_aprovacao_inicial = agora
+                            
                             solicitacao = Solicitacoes.objects.create(
                                 ticket=ticket_final,
                                 status=status,
@@ -826,7 +839,8 @@ def receber_dados(request):
                                 anexo=anexo,
                                 tempo_criacao=tempo_criacao_auto,
                                 tempo_fila=tempo_fila_inicial,
-                                data_entrada_status=timezone.now(),
+                                data_entrada_status=agora,
+                                data_aprovacao=data_aprovacao_inicial,
                                 prioridade=prioridade,
                                 servico=servico_obj,
                                 tipo='casual',
@@ -1302,10 +1316,19 @@ def atualizar_status(request):
         # Buscar e atualizar solicitação
         from django.utils import timezone
         solicitacao = Solicitacoes.objects.get(id=card_id)
+        status_anterior = solicitacao.status
+        agora = timezone.now()
         
         # Se o status mudou, atualizar data_entrada_status
-        if solicitacao.status != status_db:
-            solicitacao.data_entrada_status = timezone.now()
+        if status_anterior != status_db:
+            solicitacao.data_entrada_status = agora
+        
+        # Registrar momento exato da aprovação para manter a métrica mesmo após outras mudanças
+        if status_db == 'aprovado' and not solicitacao.data_aprovacao:
+            solicitacao.data_aprovacao = agora
+        elif status_db == 'concluido' and not solicitacao.data_aprovacao:
+            # Alguns fluxos podem pular direto para concluído; registramos a aprovação no mesmo instante
+            solicitacao.data_aprovacao = agora
         
         solicitacao.status = status_db
         solicitacao.save()
