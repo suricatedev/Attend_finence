@@ -1,4 +1,4 @@
-﻿﻿// JavaScript SUPER SIMPLES - Apenas abrir e fechar modal
+﻿// JavaScript SUPER SIMPLES - Apenas abrir e fechar modal
 
 // Esperar a página carregar
 window.addEventListener('DOMContentLoaded', function() {

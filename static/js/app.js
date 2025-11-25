@@ -73,16 +73,23 @@ class ModalManager {
     }
 
     init() {
-        // Fechar modal ao clicar no overlay
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal')) {
-                this.closeModal();
-            }
-        });
+        // DESABILITADO: Não fechar modal ao clicar no overlay
+        // O modal não deve fechar ao clicar fora, especialmente quando há erros
+        // document.addEventListener('click', (e) => {
+        //     if (e.target.classList.contains('modal')) {
+        //         this.closeModal();
+        //     }
+        // });
         
-        // Fechar modal com ESC
+        // Fechar modal com ESC (mantido para UX)
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.activeModal) {
+                // Verificar se há erros no formulário antes de fechar
+                const form = document.getElementById('createCampaignForm');
+                if (form && form.querySelectorAll('.form-group.error, .error-message').length > 0) {
+                    console.log('🛡️ Modal não fechado com ESC - há erros no formulário');
+                    return; // Não fechar se houver erros
+                }
                 this.closeModal();
             }
         });
@@ -330,15 +337,12 @@ class FormManager {
                         return false;
                     }
                     
-                    // Se chegou aqui, a validação passou (result é undefined ou qualquer outro valor)
-                    // NÃO fazer preventDefault - deixar o submit continuar para Django
-                    console.log('✅ Validação passou - Permitindo submit do formulário para Django');
-                    console.log('📤 Formulário será submetido normalmente para:', e.target.action);
-                    console.log('📤 O evento submit continuará normalmente (sem preventDefault)');
-                    
-                    // IMPORTANTE: Não retornar false e não fazer preventDefault
-                    // Deixar o evento continuar normalmente para o Django processar
-                    return;
+                    // Se chegou aqui, a validação passou - enviar via AJAX para controlar erros
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('✅ Validação passou - Enviando via AJAX para manter modal aberto em caso de erro');
+                    this.submitFormViaAjax(e.target);
+                    return false;
                 } else {
                     // Para outros formulários, também processar
                 this.handleSubmit(e);
@@ -386,10 +390,20 @@ class FormManager {
     }
 
     showFieldError(formGroup, message) {
+        // Remover mensagens de erro anteriores
+        const existingError = formGroup.querySelector('.error-message');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Adicionar nova mensagem de erro
         const errorDiv = document.createElement('div');
         errorDiv.className = 'error-message';
         errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
         formGroup.appendChild(errorDiv);
+        
+        // Garantir que o grupo tem a classe error
+        formGroup.classList.add('error');
     }
 
     handleSubmit(e) {
@@ -882,8 +896,19 @@ class FormManager {
         // Se o formulário tem action para Django
         if (form.action && (form.action.includes('/solicitacoes/') || form.action.includes('/Solicitacoes/') || form.action.includes('/home/'))) {
             if (!isValid) {
+                // BLOQUEAR COMPLETAMENTE o submit para não fechar o modal
                 e.preventDefault();
-                e.stopPropagation(); // Evitar que o evento se propague e feche o modal
+                e.stopPropagation();
+                e.stopImmediatePropagation(); // Bloquear outros listeners também
+                
+                // GARANTIR que o modal não fecha
+                const modal = document.getElementById('createCampaignModal');
+                if (modal) {
+                    // Forçar modal a permanecer aberto
+                    modal.style.display = 'flex';
+                    modal.classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                }
                 
                 // Log detalhado para debug
                 console.error('❌ VALIDAÇÃO FALHOU:', {
@@ -956,6 +981,17 @@ class FormManager {
                     console.error('⚠️ Utils.showNotification não está disponível, usando alert como fallback');
                     alert(message);
                 }
+                
+                // GARANTIR que o modal permanece aberto
+                setTimeout(() => {
+                    const modal = document.getElementById('createCampaignModal');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                        modal.classList.add('show');
+                        document.body.style.overflow = 'hidden';
+                        console.log('🛡️ Modal mantido aberto após erro de validação');
+                    }
+                }, 100);
                 
                 return false;
             }
@@ -1078,6 +1114,219 @@ class FormManager {
     prepareFormForSubmission(form) {
         // Preparação adicional do formulário antes do submit (se necessário)
         // O título será gerado automaticamente no backend
+    }
+    
+    async submitFormViaAjax(form) {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn ? submitBtn.textContent : '';
+        const originalHtml = submitBtn ? submitBtn.innerHTML : '';
+        
+        // Estado de carregamento
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+        }
+        form.classList.add('form-loading');
+        
+        try {
+            // Criar FormData do formulário
+            const formData = new FormData(form);
+            
+            // Enviar via AJAX
+            const response = await fetch(form.action, {
+                method: form.method || 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            // Verificar se a resposta é HTML (redirect com erro) ou JSON
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+                // Resposta JSON
+                const data = await response.json();
+                if (data.success) {
+                    // Sucesso - fechar modal e recarregar
+                    if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                        Utils.showNotification(data.message || 'Solicitação criada com sucesso!', 'success');
+                    }
+                    if (window.modalManager) {
+                        window.modalManager.closeModal();
+                    }
+                    // Recarregar página após um pequeno delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                    return;
+                } else {
+                    // Erro - não fechar modal, focar no campo com erro
+                    const errorMessage = data.message || 'Erro ao processar solicitação';
+                    let errorField = null;
+                    
+                    // Tentar encontrar o campo pelo nome retornado pelo backend
+                    if (data.field) {
+                        errorField = form.querySelector(`[name="${data.field}"], #${data.field}`);
+                    }
+                    
+                    // Se não encontrou pelo nome, tentar pelo texto da mensagem
+                    if (!errorField) {
+                        if (errorMessage.includes('Descrição')) {
+                            errorField = form.querySelector('#campaignDescription, [name="casual_description"], [name="route_description"]');
+                        } else if (errorMessage.includes('Recebedor')) {
+                            errorField = form.querySelector('#campaignRecebedor, [name="casual_recebedor"]');
+                        } else if (errorMessage.includes('Data de Pagamento') || errorMessage.includes('Pagamento')) {
+                            errorField = form.querySelector('#campaignDataPagamento, [name="casual_dataPagamento"], [name="route_dataPagamento"]');
+                        }
+                    }
+                    
+                    // Focar no campo com erro
+                    if (errorField) {
+                        setTimeout(() => {
+                            errorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            setTimeout(() => {
+                                if (!errorField.disabled) {
+                                    errorField.focus();
+                                }
+                            }, 300);
+                        }, 100);
+                        
+                        // Mostrar erro no campo
+                        const formGroup = errorField.closest('.form-group');
+                        if (formGroup) {
+                            formGroup.classList.add('error');
+                            this.showFieldError(formGroup, errorMessage);
+                        }
+                    }
+                    
+                    // Mostrar notificação
+                    if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                        Utils.showNotification(errorMessage, 'error');
+                    }
+                    
+                    // GARANTIR que o modal permanece aberto após erro
+                    setTimeout(() => {
+                        const modal = document.getElementById('createCampaignModal');
+                        if (modal) {
+                            modal.style.display = 'flex';
+                            modal.classList.add('show');
+                            document.body.style.overflow = 'hidden';
+                            console.log('🛡️ Modal mantido aberto após erro HTML do backend');
+                        }
+                    }, 100);
+                    
+                    return; // Não fechar modal
+                }
+            } else {
+                // Resposta HTML (pode ser redirect ou página de erro)
+                const html = await response.text();
+                
+                // Verificar se há mensagens de erro do Django
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const errorMessages = doc.querySelectorAll('.alert-error, .error, [class*="error"]');
+                
+                if (errorMessages.length > 0 || !response.ok) {
+                    // Extrair mensagem de erro
+                    let errorMessage = '';
+                    let errorField = null;
+                    
+                    errorMessages.forEach(msg => {
+                        const text = msg.textContent.trim();
+                        if (text) {
+                            errorMessage = text;
+                            
+                            // Tentar identificar o campo pelo texto da mensagem
+                            if (text.includes('Descrição')) {
+                                errorField = form.querySelector('#campaignDescription, [name="casual_description"], [name="route_description"]');
+                            } else if (text.includes('Recebedor')) {
+                                errorField = form.querySelector('#campaignRecebedor, [name="casual_recebedor"]');
+                            } else if (text.includes('Data de Pagamento') || text.includes('Pagamento')) {
+                                errorField = form.querySelector('#campaignDataPagamento, [name="casual_dataPagamento"], [name="route_dataPagamento"]');
+                            }
+                        }
+                    });
+                    
+                    if (!errorMessage) {
+                        errorMessage = 'Erro ao processar solicitação. Verifique os campos obrigatórios.';
+                    }
+                    
+                    // Focar no campo com erro se encontrado
+                    if (errorField) {
+                        setTimeout(() => {
+                            errorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            setTimeout(() => {
+                                if (!errorField.disabled) {
+                                    errorField.focus();
+                                }
+                            }, 300);
+                        }, 100);
+                        
+                        // Mostrar erro no campo
+                        const formGroup = errorField.closest('.form-group');
+                        if (formGroup) {
+                            formGroup.classList.add('error');
+                            this.showFieldError(formGroup, errorMessage);
+                        }
+                    }
+                    
+                    // Mostrar notificação
+                    if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                        Utils.showNotification(errorMessage, 'error');
+                    }
+                    
+                    // GARANTIR que o modal permanece aberto após erro HTML
+                    setTimeout(() => {
+                        const modal = document.getElementById('createCampaignModal');
+                        if (modal) {
+                            modal.style.display = 'flex';
+                            modal.classList.add('show');
+                            document.body.style.overflow = 'hidden';
+                            console.log('🛡️ Modal mantido aberto após erro HTML do backend');
+                        }
+                    }, 100);
+                    
+                    return; // Não fechar modal
+                } else {
+                    // Sucesso - redirecionar ou recarregar
+                    if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                        Utils.showNotification('Solicitação criada com sucesso!', 'success');
+                    }
+                    if (window.modalManager) {
+                        window.modalManager.closeModal();
+                    }
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                    return;
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao enviar formulário:', error);
+            if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                Utils.showNotification('Erro ao enviar solicitação: ' + error.message, 'error');
+            }
+            
+            // GARANTIR que o modal permanece aberto em caso de erro de rede/exceção
+            setTimeout(() => {
+                const modal = document.getElementById('createCampaignModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    modal.classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                    console.log('🛡️ Modal mantido aberto após erro de exceção');
+                }
+            }, 100);
+        } finally {
+            // Restaurar estado do botão
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                submitBtn.innerHTML = originalHtml;
+            }
+            form.classList.remove('form-loading');
+        }
     }
     async submitForm(form, formData) {
         const submitBtn = form.querySelector('button[type="submit"]');

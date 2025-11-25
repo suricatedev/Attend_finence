@@ -82,10 +82,10 @@ class LoginUsuarios(View):
             user = authenticate(request, username=name, password=password)
 
             if user is not None:               
-                login(request, user)
+                login(request, user)        
                 if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
                     return redirect(next_url)
-                return redirect('home')
+                return redirect('home')   
                           
             else:
                 return render(request, "usuarios/login/login.html", {
@@ -648,6 +648,6 @@ class RedefinirSenha(View):
             return render(request, "usuarios/login/redefinir-senha.html")
 
 
-
-
     
+
+

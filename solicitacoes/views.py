@@ -366,15 +366,38 @@ def receber_dados(request):
             
             # Validação básica dos campos obrigatórios (apenas para feedback do backend)
             # A validação principal deve ser feita no frontend
+            # Se for requisição AJAX, retornar JSON ao invés de redirect
+            is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+            
             if tipo == 'casual' and not nome_do_recebedor:
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'O campo "Nome do Recebedor" é obrigatório.',
+                        'field': 'casual_recebedor'
+                    }, status=400)
                 messages.error(request, 'O campo "Nome do Recebedor" é obrigatório.')
                 return redirect('/solicitacoes/home/')
             
             if not descricao:
+                if is_ajax:
+                    field_name = 'casual_description' if tipo == 'casual' else 'route_description'
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'O campo "Descrição" é obrigatório.',
+                        'field': field_name
+                    }, status=400)
                 messages.error(request, 'O campo "Descrição" é obrigatório.')
                 return redirect('/solicitacoes/home/')
                 
             if not data_de_pagamento_str:
+                if is_ajax:
+                    field_name = 'casual_dataPagamento' if tipo == 'casual' else 'route_dataPagamento'
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'O campo "Data de Pagamento" é obrigatório.',
+                        'field': field_name
+                    }, status=400)
                 messages.error(request, 'O campo "Data de Pagamento" é obrigatório.')
                 return redirect('/solicitacoes/home/')
             
@@ -860,6 +883,16 @@ def receber_dados(request):
                     messages.error(request, f'Erro ao salvar solicitação Casual: {str(e)}')
                     return redirect('/solicitacoes/home/')
             
+            # Verificar se é requisição AJAX
+            is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+            
+            if is_ajax:
+                # Retornar JSON para requisições AJAX
+                return JsonResponse({
+                    'success': True,
+                    'message': success_message
+                })
+            
             messages.success(request, success_message)
             print(f"✅ DEBUG EDIÇÃO - Mensagem de sucesso enviada: {success_message}")
             if is_edit_mode:
@@ -872,6 +905,16 @@ def receber_dados(request):
             error_trace = traceback.format_exc()
             print(f"❌ ERRO GERAL ao processar solicitação: {str(e)}")
             print(f"📋 Traceback completo:\n{error_trace}")
+            
+            # Verificar se é requisição AJAX
+            is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+            
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Erro ao criar solicitação: {str(e)}'
+                }, status=500)
+            
             messages.error(request, f'Erro ao criar solicitação: {str(e)}')
             return redirect('/solicitacoes/home/')
     
