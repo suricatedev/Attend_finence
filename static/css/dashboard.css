@@ -2,6 +2,84 @@
    DASHBOARD CSS CONSOLIDADO - SISTEMA FINANCEIRO
    ======================================== */
 
+/* Garantir que o header tenha a mesma cor do background do dashboard - apenas quando dashboard-view existe */
+body:has(.dashboard-view) .header,
+body:has(#dashboardView) .header,
+.main-content:has(.dashboard-view) .header {
+    background: #1C1C1C !important;
+    background-color: #1C1C1C !important;
+    color: white !important;
+}
+
+/* Ajustar cores dos elementos do header para contraste quando na página de dashboard */
+body:has(.dashboard-view) .header .app-title,
+body:has(.dashboard-view) .header .logo-icon,
+body:has(#dashboardView) .header .app-title,
+body:has(#dashboardView) .header .logo-icon {
+    color: white !important;
+}
+
+body:has(.dashboard-view) .header .tab-btn,
+body:has(#dashboardView) .header .tab-btn {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+body:has(.dashboard-view) .header .tab-btn.active,
+body:has(#dashboardView) .header .tab-btn.active {
+    background: #FFCB57 !important;
+    color: #1C1C1C !important;
+}
+
+/* Ajustar ícones à direita do header para brancos */
+body:has(.dashboard-view) .header .action-btn,
+body:has(#dashboardView) .header .action-btn {
+    color: white !important;
+}
+
+body:has(.dashboard-view) .header .action-btn i,
+body:has(#dashboardView) .header .action-btn i {
+    color: white !important;
+}
+
+body:has(.dashboard-view) .header .action-btn:hover,
+body:has(#dashboardView) .header .action-btn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+}
+
+body:has(.dashboard-view) .header .user-avatar,
+body:has(#dashboardView) .header .user-avatar {
+    border-color: white !important;
+}
+
+/* Ajustar borda da imagem do avatar do usuário */
+body:has(.dashboard-view) .header .user-avatar-btn img,
+body:has(#dashboardView) .header .user-avatar-btn img {
+    border-color: white !important;
+    border: 2px solid white !important;
+}
+
+/* Ajustar botão "Nova Solicitação Financeira" para amarelo na página de dashboards */
+body:has(.dashboard-view) .header .btn-primary,
+body:has(#dashboardView) .header .btn-primary {
+    background: linear-gradient(135deg, #FFCB57 0%, #FFD700 100%) !important;
+    background-color: #FFCB57 !important;
+    color: #1C1C1C !important;
+    box-shadow: 0 4px 15px rgba(255, 203, 87, 0.4) !important;
+}
+
+body:has(.dashboard-view) .header .btn-primary:hover,
+body:has(#dashboardView) .header .btn-primary:hover {
+    background: linear-gradient(135deg, #FFD700 0%, #FFCB57 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(255, 203, 87, 0.5) !important;
+}
+
+body:has(.dashboard-view) .header .btn-primary i,
+body:has(#dashboardView) .header .btn-primary i {
+    color: #1C1C1C !important;
+}
+
 .dashboard-view {
     background: linear-gradient(135deg, #0f0f0f 0%, #1f1c1c 50%, #080808 100%);
     min-height: calc(100vh - 80px);

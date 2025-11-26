@@ -7,6 +7,70 @@
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Garantir que o header tenha a mesma cor do background do dashboard */
+        body .header,
+        .main-content .header,
+        header.header {
+            background: #1C1C1C !important;
+            background-color: #1C1C1C !important;
+            color: white !important;
+        }
+        
+        /* Ajustar cores dos elementos do header para contraste */
+        .header .app-title,
+        .header .logo-icon {
+            color: white !important;
+        }
+        
+        .header .tab-btn {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+        
+        .header .tab-btn.active {
+            background: #FFCB57 !important;
+            color: #1C1C1C !important;
+        }
+        
+        /* Ajustar ícones à direita do header para brancos */
+        .header .action-btn,
+        .header .action-btn i {
+            color: white !important;
+        }
+        
+        .header .action-btn:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+        }
+        
+        .header .user-avatar {
+            border-color: white !important;
+        }
+        
+        /* Ajustar borda da imagem do avatar do usuário */
+        .header .user-avatar-btn img {
+            border-color: white !important;
+            border: 2px solid white !important;
+        }
+        
+        /* Ajustar botão "Nova Solicitação Financeira" para amarelo */
+        .header .btn-primary {
+            background: linear-gradient(135deg, #FFCB57 0%, #FFD700 100%) !important;
+            background-color: #FFCB57 !important;
+            color: #1C1C1C !important;
+            box-shadow: 0 4px 15px rgba(255, 203, 87, 0.4) !important;
+        }
+        
+        .header .btn-primary:hover {
+            background: linear-gradient(135deg, #FFD700 0%, #FFCB57 100%) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(255, 203, 87, 0.5) !important;
+        }
+        
+        .header .btn-primary i {
+            color: #1C1C1C !important;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -153,5 +217,63 @@
                     window.dashboardData = {};
                 }
             }
-        });    </script>
+        });
+        
+        // Garantir que o header tenha a cor correta
+        document.addEventListener('DOMContentLoaded', function() {
+            const header = document.querySelector('.header');
+            if (header) {
+                header.style.background = '#1C1C1C';
+                header.style.backgroundColor = '#1C1C1C';
+                header.style.color = 'white';
+                
+                // Ajustar cores dos elementos do header
+                const appTitle = header.querySelector('.app-title');
+                if (appTitle) {
+                    appTitle.style.color = 'white';
+                }
+                
+                const logoIcon = header.querySelector('.logo-icon');
+                if (logoIcon) {
+                    logoIcon.style.color = 'white';
+                }
+                
+                // Ajustar ícones à direita para brancos
+                const actionButtons = header.querySelectorAll('.action-btn');
+                actionButtons.forEach(btn => {
+                    btn.style.color = 'white';
+                    const icon = btn.querySelector('i');
+                    if (icon) {
+                        icon.style.color = 'white';
+                    }
+                });
+                
+                const userAvatar = header.querySelector('.user-avatar');
+                if (userAvatar) {
+                    userAvatar.style.borderColor = 'white';
+                }
+                
+                // Ajustar borda da imagem do avatar do usuário
+                const userAvatarImg = header.querySelector('.user-avatar-btn img');
+                if (userAvatarImg) {
+                    userAvatarImg.style.borderColor = 'white';
+                    userAvatarImg.style.border = '2px solid white';
+                }
+                
+                // Ajustar botão "Nova Solicitação Financeira" para amarelo
+                const btnPrimary = header.querySelector('.btn-primary');
+                if (btnPrimary) {
+                    btnPrimary.style.background = 'linear-gradient(135deg, #FFCB57 0%, #FFD700 100%)';
+                    btnPrimary.style.backgroundColor = '#FFCB57';
+                    btnPrimary.style.color = '#1C1C1C';
+                    btnPrimary.style.boxShadow = '0 4px 15px rgba(255, 203, 87, 0.4)';
+                    
+                    const btnIcon = btnPrimary.querySelector('i');
+                    if (btnIcon) {
+                        btnIcon.style.color = '#1C1C1C';
+                    }
+                }
+            }
+        });
+    </script>
 {% endblock %}

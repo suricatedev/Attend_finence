@@ -1337,88 +1337,144 @@ class RelatoriosOptimized {
             // Coletar dados das linhas
             const rows = [];
             const monetaryColumns = []; // Índices das colunas que contêm valores monetários
+            const dateColumns = []; // Índices das colunas que contêm datas
             
-            // Identificar colunas monetárias pelos cabeçalhos
+            // Identificar colunas monetárias e de data pelos cabeçalhos
             headers.forEach((header, idx) => {
-                if (header.includes('Valor') || header.includes('Receita') || header.includes('KM') || 
-                    header.includes('Pedágio') || header.includes('Hospedagem') || header.includes('Fluvial') || 
-                    header.includes('Outros') || header.includes('EM ROTA')) {
+                const headerLower = header.toLowerCase();
+                if (headerLower.includes('valor') || headerLower.includes('receita') || headerLower.includes('km') || 
+                    headerLower.includes('pedágio') || headerLower.includes('pedagio') || headerLower.includes('hospedagem') || 
+                    headerLower.includes('fluvial') || headerLower.includes('outros') || headerLower.includes('em rota')) {
                     monetaryColumns.push(idx);
+                }
+                if (headerLower.includes('data') || headerLower.includes('criação') || headerLower.includes('criacao') || 
+                    headerLower.includes('pagamento')) {
+                    dateColumns.push(idx);
                 }
             });
             
+            // Função auxiliar para extrair número de valor monetário
+            function extractMonetaryValue(text) {
+                if (!text) return null;
+                // Remover R$, espaços, e pontos (milhares), substituir vírgula por ponto
+                const cleaned = String(text).replace(/R\$\s?/g, '').replace(/\./g, '').replace(',', '.').trim();
+                const num = parseFloat(cleaned);
+                return isNaN(num) ? null : num;
+            }
+            
+            // Função auxiliar para limpar texto da célula
+            function cleanCellText(td) {
+                // Limpar valores de status e prioridade (remover badges)
+                const statusBadge = td.querySelector('.status-badge');
+                if (statusBadge) {
+                    return statusBadge.textContent.trim();
+                }
+                
+                const priorityBadge = td.querySelector('.priority-badge');
+                if (priorityBadge) {
+                    return priorityBadge.textContent.trim();
+                }
+                
+                // Para outras células, pegar todo o texto visível
+                let text = td.innerText || td.textContent || '';
+                return text.trim();
+            }
+            
+            // Coletar dados das linhas, garantindo correspondência correta com headers
             table.querySelectorAll('tbody tr:not(.empty-state)').forEach(tr => {
                 const row = [];
+                const tds = tr.querySelectorAll('td');
+                let headerIndex = 0;
                 
-                tr.querySelectorAll('td').forEach((td, tdIndex) => {
+                tds.forEach((td) => {
                     // Se for a coluna de ações, pular
                     if (td.classList.contains('actions-cell')) {
                         return;
                     }
                     
-                    let cellValue = '';
+                    let cellValue = cleanCellText(td);
                     
-                    // Limpar valores de status e prioridade (remover badges)
-                    if (td.querySelector('.status-badge')) {
-                        cellValue = td.querySelector('.status-badge').textContent.trim();
-                    } else if (td.querySelector('.priority-badge')) {
-                        cellValue = td.querySelector('.priority-badge').textContent.trim();
+                    // Remover espaços extras, quebras de linha e caracteres especiais
+                    cellValue = cellValue.replace(/\s+/g, ' ').replace(/\n/g, ' ').replace(/\r/g, '').trim();
+                    
+                    // Verificar se é coluna monetária e converter para número
+                    if (monetaryColumns.includes(headerIndex) && cellValue) {
+                        const numValue = extractMonetaryValue(cellValue);
+                        if (numValue !== null) {
+                            // Armazenar como número para formatação posterior
+                            row.push({ value: numValue, type: 'monetary' });
+                        } else {
+                            row.push(cellValue || '');
+                        }
                     } else {
-                        cellValue = td.textContent.trim();
+                        row.push(cellValue || '');
                     }
                     
-                    // Remover espaços extras e quebras de linha
-                    cellValue = cellValue.replace(/\s+/g, ' ').trim();
-                    
-                    row.push(cellValue || '');
+                    headerIndex++;
                 });
+                
+                // Garantir que a linha tenha o mesmo número de colunas dos headers
+                while (row.length < headers.length) {
+                    row.push('');
+                }
                 
                 if (row.length > 0) {
                     rows.push(row);
                 }
             });
 
+            // Preparar dados para o worksheet, convertendo objetos monetários
+            const wsData = [headers];
+            rows.forEach(row => {
+                const processedRow = row.map(cell => {
+                    if (typeof cell === 'object' && cell.type === 'monetary') {
+                        return cell.value;
+                    }
+                    return cell;
+                });
+                wsData.push(processedRow);
+            });
+            
             // Criar workbook
             const wb = XLSX.utils.book_new();
             
             // Converter dados para worksheet
-            const wsData = [headers, ...rows];
             const ws = XLSX.utils.aoa_to_sheet(wsData);
             
             // Configurar larguras de colunas
             const colWidths = headers.map((header) => {
+                const headerLower = header.toLowerCase();
                 // Larguras baseadas no tipo de conteúdo
-                if (header.includes('Valor') || header.includes('Receita') || header.includes('KM') || 
-                    header.includes('Pedágio') || header.includes('Hospedagem') || header.includes('Fluvial') || 
-                    header.includes('Outros') || header.includes('EM ROTA')) {
-                    return { wch: 15 };
-                } else if (header.includes('Data') || header.includes('Criação') || header.includes('Pagamento')) {
-                    return { wch: 12 };
-                } else if (header.includes('Status') || header.includes('Prioridade')) {
-                    return { wch: 12 };
-                } else if (header.includes('ID') || header.includes('Título')) {
+                if (headerLower.includes('valor') || headerLower.includes('receita') || headerLower.includes('km') || 
+                    headerLower.includes('pedágio') || headerLower.includes('pedagio') || headerLower.includes('hospedagem') || 
+                    headerLower.includes('fluvial') || headerLower.includes('outros') || headerLower.includes('em rota')) {
                     return { wch: 18 };
+                } else if (headerLower.includes('data') || headerLower.includes('criação') || headerLower.includes('criacao') || 
+                          headerLower.includes('pagamento')) {
+                    return { wch: 12 };
+                } else if (headerLower.includes('status') || headerLower.includes('prioridade')) {
+                    return { wch: 12 };
+                } else if (headerLower.includes('id') || headerLower.includes('título') || headerLower.includes('titulo')) {
+                    return { wch: 15 };
                 } else {
                     return { wch: 20 };
                 }
             });
             ws['!cols'] = colWidths;
             
-            // Converter valores monetários para números e aplicar formatação
+            // Aplicar formatação aos valores monetários
             rows.forEach((row, rowIdx) => {
-                monetaryColumns.forEach(colIdx => {
-                    const cellAddress = XLSX.utils.encode_cell({ r: rowIdx + 1, c: colIdx });
-                    const cell = ws[cellAddress];
-                    if (cell && cell.v) {
-                        // Extrair número do valor monetário
-                        const numValue = String(cell.v).replace(/R\$\s?/g, '').replace(/\./g, '').replace(',', '.');
-                        const parsedNum = parseFloat(numValue);
-                        if (!isNaN(parsedNum)) {
-                            cell.v = parsedNum;
-                            cell.t = 'n';
-                            cell.z = '"R$"#,##0.00';
+                row.forEach((cell, colIdx) => {
+                    if (typeof cell === 'object' && cell.type === 'monetary') {
+                        const cellAddress = XLSX.utils.encode_cell({ r: rowIdx + 1, c: colIdx });
+                        const cellObj = ws[cellAddress];
+                        if (cellObj && typeof cellObj.v === 'number') {
+                            // Formato monetário brasileiro: R$ 1.234,56
+                            cellObj.z = '"R$"#,##0.00';
+                            cellObj.t = 'n';
                         }
                     }
+                    // Datas serão mantidas como texto formatado (dd/mm/yyyy já está correto)
                 });
             });
             
