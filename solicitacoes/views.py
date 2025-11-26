@@ -1509,3 +1509,105 @@ def buscar_clientes_empresas(request):
             'clientes_empresas': [],
             'message': str(e)
         }, status=500)
+
+@require_http_methods(["POST"])
+def excluir_solicitacao(request, solicitacao_id):
+    """
+    View para excluir uma solicitação individual
+    Apenas usuários do grupo Financeiro podem executar esta ação
+    E apenas para solicitações recusadas
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'success': False,
+            'message': 'Não autenticado'
+        }, status=401)
+    
+    # Verificar permissão: apenas Financeiro pode excluir solicitações
+    from usuarios.decorators import user_is_financeiro
+    if not user_is_financeiro(request.user):
+        return JsonResponse({
+            'success': False,
+            'message': 'Apenas membros do grupo Financeiro podem excluir solicitações.'
+        }, status=403)
+    
+    try:
+        # Buscar a solicitação
+        solicitacao = Solicitacoes.objects.get(id=solicitacao_id)
+        
+        # Verificar se é recusada
+        if solicitacao.status != 'recusado':
+            return JsonResponse({
+                'success': False,
+                'message': 'Apenas solicitações recusadas podem ser excluídas.'
+            }, status=400)
+        
+        ticket = solicitacao.ticket
+        solicitacao.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Solicitação #{ticket} excluída com sucesso!'
+        })
+        
+    except Solicitacoes.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Solicitação não encontrada.'
+        }, status=404)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'message': f'Erro ao excluir solicitação: {str(e)}'
+        }, status=500)
+
+@require_http_methods(["POST"])
+def excluir_solicitacoes_recusadas(request):
+    """
+    View para excluir todas as solicitações recusadas
+    Apenas usuários do grupo Financeiro podem executar esta ação
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'success': False,
+            'message': 'Não autenticado'
+        }, status=401)
+    
+    # Verificar permissão: apenas Financeiro pode excluir solicitações recusadas
+    from usuarios.decorators import user_is_financeiro
+    if not user_is_financeiro(request.user):
+        return JsonResponse({
+            'success': False,
+            'message': 'Apenas membros do grupo Financeiro podem excluir solicitações recusadas.'
+        }, status=403)
+    
+    try:
+        # Buscar todas as solicitações recusadas
+        solicitacoes_recusadas = Solicitacoes.objects.filter(status='recusado')
+        quantidade = solicitacoes_recusadas.count()
+        
+        if quantidade == 0:
+            return JsonResponse({
+                'success': True,
+                'message': 'Não há solicitações recusadas para excluir.',
+                'quantidade': 0
+            })
+        
+        # Excluir todas as solicitações recusadas
+        solicitacoes_recusadas.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'{quantidade} solicitação(ões) recusada(s) excluída(s) com sucesso!',
+            'quantidade': quantidade
+        })
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'message': f'Erro ao excluir solicitações: {str(e)}'
+        }, status=500)

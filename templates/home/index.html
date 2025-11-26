@@ -324,6 +324,11 @@
                             <div class="card-footer">
                     <span class="card-stage">Solicitação recusada</span>
                             </div>
+                            {% if user|is_financeiro %}
+                            <button class="btn-delete-card" data-solicitacao-id="{{ solicitacao.id }}" data-ticket="{{ solicitacao.ticket }}" title="Excluir esta solicitação">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                            {% endif %}
                             <div class="expand-indicator" title="Clique para ver detalhes">
                                 <i class="fas fa-external-link-alt"></i>
                             </div>
@@ -916,6 +921,83 @@
                         updateCardCount(column, visibleCards.length);
                     }
                 }
+            }
+        });
+        
+        // Excluir solicitação individual - apenas para grupo Financeiro
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.btn-delete-card')) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                
+                const btn = e.target.closest('.btn-delete-card');
+                const solicitacaoId = btn.getAttribute('data-solicitacao-id');
+                const ticket = btn.getAttribute('data-ticket') || solicitacaoId;
+                
+                if (!confirm(`Tem certeza que deseja excluir a solicitação #${ticket}?\n\nEsta ação não pode ser desfeita.`)) {
+                    return;
+                }
+                
+                // Buscar CSRF token
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                                 document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+                
+                // Fazer requisição para excluir
+                fetch(`/solicitacoes/excluir-solicitacao/${solicitacaoId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remover o card do DOM
+                        const card = btn.closest('.card');
+                        if (card) {
+                            card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.9)';
+                            
+                            setTimeout(() => {
+                                card.remove();
+                                
+                                // Atualizar contador
+                                const column = document.querySelector('.kanban-column[data-column="test"]');
+                                if (column) {
+                                    const cardCount = column.querySelector('.card-count');
+                                    const remainingCards = column.querySelectorAll('.card:not(.empty-column)').length;
+                                    if (cardCount) {
+                                        cardCount.textContent = remainingCards;
+                                    }
+                                    
+                                    // Se não houver mais cards, mostrar mensagem vazia
+                                    if (remainingCards === 0) {
+                                        const columnContent = column.querySelector('.column-content');
+                                        if (columnContent && !columnContent.querySelector('.empty-column')) {
+                                            const emptyDiv = document.createElement('div');
+                                            emptyDiv.className = 'empty-column';
+                                            emptyDiv.innerHTML = '<i class="fas fa-inbox"></i><p>Nenhuma solicitação recusada</p>';
+                                            columnContent.appendChild(emptyDiv);
+                                        }
+                                    }
+                                }
+                            }, 300);
+                        }
+                        
+                        // Mostrar notificação de sucesso
+                        alert(data.message);
+                    } else {
+                        alert('Erro: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao excluir solicitação:', error);
+                    alert('Erro ao excluir solicitação. Por favor, tente novamente.');
+                });
             }
         });
     </script>

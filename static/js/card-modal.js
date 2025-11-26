@@ -76,7 +76,8 @@ function initializeCardExpansion() {
                 e.target.closest('.card-action-btn') ||
                 e.target.closest('.card-count') ||
                 e.target.closest('.selected-date-display') ||
-                e.target.closest('.date-filter-btn')) {
+                e.target.closest('.date-filter-btn') ||
+                e.target.closest('.btn-delete-card')) {
                 return;
             }
 

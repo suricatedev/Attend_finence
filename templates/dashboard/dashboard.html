@@ -36,6 +36,50 @@
                     <div class="metric-change positive">Total</div>
                 </div>
             </div>
+            
+            <!-- Filtros de Período -->
+            <div class="period-filter-container">
+                <div class="period-selector">
+                    <button class="period-button active" data-period="3months">
+                        <i class="fas fa-calendar-week"></i>
+                        3 Meses
+                    </button>
+                    <button class="period-button" data-period="6months">
+                        <i class="fas fa-calendar"></i>
+                        6 Meses
+                    </button>
+                    <button class="period-button" data-period="12months">
+                        <i class="fas fa-calendar-alt"></i>
+                        12 Meses
+                    </button>
+                    <button class="period-button" data-period="all">
+                        <i class="fas fa-calendar-check"></i>
+                        Todos
+                    </button>
+                </div>
+                <div class="custom-period-selector">
+                    <div class="date-range-inputs">
+                        <label for="dateFrom">
+                            <i class="fas fa-calendar"></i>
+                            De:
+                        </label>
+                        <input type="date" id="dateFrom" class="date-input" title="Data inicial" placeholder="dd/mm/aaaa">
+                        <label for="dateTo">
+                            <i class="fas fa-calendar"></i>
+                            Até:
+                        </label>
+                        <input type="date" id="dateTo" class="date-input" title="Data final" placeholder="dd/mm/aaaa">
+                        <button class="apply-date-btn" id="applyDateFilter" title="Aplicar filtro de data" type="button">
+                            <i class="fas fa-check"></i>
+                            <span>Aplicar</span>
+                        </button>
+                        <button class="clear-date-btn" id="clearDateFilter" title="Limpar filtro de data" type="button">
+                            <i class="fas fa-times"></i>
+                            <span>Limpar</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- ========================================
@@ -46,48 +90,6 @@ GRÁFICO DE LINHA PRINCIPAL - SOLICITAÇÕES AO LONGO DO TEMPO
                 <div class="chart-header">
                     <div class="chart-title-section">
                         <h2>Solicitações ao Longo do Tempo</h2>
-                    </div>
-                    <div class="chart-controls">
-                        <div class="period-selector">
-                            <button class="period-button active" data-period="3months">
-                                <i class="fas fa-calendar-week"></i>
-                                3 Meses
-                            </button>
-                            <button class="period-button" data-period="6months">
-                                <i class="fas fa-calendar"></i>
-                                6 Meses
-                            </button>
-                            <button class="period-button" data-period="12months">
-                                <i class="fas fa-calendar-alt"></i>
-                                12 Meses
-                            </button>
-                            <button class="period-button" data-period="all">
-                                <i class="fas fa-calendar-check"></i>
-                                Todos
-                            </button>
-                        </div>
-                        <div class="custom-period-selector">
-                            <div class="date-range-inputs">
-                                <label for="dateFrom">
-                                    <i class="fas fa-calendar"></i>
-                                    De:
-                                </label>
-                                <input type="date" id="dateFrom" class="date-input" title="Data inicial" placeholder="dd/mm/aaaa">
-                                <label for="dateTo">
-                                    <i class="fas fa-calendar"></i>
-                                    Até:
-                                </label>
-                                <input type="date" id="dateTo" class="date-input" title="Data final" placeholder="dd/mm/aaaa">
-                                <button class="apply-date-btn" id="applyDateFilter" title="Aplicar filtro de data" type="button">
-                                    <i class="fas fa-check"></i>
-                                    <span>Aplicar</span>
-                                </button>
-                                <button class="clear-date-btn" id="clearDateFilter" title="Limpar filtro de data" type="button">
-                                    <i class="fas fa-times"></i>
-                                    <span>Limpar</span>
-                                </button>
-                            </div>
-                        </div>
                     </div>
                 </div>
                 <div class="chart-content">

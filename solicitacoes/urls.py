@@ -10,4 +10,6 @@ urlpatterns = [
     path("buscar-recebedores/", views.buscar_recebedores, name='buscar_recebedores'),
     path("buscar-clientes-empresas/", views.buscar_clientes_empresas, name='buscar_clientes_empresas'),
     path("exportar-relatorio-card/<int:solicitacao_id>/", views.exportar_relatorio_card, name='exportar_relatorio_card'),
+    path("excluir-solicitacao/<int:solicitacao_id>/", views.excluir_solicitacao, name='excluir_solicitacao'),
+    path("excluir-solicitacoes-recusadas/", views.excluir_solicitacoes_recusadas, name='excluir_solicitacoes_recusadas'),
 ]
