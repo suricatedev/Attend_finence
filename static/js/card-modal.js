@@ -1781,7 +1781,7 @@ function initializeColumnFilters() {
         
         // Event listener para digitação
         input.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase().trim();
+            const searchTerm = this.value.trim();
             filterCardsInColumn(column, searchTerm);
             updateClearButton(clearBtn, searchTerm);
         });
@@ -1805,6 +1805,31 @@ function initializeColumnFilters() {
     });
 }
 
+// Função para normalizar texto removendo acentos
+function normalizeText(text) {
+    if (!text) return '';
+    
+    // Converter para string se não for
+    text = String(text);
+    
+    // Usar método mais robusto com String.normalize() - remove todos os acentos Unicode
+    try {
+        return text
+            .normalize('NFD')  // Decompõe caracteres acentuados (ex: é -> e + ́)
+            .replace(/[\u0300-\u036f]/g, '')  // Remove todos os diacríticos (acentos)
+            .toLowerCase();  // Converte para minúsculo
+    } catch (e) {
+        // Fallback se normalize não estiver disponível
+        const accents = 'ÀÁÂÃÄÅàáâãäåÈÉÊËèéêëÌÍÎÏìíîïÒÓÔÕÖòóôõöÙÚÛÜùúûüÇçÑñÝý';
+        const noAccents = 'AAAAAAaaaaaaEEEEeeeeIIIIiiiiOOOOOOooooooUUUUuuuuCcNnYy';
+        
+        return text.split('').map(char => {
+            const index = accents.indexOf(char);
+            return index !== -1 ? noAccents[index] : char;
+        }).join('').toLowerCase();
+    }
+}
+
 // Função para filtrar cards em uma coluna específica
 function filterCardsInColumn(column, searchTerm) {
     const columnContent = document.querySelector(`[data-column="${column}"].column-content`);
@@ -1813,15 +1838,37 @@ function filterCardsInColumn(column, searchTerm) {
     const cards = columnContent.querySelectorAll('.card');
     let visibleCount = 0;
     
+    // Normalizar o termo de busca (remover acentos e converter para minúsculo)
+    // normalizeText já faz toLowerCase, então não precisa fazer duas vezes
+    const normalizedSearchTerm = normalizeText(searchTerm.trim());
+    
     cards.forEach(card => {
-        const cardText = getCardSearchableText(card).toLowerCase();
-        const isMatch = searchTerm === '' || cardText.includes(searchTerm);
+        const cardText = getCardSearchableText(card);
+        // Normalizar o texto do card também (remover acentos e converter para minúsculo)
+        const normalizedCardText = normalizeText(cardText);
+        
+        // Debug apenas para o primeiro card quando há busca (remover depois)
+        if (normalizedSearchTerm && normalizedSearchTerm.length > 0 && visibleCount === 0 && cards.length > 0) {
+            console.log('🔍 Buscando termo original:', searchTerm);
+            console.log('🔍 Termo normalizado:', normalizedSearchTerm);
+            console.log('📄 Texto original do card:', cardText);
+            console.log('📄 Texto normalizado do card:', normalizedCardText);
+            console.log('📋 Solicitante capturado:', getCardSearchableText(card).split(' ').find(w => w.toLowerCase().includes('gean')));
+            console.log('✅ Match encontrado?', normalizedCardText.includes(normalizedSearchTerm));
+        }
+        
+        const isMatch = normalizedSearchTerm === '' || normalizedCardText.includes(normalizedSearchTerm);
         
         if (isMatch) {
+            card.style.display = '';
+            card.style.visibility = 'visible';
+            card.style.opacity = '1';
             card.classList.remove('filtered-out');
             card.classList.add('filtered-in');
             visibleCount++;
         } else {
+            card.style.display = 'none';
+            card.style.visibility = 'hidden';
             card.classList.remove('filtered-in');
             card.classList.add('filtered-out');
         }
@@ -1834,14 +1881,53 @@ function filterCardsInColumn(column, searchTerm) {
 // Função para extrair texto pesquisável do card
 function getCardSearchableText(card) {
     const title = card.querySelector('.card-title')?.textContent || '';
-    const id = card.querySelector('.info-value')?.textContent || '';
-    const solicitante = card.querySelectorAll('.info-value')[1]?.textContent || '';
-    const recebedor = card.querySelectorAll('.info-value')[2]?.textContent || '';
-    const valor = card.querySelectorAll('.info-value')[3]?.textContent || '';
+    
+    // Buscar todos os valores de info-value
+    const allInfoValues = card.querySelectorAll('.info-value');
+    const id = allInfoValues[0]?.textContent || '';
+    
+    // Buscar solicitante e recebedor de forma mais robusta
+    const infoItems = card.querySelectorAll('.info-item');
+    let solicitante = '';
+    let recebedor = '';
+    let valor = '';
+    
+    infoItems.forEach(item => {
+        const labelElement = item.querySelector('.info-label');
+        const valueElement = item.querySelector('.info-value');
+        
+        if (labelElement && valueElement) {
+            const label = labelElement.textContent.trim().toUpperCase();
+            const value = valueElement.textContent.trim();
+            
+            if (label.includes('SOLICITANTE')) {
+                solicitante = value;
+            } else if (label.includes('RECEBEDOR')) {
+                recebedor = value;
+            } else if (label.includes('VALOR')) {
+                valor = value;
+            }
+        }
+    });
+    
+    // Fallback: tentar pelos índices se não encontrou pelo label
+    if (!solicitante && allInfoValues.length > 1) {
+        solicitante = allInfoValues[1]?.textContent || '';
+    }
+    if (!recebedor && allInfoValues.length > 2) {
+        recebedor = allInfoValues[2]?.textContent || '';
+    }
+    if (!valor && allInfoValues.length > 3) {
+        valor = allInfoValues[3]?.textContent || '';
+    }
+    
     const prioridade = card.querySelector('.priority')?.textContent || '';
     const status = card.querySelector('.card-stage')?.textContent || '';
     
-    return `${title} ${id} ${solicitante} ${recebedor} ${valor} ${prioridade} ${status}`;
+    // Combinar todos os textos pesquisáveis
+    const searchableText = `${title} ${id} ${solicitante} ${recebedor} ${valor} ${prioridade} ${status}`.trim();
+    
+    return searchableText;
 }
 
 // Função para atualizar botão limpar

@@ -1,0 +1,617 @@
+⚠️ ATENÇÃO: Email SMTP não configurado. Usando console backend (emails aparecerão no terminal).
+   Para enviar emails reais, configure EMAIL_HOST_USER e EMAIL_HOST_PASSWORD no arquivo .env
+   Veja instruções em: CONFIGURAR_EMAIL.md
+[
+{
+    "model": "contenttypes.contenttype",
+    "fields": {
+        "app_label": "admin",
+        "model": "logentry"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "fields": {
+        "app_label": "auth",
+        "model": "permission"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "fields": {
+        "app_label": "auth",
+        "model": "group"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "fields": {
+        "app_label": "auth",
+        "model": "user"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "fields": {
+        "app_label": "contenttypes",
+        "model": "contenttype"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "fields": {
+        "app_label": "sessions",
+        "model": "session"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "fields": {
+        "app_label": "solicitacoes",
+        "model": "solicitacoes"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "fields": {
+        "app_label": "solicitacoes",
+        "model": "solicitacaorotaitem"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "fields": {
+        "app_label": "solicitacoes",
+        "model": "recebedor"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "fields": {
+        "app_label": "solicitacoes",
+        "model": "clienteempresa"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "fields": {
+        "app_label": "usuarios",
+        "model": "passwordresettoken"
+    }
+},
+{
+    "model": "contenttypes.contenttype",
+    "fields": {
+        "app_label": "servicos",
+        "model": "servico"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can add log entry",
+        "content_type": [
+            "admin",
+            "logentry"
+        ],
+        "codename": "add_logentry"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can change log entry",
+        "content_type": [
+            "admin",
+            "logentry"
+        ],
+        "codename": "change_logentry"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can delete log entry",
+        "content_type": [
+            "admin",
+            "logentry"
+        ],
+        "codename": "delete_logentry"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can view log entry",
+        "content_type": [
+            "admin",
+            "logentry"
+        ],
+        "codename": "view_logentry"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can add permission",
+        "content_type": [
+            "auth",
+            "permission"
+        ],
+        "codename": "add_permission"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can change permission",
+        "content_type": [
+            "auth",
+            "permission"
+        ],
+        "codename": "change_permission"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can delete permission",
+        "content_type": [
+            "auth",
+            "permission"
+        ],
+        "codename": "delete_permission"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can view permission",
+        "content_type": [
+            "auth",
+            "permission"
+        ],
+        "codename": "view_permission"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can add group",
+        "content_type": [
+            "auth",
+            "group"
+        ],
+        "codename": "add_group"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can change group",
+        "content_type": [
+            "auth",
+            "group"
+        ],
+        "codename": "change_group"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can delete group",
+        "content_type": [
+            "auth",
+            "group"
+        ],
+        "codename": "delete_group"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can view group",
+        "content_type": [
+            "auth",
+            "group"
+        ],
+        "codename": "view_group"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can add user",
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "codename": "add_user"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can change user",
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "codename": "change_user"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can delete user",
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "codename": "delete_user"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can view user",
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "codename": "view_user"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can add content type",
+        "content_type": [
+            "contenttypes",
+            "contenttype"
+        ],
+        "codename": "add_contenttype"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can change content type",
+        "content_type": [
+            "contenttypes",
+            "contenttype"
+        ],
+        "codename": "change_contenttype"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can delete content type",
+        "content_type": [
+            "contenttypes",
+            "contenttype"
+        ],
+        "codename": "delete_contenttype"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can view content type",
+        "content_type": [
+            "contenttypes",
+            "contenttype"
+        ],
+        "codename": "view_contenttype"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can add session",
+        "content_type": [
+            "sessions",
+            "session"
+        ],
+        "codename": "add_session"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can change session",
+        "content_type": [
+            "sessions",
+            "session"
+        ],
+        "codename": "change_session"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can delete session",
+        "content_type": [
+            "sessions",
+            "session"
+        ],
+        "codename": "delete_session"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can view session",
+        "content_type": [
+            "sessions",
+            "session"
+        ],
+        "codename": "view_session"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can add solicitacoes",
+        "content_type": [
+            "solicitacoes",
+            "solicitacoes"
+        ],
+        "codename": "add_solicitacoes"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can change solicitacoes",
+        "content_type": [
+            "solicitacoes",
+            "solicitacoes"
+        ],
+        "codename": "change_solicitacoes"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can delete solicitacoes",
+        "content_type": [
+            "solicitacoes",
+            "solicitacoes"
+        ],
+        "codename": "delete_solicitacoes"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can view solicitacoes",
+        "content_type": [
+            "solicitacoes",
+            "solicitacoes"
+        ],
+        "codename": "view_solicitacoes"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can add Item da Rota",
+        "content_type": [
+            "solicitacoes",
+            "solicitacaorotaitem"
+        ],
+        "codename": "add_solicitacaorotaitem"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can change Item da Rota",
+        "content_type": [
+            "solicitacoes",
+            "solicitacaorotaitem"
+        ],
+        "codename": "change_solicitacaorotaitem"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can delete Item da Rota",
+        "content_type": [
+            "solicitacoes",
+            "solicitacaorotaitem"
+        ],
+        "codename": "delete_solicitacaorotaitem"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can view Item da Rota",
+        "content_type": [
+            "solicitacoes",
+            "solicitacaorotaitem"
+        ],
+        "codename": "view_solicitacaorotaitem"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can add Recebedor",
+        "content_type": [
+            "solicitacoes",
+            "recebedor"
+        ],
+        "codename": "add_recebedor"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can change Recebedor",
+        "content_type": [
+            "solicitacoes",
+            "recebedor"
+        ],
+        "codename": "change_recebedor"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can delete Recebedor",
+        "content_type": [
+            "solicitacoes",
+            "recebedor"
+        ],
+        "codename": "delete_recebedor"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can view Recebedor",
+        "content_type": [
+            "solicitacoes",
+            "recebedor"
+        ],
+        "codename": "view_recebedor"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can add Cliente/Empresa",
+        "content_type": [
+            "solicitacoes",
+            "clienteempresa"
+        ],
+        "codename": "add_clienteempresa"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can change Cliente/Empresa",
+        "content_type": [
+            "solicitacoes",
+            "clienteempresa"
+        ],
+        "codename": "change_clienteempresa"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can delete Cliente/Empresa",
+        "content_type": [
+            "solicitacoes",
+            "clienteempresa"
+        ],
+        "codename": "delete_clienteempresa"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can view Cliente/Empresa",
+        "content_type": [
+            "solicitacoes",
+            "clienteempresa"
+        ],
+        "codename": "view_clienteempresa"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can add Token de Recuperação de Senha",
+        "content_type": [
+            "usuarios",
+            "passwordresettoken"
+        ],
+        "codename": "add_passwordresettoken"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can change Token de Recuperação de Senha",
+        "content_type": [
+            "usuarios",
+            "passwordresettoken"
+        ],
+        "codename": "change_passwordresettoken"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can delete Token de Recuperação de Senha",
+        "content_type": [
+            "usuarios",
+            "passwordresettoken"
+        ],
+        "codename": "delete_passwordresettoken"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can view Token de Recuperação de Senha",
+        "content_type": [
+            "usuarios",
+            "passwordresettoken"
+        ],
+        "codename": "view_passwordresettoken"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can add Serviço",
+        "content_type": [
+            "servicos",
+            "servico"
+        ],
+        "codename": "add_servico"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can change Serviço",
+        "content_type": [
+            "servicos",
+            "servico"
+        ],
+        "codename": "change_servico"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can delete Serviço",
+        "content_type": [
+            "servicos",
+            "servico"
+        ],
+        "codename": "delete_servico"
+    }
+},
+{
+    "model": "auth.permission",
+    "fields": {
+        "name": "Can view Serviço",
+        "content_type": [
+            "servicos",
+            "servico"
+        ],
+        "codename": "view_servico"
+    }
+}
+]
