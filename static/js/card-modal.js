@@ -55,39 +55,108 @@ function calculateQueueTime() {
 
 // Função para inicializar expansão dos cards do Django
 function initializeCardExpansion() {
-    const cards = document.querySelectorAll('.card');
+    // Buscar TODOS os cards (não apenas os não inicializados) para garantir
+    const allCards = document.querySelectorAll('.card');
+    const cards = Array.from(allCards).filter(card => !card.hasAttribute('data-modal-initialized'));
+    
+    console.log(`🔧 Inicializando ${cards.length} cards de ${allCards.length} total`);
     
     cards.forEach(card => {
-        // Adicionar evento de clique para abrir modal de detalhes
-        card.addEventListener('click', function(e) {
-            // Não abrir modal se clicar nos botões de ação ou elementos específicos
+        // Marcar card como inicializado para evitar duplicar listeners
+        card.setAttribute('data-modal-initialized', 'true');
+        
+        // Remover listener anterior se existir (usando named function para poder remover)
+        if (card._modalClickHandler) {
+            card.removeEventListener('click', card._modalClickHandler);
+        }
+        
+        // Clique simples com prioridade máxima
+        card._modalClickHandler = function(e) {
             if (e.target.closest('.card-actions') || 
                 e.target.closest('.card-action-btn') ||
-                e.target.closest('.priority') ||
-                e.target.closest('.card-count')) {
+                e.target.closest('.card-count') ||
+                e.target.closest('.selected-date-display') ||
+                e.target.closest('.date-filter-btn')) {
                 return;
             }
-            
+
+            if (card.classList.contains('dragging')) {
+                console.log('❌ Clique ignorado - card em drag');
+                return;
+            }
+
+            console.log('✅ Clique válido - abrindo modal para', card.dataset.cardId);
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
             openCardDetailModal(card);
-        });
+            return false;
+        };
+
+        card.addEventListener('click', card._modalClickHandler, true);
         
         // Adicionar indicador visual de que o card é clicável
-        if (!card.querySelector('.expand-indicator')) {
-            const indicator = document.createElement('div');
+        let indicator = card.querySelector('.expand-indicator');
+        if (!indicator) {
+            indicator = document.createElement('div');
             indicator.className = 'expand-indicator';
             indicator.innerHTML = '<i class="fas fa-external-link-alt"></i>';
+            indicator.style.cursor = 'pointer';
+            indicator.title = 'Clique para ver detalhes';
             card.appendChild(indicator);
         }
+        
+        // Tornar o indicador clicável diretamente
+        indicator.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            console.log('✅ Indicador clicado - abrindo modal');
+            openCardDetailModal(card);
+        }, true);
+        
+        // Adicionar cursor pointer para indicar que é clicável
+        if (!card.style.cursor) {
+            card.style.cursor = 'pointer';
+        }
     });
+    
+    console.log(`✅ ${cards.length} cards inicializados para abertura de modal`);
+    
+    // Log adicional para debug
+    if (cards.length === 0) {
+        console.warn('⚠️ Nenhum card encontrado para inicializar!');
+    } else {
+        console.log('📋 Cards encontrados:', cards.length);
+        cards.forEach((card, index) => {
+            console.log(`  ${index + 1}. Card ID: ${card.getAttribute('data-card-id') || 'sem ID'}`);
+        });
+    }
+    
+    console.log('✅ Total de cards no DOM:', document.querySelectorAll('.card').length);
 }
 
 // Função para abrir modal de detalhes do card
-async function openCardDetailModal(card) {    const modal = document.getElementById('cardDetailModal');
-    const header = modal.querySelector('.modal-header');
+async function openCardDetailModal(card) {
+    console.log('🔍 Tentando abrir modal para o card:', card);
+    console.log('🔍 Card ID:', card.getAttribute('data-card-id'));
+    
+    const modal = document.getElementById('cardDetailModal');
+    const header = modal ? modal.querySelector('.modal-header') : null;
     
     if (!modal) {
-        console.error('Modal não encontrado!');
+        console.error('❌ Modal não encontrado!');
+        alert('Erro: Modal de detalhes não encontrado. Por favor, recarregue a página.');
         return;
+    }
+    
+    console.log('✅ Modal encontrado:', modal);
+    
+    // Verificar se o modal já está aberto
+    if (modal.classList.contains('show')) {
+        console.log('⚠️ Modal já está aberto, fechando primeiro...');
+        closeCardDetailModal();
+        await new Promise(resolve => setTimeout(resolve, 300)); // Aguardar animação
     }
     
     // Extrair dados do card (agora é async)
@@ -151,10 +220,44 @@ async function openCardDetailModal(card) {    const modal = document.getElementB
     // A seção "Mover para Fila" já está controlada pelo template Django (permissões)
     // Se o usuário não tem permissão, a seção não será renderizada
     
-    // Mostrar modal
-    modal.style.display = 'flex';
-    requestAnimationFrame(() => modal.classList.add('show'));
+    // Mostrar modal - SIMPLIFICADO E DIRETO
+    console.log('🎬 Mostrando modal...');
+    
+    // Primeiro remover qualquer estilo inline que possa estar bloqueando
+    modal.style.display = '';
+    modal.style.visibility = '';
+    modal.style.opacity = '';
+    
+    // Adicionar a classe 'show' que o CSS precisa
+    modal.classList.add('show');
+    
+    // Bloquear scroll do body
     document.body.style.overflow = 'hidden';
+    
+    // Forçar reflow para garantir que o CSS seja aplicado
+    void modal.offsetHeight;
+    
+    // Verificar se apareceu
+    setTimeout(() => {
+        const computedStyle = window.getComputedStyle(modal);
+        console.log('🎬 Estado do modal após exibição:', {
+            display: computedStyle.display,
+            visibility: computedStyle.visibility,
+            opacity: computedStyle.opacity,
+            hasShowClass: modal.classList.contains('show'),
+            zIndex: computedStyle.zIndex
+        });
+        
+        // Se ainda não estiver visível, forçar
+        if (computedStyle.display === 'none' || computedStyle.visibility === 'hidden') {
+            console.warn('⚠️ Modal ainda não visível, forçando exibição...');
+            modal.style.display = 'flex';
+            modal.style.visibility = 'visible';
+            modal.style.opacity = '1';
+        }
+    }, 50);
+    
+    console.log('✅ Modal deve estar visível agora');
     
     // BLOQUEAR fechamento ao clicar fora - ADICIONAR IMEDIATAMENTE E REPETIDAMENTE
     function blockAllCloseAttempts() {
@@ -1637,16 +1740,30 @@ function closeCardDetailModal() {
 
 // Inicialização quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 card-modal.js: DOMContentLoaded disparado');
+    
     calculateQueueTime();
     
     // Atualizar a cada minuto
     setInterval(calculateQueueTime, 60000);
     
     // Inicializar expansão dos cards do Django
+    console.log('🚀 card-modal.js: Inicializando cards...');
     initializeCardExpansion();
+    
+    // Re-inicializar após um delay para garantir que todos os scripts carregaram
+    setTimeout(() => {
+        console.log('🚀 card-modal.js: Re-inicializando cards após delay...');
+        initializeCardExpansion();
+    }, 1000);
     
     // Inicializar filtros das colunas
     initializeColumnFilters();
+    
+    // Expor função globalmente para debug
+    window.initializeCardExpansion = initializeCardExpansion;
+    window.openCardDetailModal = openCardDetailModal;
+    console.log('✅ card-modal.js: Funções expostas globalmente');
 });
 
 // ========================================

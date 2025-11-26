@@ -96,6 +96,277 @@
     color: #1C1C1C;
 }
 
+/* Filtro de data por coluna */
+.column-date-filter {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.selected-date-display {
+    font-size: 0.85rem;
+    color: #666666;
+    font-weight: 600;
+    padding: 6px 12px;
+    background: rgba(102, 102, 102, 0.12);
+    border-radius: 8px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-left: 3px solid rgba(102, 102, 102, 0.5);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.selected-date-display.filtered {
+    color: #555555;
+    background: rgba(85, 85, 85, 0.18);
+    border-left-color: #555555;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+.selected-date-display i {
+    font-size: 0.75rem;
+    color: inherit;
+}
+
+.date-filter-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #544350;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.date-filter-btn:hover {
+    background: rgba(255, 203, 87, 0.2);
+    color: #1C1C1C;
+}
+
+.date-filter-btn i {
+    font-size: 1.1rem;
+}
+
+/* Modal de Filtro de Data - Elegante e Moderno */
+.date-filter-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.date-filter-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.date-filter-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(28, 28, 28, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.date-filter-modal-content {
+    position: relative;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    width: 90%;
+    max-width: 500px;
+    transform: scale(0.9) translateY(-20px);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.date-filter-modal.show .date-filter-modal-content {
+    transform: scale(1) translateY(0);
+}
+
+.date-filter-modal-header {
+    background: linear-gradient(135deg, #FFCB57 0%, #FFD700 100%);
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid rgba(28, 28, 28, 0.1);
+}
+
+.date-filter-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #1C1C1C;
+}
+
+.date-filter-modal-title i {
+    font-size: 1.5rem;
+    color: #1C1C1C;
+}
+
+.date-filter-modal-title h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1C1C1C;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.date-filter-modal-close {
+    background: rgba(28, 28, 28, 0.1);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1C1C1C;
+    font-size: 1.2rem;
+    transition: all 0.2s ease;
+}
+
+.date-filter-modal-close:hover {
+    background: rgba(28, 28, 28, 0.2);
+    transform: rotate(90deg);
+}
+
+.date-filter-modal-body {
+    padding: 32px 28px;
+}
+
+.date-filter-form-group {
+    margin-bottom: 24px;
+}
+
+.date-filter-form-group label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #544350;
+    margin-bottom: 12px;
+}
+
+.date-filter-form-group label i {
+    color: #FFCB57;
+    font-size: 1.1rem;
+}
+
+.date-filter-modal-input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid rgba(84, 67, 80, 0.2);
+    border-radius: 12px;
+    font-size: 1rem;
+    color: #1C1C1C;
+    background: white;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.date-filter-modal-input:hover {
+    border-color: #FFCB57;
+    box-shadow: 0 4px 12px rgba(255, 203, 87, 0.2);
+}
+
+.date-filter-modal-input:focus {
+    outline: none;
+    border-color: #FFCB57;
+    box-shadow: 0 0 0 4px rgba(255, 203, 87, 0.2), 0 4px 16px rgba(255, 203, 87, 0.3);
+    transform: translateY(-2px);
+}
+
+.date-filter-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, rgba(255, 203, 87, 0.1) 0%, rgba(255, 203, 87, 0.05) 100%);
+    border-radius: 12px;
+    border-left: 4px solid #FFCB57;
+}
+
+.date-filter-info i {
+    color: #FFCB57;
+    font-size: 1.1rem;
+}
+
+.date-filter-info span {
+    color: #544350;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.date-filter-modal-footer {
+    padding: 20px 28px;
+    background: rgba(244, 247, 245, 0.5);
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    border-top: 1px solid rgba(84, 67, 80, 0.1);
+}
+
+.date-filter-btn-clear,
+.date-filter-btn-apply {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.date-filter-btn-clear {
+    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+
+.date-filter-btn-clear:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(244, 67, 54, 0.4);
+}
+
+.date-filter-btn-apply {
+    background: linear-gradient(135deg, #FFCB57 0%, #FFD700 100%);
+    color: #1C1C1C;
+    box-shadow: 0 4px 12px rgba(255, 203, 87, 0.4);
+}
+
+.date-filter-btn-apply:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 203, 87, 0.5);
+}
+
 .column-content {
     flex: 1;
     padding: 20px;

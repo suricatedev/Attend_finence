@@ -419,9 +419,7 @@ class RelatoriosOptimized {
             this.exportToPDF();
         });
 
-        document.getElementById('exportCSV')?.addEventListener('click', () => {
-            this.exportToCSV();
-        });
+        // CSV removido - apenas Excel e PDF disponíveis
 
         // Modal de detalhes
         document.getElementById('closeDetailsModal')?.addEventListener('click', () => {
@@ -1304,6 +1302,13 @@ class RelatoriosOptimized {
 
     exportToExcel() {
         try {
+            // Verificar se a biblioteca XLSX está disponível
+            if (typeof XLSX === 'undefined') {
+                alert('Biblioteca XLSX não carregada. Por favor, recarregue a página.');
+                console.error('XLSX não encontrado');
+                return;
+            }
+
             // Pegar dados diretamente da tabela HTML
             const table = document.getElementById('reportsTable');
             if (!table) {
@@ -1311,10 +1316,7 @@ class RelatoriosOptimized {
                 return;
             }
 
-            let csvContent = '\uFEFF'; // UTF-8 BOM para Excel
-            const delimiter = ';'; // Usar ponto e vírgula para Excel brasileiro
-            
-            // Pegar cabeçalhos (excluindo coluna de ações)
+            // Coletar cabeçalhos (excluindo coluna de ações)
             const headers = [];
             table.querySelectorAll('thead th').forEach(th => {
                 // Pular coluna de ações
@@ -1323,81 +1325,117 @@ class RelatoriosOptimized {
                 }
                 
                 let text = th.textContent.replace(/\s+/g, ' ').trim();
-                
                 // Remover ícones de ordenação (setas)
                 text = text.replace(/↑|↓/g, '').trim();
-                
-                // Remover espaços extras e quebras de linha
                 text = text.replace(/\s+/g, ' ').trim();
-                
-                // Se contém delimitador, vírgula ou aspas, envolver em aspas
-                if (text.includes(delimiter) || text.includes(',') || text.includes('"') || text.includes('\n')) {
-                    text = '"' + text.replace(/"/g, '""') + '"';
-                }
                 
                 if (text && text.length > 0) {
                     headers.push(text);
                 }
             });
-            csvContent += headers.join(delimiter) + '\n';
 
-            // Pegar dados das linhas
+            // Coletar dados das linhas
+            const rows = [];
+            const monetaryColumns = []; // Índices das colunas que contêm valores monetários
+            
+            // Identificar colunas monetárias pelos cabeçalhos
+            headers.forEach((header, idx) => {
+                if (header.includes('Valor') || header.includes('Receita') || header.includes('KM') || 
+                    header.includes('Pedágio') || header.includes('Hospedagem') || header.includes('Fluvial') || 
+                    header.includes('Outros') || header.includes('EM ROTA')) {
+                    monetaryColumns.push(idx);
+                }
+            });
+            
             table.querySelectorAll('tbody tr:not(.empty-state)').forEach(tr => {
                 const row = [];
-                tr.querySelectorAll('td').forEach((td, index) => {
+                
+                tr.querySelectorAll('td').forEach((td, tdIndex) => {
                     // Se for a coluna de ações, pular
                     if (td.classList.contains('actions-cell')) {
                         return;
                     }
                     
-                    let cellValue = td.textContent.trim();
-                    
-                    // Remover espaços extras e quebras de linha
-                    cellValue = cellValue.replace(/\s+/g, ' ').trim();
+                    let cellValue = '';
                     
                     // Limpar valores de status e prioridade (remover badges)
                     if (td.querySelector('.status-badge')) {
                         cellValue = td.querySelector('.status-badge').textContent.trim();
                     } else if (td.querySelector('.priority-badge')) {
                         cellValue = td.querySelector('.priority-badge').textContent.trim();
+                    } else {
+                        cellValue = td.textContent.trim();
                     }
                     
-                    // Para valores monetários, manter formato original
-                    // Não precisa envolver em aspas se não contiver delimitador
+                    // Remover espaços extras e quebras de linha
+                    cellValue = cellValue.replace(/\s+/g, ' ').trim();
                     
-                    // Se contém delimitador, vírgula, aspas ou quebra de linha, envolver em aspas e escapar aspas
-                    if (cellValue.includes(delimiter) || cellValue.includes(',') || cellValue.includes('"') || cellValue.includes('\n')) {
-                        cellValue = '"' + cellValue.replace(/"/g, '""') + '"';
-                    }
-                    
-                    row.push(cellValue || ''); // Garantir que sempre tenha um valor
+                    row.push(cellValue || '');
                 });
                 
-                // Só adicionar linha se tiver dados (não vazia)
                 if (row.length > 0) {
-                    csvContent += row.join(delimiter) + '\n';
+                    rows.push(row);
                 }
             });
 
-            // Criar blob e download
-            // Usar CSV com encoding UTF-8 BOM e ponto e vírgula como delimitador
-            const blob = new Blob([csvContent], { 
-                type: 'text/csv;charset=utf-8;' 
-            });
-            const link = document.createElement('a');
-            const dateStr = new Date().toISOString().split('T')[0];
-            const fileName = `relatorios_financeiros_${dateStr}.csv`;
-            link.href = URL.createObjectURL(blob);
-            link.download = fileName;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
+            // Criar workbook
+            const wb = XLSX.utils.book_new();
             
-            // Limpar após um tempo
-            setTimeout(() => {
-                document.body.removeChild(link);
-                URL.revokeObjectURL(link.href);
-            }, 100);
+            // Converter dados para worksheet
+            const wsData = [headers, ...rows];
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            
+            // Configurar larguras de colunas
+            const colWidths = headers.map((header) => {
+                // Larguras baseadas no tipo de conteúdo
+                if (header.includes('Valor') || header.includes('Receita') || header.includes('KM') || 
+                    header.includes('Pedágio') || header.includes('Hospedagem') || header.includes('Fluvial') || 
+                    header.includes('Outros') || header.includes('EM ROTA')) {
+                    return { wch: 15 };
+                } else if (header.includes('Data') || header.includes('Criação') || header.includes('Pagamento')) {
+                    return { wch: 12 };
+                } else if (header.includes('Status') || header.includes('Prioridade')) {
+                    return { wch: 12 };
+                } else if (header.includes('ID') || header.includes('Título')) {
+                    return { wch: 18 };
+                } else {
+                    return { wch: 20 };
+                }
+            });
+            ws['!cols'] = colWidths;
+            
+            // Converter valores monetários para números e aplicar formatação
+            rows.forEach((row, rowIdx) => {
+                monetaryColumns.forEach(colIdx => {
+                    const cellAddress = XLSX.utils.encode_cell({ r: rowIdx + 1, c: colIdx });
+                    const cell = ws[cellAddress];
+                    if (cell && cell.v) {
+                        // Extrair número do valor monetário
+                        const numValue = String(cell.v).replace(/R\$\s?/g, '').replace(/\./g, '').replace(',', '.');
+                        const parsedNum = parseFloat(numValue);
+                        if (!isNaN(parsedNum)) {
+                            cell.v = parsedNum;
+                            cell.t = 'n';
+                            cell.z = '"R$"#,##0.00';
+                        }
+                    }
+                });
+            });
+            
+            // Congelar primeira linha (cabeçalho)
+            ws['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' };
+            
+            // Auto-filtrar (opcional - pode ser ativado pelo usuário no Excel)
+            ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length, c: headers.length - 1 } }) };
+            
+            // Adicionar worksheet ao workbook
+            XLSX.utils.book_append_sheet(wb, ws, "Relatórios Financeiros");
+            
+            // Gerar arquivo e fazer download
+            const dateStr = new Date().toISOString().split('T')[0];
+            const fileName = `relatorios_financeiros_${dateStr}.xlsx`;
+            
+            XLSX.writeFile(wb, fileName);
             
             // Mostrar mensagem de sucesso
             this.showNotification('Arquivo Excel exportado com sucesso!', 'success');
@@ -1568,33 +1606,7 @@ class RelatoriosOptimized {
             alert('Erro ao exportar para PDF: ' + error.message);
         }    }
 
-    exportToCSV() {
-        const csvContent = this.generateCSV();
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `relatorios_${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
-    }
-
-    generateCSV() {
-        const headers = ['ID', 'Título', 'Solicitante', 'Supervisor', 'Recebedor', 'Serviço', 'Valor', 'Status', 'Prioridade', 'Data Criação', 'Data Pagamento'];
-        const rows = this.filteredData.map(item => [
-            item.id,
-            item.title,
-            item.solicitante,
-            item.supervisor || '-',
-            item.recebedor,
-            this.getServiceName(item.service),
-            item.valor,
-            this.getStatusName(item.status),
-            this.getPriorityName(item.priority),
-            this.formatDate(item.dataCriacao),
-            this.formatDate(item.dataPagamento)
-        ]);
-
-        return [headers, ...rows].map(row => row.join(',')).join('\n');
-    }
+    // Funções CSV removidas - usando apenas XLSX formatado
 
     // Métodos auxiliares otimizados
     getServiceName(service) {

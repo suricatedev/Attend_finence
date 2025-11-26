@@ -44,7 +44,7 @@ window.addEventListener('DOMContentLoaded', function() {
                 
                 console.log('✅ Formulário limpo e resetado para padrão (Casual)');
             }
-                        modal.style.display = 'flex';
+            modal.style.display = 'flex';
             modal.classList.add('show');
         });
     }
@@ -135,7 +135,8 @@ window.addEventListener('DOMContentLoaded', function() {
         btnFechar.addEventListener('click', function(e) {
             e.stopPropagation();
             console.log('❌ Fechando modal...');
-            clearFormCompletely();            modal.style.display = 'none';
+            clearFormCompletely();
+            modal.style.display = 'none';
             modal.classList.remove('show');
         });
     }
@@ -145,21 +146,31 @@ window.addEventListener('DOMContentLoaded', function() {
         btnCancelar.addEventListener('click', function(e) {
             e.stopPropagation();
             console.log('❌ Cancelando...');
-            clearFormCompletely();            modal.style.display = 'none';
+            clearFormCompletely();
+            modal.style.display = 'none';
             modal.classList.remove('show');
         });
     }
     
-    // Quando clicar FORA do modal (no overlay escuro), FECHAR
-    // DESABILITADO COMPLETAMENTE - Modal não fecha mais ao clicar fora
-    // NENHUM CÓDIGO AQUI FECHA O MODAL AO CLICAR FORA
-    // O código original foi completamente removido
+    // BLOQUEAR fechamento ao clicar fora (overlay escuro)
+    // O modal só fecha via botão X, Cancelar ou ESC
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            // Se clicar diretamente no overlay/modal (não no conteúdo), BLOQUEAR o fechamento
+            if (e.target === modal) {
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                console.log('🛡️ Clique no overlay bloqueado - modal não fecha');
+            }
+        }, true); // Usar capture phase para interceptar antes de outros listeners
+    }
     
     // Quando apertar ESC, FECHAR o modal
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
             console.log('❌ ESC pressionado...');
-            clearFormCompletely();            modal.style.display = 'none';
+            clearFormCompletely();
+            modal.style.display = 'none';
             modal.classList.remove('show');
         }
     });

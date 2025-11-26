@@ -179,12 +179,10 @@
                             <span>Pendente</span>
                 <span class="card-count">{{ num_solicitacoes_pendentes }}</span>
                         </div>
-                        <div class="column-actions">
-                            <button class="add-card-btn" title="Adicionar card">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                            <button class="column-menu-btn" title="Menu da coluna">
-                                <i class="fas fa-ellipsis-h"></i>
+                        <div class="column-date-filter">
+                            <span class="selected-date-display" data-column="planning">Todos</span>
+                            <button class="date-filter-btn" title="Filtrar por data" data-column="planning">
+                                <i class="fas fa-calendar-alt"></i>
                             </button>
                         </div>
                     </div>
@@ -199,7 +197,7 @@
                     </div>
                     <div class="column-content" data-column="planning">
                         {% for solicitacao in solicitacoes_pendentes %}
-            <div class="card card-status-pending" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}">
+            <div class="card card-status-pending" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -243,6 +241,9 @@
                             <div class="card-footer">
                                 <span class="card-stage">Solicitação pendente de análise</span>
                             </div>
+                            <div class="expand-indicator" title="Clique para ver detalhes">
+                                <i class="fas fa-external-link-alt"></i>
+                            </div>
                         </div>
             {% empty %}
             <div class="empty-column">
@@ -261,12 +262,10 @@
                             <span>Recusado</span>
                 <span class="card-count">{{ num_solicitacoes_recusados }}</span>
                         </div>
-                        <div class="column-actions">
-                            <button class="add-card-btn" title="Adicionar card">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                            <button class="column-menu-btn" title="Menu da coluna">
-                                <i class="fas fa-ellipsis-h"></i>
+                        <div class="column-date-filter">
+                            <span class="selected-date-display" data-column="test">Todos</span>
+                            <button class="date-filter-btn" title="Filtrar por data" data-column="test">
+                                <i class="fas fa-calendar-alt"></i>
                             </button>
                         </div>
                     </div>
@@ -281,7 +280,7 @@
                     </div>
                     <div class="column-content" data-column="test">
             {% for solicitacao in solicitacoes_recusados %}
-            <div class="card card-status-rejected" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}">
+            <div class="card card-status-rejected" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -325,6 +324,9 @@
                             <div class="card-footer">
                     <span class="card-stage">Solicitação recusada</span>
                             </div>
+                            <div class="expand-indicator" title="Clique para ver detalhes">
+                                <i class="fas fa-external-link-alt"></i>
+                            </div>
                         </div>
             {% empty %}
             <div class="empty-column">
@@ -343,12 +345,10 @@
                             <span>Aprovado</span>
                 <span class="card-count">{{ num_solicitacoes_aprovado }}</span>
                         </div>
-                        <div class="column-actions">
-                            <button class="add-card-btn" title="Adicionar card">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                            <button class="column-menu-btn" title="Menu da coluna">
-                                <i class="fas fa-ellipsis-h"></i>
+                        <div class="column-date-filter">
+                            <span class="selected-date-display" data-column="launch">Todos</span>
+                            <button class="date-filter-btn" title="Filtrar por data" data-column="launch">
+                                <i class="fas fa-calendar-alt"></i>
                             </button>
                         </div>
                     </div>
@@ -363,7 +363,7 @@
                     </div>
                     <div class="column-content" data-column="launch">
                         {% for solicitacao in solicitacoes_aprovado %}
-            <div class="card card-status-approved" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}">
+            <div class="card card-status-approved" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -407,6 +407,9 @@
                             <div class="card-footer">
                                 <span class="card-stage">Aprovado e em processamento</span>
                             </div>
+                            <div class="expand-indicator" title="Clique para ver detalhes">
+                                <i class="fas fa-external-link-alt"></i>
+                            </div>
                         </div>
             {% empty %}
             <div class="empty-column">
@@ -425,12 +428,10 @@
                             <span>Concluído</span>
                 <span class="card-count">{{ num_solicitacoes_concluido }}</span>
                         </div>
-                        <div class="column-actions">
-                            <button class="add-card-btn" title="Adicionar card">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                            <button class="column-menu-btn" title="Menu da coluna">
-                                <i class="fas fa-ellipsis-h"></i>
+                        <div class="column-date-filter">
+                            <span class="selected-date-display" data-column="success">Todos</span>
+                            <button class="date-filter-btn" title="Filtrar por data" data-column="success">
+                                <i class="fas fa-calendar-alt"></i>
                             </button>
                         </div>
                     </div>
@@ -445,7 +446,7 @@
                     </div>
                     <div class="column-content" data-column="success">
                         {% for solicitacao in solicitacoes_concluido %}
-            <div class="card card-status-completed" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}">
+            <div class="card card-status-completed" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -488,6 +489,9 @@
                             </div>
                             <div class="card-footer">
                                 <span class="card-stage">Solicitação concluída com sucesso</span>
+                            </div>
+                            <div class="expand-indicator" title="Clique para ver detalhes">
+                                <i class="fas fa-external-link-alt"></i>
                             </div>
                         </div>
             {% empty %}
@@ -622,6 +626,45 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal de Filtro de Data -->
+    <div class="date-filter-modal" id="dateFilterModal">
+        <div class="date-filter-modal-overlay"></div>
+        <div class="date-filter-modal-content">
+            <div class="date-filter-modal-header">
+                <div class="date-filter-modal-title">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3>Filtrar por Data</h3>
+                </div>
+                <button class="date-filter-modal-close" id="closeDateFilterModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="date-filter-modal-body">
+                <div class="date-filter-form-group">
+                    <label for="dateFilterInput">
+                        <i class="fas fa-calendar-check"></i>
+                        Selecione a data para filtrar as solicitações em todas as colunas:
+                    </label>
+                    <input type="date" id="dateFilterInput" class="date-filter-modal-input">
+                </div>
+                <div class="date-filter-info">
+                    <i class="fas fa-info-circle"></i>
+                    <span>O filtro será aplicado em todas as colunas (Pendente, Recusado, Aprovado e Concluído)</span>
+                </div>
+            </div>
+            <div class="date-filter-modal-footer">
+                <button class="date-filter-btn-clear" id="clearDateFilter">
+                    <i class="fas fa-eraser"></i>
+                    Limpar Filtro
+                </button>
+                <button class="date-filter-btn-apply" id="applyDateFilter">
+                    <i class="fas fa-check"></i>
+                    Aplicar Filtro
+                </button>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block extra_js %}
@@ -629,4 +672,251 @@
     <script src="{% static 'js/app.js' %}"></script>
     <script src="{% static 'js/card-modal.js' %}"></script>
     <script src="{% static 'js/kanban.js' %}"></script>
+    <script>
+        // Filtro de data por coluna do Kanban - Modal elegante
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateFilterModal = document.getElementById('dateFilterModal');
+            const dateFilterInput = document.getElementById('dateFilterInput');
+            const closeDateFilterModal = document.getElementById('closeDateFilterModal');
+            const applyDateFilter = document.getElementById('applyDateFilter');
+            const clearDateFilter = document.getElementById('clearDateFilter');
+            let currentColumn = null;
+
+            // Garantir que os cards tenham os event listeners do modal
+            function setupCardClickListeners() {
+                if (typeof initializeCardExpansion === 'function') {
+                    console.log('🔧 Inicializando listeners de clique nos cards...');
+                    initializeCardExpansion();
+                } else {
+                    console.error('❌ Função initializeCardExpansion não encontrada!');
+                    console.log('Aguardando carregamento do script...');
+                    // Tentar novamente após um delay
+                    setTimeout(() => {
+                        if (typeof initializeCardExpansion === 'function') {
+                            console.log('✅ Função encontrada agora, inicializando...');
+                            initializeCardExpansion();
+                        }
+                    }, 1000);
+                }
+            }
+            
+            // Inicializar imediatamente
+            setupCardClickListeners();
+            
+            // Re-inicializar após delays para garantir
+            setTimeout(setupCardClickListeners, 500);
+            setTimeout(setupCardClickListeners, 1000);
+            setTimeout(setupCardClickListeners, 2000);
+            
+            // Observar quando novos cards são adicionados ao DOM
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.addedNodes.length) {
+                        mutation.addedNodes.forEach(function(node) {
+                            if (node.nodeType === 1 && (node.classList && node.classList.contains('card'))) {
+                                console.log('🆕 Novo card detectado, reinicializando listeners...');
+                                setupCardClickListeners();
+                            }
+                        });
+                    }
+                });
+            });
+            
+            // Observar mudanças nas colunas do kanban
+            const kanbanBoard = document.querySelector('.kanban-board');
+            if (kanbanBoard) {
+                observer.observe(kanbanBoard, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+            
+            // Abrir modal ao clicar no botão de calendário (de qualquer coluna)
+            document.querySelectorAll('.date-filter-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    // Não importa qual coluna, vamos aplicar em todas
+                    currentColumn = null; // null significa aplicar em todas
+                    openDateFilterModal();
+                });
+            });
+
+            // Fechar modal
+            function closeModal() {
+                dateFilterModal.classList.remove('show');
+                dateFilterInput.value = '';
+                currentColumn = null;
+            }
+
+            function openDateFilterModal() {
+                dateFilterModal.classList.add('show');
+                setTimeout(() => dateFilterInput.focus(), 300);
+            }
+
+            // Event listeners do modal
+            closeDateFilterModal.addEventListener('click', closeModal);
+            dateFilterModal.querySelector('.date-filter-modal-overlay').addEventListener('click', closeModal);
+
+            // Aplicar filtro em TODAS as colunas
+            applyDateFilter.addEventListener('click', function() {
+                const selectedDate = dateFilterInput.value;
+                if (selectedDate) {
+                    // Aplicar filtro em todas as colunas
+                    const columns = ['planning', 'test', 'launch', 'success'];
+                    columns.forEach(column => {
+                        filterCardsByDate(column, selectedDate);
+                        showSelectedDate(column, selectedDate);
+                    });
+                    closeModal();
+                } else {
+                    alert('Por favor, selecione uma data para filtrar.');
+                }
+            });
+
+            // Limpar filtro de TODAS as colunas
+            clearDateFilter.addEventListener('click', function() {
+                const columns = ['planning', 'test', 'launch', 'success'];
+                columns.forEach(column => {
+                    clearDateFilterForColumn(column);
+                    showAll(column);
+                });
+                closeModal();
+            });
+            
+            // Função para formatar data no formato brasileiro
+            function formatDateBR(dateString) {
+                const date = new Date(dateString + 'T00:00:00');
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}/${month}/${year}`;
+            }
+            
+            // Função para mostrar a data selecionada
+            function showSelectedDate(column, date) {
+                const dateDisplay = document.querySelector(`.selected-date-display[data-column="${column}"]`);
+                if (dateDisplay) {
+                    dateDisplay.textContent = formatDateBR(date);
+                    dateDisplay.style.display = 'flex';
+                    dateDisplay.classList.add('filtered'); // Adicionar classe para diferenciar visualmente
+                }
+            }
+            
+            // Função para mostrar "Todos" quando não há filtro
+            function showAll(column) {
+                const dateDisplay = document.querySelector(`.selected-date-display[data-column="${column}"]`);
+                if (dateDisplay) {
+                    dateDisplay.textContent = 'Todos';
+                    dateDisplay.style.display = 'flex';
+                    dateDisplay.classList.remove('filtered'); // Remover classe para voltar ao estado padrão
+                }
+            }
+            
+            // Função para ocultar a data selecionada (substituída por showAll)
+            function hideSelectedDate(column) {
+                showAll(column);
+            }
+
+            // Aplicar filtro ao pressionar Enter
+            dateFilterInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    applyDateFilter.click();
+                }
+            });
+            
+            // Função para filtrar cards por data
+            function filterCardsByDate(column, date) {
+                const columnContent = document.querySelector(`.column-content[data-column="${column}"]`);
+                if (!columnContent) return;
+                
+                const cards = columnContent.querySelectorAll('.card[data-de-criacao]');
+                let visibleCount = 0;
+                
+                cards.forEach(card => {
+                    const cardDate = card.getAttribute('data-de-criacao');
+                    
+                    if (cardDate === date) {
+                        card.style.display = '';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                // Ocultar mensagem de coluna vazia se houver cards visíveis
+                const emptyColumn = columnContent.querySelector('.empty-column');
+                if (emptyColumn) {
+                    emptyColumn.style.display = visibleCount > 0 ? 'none' : '';
+                }
+                
+                // Atualizar contador
+                updateCardCount(column, visibleCount);
+                
+                // Garantir que os event listeners do modal estão ativos nos cards visíveis
+                if (typeof initializeCardExpansion === 'function') {
+                    initializeCardExpansion();
+                }
+                
+                console.log(`✅ Filtrado ${column}: ${visibleCount} cards para a data ${date}`);
+            }
+            
+            // Função para limpar filtro de data
+            function clearDateFilterForColumn(column) {
+                const columnContent = document.querySelector(`.column-content[data-column="${column}"]`);
+                if (!columnContent) return;
+                
+                const cards = columnContent.querySelectorAll('.card[data-de-criacao]');
+                
+                cards.forEach(card => {
+                    card.style.display = '';
+                });
+                
+                // Mostrar mensagem de coluna vazia se não houver cards
+                const emptyColumn = columnContent.querySelector('.empty-column');
+                if (emptyColumn && cards.length === 0) {
+                    emptyColumn.style.display = '';
+                }
+                
+                // Restaurar contador original
+                restoreOriginalCardCount(column);
+                
+                // Mostrar "Todos" no indicador
+                showAll(column);
+                
+                // Garantir que os event listeners do modal estão ativos
+                if (typeof initializeCardExpansion === 'function') {
+                    initializeCardExpansion();
+                }
+                
+                console.log(`🔄 Filtro de data removido da coluna ${column}`);
+            }
+            
+            // Função para atualizar contador de cards
+            function updateCardCount(column, count) {
+                const columnElement = document.querySelector(`.kanban-column[data-column="${column}"]`);
+                if (columnElement) {
+                    const cardCountElement = columnElement.querySelector('.card-count');
+                    if (cardCountElement) {
+                        cardCountElement.textContent = count;
+                    }
+                }
+            }
+            
+            // Função para restaurar contador original (buscar do DOM original)
+            function restoreOriginalCardCount(column) {
+                const columnElement = document.querySelector(`.kanban-column[data-column="${column}"]`);
+                if (columnElement) {
+                    const columnContent = columnElement.querySelector('.column-content');
+                    if (columnContent) {
+                        const allCards = columnContent.querySelectorAll('.card:not(.empty-column)');
+                        const visibleCards = Array.from(allCards).filter(card => 
+                            card.style.display !== 'none' && !card.classList.contains('empty-column')
+                        );
+                        updateCardCount(column, visibleCards.length);
+                    }
+                }
+            }
+        });
+    </script>
 {% endblock %}
