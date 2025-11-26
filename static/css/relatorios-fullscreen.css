@@ -18,7 +18,7 @@
    ======================================== */
 
 .reports-header {
-    background: linear-gradient(135deg, #1C1C1C 0%, #544350 100%);
+    background: #1C1C1C;
     color: white;
     padding: 20px 30px;
     display: flex;

@@ -3,8 +3,15 @@
    ======================================== */
 
 /* Ocultar header padrão do base.html na página de relatórios */
-.main-content > .header {
+.main-content > .header,
+body .main-content .header,
+header.header {
     display: none !important;
+}
+
+/* Garantir que apenas o reports-header apareça */
+.reports-fullscreen .reports-header {
+    display: flex !important;
 }
 
 /* Reset para página de relatórios - layout limpo */
@@ -13,13 +20,14 @@
     width: 100%;
     height: 100vh;
     min-height: 100vh;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    background: #1C1C1C;
     overflow-y: auto;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    box-sizing: border-box;}
+    box-sizing: border-box;
+}
 
 /* Garantir que todas as seções respeitem o container */
 .reports-fullscreen > * {
@@ -38,9 +46,11 @@
    ======================================== */
 
 .reports-header {
-    background: linear-gradient(135deg, #1C1C1C 0%, #544350 100%);
-    color: white;
-    padding: 15px 25px;    display: flex;
+    background: #1C1C1C !important;
+    background-color: #1C1C1C !important;
+    color: white !important;
+    padding: 15px 25px;
+    display: flex !important;
     align-items: center;
     justify-content: space-between;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -50,7 +60,8 @@
     box-sizing: border-box;
     gap: 20px;
     min-height: 70px;
-    position: relative;}
+    position: relative;
+}
 
 .header-left {
     display: flex;
@@ -109,9 +120,33 @@
 .header-right {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 15px;
     flex-shrink: 0;
     margin-left: auto;
+}
+
+/* Botão de criar solicitação - estilo amarelo como na página de solicitações */
+.btn-primary-reports {
+    background: linear-gradient(135deg, #ffe8b6, #ffc21c);
+    color: #1C1C1C;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(255, 203, 87, 0.3);
+    white-space: nowrap;
+}
+
+.btn-primary-reports:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 203, 87, 0.4);
+    background: linear-gradient(135deg, #ffc21c, #ffb700);
 }
 
 .export-actions {
@@ -1632,6 +1667,7 @@
     .reports-header {
         padding: 12px 20px;
         gap: 15px;
+        background: #1C1C1C !important;
     }
     
     .page-title h1 {
@@ -1668,6 +1704,7 @@
         padding: 12px 15px;
         flex-wrap: wrap;
         gap: 12px;
+        background: #1C1C1C !important;
     }
     
     .header-left {
@@ -1791,6 +1828,7 @@
 @media (max-width: 480px) {
     .reports-header {
         padding: 8px 12px;
+        background: #1C1C1C !important;
     }
     
     .page-title h1 {

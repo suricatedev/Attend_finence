@@ -46,8 +46,9 @@
     align-items: center;
     justify-content: space-between;
     background: rgba(255, 203, 87, 0.05);
-    flex-wrap: wrap;
-    gap: 10px;
+    flex-wrap: nowrap;
+    gap: 15px;
+    min-width: 0;
 }
 
 .column-header-actions {
@@ -64,11 +65,45 @@
     font-weight: 700;
     color: #1C1C1C;
     font-size: 1.1rem;
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
+    flex-shrink: 0;
+    min-width: 0;
 }
 
-.column-title i {
+.column-title i,
+.column-title .fas,
+.column-title .fa {
     color: #544350;
     font-size: 1.2rem;
+    width: 20px;
+    min-width: 20px;
+    max-width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    vertical-align: middle;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    order: 1;
+}
+
+.column-title > span:not(.card-count) {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
+    order: 2;
+}
+
+.column-title .card-count {
+    order: 3;
+    flex-shrink: 0;
 }
 
 .card-count {
@@ -828,12 +863,30 @@
 .card-time {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
     font-size: 0.8rem;
     color: #544350;
     margin-top: auto;
     flex-shrink: 0;
     min-height: 20px;
+}
+
+.card-time i,
+.card-time .fas,
+.card-time .fa {
+    width: 16px;
+    min-width: 16px;
+    max-width: 16px;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    vertical-align: middle;
 }
 
 .card-time.completed {
@@ -899,6 +952,7 @@
     border: 1px solid #e9ecef;
     font-size: 0.8rem;
     transition: all 0.2s ease;
+    min-height: 40px;
 }
 
 .info-item:hover {
@@ -906,12 +960,25 @@
     transform: translateY(-1px);
 }
 
-.info-item i {
+.info-item i,
+.info-item .fas,
+.info-item .fa {
     color: #544350;
-    width: 16px;
+    width: 18px;
+    min-width: 18px;
+    max-width: 18px;
+    height: 18px;
     text-align: center;
     flex-shrink: 0;
     font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    vertical-align: middle;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 .info-content {

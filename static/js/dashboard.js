@@ -1136,12 +1136,66 @@ function initializeLineChart(period = '3months', customDates = null) {
     lineChart = new Chart(ctx, configToUse);
 }
 
+// Função para atualizar métricas dos cards via AJAX
+function updateMetricsCards(period, dateFrom = null, dateTo = null) {
+    // Buscar CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                     document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+    
+    // Construir URL com parâmetros
+    let url = `/dashboards/dashboard/metrics/?period=${period}`;
+    if (dateFrom) {
+        url += `&date_from=${dateFrom}`;
+    }
+    if (dateTo) {
+        url += `&date_to=${dateTo}`;
+    }
+    
+    // Fazer requisição AJAX
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            console.error('Erro ao buscar métricas:', data.error);
+            return;
+        }
+        
+        // Atualizar card de solicitações pendentes
+        const metricPendentes = document.getElementById('metricPendentes');
+        if (metricPendentes) {
+            metricPendentes.textContent = data.pendentes;
+        }
+        
+        // Atualizar card de valor total processado
+        const metricValorTotal = document.getElementById('metricValorTotal');
+        if (metricValorTotal) {
+            // Formatar valor em R$ brasileiro
+            const valorFormatado = new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(data.valor_total);
+            metricValorTotal.textContent = valorFormatado;
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao atualizar métricas:', error);
+    });
+}
+
 function changePeriod(period) {
     // Reconstruir o gráfico com o período correto
     if (lineChart) {
         lineChart.destroy();
     }
     initializeLineChart(period);
+    
+    // Atualizar cards de métricas
+    updateMetricsCards(period);
     
     // Atualizar gráfico de fluxo também
     if (flowChart && window.dashboardData && window.dashboardData.solicitacoesPorMesDetalhado) {
@@ -1288,6 +1342,9 @@ window.addEventListener('DOMContentLoaded', () => {
                     lineChart.destroy();
                 }
                 initializeLineChart('custom', customDateFilter);
+                
+                // Atualizar cards de métricas com filtro de data
+                updateMetricsCards('custom', dateFrom || null, dateTo || null);
             });
         }
         
@@ -1306,9 +1363,14 @@ window.addEventListener('DOMContentLoaded', () => {
                         lineChart.destroy();
                     }
                     initializeLineChart('3months');
+                    // Atualizar cards de métricas
+                    updateMetricsCards('3months');
                 }
             });
         }
+        
+        // Inicializar cards de métricas com período padrão (3 meses)
+        updateMetricsCards('3months');
         
         // Garantir que o botão padrão (3 meses) esteja ativo
         const defaultButton = document.querySelector('.period-button[data-period="3months"]');

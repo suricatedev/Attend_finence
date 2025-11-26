@@ -1509,7 +1509,6 @@ def buscar_clientes_empresas(request):
             'clientes_empresas': [],
             'message': str(e)
         }, status=500)
-
 @require_http_methods(["POST"])
 def excluir_solicitacao(request, solicitacao_id):
     """

@@ -5,13 +5,37 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/relatorios-compact.css' %}">
+    <style>
+        /* Garantir que o header de relatórios seja preto - mesma cor do background */
+        body .reports-header,
+        .reports-fullscreen .reports-header,
+        header.reports-header {
+            background: #1C1C1C !important;
+            background-color: #1C1C1C !important;
+            color: white !important;
+        }
+        
+        /* Garantir que o background seja a mesma cor do header */
+        body .reports-fullscreen,
+        .reports-fullscreen {
+            background: #1C1C1C !important;
+            background-color: #1C1C1C !important;
+        }
+        
+        /* Garantir que o header padrão esteja oculto */
+        .main-content > .header,
+        body .main-content .header,
+        header.header {
+            display: none !important;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
 <!-- Página de Relatórios em Tela Cheia -->
-<div class="reports-fullscreen">
+<div class="reports-fullscreen" style="background: #1C1C1C !important; background-color: #1C1C1C !important;">
     <!-- Header com Botão Voltar -->
-    <header class="reports-header">
+    <header class="reports-header" style="background: #1C1C1C !important; background-color: #1C1C1C !important;">
         <div class="header-left">
             <button class="btn-back" onclick="window.history.back()">
                 <i class="fas fa-arrow-left"></i>
@@ -23,6 +47,10 @@
             </div>
         </div>
         <div class="header-right">
+            <button class="btn-primary-reports" id="createCampaignBtn">
+                <i class="fas fa-plus"></i>
+                Nova Solicitação Financeira
+            </button>
             <div class="export-actions">
                 <button class="btn-export" id="exportExcel">
                     <i class="fas fa-file-excel"></i>
@@ -419,4 +447,44 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="{% static 'js/relatorios-optimized.js' %}" defer></script>
+    <script>
+        // Garantir que o header e background sejam pretos
+        document.addEventListener('DOMContentLoaded', function() {
+            const reportsHeader = document.querySelector('.reports-header');
+            const reportsFullscreen = document.querySelector('.reports-fullscreen');
+            
+            if (reportsHeader) {
+                reportsHeader.style.background = '#1C1C1C';
+                reportsHeader.style.backgroundColor = '#1C1C1C';
+                reportsHeader.style.color = 'white';
+            }
+            
+            if (reportsFullscreen) {
+                reportsFullscreen.style.background = '#1C1C1C';
+                reportsFullscreen.style.backgroundColor = '#1C1C1C';
+            }
+            
+            // Garantir que o header padrão esteja oculto
+            const defaultHeader = document.querySelector('.main-content > .header');
+            if (defaultHeader) {
+                defaultHeader.style.display = 'none';
+            }
+        });
+        
+        // Também aplicar após um pequeno delay para garantir
+        setTimeout(function() {
+            const reportsHeader = document.querySelector('.reports-header');
+            const reportsFullscreen = document.querySelector('.reports-fullscreen');
+            
+            if (reportsHeader) {
+                reportsHeader.style.setProperty('background', '#1C1C1C', 'important');
+                reportsHeader.style.setProperty('background-color', '#1C1C1C', 'important');
+            }
+            
+            if (reportsFullscreen) {
+                reportsFullscreen.style.setProperty('background', '#1C1C1C', 'important');
+                reportsFullscreen.style.setProperty('background-color', '#1C1C1C', 'important');
+            }
+        }, 100);
+    </script>
 {% endblock %}

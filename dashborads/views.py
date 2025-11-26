@@ -182,6 +182,81 @@ def dashboard(request):
         
     elif request.method == "POST":
         pass
+
+def dashboard_metrics(request):
+    """View para retornar métricas do dashboard filtradas por período via AJAX"""
+    from django.http import JsonResponse
+    from datetime import datetime, timedelta
+    from calendar import monthrange
+    
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Não autenticado'}, status=401)
+    
+    # Verificar permissão
+    if not user_can_view_dashboard(request.user):
+        return JsonResponse({'error': 'Sem permissão'}, status=403)
+    
+    # Obter período da requisição ou filtro de data customizado
+    period = request.GET.get('period', '3months')
+    date_from = request.GET.get('date_from', None)
+    date_to = request.GET.get('date_to', None)
+    
+    # Calcular data inicial baseado no período
+    hoje = timezone.now().date()
+    data_inicial = None
+    data_final = None
+    
+    # Função auxiliar para subtrair meses
+    def subtract_months(date, months):
+        month = date.month - months
+        year = date.year
+        while month <= 0:
+            month += 12
+            year -= 1
+        # Garantir que o dia seja válido para o mês (ex: 31 de janeiro -> 28/29 de fevereiro)
+        last_day = monthrange(year, month)[1]
+        day = min(date.day, last_day)
+        return date.replace(year=year, month=month, day=day)
+    
+    # Se houver filtro de data customizado, usar ele
+    if date_from or date_to:
+        try:
+            if date_from:
+                data_inicial = datetime.strptime(date_from, '%Y-%m-%d').date()
+            if date_to:
+                data_final = datetime.strptime(date_to, '%Y-%m-%d').date()
+        except ValueError:
+            pass
+    else:
+        # Usar período padrão
+        if period == '3months':
+            data_inicial = subtract_months(hoje, 3)
+        elif period == '6months':
+            data_inicial = subtract_months(hoje, 6)
+        elif period == '12months':
+            data_inicial = subtract_months(hoje, 12)
+        elif period == 'all':
+            data_inicial = None
+        else:
+            data_inicial = subtract_months(hoje, 3)  # padrão: 3 meses
+    
+    # Filtrar solicitações pelo período
+    solicitacoes_filtradas = Solicitacoes.objects.all()
+    
+    if data_inicial:
+        solicitacoes_filtradas = solicitacoes_filtradas.filter(data_de_criacao__gte=data_inicial)
+    if data_final:
+        solicitacoes_filtradas = solicitacoes_filtradas.filter(data_de_criacao__lte=data_final)
+    
+    # Calcular métricas filtradas
+    pendentes = solicitacoes_filtradas.filter(status='pendente').count()
+    valor_total = solicitacoes_filtradas.aggregate(Sum('valor'))['valor__sum'] or 0
+    
+    return JsonResponse({
+        'pendentes': pendentes,
+        'valor_total': float(valor_total),
+        'period': period
+    })
     
 def relatorio(request):
     if request.method == "GET":
