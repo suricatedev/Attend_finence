@@ -29,6 +29,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    z-index: 2001;
 }
 
 .modal-header {
@@ -63,10 +64,14 @@
 .modal-body {
     padding: 20px;
     position: relative;
-    z-index: 1;}
+    z-index: 1;
+    overflow-y: auto;
+}
 
 .form-group {
     margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
 }
 
 .form-group label {
@@ -104,6 +109,67 @@
     outline: none;
     border-color: #FFCB57;
     box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2);
+}
+
+/* Estilos para campos com erro */
+.form-group.error input,
+.form-group.error select,
+.form-group.error textarea {
+    border-color: #dc3545;
+    background-color: #fff5f5;
+}
+
+/* Mensagens de erro - mesmo padrão do campo obrigatório */
+.error-message {
+    color: #dc3545 !important;
+    font-size: 0.9rem;
+    margin-top: 8px;
+    padding: 12px 16px;
+    background-color: #dc3545 !important;
+    border: 2px solid #dc3545 !important;
+    border-radius: 6px;
+    display: flex !important;
+    align-items: flex-start;
+    gap: 8px;
+    position: relative !important;
+    z-index: 9999 !important;
+    width: 100%;
+    box-sizing: border-box;
+    animation: slideInError 0.3s ease-out;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+    margin-bottom: 10px;
+}
+
+.error-message,
+.error-message * {
+    color: #ffffff !important;
+}
+
+.error-message i {
+    color: #ffffff !important;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.error-message small {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.85rem;
+    color: #ffffff !important;
+    opacity: 0.95;
+    font-weight: 500;
+}
+
+@keyframes slideInError {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Estilos para formulário com campos em linha */
@@ -355,4 +421,205 @@
         width: 100%;
         justify-content: center;
     }
+}
+
+/* ============================================
+   AVISO DE ID DUPLICADO - NO TOPO DO MODAL
+   ============================================ */
+
+.aviso-id-duplicado-container {
+    margin-bottom: 20px !important;
+    margin-top: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 1000 !important;
+    animation: slideDownFadeIn 0.4s ease-out;
+}
+
+.aviso-id-duplicado-content {
+    display: flex !important;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 18px 24px !important;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%) !important;
+    border: 3px solid #ffc107 !important;
+    border-left: 8px solid #dc3545 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.5), 0 0 0 4px rgba(220, 53, 69, 0.1) !important;
+    position: relative !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    z-index: 1001 !important;
+}
+
+.aviso-id-duplicado-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    background-color: #dc3545;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 1.3rem;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.aviso-id-duplicado-icon i {
+    color: #ffffff;
+}
+
+.aviso-id-duplicado-text {
+    flex: 1;
+    color: #856404;
+}
+
+.aviso-id-duplicado-text strong {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #856404;
+    margin-bottom: 6px;
+}
+
+.aviso-id-duplicado-text p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #856404;
+}
+
+.aviso-id-duplicado-detalhes {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 193, 7, 0.5);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.85rem;
+}
+
+.aviso-id-duplicado-detalhes span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background-color: rgba(255, 255, 255, 0.6);
+    border-radius: 6px;
+    color: #6c5a00;
+}
+
+.aviso-id-duplicado-detalhes span strong {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.aviso-id-duplicado-close {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 1px solid #ffc107;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #856404;
+    transition: all 0.3s ease;
+    padding: 0;
+    margin: 0;
+}
+
+.aviso-id-duplicado-close:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: #ffffff;
+    transform: scale(1.1);
+}
+
+.aviso-id-duplicado-close i {
+    font-size: 0.9rem;
+}
+
+@keyframes slideDownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Estilos para o campo de input com erro */
+.form-group.has-error input.id-duplicado {
+    border-color: #dc3545 !important;
+    background-color: #fff5f5 !important;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15) !important;
+}
+
+.form-group.has-error input.id-duplicado:focus {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25) !important;
+}
+
+/* Fallback para aviso próximo ao campo (caso o container não exista) */
+.aviso-id-duplicado {
+    margin-top: 8px;
+    padding: 12px 16px;
+    background-color: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    color: #856404;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.5;
+    animation: slideDown 0.3s ease-out;
+}
+
+.aviso-id-duplicado i {
+    color: #ffc107;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.aviso-id-duplicado small {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.85rem;
+    color: #6c5a00;
+    font-weight: 400;
+    font-style: italic;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Estilo para quando o aviso está dentro de route-id-group */
+.route-id-group .aviso-id-duplicado {
+    margin-top: 12px;
+    grid-column: 1 / -1;
+}
+
+.route-id-inputs .form-group.has-error {
+    margin-bottom: 0;
 }

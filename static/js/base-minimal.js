@@ -42,6 +42,26 @@ window.addEventListener('DOMContentLoaded', function() {
                     formEmRota.style.display = 'none';
                 }
                 
+                // Limpar classes de erro e mensagens de aviso de ID duplicado
+                const form = document.getElementById('createCampaignForm');
+                if (form) {
+                    // Limpar mensagens de erro de ID duplicado
+                    form.querySelectorAll('.error-message.id-duplicado-message').forEach(msg => msg.remove());
+                    
+                    // Limpar classes de erro dos campos de ID
+                    document.querySelectorAll('.id-duplicado').forEach(input => {
+                        input.classList.remove('id-duplicado');
+                        const formGroup = input.closest('.form-group');
+                        if (formGroup) {
+                            // Só remover classe error se não houver outros erros
+                            const outrosErros = formGroup.querySelectorAll('.error-message:not(.id-duplicado-message)');
+                            if (outrosErros.length === 0) {
+                                formGroup.classList.remove('error');
+                            }
+                        }
+                    });
+                }
+                
                 console.log('✅ Formulário limpo e resetado para padrão (Casual)');
             }
             modal.style.display = 'flex';
@@ -80,9 +100,24 @@ window.addEventListener('DOMContentLoaded', function() {
             window.routeIdCounter = 3;
             window.isEditingSolicitacao = false;
 
-            // Remover classes e mensagens de erro
-            form.querySelectorAll('.form-group.error').forEach(group => group.classList.remove('error'));
-            form.querySelectorAll('.error-message').forEach(error => error.remove());
+            // Remover mensagens de erro de ID duplicado especificamente
+            form.querySelectorAll('.error-message.id-duplicado-message').forEach(error => error.remove());
+            
+            // Limpar classes de erro, mas preservar se houver outros erros
+            form.querySelectorAll('.form-group.error').forEach(group => {
+                const outrosErros = group.querySelectorAll('.error-message:not(.id-duplicado-message)');
+                if (outrosErros.length === 0) {
+                    group.classList.remove('error');
+                }
+            });
+            
+            // Remover todas as outras mensagens de erro
+            form.querySelectorAll('.error-message:not(.id-duplicado-message)').forEach(error => error.remove());
+            
+            // Limpar classes de erro dos campos de ID
+            document.querySelectorAll('.id-duplicado').forEach(input => {
+                input.classList.remove('id-duplicado');
+            });
 
             // Resetar a seleção de tipo para "Casual" e ajustar a visibilidade
             const routeCasual = document.getElementById('routeCasual');
@@ -127,6 +162,26 @@ window.addEventListener('DOMContentLoaded', function() {
                 receitaField.dataset.auto = '0';
                 receitaField.value = 'R$ 0,00';
             }
+            // Limpar aviso de ID duplicado
+            if (typeof window.fecharAvisoIdDuplicado === 'function') {
+                window.fecharAvisoIdDuplicado();
+            } else {
+                const containerAviso = document.getElementById('avisoIdDuplicadoContainer');
+                if (containerAviso) {
+                    containerAviso.style.display = 'none';
+                    containerAviso.innerHTML = '';
+                }
+            }
+            
+            // Limpar classes de erro dos campos de ID
+            document.querySelectorAll('.id-duplicado').forEach(input => {
+                input.classList.remove('id-duplicado');
+                const formGroup = input.closest('.form-group');
+                if (formGroup) {
+                    formGroup.classList.remove('has-error');
+                }
+            });
+            
             console.log('✅ Formulário limpo e resetado para o estado padrão (Casual).');
         }
     }

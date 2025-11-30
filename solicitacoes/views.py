@@ -1610,3 +1610,89 @@ def excluir_solicitacoes_recusadas(request):
             'success': False,
             'message': f'Erro ao excluir solicitações: {str(e)}'
         }, status=500)
+
+
+@require_http_methods(["GET"])
+def verificar_id_existente(request):
+    """
+    View para verificar se um ID (ticket) já está cadastrado no sistema.
+    Usado para validação em tempo real no formulário.
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'existe': False,
+            'message': 'Não autenticado'
+        }, status=401)
+    
+    ticket = request.GET.get('ticket', '').strip()
+    solicitacao_id = request.GET.get('solicitacao_id', '').strip()  # Para modo edição
+    
+    if not ticket:
+        return JsonResponse({
+            'existe': False,
+            'message': 'ID não fornecido'
+        })
+    
+    try:
+        # Verificar se existe como ticket principal em Solicitacoes
+        consulta_solic = Solicitacoes.objects.filter(ticket=ticket)
+        if solicitacao_id:
+            try:
+                consulta_solic = consulta_solic.exclude(id=int(solicitacao_id))
+            except (ValueError, TypeError):
+                pass
+        
+        if consulta_solic.exists():
+            solicitacao_existente = consulta_solic.first()
+            tipo_dict = dict(Solicitacoes.TIPO_CHOICES)
+            tipo_existente = tipo_dict.get(solicitacao_existente.tipo, solicitacao_existente.tipo)
+            status_existente = solicitacao_existente.status
+            
+            return JsonResponse({
+                'existe': True,
+                'tipo': 'solicitacao',
+                'message': f'O ID "{ticket}" já está cadastrado como solicitação "{tipo_existente}" (Status: {status_existente}).',
+                'detalhes': {
+                    'tipo': tipo_existente,
+                    'status': status_existente,
+                    'titulo': solicitacao_existente.titulo
+                }
+            })
+        
+        # Verificar se existe como ticket_item em SolicitacaoRotaItem
+        consulta_item = SolicitacaoRotaItem.objects.filter(ticket_item=ticket)
+        if solicitacao_id:
+            try:
+                consulta_item = consulta_item.exclude(solicitacao_id=int(solicitacao_id))
+            except (ValueError, TypeError):
+                pass
+        
+        if consulta_item.exists():
+            item_existente = consulta_item.first()
+            if item_existente and item_existente.solicitacao:
+                tipo_dict = dict(Solicitacoes.TIPO_CHOICES)
+                tipo_existente = tipo_dict.get(item_existente.solicitacao.tipo, item_existente.solicitacao.tipo)
+                
+                return JsonResponse({
+                    'existe': True,
+                    'tipo': 'item_rota',
+                    'message': f'O ID "{ticket}" já está cadastrado como item de rota em uma solicitação "{tipo_existente}".',
+                    'detalhes': {
+                        'tipo': tipo_existente,
+                        'solicitacao_titulo': item_existente.solicitacao.titulo
+                    }
+                })
+        
+        # ID não encontrado
+        return JsonResponse({
+            'existe': False,
+            'message': 'ID disponível'
+        })
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'existe': False,
+            'message': f'Erro ao verificar ID: {str(e)}'
+        }, status=500)

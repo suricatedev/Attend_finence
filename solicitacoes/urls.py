@@ -12,4 +12,5 @@ urlpatterns = [
     path("exportar-relatorio-card/<int:solicitacao_id>/", views.exportar_relatorio_card, name='exportar_relatorio_card'),
     path("excluir-solicitacao/<int:solicitacao_id>/", views.excluir_solicitacao, name='excluir_solicitacao'),
     path("excluir-solicitacoes-recusadas/", views.excluir_solicitacoes_recusadas, name='excluir_solicitacoes_recusadas'),
+    path("verificar-id-existente/", views.verificar_id_existente, name='verificar_id_existente'),
 ]

@@ -619,6 +619,20 @@
                     }
                     
                     console.log(`✅✅✅ PASSO 5: ID ${novoNumero} está no DOM e visível!`);
+                    
+                    // Configurar validação para o campo de ID recém-criado
+                    const novoRouteIdInput = verificarAdicionado.querySelector(`#routeId${novoNumero}`);
+                    if (novoRouteIdInput) {
+                        // Aguardar um pouco para garantir que a função de validação já esteja disponível
+                        setTimeout(() => {
+                            if (typeof window.configurarValidacaoId === 'function') {
+                                window.configurarValidacaoId(novoRouteIdInput);
+                                console.log(`✅ Validação de ID configurada para routeId${novoNumero}`);
+                            } else {
+                                console.warn(`⚠️ Função configurarValidacaoId ainda não está disponível, o MutationObserver deve configurá-la`);
+                            }
+                        }, 100);
+                    }
                 } else {
                     console.error(`❌ ERRO CRÍTICO: ID ${novoNumero} não encontrado após appendChild!`);
                     window.criandoNovoId = false;
@@ -2265,6 +2279,329 @@
                     return resultado;
                 };
             }
+            
+            // ============================================
+            // VALIDAÇÃO EM TEMPO REAL DE ID DUPLICADO
+            // ============================================
+            
+            let timeoutVerificacaoId = null;
+            
+            /**
+             * Verifica se um ID (ticket) já está cadastrado no sistema
+             * @param {string} ticket - O ID a verificar
+             * @param {HTMLElement} inputElement - O elemento input que contém o ID
+             * @param {string} solicitacaoId - ID da solicitação em edição (opcional)
+             */
+            async function verificarIdExistente(ticket, inputElement, solicitacaoId = null) {
+                if (!ticket || !ticket.trim()) {
+                    limparAvisoIdDuplicado(inputElement);
+                    return;
+                }
+                
+                try {
+                    let url = `/solicitacoes/verificar-id-existente/?ticket=${encodeURIComponent(ticket.trim())}`;
+                    if (solicitacaoId) {
+                        url += `&solicitacao_id=${encodeURIComponent(solicitacaoId)}`;
+                    }
+                    
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        credentials: 'same-origin'
+                    });
+                    
+                    const data = await response.json();
+                    console.log('📡 Resposta da verificação de ID:', data);
+                    
+                    if (data.existe) {
+                        console.log('⚠️ ID existe! Mostrando aviso...');
+                        mostrarAvisoIdDuplicado(inputElement, data.message, data.detalhes);
+                    } else {
+                        console.log('✅ ID não existe, limpando aviso...');
+                        limparAvisoIdDuplicado(inputElement);
+                    }
+                } catch (error) {
+                    console.error('Erro ao verificar ID:', error);
+                    // Em caso de erro, não bloqueamos o campo
+                    limparAvisoIdDuplicado(inputElement);
+                }
+            }
+            
+            /**
+             * Mostra um aviso visual de que o ID já está cadastrado
+             * @param {HTMLElement} inputElement - O elemento input
+             * @param {string} mensagem - Mensagem de aviso
+             * @param {object} detalhes - Detalhes adicionais (opcional)
+             */
+            function mostrarAvisoIdDuplicado(inputElement, mensagem, detalhes = null) {
+                console.log('🚨 MOSTRANDO AVISO DE ID DUPLICADO:', mensagem);
+                
+                // Remover avisos anteriores
+                limparAvisoIdDuplicado(inputElement);
+                
+                // Adicionar classe de erro ao input
+                inputElement.classList.add('id-duplicado');
+                inputElement.style.borderColor = '#dc3545';
+                inputElement.style.backgroundColor = '#fff5f5';
+                
+                // Encontrar o form-group do campo - tentar múltiplas formas
+                let formGroup = inputElement.closest('.form-group');
+                
+                if (!formGroup) {
+                    // Tentar pelo parent
+                    formGroup = inputElement.parentElement;
+                    let tentativas = 0;
+                    while (formGroup && !formGroup.classList.contains('form-group') && tentativas < 5) {
+                        formGroup = formGroup.parentElement;
+                        tentativas++;
+                    }
+                }
+                
+                if (!formGroup) {
+                    console.error('❌ Form-group não encontrado! Tentando criar container...');
+                    // Criar um wrapper se não existir
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'form-group';
+                    inputElement.parentNode.insertBefore(wrapper, inputElement.nextSibling);
+                    wrapper.appendChild(inputElement);
+                    formGroup = wrapper;
+                }
+                
+                if (formGroup) {
+                    console.log('✅ Form-group encontrado/criado:', formGroup);
+                    
+                    // Adicionar classe de erro
+                    formGroup.classList.add('error');
+                    
+                    // Remover mensagens anteriores
+                    const existingError = formGroup.querySelector('.error-message.id-duplicado-message');
+                    if (existingError) {
+                        existingError.remove();
+                    }
+                    
+                    // Criar DIV do aviso
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message id-duplicado-message';
+                    errorDiv.setAttribute('role', 'alert');
+                    
+                    // Montar mensagem
+                    let msgHTML = `<i class="fas fa-exclamation-circle"></i> <strong>ID Já Cadastrado:</strong> ${mensagem}`;
+                    if (detalhes && detalhes.tipo) {
+                        msgHTML += `<br><small style="margin-left: 24px; display: block; margin-top: 4px;">Tipo: ${detalhes.tipo}${detalhes.status ? ' | Status: ' + detalhes.status : ''}</small>`;
+                    }
+                    
+                    errorDiv.innerHTML = msgHTML;
+                    
+                    // ESTILO INLINE FORÇADO - VERMELHO BRILHANTE
+                    errorDiv.style.cssText = `
+                        color: white !important;
+                        font-size: 14px !important;
+                        font-weight: 500 !important;
+                        margin-top: 12px !important;
+                        margin-bottom: 12px !important;
+                        padding: 14px 18px !important;
+                        background-color: #dc3545 !important;
+                        border: 2px solid #dc3545 !important;
+                        border-radius: 8px !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        align-items: flex-start !important;
+                        gap: 4px !important;
+                        visibility: visible !important;
+                        opacity: 1 !important;
+                        position: relative !important;
+                        z-index: 9999 !important;
+                        width: 100% !important;
+                        max-width: 100% !important;
+                        box-sizing: border-box !important;
+                        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4) !important;
+                    `;
+                    
+                    // Garantir que ícone e texto tenham cor branca
+                    errorDiv.querySelectorAll('i, strong, small').forEach(el => {
+                        el.style.color = 'white !important';
+                    });
+                    
+                    // ADICIONAR DEPOIS DO INPUT OU DO FORM-HELP
+                    const formHelp = formGroup.querySelector('.form-help');
+                    if (formHelp && formHelp.nextSibling) {
+                        formGroup.insertBefore(errorDiv, formHelp.nextSibling);
+                    } else if (formHelp) {
+                        formGroup.appendChild(errorDiv);
+                    } else {
+                        // Adicionar após o input
+                        formGroup.appendChild(errorDiv);
+                    }
+                    
+                    console.log('✅✅✅ AVISO ADICIONADO AO DOM!');
+                    console.log('✅ Form-group filhos:', formGroup.children.length);
+                    
+                    // Forçar reflow para garantir renderização
+                    void errorDiv.offsetHeight;
+                    
+                    // Scroll para o campo
+                    setTimeout(() => {
+                        errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }, 300);
+                } else {
+                    console.error('❌ Não foi possível criar/encontrar form-group!');
+                }
+            }
+            
+            /**
+             * Remove o aviso visual de ID duplicado
+             * @param {HTMLElement} inputElement - O elemento input
+             */
+            function limparAvisoIdDuplicado(inputElement) {
+                if (inputElement) {
+                    inputElement.classList.remove('id-duplicado');
+                    
+                    const formGroup = inputElement.closest('.form-group');
+                    if (formGroup) {
+                        // Remover classe de erro
+                        const errorMessage = formGroup.querySelector('.error-message.id-duplicado-message');
+                        if (errorMessage) {
+                            errorMessage.remove();
+                        }
+                        
+                        // Só remover a classe 'error' se não houver outros erros
+                        const outrosErros = formGroup.querySelectorAll('.error-message:not(.id-duplicado-message)');
+                        if (outrosErros.length === 0) {
+                            formGroup.classList.remove('error');
+                        }
+                    }
+                }
+            }
+            
+            /**
+             * Configura validação em tempo real para um campo de ID
+             * @param {HTMLElement} inputElement - O elemento input do ID
+             */
+            window.configurarValidacaoId = function(inputElement) {
+                if (!inputElement) return;
+                
+                // Limpar timeout anterior se existir
+                inputElement.addEventListener('input', function(e) {
+                    const ticket = e.target.value.trim();
+                    
+                    // Limpar aviso quando o campo estiver vazio
+                    if (!ticket) {
+                        limparAvisoIdDuplicado(e.target);
+                        return;
+                    }
+                    
+                    // Debounce: aguardar 500ms após o usuário parar de digitar
+                    clearTimeout(timeoutVerificacaoId);
+                    timeoutVerificacaoId = setTimeout(() => {
+                        // Obter ID da solicitação em edição (se houver)
+                        const solicitacaoIdField = document.getElementById('solicitacaoId');
+                        const solicitacaoId = solicitacaoIdField && solicitacaoIdField.value ? solicitacaoIdField.value : null;
+                        
+                        verificarIdExistente(ticket, e.target, solicitacaoId);
+                    }, 500);
+                });
+                
+                // Também verificar ao perder o foco
+                inputElement.addEventListener('blur', function(e) {
+                    clearTimeout(timeoutVerificacaoId);
+                    const ticket = e.target.value.trim();
+                    if (ticket) {
+                        const solicitacaoIdField = document.getElementById('solicitacaoId');
+                        const solicitacaoId = solicitacaoIdField && solicitacaoIdField.value ? solicitacaoIdField.value : null;
+                        verificarIdExistente(ticket, e.target, solicitacaoId);
+                    }
+                });
+            }
+            
+            // Função para configurar validação de forma mais direta e confiável
+            function configurarValidacaoQuandoModalAbrir() {
+                console.log('🔍 Configurando validação de ID quando modal abrir...');
+                
+                // Aguardar um pouco para garantir que o modal esteja totalmente carregado
+                setTimeout(() => {
+                    // Configurar para campo Casual
+                    const campaignIdInput = document.getElementById('campaignId');
+                    if (campaignIdInput) {
+                        console.log('✅ Campo campaignId encontrado, configurando validação...');
+                        if (typeof window.configurarValidacaoId === 'function') {
+                            window.configurarValidacaoId(campaignIdInput);
+                            console.log('✅ Validação configurada para campaignId');
+                        } else {
+                            console.error('❌ Função configurarValidacaoId não está disponível!');
+                        }
+                    } else {
+                        console.warn('⚠️ Campo campaignId não encontrado ainda');
+                    }
+                    
+                    // Configurar para campos de rota
+                    const routeIdInputs = document.querySelectorAll('[id^="routeId"]');
+                    console.log(`✅ Encontrados ${routeIdInputs.length} campos de rota`);
+                    routeIdInputs.forEach(input => {
+                        if (typeof window.configurarValidacaoId === 'function') {
+                            window.configurarValidacaoId(input);
+                        }
+                    });
+                }, 500);
+            }
+            
+            // Configurar validação quando DOM carregar
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('✅ DOM carregado, configurando validação...');
+                    configurarValidacaoQuandoModalAbrir();
+                });
+            } else {
+                console.log('✅ DOM já carregado, configurando validação agora...');
+                configurarValidacaoQuandoModalAbrir();
+            }
+            
+            // Observar quando o modal for aberto
+            const modal = document.getElementById('createCampaignModal');
+            if (modal) {
+                const observerModal = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                            if (modal.classList.contains('show')) {
+                                console.log('✅ Modal aberto, configurando validação...');
+                                configurarValidacaoQuandoModalAbrir();
+                            }
+                        }
+                    });
+                });
+                
+                observerModal.observe(modal, {
+                    attributes: true,
+                    attributeFilter: ['class']
+                });
+            }
+            
+            // MutationObserver para campos dinâmicos
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1 && typeof window.configurarValidacaoId === 'function') {
+                            if (node.id && node.id.startsWith('routeId')) {
+                                console.log(`✅ Novo campo de ID encontrado: ${node.id}`);
+                                window.configurarValidacaoId(node);
+                            }
+                            const routeIdInputs = node.querySelectorAll && node.querySelectorAll('[id^="routeId"]');
+                            if (routeIdInputs && routeIdInputs.length > 0) {
+                                routeIdInputs.forEach(input => {
+                                    console.log(`✅ Campo de ID encontrado dentro do nó: ${input.id}`);
+                                    window.configurarValidacaoId(input);
+                                });
+                            }
+                        }
+                    });
+                });
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
         });
     </script>
 </div>
