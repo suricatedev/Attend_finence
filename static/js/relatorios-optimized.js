@@ -92,6 +92,27 @@ class RelatoriosOptimized {
         console.log('🔍 Debug - Linhas encontradas na tabela:', rows.length);
         const data = [];
         
+        // Mapear índices das colunas pelos headers
+        const table = document.getElementById('reportsTable');
+        const headers = table?.querySelectorAll('thead th');
+        const columnIndexMap = {};
+        if (headers) {
+            headers.forEach((th, index) => {
+                const headerText = th.textContent.trim().toLowerCase();
+                if (headerText.includes('criação') || headerText.includes('criacao')) {
+                    columnIndexMap.dataCriacao = index;
+                } else if (headerText.includes('pagamento')) {
+                    columnIndexMap.dataPagamento = index;
+                } else if (headerText.includes('status')) {
+                    columnIndexMap.status = index;
+                } else if (headerText.includes('prioridade')) {
+                    columnIndexMap.priority = index;
+                }
+            });
+        }
+        
+        console.log('🔍 Mapeamento de colunas:', columnIndexMap);
+        
         rows.forEach(row => {
             const cells = row.querySelectorAll('td');
             if (cells.length > 0) {
@@ -121,18 +142,24 @@ class RelatoriosOptimized {
                     valorOutros = valoresCells[5]?.textContent.trim() || '';
                 }
                 
-                // Encontrar índice correto das células (considerando colunas adicionais)
-                // Estrutura: ID(0), Título(1), Solicitante(2), Supervisor(3), Recebedor(4), Chave PIX(5), Cliente/Empresa(6), CNPJ(7), Serviço(8), Valor(9), 
-                // [Toggle Cell(9)], [Receita(10)], [EM ROTA(11)], [KM(12)], [Pedágio(13)], [Hospedagem(14)], [Fluvial(15)], [Outros(16)], 
-                // Status(17), Prioridade(18), Criação(19), Pagamento(20), Ações(21)
-                let statusIdx = 17, priorityIdx = 18, dataCriacaoIdx = 19, dataPagamentoIdx = 20;
+                // Usar índices mapeados ou fallback para índices fixos
+                const statusIdx = columnIndexMap.status !== undefined ? columnIndexMap.status : 18;
+                const priorityIdx = columnIndexMap.priority !== undefined ? columnIndexMap.priority : 19;
+                const dataCriacaoIdx = columnIndexMap.dataCriacao !== undefined ? columnIndexMap.dataCriacao : 20;
+                const dataPagamentoIdx = columnIndexMap.dataPagamento !== undefined ? columnIndexMap.dataPagamento : 21;
                 
-                // Se não há colunas de valores detalhados visíveis, ajustar índices
-                if (valoresCells.length === 0) {
-                    statusIdx = 9;
-                    priorityIdx = 10;
-                    dataCriacaoIdx = 11;
-                    dataPagamentoIdx = 12;
+                // Log apenas para a primeira linha para debug
+                if (data.length === 0) {
+                    console.log(`🔍 Índices mapeados - Total de células: ${cells.length}`, {
+                        status: statusIdx,
+                        priority: priorityIdx,
+                        dataCriacao: dataCriacaoIdx,
+                        dataPagamento: dataPagamentoIdx,
+                        statusCellText: cells[statusIdx]?.textContent.trim()?.substring(0, 20),
+                        priorityCellText: cells[priorityIdx]?.textContent.trim()?.substring(0, 20),
+                        dataCriacaoCellText: cells[dataCriacaoIdx]?.textContent.trim()?.substring(0, 20),
+                        dataPagamentoCellText: cells[dataPagamentoIdx]?.textContent.trim()?.substring(0, 20)
+                    });
                 }
                 
                 // Extrair novos campos
@@ -220,8 +247,59 @@ class RelatoriosOptimized {
                     statusDisplay: cells[statusIdx]?.textContent.trim() || '',
                     priority: priority,
                     tipo: tipo.toLowerCase(),
-                    dataCriacao: parseDate(cells[dataCriacaoIdx]?.textContent.trim() || ''),
-                    dataPagamento: parseDate(cells[dataPagamentoIdx]?.textContent.trim() || ''),
+                    dataCriacao: (() => {
+                        // Extrair data do índice correto (20) e validar
+                        const cell = cells[dataCriacaoIdx];
+                        if (!cell) return '';
+                        
+                        const text = cell.textContent.trim();
+                        // Validar que é uma data no formato dd/mm/yyyy
+                        if (text && /^\d{2}\/\d{2}\/\d{4}$/.test(text)) {
+                            return parseDate(text);
+                        }
+                        
+                        // Se não encontrou no índice esperado, procurar em todas as células
+                        for (let i = 10; i < cells.length - 1; i++) {
+                            const cellText = cells[i]?.textContent.trim() || '';
+                            // Pular células com badges (status, prioridade)
+                            if (cells[i]?.querySelector('.status-badge') || cells[i]?.querySelector('.priority-badge')) {
+                                continue;
+                            }
+                            // Se encontrar uma data válida
+                            if (cellText && /^\d{2}\/\d{2}\/\d{4}$/.test(cellText)) {
+                                return parseDate(cellText);
+                            }
+                        }
+                        
+                        return '';
+                    })(),
+                    dataPagamento: (() => {
+                        // Extrair data do índice correto (21) e validar
+                        const cell = cells[dataPagamentoIdx];
+                        if (!cell) return '';
+                        
+                        const text = cell.textContent.trim();
+                        // Validar que é uma data no formato dd/mm/yyyy
+                        if (text && /^\d{2}\/\d{2}\/\d{4}$/.test(text)) {
+                            return parseDate(text);
+                        }
+                        
+                        // Se não encontrou, procurar todas as datas e pegar a última (pagamento)
+                        let lastDate = '';
+                        for (let i = 10; i < cells.length - 1; i++) {
+                            const cellText = cells[i]?.textContent.trim() || '';
+                            // Pular células com badges
+                            if (cells[i]?.querySelector('.status-badge') || cells[i]?.querySelector('.priority-badge')) {
+                                continue;
+                            }
+                            // Se encontrar uma data válida, atualizar (pegará a última)
+                            if (cellText && /^\d{2}\/\d{2}\/\d{4}$/.test(cellText)) {
+                                lastDate = parseDate(cellText);
+                            }
+                        }
+                        
+                        return lastDate;
+                    })(),
                     isItem: isItem, // Flag para identificar itens expandidos
                     itemId: itemId, // ID do item (ticket do item)
                 });
@@ -376,6 +454,8 @@ class RelatoriosOptimized {
         });
 
         document.getElementById('applyFilters')?.addEventListener('click', () => {
+            // ✅ IMPORTANTE: Ler todos os valores dos campos antes de aplicar filtros
+            this.readFilterValues();
             this.applyFilters();
         });
 
@@ -457,8 +537,64 @@ class RelatoriosOptimized {
             clearTimeout(this.cache.debounceTimer);
         }
         this.cache.debounceTimer = setTimeout(() => {
+            this.readFilterValues();
             this.applyFilters();
         }, 150); // Reduzido de 300ms para 150ms
+    }
+
+    readFilterValues() {
+        // ✅ Ler todos os valores dos campos de filtro e atualizar this.currentFilters
+        const statusBtn = document.querySelector('.status-btn.active');
+        if (statusBtn) {
+            this.currentFilters.status = statusBtn.dataset.status || 'all';
+        }
+        
+        const typeBtn = document.querySelector('.type-btn.active');
+        if (typeBtn) {
+            this.currentFilters.tipo = typeBtn.dataset.type || 'all';
+        }
+        
+        const dateFrom = document.getElementById('dateFrom');
+        if (dateFrom) {
+            this.currentFilters.dateFrom = dateFrom.value || '';
+        }
+        
+        const dateTo = document.getElementById('dateTo');
+        if (dateTo) {
+            this.currentFilters.dateTo = dateTo.value || '';
+        }
+        
+        const serviceFilter = document.getElementById('serviceFilter');
+        if (serviceFilter) {
+            this.currentFilters.service = serviceFilter.value || '';
+        }
+        
+        const priorityFilter = document.getElementById('priorityFilter');
+        if (priorityFilter) {
+            this.currentFilters.priority = priorityFilter.value || '';
+        }
+        
+        const clienteEmpresaFilter = document.getElementById('clienteEmpresaFilter');
+        if (clienteEmpresaFilter) {
+            this.currentFilters.clienteEmpresa = clienteEmpresaFilter.value.toLowerCase().trim() || '';
+        }
+        
+        const cnpjFilter = document.getElementById('cnpjFilter');
+        if (cnpjFilter) {
+            this.currentFilters.cnpj = cnpjFilter.value.toLowerCase().trim() || '';
+        }
+        
+        const chavePixFilter = document.getElementById('chavePixFilter');
+        if (chavePixFilter) {
+            this.currentFilters.chavePix = chavePixFilter.value.toLowerCase().trim() || '';
+        }
+        
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            this.currentFilters.search = searchInput.value.toLowerCase().trim() || '';
+        }
+        
+        console.log('🔍 Valores dos filtros lidos:', this.currentFilters);
     }
 
     applyFilters() {
@@ -466,6 +602,11 @@ class RelatoriosOptimized {
         
         console.log('🔍 Debug - Aplicando filtros:', this.currentFilters);
         console.log('🔍 Debug - Total de dados:', this.data.length);
+        console.log('🔍 Debug - Filtro de data:', {
+            dateFrom: this.currentFilters.dateFrom,
+            dateTo: this.currentFilters.dateTo,
+            primeiroItemData: this.data.length > 0 ? this.data[0].dataCriacao : 'N/A'
+        });
         
         // Se não houver dados, não aplicar filtros
         if (this.data.length === 0) {
@@ -477,6 +618,7 @@ class RelatoriosOptimized {
         }
         
         let filteredCount = 0;
+        let debugCount = 0; // Contador para logs de debug
         this.filteredData = this.data.filter(item => {
             let passes = true;
             
@@ -499,41 +641,88 @@ class RelatoriosOptimized {
                     return false;
                 }
             }
-            // Filtro de data
-            if (this.currentFilters.dateFrom && item.dataCriacao) {
-                // Garantir que a data do item está no formato correto
-                const itemDateStr = item.dataCriacao.includes('T') ? item.dataCriacao.split('T')[0] : item.dataCriacao;
-                const itemDate = new Date(itemDateStr + 'T00:00:00');
-                const filterDateFrom = new Date(this.currentFilters.dateFrom + 'T00:00:00');
+            // Filtro de data - usar data de criação para filtrar
+            // Função auxiliar para normalizar data para yyyy-mm-dd
+            const normalizeDate = (dateStr) => {
+                if (!dateStr) return null;
                 
-                if (isNaN(itemDate.getTime()) || isNaN(filterDateFrom.getTime())) {
-                    // Se a data não for válida, pular o filtro de data para este item
-                    console.warn('⚠️ Data inválida no filtro:', { 
-                        itemDate: item.dataCriacao, 
-                        filterDate: this.currentFilters.dateFrom,
-                        itemId: item.id 
-                    });
-                } else if (itemDate < filterDateFrom) {
+                // Remover espaços e limpar
+                dateStr = String(dateStr).trim();
+                if (!dateStr) return null;
+                
+                // Se já está no formato yyyy-mm-dd, retornar como está
+                if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+                    return dateStr.split('T')[0].split(' ')[0];
+                }
+                
+                // Se está no formato dd/mm/yyyy, converter para yyyy-mm-dd
+                if (/^\d{1,2}\/\d{1,2}\/\d{4}/.test(dateStr)) {
+                    const parts = dateStr.split('/');
+                    if (parts.length === 3) {
+                        const day = parts[0].padStart(2, '0');
+                        const month = parts[1].padStart(2, '0');
+                        const year = parts[2];
+                        return `${year}-${month}-${day}`;
+                    }
+                }
+                
+                console.warn('⚠️ Formato de data não reconhecido:', dateStr);
+                return null;
+            };
+            
+            // Aplicar filtro de data inicial (dateFrom)
+            if (this.currentFilters.dateFrom) {
+                const itemDateStr = normalizeDate(item.dataCriacao);
+                const filterDateFrom = this.currentFilters.dateFrom.trim(); // Já vem no formato yyyy-mm-dd do input
+                
+                if (filterDateFrom) {
+                    if (!itemDateStr) {
+                        // Se o item não tem data válida e há filtro, excluir
+                        if (filteredCount < 3) {
+                            console.log(`❌ Item ${item.id} excluído: sem data válida. Data original: "${item.dataCriacao}"`);
+                        }
                     return false;
                 }
-            }
-            if (this.currentFilters.dateTo && item.dataCriacao) {
-                // Garantir que a data do item está no formato correto
-                const itemDateStr = item.dataCriacao.includes('T') ? item.dataCriacao.split('T')[0] : item.dataCriacao;
-                const itemDate = new Date(itemDateStr + 'T00:00:00');
-                const filterDateTo = new Date(this.currentFilters.dateTo + 'T23:59:59');
-                
-                if (isNaN(itemDate.getTime()) || isNaN(filterDateTo.getTime())) {
-                    // Se a data não for válida, pular o filtro de data para este item
-                    console.warn('⚠️ Data inválida no filtro:', { 
-                        itemDate: item.dataCriacao, 
-                        filterDate: this.currentFilters.dateTo,
-                        itemId: item.id 
-                    });
-                } else if (itemDate > filterDateTo) {
-                    return false;
+                    
+                    // Comparar como strings (yyyy-mm-dd pode ser comparado diretamente como string)
+                    if (itemDateStr < filterDateFrom) {
+                        if (debugCount < 3) {
+                            console.log(`❌ Item ${item.id || item.ticket} excluído por dateFrom: ${itemDateStr} < ${filterDateFrom} (original: ${item.dataCriacao})`);
+                            debugCount++;
+                        }
+                        return false;
+                    }
                 }
             }
+            
+            // Aplicar filtro de data final (dateTo)
+            if (this.currentFilters.dateTo) {
+                const itemDateStr = normalizeDate(item.dataCriacao);
+                const filterDateTo = this.currentFilters.dateTo.trim(); // Já vem no formato yyyy-mm-dd do input
+                
+                if (filterDateTo) {
+                    if (!itemDateStr) {
+                        // Se o item não tem data válida e há filtro, excluir
+                        if (debugCount < 3) {
+                            console.log(`❌ Item ${item.id || item.ticket} excluído: sem data válida. Data original: "${item.dataCriacao}"`);
+                            debugCount++;
+                        }
+                    return false;
+                    }
+                    
+                    // Comparar como strings (yyyy-mm-dd pode ser comparado diretamente como string)
+                    if (itemDateStr > filterDateTo) {
+                        if (debugCount < 3) {
+                            console.log(`❌ Item ${item.id || item.ticket} excluído por dateTo: ${itemDateStr} > ${filterDateTo} (original: ${item.dataCriacao})`);
+                            debugCount++;
+                        }
+                        return false;
+                    }
+                }
+            }
+            
+            // Se chegou aqui, o item passou em todos os filtros
+            filteredCount++;
 
             // Filtro de serviço
             // IMPORTANTE: Comparar IDs diretamente (sem toLowerCase) pois são números/strings
@@ -593,7 +782,16 @@ class RelatoriosOptimized {
 
         this.currentPage = 1;
         
-        console.log('🔍 Debug - Dados após filtro:', this.filteredData.length, 'itens');
+        console.log('🔍 Debug - Dados após filtro:', this.filteredData.length, 'itens de', this.data.length, 'totais');
+        console.log('🔍 Debug - Filtros aplicados:', {
+            dateFrom: this.currentFilters.dateFrom,
+            dateTo: this.currentFilters.dateTo,
+            status: this.currentFilters.status,
+            tipo: this.currentFilters.tipo,
+            service: this.currentFilters.service,
+            priority: this.currentFilters.priority,
+            search: this.currentFilters.search
+        });
         
         this.renderTableOptimized();
         this.updateStats();
