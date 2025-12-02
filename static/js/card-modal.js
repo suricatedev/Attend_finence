@@ -1209,12 +1209,10 @@ function setupModalEventListeners() {
     
     // Buscar botões toda vez que o modal é aberto
     const closeBtn = document.getElementById('closeCardModal');
-    const closeModalBtn = document.getElementById('closeModalBtn');
     const overlay = modal.querySelector('.modal-overlay');
     
     console.log('🔍 Configurando listeners do modal:', {
         closeBtn: !!closeBtn,
-        closeModalBtn: !!closeModalBtn,
         overlay: !!overlay
     });
     
@@ -1233,23 +1231,6 @@ function setupModalEventListeners() {
         console.log('✅ Listener do botão X adicionado');
     } else {
         console.warn('⚠️ Botão closeCardModal não encontrado');
-    }
-    
-    // Fechar modal com botão Voltar
-    if (closeModalBtn) {
-        // Remover listeners anteriores
-        const newCloseModalBtn = closeModalBtn.cloneNode(true);
-        closeModalBtn.parentNode.replaceChild(newCloseModalBtn, closeModalBtn);
-        newCloseModalBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('✅ Botão Voltar clicado, fechando modal');
-            closeCardDetailModal();
-            return false;
-        });
-        console.log('✅ Listener do botão Voltar adicionado');
-    } else {
-        console.warn('⚠️ Botão closeModalBtn não encontrado');
     }
     
     // BLOQUEAR COMPLETAMENTE o fechamento ao clicar fora do modal
