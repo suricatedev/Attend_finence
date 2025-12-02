@@ -24,8 +24,11 @@
     display: flex;
     flex-direction: column;
     height: calc(100vh - 140px);
+    min-height: calc(100vh - 140px);
+    max-height: calc(100vh - 140px);
     position: relative;
     overflow: hidden;
+    align-self: stretch;
 }
 
 .kanban-column::before {
@@ -40,15 +43,16 @@
 }
 
 .column-header {
-    padding: 24px 20px 20px;
+    padding: 20px 16px 16px;
     border-bottom: 1px solid rgba(84, 67, 80, 0.2);
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
     background: rgba(255, 203, 87, 0.05);
-    flex-wrap: nowrap;
-    gap: 15px;
+    gap: 12px;
     min-width: 0;
+    min-height: auto;
 }
 
 .column-header-actions {
@@ -69,6 +73,8 @@
     white-space: nowrap !important;
     flex-shrink: 0;
     min-width: 0;
+    width: 100%;
+    justify-content: space-between;
 }
 
 .column-title i,
@@ -143,9 +149,47 @@
 /* Filtro de data por coluna */
 .column-date-filter {
     position: relative;
-    display: flex;
+    display: flex !important;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 4px 0;
+    -webkit-overflow-scrolling: touch;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.column-date-filter::-webkit-scrollbar {
+    height: 4px;
+}
+
+.column-date-filter::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.column-date-filter::-webkit-scrollbar-thumb {
+    background: rgba(84, 67, 80, 0.2);
+    border-radius: 2px;
+}
+
+/* Garantir que todos os elementos dentro do filtro sejam visíveis */
+.column-date-filter > * {
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: inline-flex !important;
+}
+
+/* Garantir que o container de filtros seja sempre visível */
+.column-date-filter {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .selected-date-display {
@@ -156,12 +200,13 @@
     background: rgba(102, 102, 102, 0.12);
     border-radius: 8px;
     white-space: nowrap;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
     border-left: 3px solid rgba(102, 102, 102, 0.5);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
+    flex-shrink: 0;
 }
 
 .selected-date-display.filtered {
@@ -177,17 +222,23 @@
 }
 
 .date-filter-btn {
-    background: none;
-    border: none;
-    padding: 8px;
-    border-radius: 6px;
-    cursor: pointer;
-    color: #544350;
-    transition: all 0.2s ease;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: rgba(255, 203, 87, 0.15) !important;
+    border: 1px solid rgba(255, 203, 87, 0.3) !important;
+    padding: 8px 10px !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    color: #544350 !important;
+    transition: all 0.2s ease !important;
+    font-size: 1rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    min-width: 36px !important;
+    width: 36px !important;
+    height: 36px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .date-filter-btn:hover {
@@ -271,7 +322,58 @@
 }
 
 .date-filter-btn i {
-    font-size: 1.1rem;
+    font-size: 1.1rem !important;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Garantir que o botão do calendário seja sempre visível */
+.date-filter-btn {
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* Botões de filtro HOJE e TODOS */
+.date-filter-today-btn,
+.date-filter-all-btn {
+    background: rgba(255, 203, 87, 0.15);
+    border: 1px solid rgba(255, 203, 87, 0.3);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #544350;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 60px;
+}
+
+.date-filter-today-btn:hover,
+.date-filter-all-btn:hover {
+    background: rgba(255, 203, 87, 0.25);
+    border-color: rgba(255, 203, 87, 0.5);
+    color: #1C1C1C;
+}
+
+.date-filter-today-btn.active {
+    background: linear-gradient(135deg, #FFCB57 0%, #FFD700 100%);
+    border-color: #FFCB57;
+    color: #1C1C1C;
+    box-shadow: 0 2px 6px rgba(255, 203, 87, 0.4);
+}
+
+.date-filter-all-btn.active {
+    background: linear-gradient(135deg, #544350 0%, #3A3A3A 100%);
+    border-color: #544350;
+    color: white;
+    box-shadow: 0 2px 6px rgba(84, 67, 80, 0.4);
 }
 
 /* Modal de Filtro de Data - Elegante e Moderno */
@@ -487,14 +589,16 @@
 }
 
 .column-content {
-    flex: 1;
+    flex: 1 1 auto;
     padding: 20px;
-    overflow-y: visible; /* permite o card crescer totalmente */
+    overflow-y: auto;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
     gap: 0;
-    height: calc(100vh - 200px);
+    min-height: 0;
+    flex-grow: 1;
+    flex-shrink: 1;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE and Edge */
 }

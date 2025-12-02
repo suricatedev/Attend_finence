@@ -180,8 +180,14 @@
                 <span class="card-count">{{ num_solicitacoes_pendentes }}</span>
                         </div>
                         <div class="column-date-filter">
-                            <span class="selected-date-display" data-column="planning">Todos</span>
-                            <button class="date-filter-btn" title="Filtrar por data" data-column="planning">
+                            <span class="selected-date-display" data-column="planning">Hoje</span>
+                            <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="planning">
+                                Hoje
+                            </button>
+                            <button class="date-filter-all-btn" title="Mostrar todos" data-column="planning">
+                                Todos
+                            </button>
+                            <button class="date-filter-btn" title="Filtrar por data específica" data-column="planning">
                                 <i class="fas fa-calendar-alt"></i>
                             </button>
                         </div>
@@ -263,7 +269,13 @@
                 <span class="card-count">{{ num_solicitacoes_recusados }}</span>
                         </div>
                         <div class="column-date-filter">
-                            <span class="selected-date-display" data-column="test">Todos</span>
+                            <span class="selected-date-display" data-column="test">Hoje</span>
+                            <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="test">
+                                Hoje
+                            </button>
+                            <button class="date-filter-all-btn" title="Mostrar todos" data-column="test">
+                                Todos
+                            </button>
                             <button class="date-filter-btn" title="Filtrar por data" data-column="test">
                                 <i class="fas fa-calendar-alt"></i>
                             </button>
@@ -351,7 +363,13 @@
                 <span class="card-count">{{ num_solicitacoes_aprovado }}</span>
                         </div>
                         <div class="column-date-filter">
-                            <span class="selected-date-display" data-column="launch">Todos</span>
+                            <span class="selected-date-display" data-column="launch">Hoje</span>
+                            <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="launch">
+                                Hoje
+                            </button>
+                            <button class="date-filter-all-btn" title="Mostrar todos" data-column="launch">
+                                Todos
+                            </button>
                             <button class="date-filter-btn" title="Filtrar por data" data-column="launch">
                                 <i class="fas fa-calendar-alt"></i>
                             </button>
@@ -434,7 +452,13 @@
                 <span class="card-count">{{ num_solicitacoes_concluido }}</span>
                         </div>
                         <div class="column-date-filter">
-                            <span class="selected-date-display" data-column="success">Todos</span>
+                            <span class="selected-date-display" data-column="success">Hoje</span>
+                            <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="success">
+                                Hoje
+                            </button>
+                            <button class="date-filter-all-btn" title="Mostrar todos" data-column="success">
+                                Todos
+                            </button>
                             <button class="date-filter-btn" title="Filtrar por data" data-column="success">
                                 <i class="fas fa-calendar-alt"></i>
                             </button>
@@ -779,12 +803,11 @@
                 }
             });
 
-            // Limpar filtro de TODAS as colunas
+            // Limpar filtro de TODAS as colunas - volta para HOJE (padrão)
             clearDateFilter.addEventListener('click', function() {
                 const columns = ['planning', 'test', 'launch', 'success'];
                 columns.forEach(column => {
-                    clearDateFilterForColumn(column);
-                    showAll(column);
+                    filterByToday(column);
                 });
                 closeModal();
             });
@@ -806,6 +829,12 @@
                     dateDisplay.style.display = 'flex';
                     dateDisplay.classList.add('filtered'); // Adicionar classe para diferenciar visualmente
                 }
+                
+                // Desativar botões HOJE e TODOS quando usar calendário
+                const todayBtn = document.querySelector(`.date-filter-today-btn[data-column="${column}"]`);
+                const allBtn = document.querySelector(`.date-filter-all-btn[data-column="${column}"]`);
+                if (todayBtn) todayBtn.classList.remove('active');
+                if (allBtn) allBtn.classList.remove('active');
             }
             
             // Função para mostrar "Todos" quando não há filtro
@@ -816,7 +845,87 @@
                     dateDisplay.style.display = 'flex';
                     dateDisplay.classList.remove('filtered'); // Remover classe para voltar ao estado padrão
                 }
+                
+                // Atualizar botões
+                const todayBtn = document.querySelector(`.date-filter-today-btn[data-column="${column}"]`);
+                const allBtn = document.querySelector(`.date-filter-all-btn[data-column="${column}"]`);
+                if (todayBtn) todayBtn.classList.remove('active');
+                if (allBtn) allBtn.classList.add('active');
             }
+            
+            // Função para mostrar "Hoje" quando filtrado por hoje
+            function showToday(column) {
+                const dateDisplay = document.querySelector(`.selected-date-display[data-column="${column}"]`);
+                if (dateDisplay) {
+                    dateDisplay.textContent = 'Hoje';
+                    dateDisplay.style.display = 'flex';
+                    dateDisplay.classList.add('filtered');
+                }
+            }
+            
+            // Função para obter a data de hoje no formato YYYY-MM-DD
+            function getTodayDate() {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            // Função para filtrar por hoje
+            function filterByToday(column) {
+                const today = getTodayDate();
+                filterCardsByDate(column, today);
+                showToday(column);
+                
+                // Atualizar botões
+                const todayBtn = document.querySelector(`.date-filter-today-btn[data-column="${column}"]`);
+                const allBtn = document.querySelector(`.date-filter-all-btn[data-column="${column}"]`);
+                if (todayBtn) todayBtn.classList.add('active');
+                if (allBtn) allBtn.classList.remove('active');
+            }
+            
+            // Função para mostrar todos os cards
+            function showAllCards(column) {
+                clearDateFilterForColumn(column);
+                showAll(column);
+                
+                // Atualizar botões
+                const todayBtn = document.querySelector(`.date-filter-today-btn[data-column="${column}"]`);
+                const allBtn = document.querySelector(`.date-filter-all-btn[data-column="${column}"]`);
+                if (todayBtn) todayBtn.classList.remove('active');
+                if (allBtn) allBtn.classList.add('active');
+            }
+            
+            // Event listeners para botões HOJE e TODOS
+            document.querySelectorAll('.date-filter-today-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const column = this.getAttribute('data-column');
+                    filterByToday(column);
+                });
+            });
+            
+            document.querySelectorAll('.date-filter-all-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const column = this.getAttribute('data-column');
+                    showAllCards(column);
+                });
+            });
+            
+            // Filtrar por hoje por padrão ao carregar a página
+            function initializeTodayFilter() {
+                const columns = ['planning', 'test', 'launch', 'success'];
+                columns.forEach(column => {
+                    filterByToday(column);
+                });
+            }
+            
+            // Aguardar um pouco para garantir que os cards estejam carregados
+            setTimeout(() => {
+                initializeTodayFilter();
+            }, 500);
             
             // Função para ocultar a data selecionada (substituída por showAll)
             function hideSelectedDate(column) {
@@ -866,7 +975,7 @@
                 console.log(`✅ Filtrado ${column}: ${visibleCount} cards para a data ${date}`);
             }
             
-            // Função para limpar filtro de data
+            // Função para limpar filtro de data (mostrar todos os cards)
             function clearDateFilterForColumn(column) {
                 const columnContent = document.querySelector(`.column-content[data-column="${column}"]`);
                 if (!columnContent) return;
@@ -885,9 +994,6 @@
                 
                 // Restaurar contador original
                 restoreOriginalCardCount(column);
-                
-                // Mostrar "Todos" no indicador
-                showAll(column);
                 
                 // Garantir que os event listeners do modal estão ativos
                 if (typeof initializeCardExpansion === 'function') {
