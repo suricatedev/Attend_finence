@@ -1309,18 +1309,23 @@ class RelatoriosOptimized {
                 return;
             }
 
-            // Pegar dados diretamente da tabela HTML
+            // Pegar dados diretamente da tabela HTML apenas para os headers
             const table = document.getElementById('reportsTable');
             if (!table) {
                 alert('Tabela não encontrada!');
                 return;
             }
 
-            // Coletar cabeçalhos (excluindo coluna de ações)
+            // Coletar cabeçalhos (excluindo coluna de ações e toggle de valores detalhados)
             const headers = [];
             table.querySelectorAll('thead th').forEach(th => {
-                // Pular coluna de ações
-                if (th.classList.contains('actions-header')) {
+                // Pular coluna de ações e toggle de valores detalhados
+                if (th.classList.contains('actions-header') || th.classList.contains('valores-detalhados-toggle-header')) {
+                    return;
+                }
+                
+                // Pular colunas de valores detalhados se estiverem ocultas
+                if (th.classList.contains('valores-detalhados-col') && th.style.display === 'none') {
                     return;
                 }
                 
@@ -1328,6 +1333,11 @@ class RelatoriosOptimized {
                 // Remover ícones de ordenação (setas)
                 text = text.replace(/↑|↓/g, '').trim();
                 text = text.replace(/\s+/g, ' ').trim();
+                
+                // Remover texto do botão de toggle se houver
+                if (text.includes('Valores Detalhados')) {
+                    return; // Não incluir o cabeçalho do toggle
+                }
                 
                 if (text && text.length > 0) {
                     headers.push(text);
@@ -1362,63 +1372,158 @@ class RelatoriosOptimized {
                 return isNaN(num) ? null : num;
             }
             
-            // Função auxiliar para limpar texto da célula
-            function cleanCellText(td) {
-                // Limpar valores de status e prioridade (remover badges)
-                const statusBadge = td.querySelector('.status-badge');
-                if (statusBadge) {
-                    return statusBadge.textContent.trim();
-                }
-                
-                const priorityBadge = td.querySelector('.priority-badge');
-                if (priorityBadge) {
-                    return priorityBadge.textContent.trim();
-                }
-                
-                // Para outras células, pegar todo o texto visível
-                let text = td.innerText || td.textContent || '';
-                return text.trim();
-            }
+            // ✅ IMPORTANTE: Usar TODOS os dados filtrados, não apenas a página atual
+            const allFilteredData = this.filteredData || [];
+            console.log(`📊 Exportando ${allFilteredData.length} solicitações (todas as páginas)`);
             
-            // Coletar dados das linhas, garantindo correspondência correta com headers
-            table.querySelectorAll('tbody tr:not(.empty-state)').forEach(tr => {
+            // Função auxiliar para obter status display
+            const getStatusDisplay = (status) => {
+                const statusMap = {
+                    'pendente': 'Pendente',
+                    'aprovado': 'Aprovado',
+                    'recusado': 'Recusado',
+                    'concluido': 'Concluído'
+                };
+                return statusMap[status?.toLowerCase()] || status || '';
+            };
+            
+            // Função auxiliar para obter prioridade display
+            const getPriorityDisplay = (priority) => {
+                const priorityMap = {
+                    'baixa': 'Baixa',
+                    'media': 'Média',
+                    'alta': 'Alta'
+                };
+                return priorityMap[priority?.toLowerCase()] || priority || '';
+            };
+            
+            // Função auxiliar para formatar data
+            const formatDate = (dateStr) => {
+                if (!dateStr) return '';
+                // Se já estiver em formato dd/mm/yyyy, retornar como está
+                if (dateStr.includes('/')) return dateStr;
+                // Se estiver em formato yyyy-mm-dd, converter para dd/mm/yyyy
+                if (dateStr.includes('-') && dateStr.length >= 10) {
+                    const parts = dateStr.split(' ')[0].split('-');
+                    if (parts.length === 3) {
+                        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    }
+                }
+                return dateStr;
+            };
+            
+            // Coletar dados de TODOS os itens filtrados
+            // Construir linha seguindo EXATAMENTE a ordem dos headers
+            allFilteredData.forEach(item => {
                 const row = [];
-                const tds = tr.querySelectorAll('td');
-                let headerIndex = 0;
                 
-                tds.forEach((td) => {
-                    // Se for a coluna de ações, pular
-                    if (td.classList.contains('actions-cell')) {
-                        return;
-                    }
+                // Mapear cada header para o valor correspondente do item
+                headers.forEach(header => {
+                    const headerLower = header.toLowerCase().trim();
                     
-                    let cellValue = cleanCellText(td);
-                    
-                    // Remover espaços extras, quebras de linha e caracteres especiais
-                    cellValue = cellValue.replace(/\s+/g, ' ').replace(/\n/g, ' ').replace(/\r/g, '').trim();
-                    
-                    // Verificar se é coluna monetária e converter para número
-                    if (monetaryColumns.includes(headerIndex) && cellValue) {
-                        const numValue = extractMonetaryValue(cellValue);
-                        if (numValue !== null) {
-                            // Armazenar como número para formatação posterior
-                            row.push({ value: numValue, type: 'monetary' });
+                    if (headerLower.includes('id')) {
+                        row.push(item.ticket || item.id || '');
+                    } else if (headerLower.includes('título') || headerLower.includes('titulo')) {
+                        row.push(item.title || '');
+                    } else if (headerLower.includes('solicitante')) {
+                        row.push(item.solicitante || '');
+                    } else if (headerLower.includes('supervisor')) {
+                        row.push(item.supervisor || '-');
+                    } else if (headerLower.includes('recebedor')) {
+                        row.push(item.recebedor || '-');
+                    } else if (headerLower.includes('chave pix') || headerLower.includes('pix')) {
+                        row.push(item.chavePix || '-');
+                    } else if (headerLower.includes('cliente') || headerLower.includes('empresa')) {
+                        row.push(item.clienteEmpresa || '-');
+                    } else if (headerLower.includes('cnpj')) {
+                        row.push(item.cnpj || '-');
+                    } else if (headerLower.includes('serviço') || headerLower.includes('servico')) {
+                        let serviceName = '';
+                        if (item.service) {
+                            const serviceSelect = document.getElementById('serviceFilter');
+                            if (serviceSelect) {
+                                const serviceOption = Array.from(serviceSelect.options).find(opt => opt.value == item.service);
+                                serviceName = serviceOption ? serviceOption.text : item.service;
+                            } else {
+                                serviceName = item.service;
+                            }
                         } else {
-                            row.push(cellValue || '');
+                            serviceName = 'N/A';
                         }
+                        row.push(serviceName);
+                    } else if (headerLower.includes('valor total')) {
+                        const valorTotal = item.valor || '';
+                        const valorNum = extractMonetaryValue(valorTotal);
+                        if (valorNum !== null) {
+                            row.push({ value: valorNum, type: 'monetary' });
+                        } else {
+                            row.push(valorTotal || '');
+                        }
+                    } else if (headerLower.includes('receita')) {
+                        const valorReceitaNum = extractMonetaryValue(item.valorReceita || '');
+                        if (valorReceitaNum !== null) {
+                            row.push({ value: valorReceitaNum, type: 'monetary' });
+                        } else {
+                            row.push(item.valorReceita || '');
+                        }
+                    } else if (headerLower.includes('em rota')) {
+                        const valorEmRotaNum = extractMonetaryValue(item.valorEmRota || '');
+                        if (valorEmRotaNum !== null) {
+                            row.push({ value: valorEmRotaNum, type: 'monetary' });
+                        } else {
+                            row.push(item.valorEmRota || '');
+                        }
+                    } else if (headerLower === 'km') {
+                        const valorKmNum = extractMonetaryValue(item.valorKm || '');
+                        if (valorKmNum !== null) {
+                            row.push({ value: valorKmNum, type: 'monetary' });
+                        } else {
+                            row.push(item.valorKm || '');
+                        }
+                    } else if (headerLower.includes('pedágio') || headerLower.includes('pedagio')) {
+                        const valorPedagioNum = extractMonetaryValue(item.valorPedagio || '');
+                        if (valorPedagioNum !== null) {
+                            row.push({ value: valorPedagioNum, type: 'monetary' });
+                        } else {
+                            row.push(item.valorPedagio || '');
+                        }
+                    } else if (headerLower.includes('hospedagem')) {
+                        const valorHospedagemNum = extractMonetaryValue(item.valorHospedagem || '');
+                        if (valorHospedagemNum !== null) {
+                            row.push({ value: valorHospedagemNum, type: 'monetary' });
+                        } else {
+                            row.push(item.valorHospedagem || '');
+                        }
+                    } else if (headerLower.includes('fluvial')) {
+                        const valorFluvialNum = extractMonetaryValue(item.valorFluvial || '');
+                        if (valorFluvialNum !== null) {
+                            row.push({ value: valorFluvialNum, type: 'monetary' });
+                        } else {
+                            row.push(item.valorFluvial || '');
+                        }
+                    } else if (headerLower.includes('outros')) {
+                        const valorOutrosNum = extractMonetaryValue(item.valorOutros || '');
+                        if (valorOutrosNum !== null) {
+                            row.push({ value: valorOutrosNum, type: 'monetary' });
+                        } else {
+                            row.push(item.valorOutros || '');
+                        }
+                    } else if (headerLower.includes('status')) {
+                        row.push(getStatusDisplay(item.status));
+                    } else if (headerLower.includes('prioridade')) {
+                        row.push(getPriorityDisplay(item.priority));
+                    } else if (headerLower.includes('criação') || headerLower.includes('criacao')) {
+                        row.push(formatDate(item.dataCriacao || ''));
+                    } else if (headerLower.includes('pagamento')) {
+                        row.push(formatDate(item.dataPagamento || ''));
                     } else {
-                        row.push(cellValue || '');
+                        // Para qualquer outro header não mapeado, adicionar string vazia
+                        row.push('');
                     }
-                    
-                    headerIndex++;
                 });
                 
-                // Garantir que a linha tenha o mesmo número de colunas dos headers
-                while (row.length < headers.length) {
-                    row.push('');
-                }
-                
-                if (row.length > 0) {
+                // Garantir que a linha tenha exatamente o mesmo número de colunas dos headers
+                if (row.length === headers.length && row.length > 0) {
                     rows.push(row);
                 }
             });
@@ -1569,11 +1674,43 @@ class RelatoriosOptimized {
             doc.setFontSize(7);
             doc.setFont('helvetica', 'normal');
             
-            // Pegar dados da tabela HTML
-            const table = document.getElementById('reportsTable');
-            const rows = table.querySelectorAll('tbody tr:not(.empty-state)');
+            // ✅ IMPORTANTE: Usar TODOS os dados filtrados, não apenas a página atual
+            const allFilteredData = this.filteredData || [];
+            console.log(`📊 Exportando ${allFilteredData.length} solicitações para PDF (todas as páginas)`);
             
-            rows.forEach((row, rowIndex) => {
+            // Funções auxiliares
+            const getStatusDisplay = (status) => {
+                const statusMap = {
+                    'pendente': 'Pendente',
+                    'aprovado': 'Aprovado',
+                    'recusado': 'Recusado',
+                    'concluido': 'Concluído'
+                };
+                return statusMap[status?.toLowerCase()] || status || '';
+            };
+            
+            const getPriorityDisplay = (priority) => {
+                const priorityMap = {
+                    'baixa': 'Baixa',
+                    'media': 'Média',
+                    'alta': 'Alta'
+                };
+                return priorityMap[priority?.toLowerCase()] || priority || '';
+            };
+            
+            const formatDate = (dateStr) => {
+                if (!dateStr) return '';
+                if (dateStr.includes('/')) return dateStr;
+                if (dateStr.includes('-') && dateStr.length >= 10) {
+                    const parts = dateStr.split(' ')[0].split('-');
+                    if (parts.length === 3) {
+                        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    }
+                }
+                return dateStr;
+            };
+            
+            allFilteredData.forEach((item, rowIndex) => {
                 // Verificar se precisa de nova página
                 if (currentY > 180) {
                     doc.addPage('landscape', 'a4');
@@ -1603,35 +1740,38 @@ class RelatoriosOptimized {
                     doc.rect(10, currentY, 277, lineHeight, 'F');
                 }
                 
-                // Dados da linha
-                const cells = row.querySelectorAll('td');
+                // Dados da linha - construir a partir de item
                 let cellX = 10;
+                let colIndex = 0;
                 
-                cells.forEach((cell, cellIndex) => {
-                    if (cell.classList.contains('actions-cell')) {
-                        return; // Pular célula de ações
-                    }
-                    
-                    let cellValue = cell.textContent.trim();
-                    
-                    // Extrair texto dos badges
-                    const statusBadge = cell.querySelector('.status-badge');
-                    const priorityBadge = cell.querySelector('.priority-badge');
-                    if (statusBadge) {
-                        cellValue = statusBadge.textContent.trim();
-                    } else if (priorityBadge) {
-                        cellValue = priorityBadge.textContent.trim();
-                    }
-                    
+                // Construir linha na ordem: ID, Título, Solicitante, Supervisor, Recebedor, Serviço, Valor, Status, Prioridade, Criação, Pagamento
+                const rowData = [
+                    item.ticket || item.id || '',
+                    (item.title || '').substring(0, 30),
+                    (item.solicitante || '').substring(0, 20),
+                    (item.supervisor || '-').substring(0, 20),
+                    (item.recebedor || '-').substring(0, 20),
+                    (item.service || 'N/A').substring(0, 20),
+                    item.valor || '',
+                    getStatusDisplay(item.status),
+                    getPriorityDisplay(item.priority),
+                    formatDate(item.dataCriacao || ''),
+                    formatDate(item.dataPagamento || '')
+                ];
+                
+                rowData.forEach((cellValue, idx) => {
+                    if (colIndex < colWidths.length) {
                     // Truncar texto muito longo
-                    const maxLength = headers[cellIndex].length * 2;
-                    if (cellValue.length > maxLength) {
+                        const maxLength = colWidths[colIndex] / 2;
+                        if (cellValue && cellValue.length > maxLength) {
                         cellValue = cellValue.substring(0, maxLength - 3) + '...';
                     }
                     
                     doc.setTextColor(84, 67, 80);
-                    doc.text(cellValue, cellX + 2, currentY + 5);
-                    cellX += colWidths[cellIndex];
+                        doc.text(cellValue || '', cellX + 2, currentY + 5);
+                        cellX += colWidths[colIndex];
+                        colIndex++;
+                    }
                 });
                 
                 currentY += lineHeight;
@@ -1645,7 +1785,7 @@ class RelatoriosOptimized {
             
             doc.setTextColor(84, 67, 80);
             doc.setFontSize(8);
-            doc.text(`Total de solicitações: ${rows.length}`, 10, finalY + 8);
+            doc.text(`Total de solicitações: ${allFilteredData.length}`, 10, finalY + 8);
             doc.text('Sistema de Gestão Financeira - Attend Finance', 148.5, finalY + 8, { align: 'center' });
             doc.text('Página ' + doc.internal.getCurrentPageInfo().pageNumber, 280, finalY + 8, { align: 'right' });
             
