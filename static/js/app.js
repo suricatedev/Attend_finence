@@ -1483,14 +1483,10 @@ class KanbanManager {
 
         document.addEventListener('drop', (e) => {
             e.preventDefault();
-            const card = e.target.closest('.kanban-column');
-            if (card) {
-                const cardId = e.dataTransfer.getData('text/html');
-                const cardElement = document.createElement('div');
-                cardElement.innerHTML = cardId;
-                card.querySelector('.cards-container').appendChild(cardElement.firstElementChild);
-                this.updateCardStatus(cardElement.firstElementChild, card.dataset.column);
-            }
+            // ✅ NÃO processar drop aqui - o kanban.js já gerencia isso
+            // Este código estava causando conflito e erro (cards-container não existe)
+            // O drag and drop é gerenciado pelo kanban.js
+            return;
         });
     }
 
@@ -1519,8 +1515,12 @@ class KanbanManager {
         const columnElement = document.querySelector(`[data-column="${column}"]`);
         if (!columnElement) return;
 
-        const cardsContainer = columnElement.querySelector('.cards-container');
-        if (!cardsContainer) return;
+        // ✅ Usar .column-content ao invés de .cards-container (estrutura atual do template)
+        const cardsContainer = columnElement.querySelector('.column-content') || columnElement.querySelector('.cards-container');
+        if (!cardsContainer) {
+            console.warn('⚠️ Container de cards não encontrado para coluna:', column);
+            return;
+        }
 
         let cardElement;
         
@@ -1838,8 +1838,11 @@ class NavigationManager {
                             <h3>Pendente</h3>
                             <span class="card-count">0</span>
                         </div>
-                        <div class="cards-container">
-                            <button class="add-card-btn">+ Adicionar Card</button>
+                        <div class="column-content" data-column="pendente">
+                            <div class="empty-column">
+                                <i class="fas fa-inbox"></i>
+                                <p>Nenhuma solicitação pendente</p>
+                            </div>
                         </div>
                     </div>
                     
@@ -1848,8 +1851,11 @@ class NavigationManager {
                             <h3>Aprovado</h3>
                             <span class="card-count">0</span>
                         </div>
-                        <div class="cards-container">
-                            <button class="add-card-btn">+ Adicionar Card</button>
+                        <div class="column-content" data-column="aprovado">
+                            <div class="empty-column">
+                                <i class="fas fa-inbox"></i>
+                                <p>Nenhuma solicitação aprovada</p>
+                            </div>
                         </div>
                     </div>
                     
@@ -1858,8 +1864,11 @@ class NavigationManager {
                             <h3>Recusado</h3>
                             <span class="card-count">0</span>
                         </div>
-                        <div class="cards-container">
-                            <button class="add-card-btn">+ Adicionar Card</button>
+                        <div class="column-content" data-column="recusado">
+                            <div class="empty-column">
+                                <i class="fas fa-inbox"></i>
+                                <p>Nenhuma solicitação recusada</p>
+                            </div>
                         </div>
                     </div>
                     
@@ -1868,8 +1877,11 @@ class NavigationManager {
                             <h3>Concluído</h3>
                             <span class="card-count">0</span>
                         </div>
-                        <div class="cards-container">
-                            <button class="add-card-btn">+ Adicionar Card</button>
+                        <div class="column-content" data-column="concluido">
+                            <div class="empty-column">
+                                <i class="fas fa-inbox"></i>
+                                <p>Nenhuma solicitação concluída</p>
+                            </div>
                         </div>
                     </div>
                 </div>
