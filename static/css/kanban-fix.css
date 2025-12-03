@@ -5,7 +5,7 @@
     flex-direction: row !important;
     gap: 20px !important;
     overflow-x: hidden !important; /* Sem scroll - sempre mostrar os 4 cards */
-    background: #F4F7F5 !important;
+    background: white !important;
     height: calc(100vh - 80px) !important;
     overflow-y: hidden !important;
     align-items: flex-start !important;
@@ -20,7 +20,7 @@
     min-width: 280px !important;
     display: flex !important;
     flex-direction: column !important;
-    background: #F4F7F5 !important;
+    background: white !important;
     border-radius: 16px !important;
     box-shadow: 0 6px 25px rgba(28, 28, 28, 0.08) !important;
     border: 1px solid #544350 !important;
@@ -37,7 +37,7 @@
 /* Coluna: Pendente - Amarelo */
 .kanban-column[data-column="planning"] {
     border-left: 4px solid #ffc107 !important;
-    background: linear-gradient(135deg, #fff8e1 0%, #f4f7f5 100%) !important;
+    background: linear-gradient(135deg, #fff8e1 0%, #ffffff 100%) !important;
 }
 
 .kanban-column[data-column="planning"]::before {
@@ -69,7 +69,7 @@
 /* Coluna: Recusado - Vermelho */
 .kanban-column[data-column="test"] {
     border-left: 4px solid #dc3545 !important;
-    background: linear-gradient(135deg, #ffebee 0%, #f4f7f5 100%) !important;
+    background: linear-gradient(135deg, #ffebee 0%, #ffffff 100%) !important;
 }
 
 .kanban-column[data-column="test"]::before {
@@ -101,7 +101,7 @@
 /* Coluna: Aprovado - Azul claro */
 .kanban-column[data-column="launch"] {
     border-left: 4px solid #17a2b8 !important;
-    background: linear-gradient(135deg, #e3f2fd 0%, #f4f7f5 100%) !important;
+    background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%) !important;
 }
 
 .kanban-column[data-column="launch"]::before {
@@ -133,7 +133,7 @@
 /* Coluna: Concluído - Verde */
 .kanban-column[data-column="success"] {
     border-left: 4px solid #28a745 !important;
-    background: linear-gradient(135deg, #e8f5e8 0%, #f4f7f5 100%) !important;
+    background: linear-gradient(135deg, #e8f5e8 0%, #ffffff 100%) !important;
 }
 
 .kanban-column[data-column="success"]::before {
@@ -218,19 +218,55 @@
 
 /* Garantir que não há interferência de outros CSS */
 @media (max-width: 768px) {
-    .kanban-board {
+    /* Sobrescrever TODAS as regras para mobile */
+    body .kanban-board,
+    .main-content .kanban-board,
+    #kanbanBoard.kanban-board {
+        display: flex !important;
         flex-direction: column !important;
-        gap: 15px !important;
+        flex-wrap: nowrap !important;
+        gap: 12px !important;
+        padding: 10px !important;
         height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        background: white !important;
+        box-sizing: border-box !important;
     }
     
-    .kanban-column {
+    body .kanban-column,
+    .main-content .kanban-column,
+    #kanbanBoard .kanban-column,
+    .kanban-board .kanban-column {
+        flex: 0 0 auto !important;
+        flex-grow: 0 !important;
+        flex-shrink: 0 !important;
         min-width: 100% !important;
         max-width: 100% !important;
+        width: 100% !important;
         height: auto !important;
-        max-height: 400px !important;
+        min-height: 300px !important;
+        max-height: 500px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        background: white !important;
+        border-radius: 16px !important;
+        box-shadow: 0 6px 25px rgba(28, 28, 28, 0.08) !important;
+        border: 1px solid #544350 !important;
+        position: relative !important;
+        overflow: hidden !important;
+        align-self: stretch !important;
+        margin-bottom: 10px !important;
+    }
+    
+    .kanban-column .column-content {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
         flex: 1 1 auto !important;
+        min-height: 0 !important;
     }
 }

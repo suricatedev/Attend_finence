@@ -1318,20 +1318,6 @@ function setupModalEventListeners() {
         modalCloseDelegationSetup = true;
     }
     
-    // Event listener para mover card entre filas
-    const moverFilaBtn = document.getElementById('moverFilaBtn');
-    if (moverFilaBtn) {
-        moverFilaBtn.addEventListener('click', function() {
-            const filaSelect = document.getElementById('filaSelect');
-            const selectedFila = filaSelect.value;
-            const currentCard = modal.getAttribute('data-card-id');
-            
-            if (currentCard && selectedFila) {
-                moveCardToFila(currentCard, selectedFila);
-            }
-        });
-    }
-
     // Event listener para botão de detalhamento
     const exportCardBtn = document.getElementById('exportCardBtn');
     console.log('🔍 Procurando botão exportCardBtn:', !!exportCardBtn);

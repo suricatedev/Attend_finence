@@ -118,3 +118,4 @@ Ver `GUIA_USO_API.md` → Solução de Problemas para mais detalhes.
 
 
 
+

@@ -13,6 +13,8 @@
     
     <!-- Estilos críticos -->
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/sidebar-responsive.css' %}">
+    <link rel="stylesheet" href="{% static 'css/hide-scrollbars.css' %}">
     
     <!-- Font Awesome com preconnect para melhor performance -->
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -241,6 +243,9 @@
             <!-- Header -->
             <header class="header">
                 <div class="header-left">
+                    <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">
+                        <i class="fas fa-bars"></i>
+                    </button>
                     <div class="logo-section">
                     </div>
                 </div>
@@ -248,30 +253,27 @@
                 <div class="header-center">
                     <button class="btn-primary" id="createCampaignBtn">
                         <i class="fas fa-plus"></i>
-                        Nova Solicitação Financeira
+                        <span>Nova Solicitação Financeira</span>
                     </button>
 
                     <div class="view-tabs">
                         <a href="{% url 'home' %}" class="tab-btn {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
                             <i class="fas fa-th"></i>
-                            Cards
+                            <span>Cards</span>
                         </a>
                         <a href="{% url 'relatorio' %}" class="tab-btn {% if request.resolver_match.url_name == 'relatorio' %}active{% endif %}">
                             <i class="fas fa-chart-bar"></i>
-                            Relatórios
+                            <span>Relatórios</span>
                         </a>
                         <a href="{% url 'dashboard' %}" class="tab-btn {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                             <i class="fas fa-tachometer-alt"></i>
-                            Dashboards
+                            <span>Dashboards</span>
                         </a>
                     </div>
                 </div>
 
                 <div class="header-right">
                     <div class="user-actions">
-                        <button class="action-btn" title="Notificações">
-                            <i class="fas fa-bell"></i>
-                        </button>
                         {% if user|can_manage_users %}
                         <div class="settings-dropdown">
                             <button class="action-btn" title="Configurações" id="settingsBtn">

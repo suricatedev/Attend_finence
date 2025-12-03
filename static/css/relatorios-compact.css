@@ -29,6 +29,31 @@ header.header {
     box-sizing: border-box;
 }
 
+/* Garantir que a tabela seja sempre visível */
+.table-section {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative;
+    z-index: 1;
+}
+
+/* Garantir que o título "Dados Detalhados" seja sempre visível */
+.table-section .table-header {
+    display: flex !important;
+    visibility: visible !important;
+}
+
+.table-section .table-container {
+    display: block !important;
+    visibility: visible !important;
+}
+
+.table-section table {
+    display: table !important;
+    visibility: visible !important;
+}
+
 /* Garantir que todas as seções respeitem o container */
 .reports-fullscreen > * {
     box-sizing: border-box;
@@ -83,6 +108,8 @@ header.header {
     gap: 6px;
     transition: all 0.2s ease;
     font-size: 0.85rem;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .btn-back:hover {
@@ -141,6 +168,11 @@ header.header {
     transition: all 0.2s ease;
     box-shadow: 0 4px 15px rgba(255, 203, 87, 0.3);
     white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.btn-primary-reports span {
+    display: inline;
 }
 
 .btn-primary-reports:hover {
@@ -632,12 +664,15 @@ header.header {
     padding: 15px 25px;
     box-sizing: border-box;
     width: 100%;
-    overflow-x: auto;
+    overflow-x: visible;
     overflow-y: visible;
     display: flex;
     flex-direction: column;
     flex: 1;
-    min-height: 0;}
+    min-height: 400px; /* Altura mínima para garantir visibilidade */
+    margin-top: 0;
+    border-top: 2px solid #e2e8f0; /* Borda superior para destacar a seção */
+}
 
 .table-header {
     display: flex;
@@ -654,6 +689,8 @@ header.header {
     font-weight: 700;
     color: #1C1C1C;
     margin: 0;
+    display: block !important;
+    visibility: visible !important;
 }
 
 .table-stats {
@@ -710,14 +747,26 @@ header.header {
 /* Container da tabela com scroll */
 .table-container {
     overflow-x: auto; /* Scroll horizontal apenas quando necessário */
-    overflow-y: auto; /* Scroll vertical quando necessário */    border: 1px solid #e2e8f0;
+    overflow-y: auto; /* Scroll vertical quando necessário */
+    border: 1px solid #e2e8f0;
     border-radius: 6px;
     background: white;
     position: relative;
     width: 100%; /* Largura total */
     max-width: 100%;
     flex: 1;
-    min-height: 0;}
+    min-height: 300px; /* Altura mínima para garantir visibilidade */
+    max-height: calc(100vh - 500px); /* Altura máxima baseada na viewport */
+    -webkit-overflow-scrolling: touch; /* Scroll suave no iOS */
+}
+
+/* Indicador visual de scroll horizontal em telas pequenas */
+@media (max-width: 768px) {
+    .table-container {
+        box-shadow: inset -10px 0 10px -10px rgba(0, 0, 0, 0.1),
+                    inset 10px 0 10px -10px rgba(0, 0, 0, 0.1);
+    }
+}
 
 /* Scrollbar personalizada */
 .table-container::-webkit-scrollbar {
@@ -1710,28 +1759,81 @@ header.header {
     .header-left {
         width: 100%;
         min-width: 100%;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .btn-back {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+    }
+    
+    .btn-back span {
+        display: none;
+    }
+    
+    .btn-back i {
+        margin: 0;
+    }
+    
+    .page-title {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .page-title h1 {
+        font-size: 1.1rem;
+    }
+    
+    .page-title p {
+        font-size: 0.75rem;
     }
     
     .header-right {
         width: 100%;
         margin-left: 0;
         justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .btn-primary-reports {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+        flex: 1;
+        min-width: 0;
+        justify-content: center;
+    }
+    
+    .btn-primary-reports span {
+        display: none;
+    }
+    
+    .btn-primary-reports i {
+        margin: 0;
     }
     
     .export-actions {
         width: 100%;
         flex-wrap: wrap;
         gap: 8px;
+        display: flex;
     }
     
     .btn-export {
         flex: 1;
         min-width: 80px;
         justify-content: center;
+        padding: 8px 12px;
+        font-size: 0.8rem;
     }
     
-    .page-title h1 {
-        font-size: 1.2rem;
+    .btn-export span {
+        display: none;
+    }
+    
+    .btn-export i {
+        margin: 0;
     }
     
     .filters-section {
@@ -1802,6 +1904,9 @@ header.header {
     
     .table-section {
         padding: 12px 15px;
+        min-height: 350px; /* Altura mínima em tablets */
+        display: flex !important;
+        visibility: visible !important;
     }
     
     .table-header {
@@ -1812,6 +1917,11 @@ header.header {
     
     .table-controls {
         justify-content: space-between;
+    }
+    
+    .table-container {
+        min-height: 250px;
+        max-height: calc(100vh - 450px);
     }
     
     .data-table {
@@ -1829,20 +1939,42 @@ header.header {
     .reports-header {
         padding: 8px 12px;
         background: #1C1C1C !important;
+        gap: 8px;
+    }
+    
+    .btn-back {
+        padding: 6px 8px;
+        font-size: 0.75rem;
+        min-width: 36px;
     }
     
     .page-title h1 {
-        font-size: 1.1rem;
+        font-size: 1rem;
+        line-height: 1.2;
+    }
+    
+    .page-title p {
+        font-size: 0.7rem;
+        display: none; /* Ocultar subtítulo em telas muito pequenas */
+    }
+    
+    .btn-primary-reports {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        width: 100%;
     }
     
     .export-actions {
-        flex-direction: column;
+        flex-direction: row;
         gap: 6px;
+        width: 100%;
     }
     
     .btn-export {
-        padding: 6px 10px;
+        padding: 8px 10px;
         font-size: 0.75rem;
+        flex: 1;
+        min-width: 60px;
     }
     
     .filters-section {
@@ -1881,6 +2013,15 @@ header.header {
     
     .table-section {
         padding: 10px 12px;
+        min-height: 300px; /* Altura mínima em smartphones */
+        display: flex !important;
+        visibility: visible !important;
+    }
+    
+    .table-container {
+        min-height: 200px;
+        max-height: calc(100vh - 400px);
+        position: relative;
     }
     
     .data-table {
@@ -1891,6 +2032,69 @@ header.header {
     .data-table th,
     .data-table td {
         padding: 4px 2px;
+    }
+    
+    .pagination {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    
+    .pagination-btn {
+        padding: 4px 8px;
+        font-size: 0.65rem;
+    }
+    
+    .pagination-btn span {
+        display: none;
+    }
+    
+    .pagination-numbers {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .pagination-number {
+        min-width: 24px;
+        padding: 4px 6px;
+        font-size: 0.65rem;
+    }
+}
+
+/* Melhorias adicionais para telas médias */
+@media (max-width: 992px) and (min-width: 769px) {
+    .btn-primary-reports span {
+        display: inline;
+    }
+    
+    .btn-primary-reports {
+        padding: 10px 16px;
+    }
+    
+    .btn-export span {
+        display: inline;
+    }
+    
+    .btn-back span {
+        display: inline;
+    }
+}
+
+/* Ajustes para melhor visualização em tablets */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .filters-main {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .filter-group-buttons {
+        grid-column: span 2;
+    }
+    
+    .filter-group-dates {
+        grid-column: span 2;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 

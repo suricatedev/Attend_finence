@@ -1,0 +1,138 @@
+/* ========================================
+   RESPONSIVIDADE SIDEBAR - TELAS MENORES
+   ======================================== */
+
+/* Botão hambúrguer para mobile */
+.sidebar-toggle-btn {
+    display: none;
+    background: rgba(255, 203, 87, 0.2);
+    border: 1px solid rgba(255, 203, 87, 0.3);
+    color: #1C1C1C;
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.2s ease;
+    z-index: 1001;
+    position: relative;
+}
+
+.sidebar-toggle-btn:hover {
+    background: rgba(255, 203, 87, 0.3);
+    transform: scale(1.05);
+}
+
+.sidebar-toggle-btn i {
+    display: block;
+}
+
+/* Mobile - Ocultar sidebar e ajustar layout */
+@media screen and (max-width: 768px) {
+    /* Sidebar oculta por padrão em mobile */
+    .sidebar {
+        transform: translateX(-100%) !important;
+        width: 280px !important;
+        z-index: 10001 !important;
+        box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3) !important;
+        transition: transform 0.3s ease !important;
+    }
+    
+    /* Sidebar visível quando ativa */
+    .sidebar.active {
+        transform: translateX(0) !important;
+    }
+    
+    /* Overlay quando sidebar está aberta */
+    .sidebar-overlay {
+        display: block !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: rgba(0, 0, 0, 0.5) !important;
+        z-index: 9999 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        transition: opacity 0.3s ease, visibility 0.3s ease !important;
+    }
+    
+    .sidebar-overlay.active {
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    /* Main content ocupa toda a largura */
+    html body .main-content,
+    body .main-content,
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    
+    /* Mostrar botão hambúrguer */
+    .sidebar-toggle-btn {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    /* Ajustar header para incluir botão hambúrguer */
+    .header-left {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+    
+    /* Ajustar logo da sidebar em mobile */
+    .sidebar .logo {
+        font-size: 1rem !important;
+        padding: 8px 0 !important;
+    }
+    
+    .sidebar .logo span {
+        font-size: 1rem !important;
+    }
+    
+    /* Ajustar navegação em mobile */
+    .sidebar .nav-link {
+        padding: 12px 16px !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .sidebar .nav-link i {
+        font-size: 1rem !important;
+        width: 24px !important;
+    }
+}
+
+/* Tablets - Sidebar pode ficar visível mas mais estreita */
+@media screen and (min-width: 769px) and (max-width: 991px) {
+    .sidebar {
+        width: 180px !important;
+    }
+    
+    .main-content {
+        margin-left: 180px !important;
+    }
+    
+    .sidebar .logo {
+        font-size: 1rem !important;
+    }
+    
+    .sidebar .nav-link {
+        padding: 10px 14px !important;
+        font-size: 0.85rem !important;
+    }
+}
+
+/* Garantir que o overlay não apareça em desktop */
+@media screen and (min-width: 769px) {
+    .sidebar-overlay {
+        display: none !important;
+    }
+}
+

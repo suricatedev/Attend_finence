@@ -232,6 +232,45 @@ window.addEventListener('DOMContentLoaded', function() {
     
     console.log('✅ Modal pronto!');
     
+    // ✅ Sidebar Toggle para Mobile
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    
+    if (sidebarToggle && sidebar) {
+        sidebarToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            sidebar.classList.toggle('active');
+            if (sidebarOverlay) {
+                sidebarOverlay.classList.toggle('active');
+            }
+        });
+    }
+    
+    // Fechar sidebar ao clicar no overlay
+    if (sidebarOverlay && sidebar) {
+        sidebarOverlay.addEventListener('click', function() {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        });
+    }
+    
+    // Fechar sidebar ao clicar em um link de navegação (mobile)
+    if (sidebar) {
+        const navLinks = sidebar.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                // Fechar sidebar apenas em mobile
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('active');
+                    if (sidebarOverlay) {
+                        sidebarOverlay.classList.remove('active');
+                    }
+                }
+            });
+        });
+    }
+    
     // ✅ Menu do Avatar do Usuário
     const userAvatarBtn = document.getElementById('userAvatarBtn');
     const userMenu = document.getElementById('userMenu');
