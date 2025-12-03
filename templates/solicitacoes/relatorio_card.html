@@ -599,8 +599,8 @@
             </div>
         </div>
         
-        <!-- Itens da Rota (se for Em Rota) -->
-        {% if solicitacao.tipo == 'em_rota' and itens_rota %}
+        <!-- Detalhamento por ID (para Em Rota e Casual) -->
+        {% if itens_rota %}
         <div class="info-section">
             <h2>Detalhamento por ID</h2>
             <div class="tabela-wrapper">
@@ -629,44 +629,44 @@
                         <td>{{ item.chave_pix|default:"-" }}</td>
                         <td>{{ item.cliente_empresa|default:"-" }}</td>
                         <td>{{ item.cnpj|default:"-" }}</td>
-                        <td class="valor-destaque">R$ {{ item.soma_detalhados|floatformat:2 }}</td>
+                        <td class="valor-destaque">R$ {{ item.valor_total|floatformat:2 }}</td>
                         <td class="td-valores-detalhados">
                             <div class="valores-detalhados-item">
-                                {% if item.soma_detalhados == 0 %}
-                                    <span class="sem-valor">Sem valores</span>
-                                {% else %}
+                                {% if item.valor_km > 0 or item.valor_pedagio > 0 or item.valor_hospedagem > 0 or item.valor_fluvial > 0 or item.valor_outros > 0 %}
                                     <div class="valores-detalhados-lista">
-                                        {% if item.valor_km > 0 %}
+                                        {% if item.valor_km and item.valor_km > 0 %}
                                         <span class="valor-item">
                                             <span class="label">KM:</span>
                                             <span class="value">R$ {{ item.valor_km|floatformat:2 }}</span>
                                         </span>
                                         {% endif %}
-                                        {% if item.valor_pedagio > 0 %}
+                                        {% if item.valor_pedagio and item.valor_pedagio > 0 %}
                                         <span class="valor-item">
                                             <span class="label">Pedágio:</span>
                                             <span class="value">R$ {{ item.valor_pedagio|floatformat:2 }}</span>
                                         </span>
                                         {% endif %}
-                                        {% if item.valor_hospedagem > 0 %}
+                                        {% if item.valor_hospedagem and item.valor_hospedagem > 0 %}
                                         <span class="valor-item">
                                             <span class="label">Hospedagem:</span>
                                             <span class="value">R$ {{ item.valor_hospedagem|floatformat:2 }}</span>
                                         </span>
                                         {% endif %}
-                                        {% if item.valor_fluvial > 0 %}
+                                        {% if item.valor_fluvial and item.valor_fluvial > 0 %}
                                         <span class="valor-item">
                                             <span class="label">Fluvial:</span>
                                             <span class="value">R$ {{ item.valor_fluvial|floatformat:2 }}</span>
                                         </span>
                                         {% endif %}
-                                        {% if item.valor_outros > 0 %}
+                                        {% if item.valor_outros and item.valor_outros > 0 %}
                                         <span class="valor-item">
                                             <span class="label">Outros:</span>
                                             <span class="value">R$ {{ item.valor_outros|floatformat:2 }}</span>
                                         </span>
                                         {% endif %}
                                     </div>
+                                {% else %}
+                                    <span class="sem-valor">-</span>
                                 {% endif %}
                             </div>
                         </td>
@@ -675,45 +675,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-            </div>
-        </div>
-        {% endif %}
-        
-        <!-- Valores Detalhados (se for Casual) -->
-        {% if solicitacao.tipo == 'casual' %}
-        <div class="info-section">
-            <h2>Valores Detalhados</h2>
-            <div class="info-grid">
-                {% if solicitacao.valor_km > 0 %}
-                <div class="info-item">
-                    <div class="info-item-label">Valor KM</div>
-                    <div class="info-item-value">R$ {{ solicitacao.valor_km|floatformat:2 }}</div>
-                </div>
-                {% endif %}
-                {% if solicitacao.valor_pedagio > 0 %}
-                <div class="info-item">
-                    <div class="info-item-label">Valor Pedágio</div>
-                    <div class="info-item-value">R$ {{ solicitacao.valor_pedagio|floatformat:2 }}</div>
-                </div>
-                {% endif %}
-                {% if solicitacao.valor_hospedagem > 0 %}
-                <div class="info-item">
-                    <div class="info-item-label">Valor Hospedagem</div>
-                    <div class="info-item-value">R$ {{ solicitacao.valor_hospedagem|floatformat:2 }}</div>
-                </div>
-                {% endif %}
-                {% if solicitacao.valor_fluvial > 0 %}
-                <div class="info-item">
-                    <div class="info-item-label">Valor Fluvial</div>
-                    <div class="info-item-value">R$ {{ solicitacao.valor_fluvial|floatformat:2 }}</div>
-                </div>
-                {% endif %}
-                {% if solicitacao.valor_outros > 0 %}
-                <div class="info-item">
-                    <div class="info-item-label">Valor Outros</div>
-                    <div class="info-item-value">R$ {{ solicitacao.valor_outros|floatformat:2 }}</div>
-                </div>
-                {% endif %}
             </div>
         </div>
         {% endif %}

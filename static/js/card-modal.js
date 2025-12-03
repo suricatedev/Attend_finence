@@ -808,6 +808,55 @@ function populateCardDetails(data) {
     const recebedorElement = document.getElementById('modal-recebedor');
     if (recebedorElement) recebedorElement.textContent = data.recebedor || 'N/A';
     
+    // Adicionar campos adicionais (Chave PIX, Cliente/Empresa, CNPJ) nas informações básicas para solicitações Casual
+    const infoBasicasSection = document.querySelector('.detail-section.info-basicas');
+    if (infoBasicasSection) {
+        // Remover campos adicionais anteriores se existirem
+        const existingChavePix = document.getElementById('modal-chave-pix-item');
+        const existingClienteEmpresa = document.getElementById('modal-cliente-empresa-item');
+        const existingCnpj = document.getElementById('modal-cnpj-item');
+        
+        if (existingChavePix) existingChavePix.remove();
+        if (existingClienteEmpresa) existingClienteEmpresa.remove();
+        if (existingCnpj) existingCnpj.remove();
+        
+        // Adicionar campos adicionais se existirem nos dados (para solicitações Casual)
+        if (data.isCasual && data.valoresDetalhados) {
+            if (data.valoresDetalhados.chave_pix) {
+                const chavePixItem = document.createElement('div');
+                chavePixItem.className = 'detail-item';
+                chavePixItem.id = 'modal-chave-pix-item';
+                chavePixItem.innerHTML = `
+                    <div class="detail-label">Chave PIX</div>
+                    <div class="detail-value" id="modal-chave-pix">${data.valoresDetalhados.chave_pix}</div>
+                `;
+                infoBasicasSection.appendChild(chavePixItem);
+            }
+            
+            if (data.valoresDetalhados.cliente_empresa) {
+                const clienteEmpresaItem = document.createElement('div');
+                clienteEmpresaItem.className = 'detail-item';
+                clienteEmpresaItem.id = 'modal-cliente-empresa-item';
+                clienteEmpresaItem.innerHTML = `
+                    <div class="detail-label">Cliente/Empresa</div>
+                    <div class="detail-value" id="modal-cliente-empresa">${data.valoresDetalhados.cliente_empresa}</div>
+                `;
+                infoBasicasSection.appendChild(clienteEmpresaItem);
+            }
+            
+            if (data.valoresDetalhados.cnpj) {
+                const cnpjItem = document.createElement('div');
+                cnpjItem.className = 'detail-item';
+                cnpjItem.id = 'modal-cnpj-item';
+                cnpjItem.innerHTML = `
+                    <div class="detail-label">CNPJ</div>
+                    <div class="detail-value" id="modal-cnpj">${data.valoresDetalhados.cnpj}</div>
+                `;
+                infoBasicasSection.appendChild(cnpjItem);
+            }
+        }
+    }
+    
     // Preencher valores e status
     const valoresStatusSection = document.querySelector('.detail-section.valores-status');
     const valorElement = document.getElementById('modal-valor');
@@ -1139,6 +1188,32 @@ function populateCardDetails(data) {
                 <span class="route-item-modal-service">${valores.servico}</span>
             `;
             casualValoresSection.appendChild(servicoInfo);
+        }
+        
+        // Adicionar seção de Informações Adicionais (Chave PIX, Cliente/Empresa, CNPJ)
+        const infoAdicional = [];
+        if (valores.chave_pix) {
+            infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-qrcode"></i> Chave PIX:</span><span class="route-item-modal-value">${valores.chave_pix}</span></div>`);
+        }
+        if (valores.cliente_empresa) {
+            infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-building"></i> Cliente/Empresa:</span><span class="route-item-modal-value">${valores.cliente_empresa}</span></div>`);
+        }
+        if (valores.cnpj) {
+            infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-id-card"></i> CNPJ:</span><span class="route-item-modal-value">${valores.cnpj}</span></div>`);
+        }
+        
+        if (infoAdicional.length > 0) {
+            const infoAdicionalHTML = document.createElement('div');
+            infoAdicionalHTML.className = 'route-item-info-adicional';
+            infoAdicionalHTML.style.marginTop = '16px';
+            infoAdicionalHTML.innerHTML = `
+                <div class="route-item-info-title"><i class="fas fa-info-circle"></i> Informações Adicionais</div>
+                <div class="route-item-info-grid">
+                    ${infoAdicional.join('')}
+                </div>
+            `;
+            casualValoresSection.appendChild(infoAdicionalHTML);
+            console.log('✅ Seção de Informações Adicionais adicionada para solicitação Casual');
         }
         
     } else {

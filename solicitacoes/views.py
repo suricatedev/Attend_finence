@@ -1104,7 +1104,10 @@ def obter_valores_detalhados_casual(request, solicitacao_id):
             'valor_outros': f'R$ {solicitacao.valor_outros:.2f}',
             'valor_receita': f'R$ {valor_receita_calculado:.2f}',  # Usar valor calculado, não o salvo
             'valor_total': f'R$ {valor_total_detalhados:.2f}',
-            'servico': solicitacao.servico.nome if solicitacao.servico else 'N/A'
+            'servico': solicitacao.servico.nome if solicitacao.servico else 'N/A',
+            'chave_pix': solicitacao.chave_pix or '',
+            'cliente_empresa': solicitacao.cliente_empresa or '',
+            'cnpj': solicitacao.cnpj or ''
         }
         
         return JsonResponse({
@@ -1293,6 +1296,25 @@ def exportar_relatorio_card(request, solicitacao_id):
             valor_total_casual = solicitacao.valor or 0.0
             if valor_total_casual > soma_detalhados_casual:
                 valor_receita_calculado = valor_total_casual - soma_detalhados_casual
+            
+            # Para Casual, criar um item único na lista para exibir na tabela "Detalhamento por ID"
+            itens_rota_data.append({
+                'ordem': 1,
+                'ticket_item': solicitacao.ticket,
+                'servico': solicitacao.servico.nome if solicitacao.servico else 'N/A',
+                'recebedor': solicitacao.nome_do_recebedor or '',
+                'chave_pix': solicitacao.chave_pix or '',
+                'cliente_empresa': solicitacao.cliente_empresa or '',
+                'cnpj': solicitacao.cnpj or '',
+                'valor_total': valor_total_casual,
+                'valor_km': solicitacao.valor_km or 0.0,
+                'valor_pedagio': solicitacao.valor_pedagio or 0.0,
+                'valor_hospedagem': solicitacao.valor_hospedagem or 0.0,
+                'valor_fluvial': solicitacao.valor_fluvial or 0.0,
+                'valor_outros': solicitacao.valor_outros or 0.0,
+                'soma_detalhados': soma_detalhados_casual,
+                'valor_atividade': valor_receita_calculado,
+            })
         
         context = {
             'solicitacao': solicitacao,
