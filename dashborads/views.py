@@ -369,3 +369,43 @@ def relatorio(request):
         
     elif request.method == "POST":
         pass
+
+        
+        # Buscar serviços disponíveis para o filtro
+        servicos_disponiveis = Servico.objects.all().order_by('nome')
+        
+        context = {
+            'solicitacoes': solicitacoes_expandidas,
+            'total_solicitacoes': total_solicitacoes,
+            'valor_total': valor_total,
+            'aprovadas': aprovadas,
+            'pendentes': pendentes,
+            'recusadas': recusadas,
+            'concluidas': concluidas,
+            'servicos_disponiveis': servicos_disponiveis,
+        }
+        
+        return render(request, "dashboard/relatorios.html", context)
+        
+    elif request.method == "POST":
+        pass
+
+        
+        # Buscar serviços disponíveis para o filtro
+        servicos_disponiveis = Servico.objects.all().order_by('nome')
+        
+        context = {
+            'solicitacoes': solicitacoes_expandidas,
+            'total_solicitacoes': total_solicitacoes,
+            'valor_total': valor_total,
+            'aprovadas': aprovadas,
+            'pendentes': pendentes,
+            'recusadas': recusadas,
+            'concluidas': concluidas,
+            'servicos_disponiveis': servicos_disponiveis,
+        }
+        
+        return render(request, "dashboard/relatorios.html", context)
+        
+    elif request.method == "POST":
+        pass

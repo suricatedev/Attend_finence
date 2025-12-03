@@ -2168,3 +2168,411 @@ header.header {
     transform: none !important;
     box-shadow: none !important;
 }
+
+        flex-direction: row;
+        gap: 6px;
+        width: 100%;
+    }
+    
+    .btn-export {
+        padding: 8px 10px;
+        font-size: 0.75rem;
+        flex: 1;
+        min-width: 60px;
+    }
+    
+    .filters-section {
+        padding: 10px 12px;
+    }
+    
+    .filters-main {
+        gap: 12px;
+    }
+    
+    .filter-group label {
+        font-size: 0.75rem;
+    }
+    
+    .status-filters {
+        gap: 4px;
+    }
+    
+    .status-btn,
+    .type-btn {
+        padding: 6px 10px;
+        font-size: 0.7rem;
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .select-input,
+    .date-input {
+        font-size: 0.7rem;
+        padding: 8px 10px;
+    }
+    
+    .stats-section {
+        padding: 8px 12px;
+    }
+    
+    .table-section {
+        padding: 10px 12px;
+        min-height: 300px; /* Altura mínima em smartphones */
+        display: flex !important;
+        visibility: visible !important;
+    }
+    
+    .table-container {
+        min-height: 200px;
+        max-height: calc(100vh - 400px);
+        position: relative;
+    }
+    
+    .data-table {
+        min-width: 600px;
+        font-size: 0.7rem;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 4px 2px;
+    }
+    
+    .pagination {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    
+    .pagination-btn {
+        padding: 4px 8px;
+        font-size: 0.65rem;
+    }
+    
+    .pagination-btn span {
+        display: none;
+    }
+    
+    .pagination-numbers {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .pagination-number {
+        min-width: 24px;
+        padding: 4px 6px;
+        font-size: 0.65rem;
+    }
+}
+
+/* Melhorias adicionais para telas médias */
+@media (max-width: 992px) and (min-width: 769px) {
+    .btn-primary-reports span {
+        display: inline;
+    }
+    
+    .btn-primary-reports {
+        padding: 10px 16px;
+    }
+    
+    .btn-export span {
+        display: inline;
+    }
+    
+    .btn-back span {
+        display: inline;
+    }
+}
+
+/* Ajustes para melhor visualização em tablets */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .filters-main {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .filter-group-buttons {
+        grid-column: span 2;
+    }
+    
+    .filter-group-dates {
+        grid-column: span 2;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ========================================
+   BOTÕES DE AÇÃO NA TABELA
+   ======================================== */
+
+.actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    width: 100%;}
+
+.btn-action {
+    background: transparent;
+    border: 1px solid #e0e0e0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-view:hover {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
+.btn-edit:hover {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: white;
+}
+
+.btn-delete:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: white;
+}
+
+/* Linha da tabela com hover */
+.data-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.data-table tbody tr:hover {
+    background: #f9fafb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transform: scale(1.01);
+}
+
+/* Empty state */
+.empty-state td {
+    background: #f9fafb;
+    border: 2px dashed #e5e7eb;
+}
+
+.empty-state:hover {
+    background: #f9fafb !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+        flex-direction: row;
+        gap: 6px;
+        width: 100%;
+    }
+    
+    .btn-export {
+        padding: 8px 10px;
+        font-size: 0.75rem;
+        flex: 1;
+        min-width: 60px;
+    }
+    
+    .filters-section {
+        padding: 10px 12px;
+    }
+    
+    .filters-main {
+        gap: 12px;
+    }
+    
+    .filter-group label {
+        font-size: 0.75rem;
+    }
+    
+    .status-filters {
+        gap: 4px;
+    }
+    
+    .status-btn,
+    .type-btn {
+        padding: 6px 10px;
+        font-size: 0.7rem;
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .select-input,
+    .date-input {
+        font-size: 0.7rem;
+        padding: 8px 10px;
+    }
+    
+    .stats-section {
+        padding: 8px 12px;
+    }
+    
+    .table-section {
+        padding: 10px 12px;
+        min-height: 300px; /* Altura mínima em smartphones */
+        display: flex !important;
+        visibility: visible !important;
+    }
+    
+    .table-container {
+        min-height: 200px;
+        max-height: calc(100vh - 400px);
+        position: relative;
+    }
+    
+    .data-table {
+        min-width: 600px;
+        font-size: 0.7rem;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 4px 2px;
+    }
+    
+    .pagination {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    
+    .pagination-btn {
+        padding: 4px 8px;
+        font-size: 0.65rem;
+    }
+    
+    .pagination-btn span {
+        display: none;
+    }
+    
+    .pagination-numbers {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .pagination-number {
+        min-width: 24px;
+        padding: 4px 6px;
+        font-size: 0.65rem;
+    }
+}
+
+/* Melhorias adicionais para telas médias */
+@media (max-width: 992px) and (min-width: 769px) {
+    .btn-primary-reports span {
+        display: inline;
+    }
+    
+    .btn-primary-reports {
+        padding: 10px 16px;
+    }
+    
+    .btn-export span {
+        display: inline;
+    }
+    
+    .btn-back span {
+        display: inline;
+    }
+}
+
+/* Ajustes para melhor visualização em tablets */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .filters-main {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .filter-group-buttons {
+        grid-column: span 2;
+    }
+    
+    .filter-group-dates {
+        grid-column: span 2;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ========================================
+   BOTÕES DE AÇÃO NA TABELA
+   ======================================== */
+
+.actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    width: 100%;}
+
+.btn-action {
+    background: transparent;
+    border: 1px solid #e0e0e0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-view:hover {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
+.btn-edit:hover {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: white;
+}
+
+.btn-delete:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: white;
+}
+
+/* Linha da tabela com hover */
+.data-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.data-table tbody tr:hover {
+    background: #f9fafb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transform: scale(1.01);
+}
+
+/* Empty state */
+.empty-state td {
+    background: #f9fafb;
+    border: 2px dashed #e5e7eb;
+}
+
+.empty-state:hover {
+    background: #f9fafb !important;
+    transform: none !important;
+    box-shadow: none !important;
+}

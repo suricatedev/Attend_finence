@@ -270,3 +270,81 @@
         min-height: 0 !important;
     }
 }
+
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        background: white !important;
+        box-sizing: border-box !important;
+    }
+    
+    body .kanban-column,
+    .main-content .kanban-column,
+    #kanbanBoard .kanban-column,
+    .kanban-board .kanban-column {
+        flex: 0 0 auto !important;
+        flex-grow: 0 !important;
+        flex-shrink: 0 !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 300px !important;
+        max-height: 500px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        background: white !important;
+        border-radius: 16px !important;
+        box-shadow: 0 6px 25px rgba(28, 28, 28, 0.08) !important;
+        border: 1px solid #544350 !important;
+        position: relative !important;
+        overflow: hidden !important;
+        align-self: stretch !important;
+        margin-bottom: 10px !important;
+    }
+    
+    .kanban-column .column-content {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+    }
+}
+
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        background: white !important;
+        box-sizing: border-box !important;
+    }
+    
+    body .kanban-column,
+    .main-content .kanban-column,
+    #kanbanBoard .kanban-column,
+    .kanban-board .kanban-column {
+        flex: 0 0 auto !important;
+        flex-grow: 0 !important;
+        flex-shrink: 0 !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 300px !important;
+        max-height: 500px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        background: white !important;
+        border-radius: 16px !important;
+        box-shadow: 0 6px 25px rgba(28, 28, 28, 0.08) !important;
+        border: 1px solid #544350 !important;
+        position: relative !important;
+        overflow: hidden !important;
+        align-self: stretch !important;
+        margin-bottom: 10px !important;
+    }
+    
+    .kanban-column .column-content {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+    }
+}

@@ -2048,3 +2048,27 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('Sistema inicializado com sucesso!');
 });
+
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    console.log('Sistema inicializado com sucesso!');
+});
+
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    console.log('Sistema inicializado com sucesso!');
+});

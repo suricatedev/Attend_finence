@@ -2106,3 +2106,815 @@ document.addEventListener('DOMContentLoaded', function() {
         window.relatoriosOptimized = new RelatoriosOptimized();
     }
 });
+
+                        if (valorOutrosNum !== null) {
+                            row.push({ value: valorOutrosNum, type: 'monetary' });
+                        } else {
+                            row.push(item.valorOutros || '');
+                        }
+                    } else if (headerLower.includes('status')) {
+                        row.push(getStatusDisplay(item.status));
+                    } else if (headerLower.includes('prioridade')) {
+                        row.push(getPriorityDisplay(item.priority));
+                    } else if (headerLower.includes('criação') || headerLower.includes('criacao')) {
+                        row.push(formatDate(item.dataCriacao || ''));
+                    } else if (headerLower.includes('pagamento')) {
+                        row.push(formatDate(item.dataPagamento || ''));
+                    } else {
+                        // Para qualquer outro header não mapeado, adicionar string vazia
+                        row.push('');
+                    }
+                });
+                
+                // Garantir que a linha tenha exatamente o mesmo número de colunas dos headers
+                if (row.length === headers.length && row.length > 0) {
+                    rows.push(row);
+                }
+            });
+
+            // Preparar dados para o worksheet, convertendo objetos monetários
+            const wsData = [headers];
+            rows.forEach(row => {
+                const processedRow = row.map(cell => {
+                    if (typeof cell === 'object' && cell.type === 'monetary') {
+                        return cell.value;
+                    }
+                    return cell;
+                });
+                wsData.push(processedRow);
+            });
+            
+            // Criar workbook
+            const wb = XLSX.utils.book_new();
+            
+            // Converter dados para worksheet
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            
+            // Configurar larguras de colunas
+            const colWidths = headers.map((header) => {
+                const headerLower = header.toLowerCase();
+                // Larguras baseadas no tipo de conteúdo
+                if (headerLower.includes('valor') || headerLower.includes('receita') || headerLower.includes('km') || 
+                    headerLower.includes('pedágio') || headerLower.includes('pedagio') || headerLower.includes('hospedagem') || 
+                    headerLower.includes('fluvial') || headerLower.includes('outros') || headerLower.includes('em rota')) {
+                    return { wch: 18 };
+                } else if (headerLower.includes('data') || headerLower.includes('criação') || headerLower.includes('criacao') || 
+                          headerLower.includes('pagamento')) {
+                    return { wch: 12 };
+                } else if (headerLower.includes('status') || headerLower.includes('prioridade')) {
+                    return { wch: 12 };
+                } else if (headerLower.includes('id') || headerLower.includes('título') || headerLower.includes('titulo')) {
+                    return { wch: 15 };
+                } else {
+                    return { wch: 20 };
+                }
+            });
+            ws['!cols'] = colWidths;
+            
+            // Aplicar formatação aos valores monetários
+            rows.forEach((row, rowIdx) => {
+                row.forEach((cell, colIdx) => {
+                    if (typeof cell === 'object' && cell.type === 'monetary') {
+                        const cellAddress = XLSX.utils.encode_cell({ r: rowIdx + 1, c: colIdx });
+                        const cellObj = ws[cellAddress];
+                        if (cellObj && typeof cellObj.v === 'number') {
+                            // Formato monetário brasileiro: R$ 1.234,56
+                            cellObj.z = '"R$"#,##0.00';
+                            cellObj.t = 'n';
+                        }
+                    }
+                    // Datas serão mantidas como texto formatado (dd/mm/yyyy já está correto)
+                });
+            });
+            
+            // Congelar primeira linha (cabeçalho)
+            ws['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' };
+            
+            // Auto-filtrar (opcional - pode ser ativado pelo usuário no Excel)
+            ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length, c: headers.length - 1 } }) };
+            
+            // Adicionar worksheet ao workbook
+            XLSX.utils.book_append_sheet(wb, ws, "Relatórios Financeiros");
+            
+            // Gerar arquivo e fazer download
+            const dateStr = new Date().toISOString().split('T')[0];
+            const fileName = `relatorios_financeiros_${dateStr}.xlsx`;
+            
+            XLSX.writeFile(wb, fileName);
+            
+            // Mostrar mensagem de sucesso
+            this.showNotification('Arquivo Excel exportado com sucesso!', 'success');
+            
+        } catch (error) {
+            console.error('Erro ao exportar para Excel:', error);
+            alert('Erro ao exportar para Excel: ' + error.message);
+        }
+    }
+
+    exportToPDF() {
+        try {
+            // Verificar se jsPDF está disponível
+            if (typeof window.jspdf === 'undefined') {
+                alert('Biblioteca jsPDF não carregada. Por favor, recarregue a página.');
+                console.error('jsPDF não encontrado');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape', 'mm', 'a4');
+
+            // Cores e estilos
+            const primaryColor = [255, 203, 87]; // #FFCB57
+            const darkColor = [84, 67, 80]; // #544350
+            const lightGray = [245, 245, 245];
+            
+            // Título do relatório
+            doc.setFillColor(...primaryColor);
+            doc.rect(10, 10, 277, 15, 'F');
+            doc.setTextColor(28, 28, 28);
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Relatórios Financeiros', 148.5, 20, { align: 'center' });
+            
+            // Data de geração
+            doc.setFontSize(10);
+            doc.setTextColor(84, 67, 80);
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('pt-BR', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            doc.text(`Gerado em: ${dateStr}`, 148.5, 32, { align: 'center' });
+
+            // Headers da tabela
+            const headers = ['ID', 'Título', 'Solicitante', 'Supervisor', 'Recebedor', 'Serviço', 'Valor', 'Status', 'Prioridade', 'Criação', 'Pagamento'];
+            const colWidths = [20, 40, 30, 30, 30, 30, 25, 20, 20, 25, 25];
+            
+            let startY = 40;
+            let currentY = startY;
+            
+            // Definir altura da linha
+            const lineHeight = 8;
+            
+            // Adicionar cabeçalhos
+            doc.setFillColor(...primaryColor);
+            doc.rect(10, currentY, 277, lineHeight, 'F');
+            doc.setTextColor(28, 28, 28);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            
+            let currentX = 10;
+            headers.forEach((header, index) => {
+                doc.text(header, currentX + 2, currentY + 5);
+                currentX += colWidths[index];
+            });
+            
+            currentY += lineHeight;
+            
+            // Adicionar linhas de dados
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            
+            // ✅ IMPORTANTE: Usar TODOS os dados filtrados, não apenas a página atual
+            const allFilteredData = this.filteredData || [];
+            console.log(`📊 Exportando ${allFilteredData.length} solicitações para PDF (todas as páginas)`);
+            
+            // Funções auxiliares
+            const getStatusDisplay = (status) => {
+                const statusMap = {
+                    'pendente': 'Pendente',
+                    'aprovado': 'Aprovado',
+                    'recusado': 'Recusado',
+                    'concluido': 'Concluído'
+                };
+                return statusMap[status?.toLowerCase()] || status || '';
+            };
+            
+            const getPriorityDisplay = (priority) => {
+                const priorityMap = {
+                    'baixa': 'Baixa',
+                    'media': 'Média',
+                    'alta': 'Alta'
+                };
+                return priorityMap[priority?.toLowerCase()] || priority || '';
+            };
+            
+            const formatDate = (dateStr) => {
+                if (!dateStr) return '';
+                if (dateStr.includes('/')) return dateStr;
+                if (dateStr.includes('-') && dateStr.length >= 10) {
+                    const parts = dateStr.split(' ')[0].split('-');
+                    if (parts.length === 3) {
+                        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    }
+                }
+                return dateStr;
+            };
+            
+            allFilteredData.forEach((item, rowIndex) => {
+                // Verificar se precisa de nova página
+                if (currentY > 180) {
+                    doc.addPage('landscape', 'a4');
+                    currentY = 10;
+                    
+                    // Re-impressão do cabeçalho
+                    doc.setFillColor(...primaryColor);
+                    doc.rect(10, currentY, 277, lineHeight, 'F');
+                    doc.setTextColor(28, 28, 28);
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'bold');
+                    
+                    let headerX = 10;
+                    headers.forEach((header, index) => {
+                        doc.text(header, headerX + 2, currentY + 5);
+                        headerX += colWidths[index];
+                    });
+                    
+                    currentY += lineHeight;
+                    doc.setFontSize(7);
+                    doc.setFont('helvetica', 'normal');
+                }
+                
+                // Cor de fundo alternada
+                if (rowIndex % 2 === 0) {
+                    doc.setFillColor(...lightGray);
+                    doc.rect(10, currentY, 277, lineHeight, 'F');
+                }
+                
+                // Dados da linha - construir a partir de item
+                let cellX = 10;
+                let colIndex = 0;
+                
+                // Construir linha na ordem: ID, Título, Solicitante, Supervisor, Recebedor, Serviço, Valor, Status, Prioridade, Criação, Pagamento
+                const rowData = [
+                    item.ticket || item.id || '',
+                    (item.title || '').substring(0, 30),
+                    (item.solicitante || '').substring(0, 20),
+                    (item.supervisor || '-').substring(0, 20),
+                    (item.recebedor || '-').substring(0, 20),
+                    (item.service || 'N/A').substring(0, 20),
+                    item.valor || '',
+                    getStatusDisplay(item.status),
+                    getPriorityDisplay(item.priority),
+                    formatDate(item.dataCriacao || ''),
+                    formatDate(item.dataPagamento || '')
+                ];
+                
+                rowData.forEach((cellValue, idx) => {
+                    if (colIndex < colWidths.length) {
+                    // Truncar texto muito longo
+                        const maxLength = colWidths[colIndex] / 2;
+                        if (cellValue && cellValue.length > maxLength) {
+                        cellValue = cellValue.substring(0, maxLength - 3) + '...';
+                    }
+                    
+                    doc.setTextColor(84, 67, 80);
+                        doc.text(cellValue || '', cellX + 2, currentY + 5);
+                        cellX += colWidths[colIndex];
+                        colIndex++;
+                    }
+                });
+                
+                currentY += lineHeight;
+            });
+            
+            // Rodapé
+            const finalY = currentY + 5;
+            doc.setDrawColor(...darkColor);
+            doc.setLineWidth(0.5);
+            doc.line(10, finalY, 287, finalY);
+            
+            doc.setTextColor(84, 67, 80);
+            doc.setFontSize(8);
+            doc.text(`Total de solicitações: ${allFilteredData.length}`, 10, finalY + 8);
+            doc.text('Sistema de Gestão Financeira - Attend Finance', 148.5, finalY + 8, { align: 'center' });
+            doc.text('Página ' + doc.internal.getCurrentPageInfo().pageNumber, 280, finalY + 8, { align: 'right' });
+            
+            // Salvar PDF
+            const dateStrFile = now.toISOString().split('T')[0];
+            const fileName = `relatorios_financeiros_${dateStrFile}.pdf`;
+            doc.save(fileName);
+            
+            // Mostrar mensagem de sucesso
+            this.showNotification('Arquivo PDF exportado com sucesso!', 'success');
+            
+        } catch (error) {
+            console.error('Erro ao exportar para PDF:', error);
+            alert('Erro ao exportar para PDF: ' + error.message);
+        }    }
+
+    // Funções CSV removidas - usando apenas XLSX formatado
+
+    // Métodos auxiliares otimizados
+    getServiceName(service) {
+        const services = {
+            'consultoria_TI': 'Consultoria em TI',
+            'desenvolvimento': 'Desenvolvimento de Software',
+            'manutencao_equipamentos': 'Manutenção de Equipamentos',
+            'treinamento_corporativo': 'Treinamento Corporativo'
+        };
+        return services[service] || service;
+    }
+
+    getStatusName(status) {
+        const statuses = {
+            'pendente': 'Pendente',
+            'aprovado': 'Aprovado',
+            'recusado': 'Recusado',
+            'concluido': 'Concluído'
+        };
+        return statuses[status] || status;
+    }
+
+    getPriorityName(priority) {
+        const priorities = {
+            'baixa': 'Baixa',
+            'media': 'Média',
+            'alta': 'Alta'
+        };
+        return priorities[priority] || priority;
+    }
+
+    formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR');
+    }
+
+    showNotification(message, type = 'info') {
+        // Criar elemento de notificação
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10000;
+            font-weight: 500;
+            animation: slideInRight 0.3s ease;
+        `;
+        notification.textContent = message;
+        
+        // Adicionar ao body
+        document.body.appendChild(notification);
+        
+        // Remover após 3 segundos
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 3000);
+        
+        // Adicionar animações CSS se não existirem
+        if (!document.getElementById('notificationStyles')) {
+            const style = document.createElement('style');
+            style.id = 'notificationStyles';
+            style.textContent = `
+                @keyframes slideInRight {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                @keyframes slideOutRight {
+                    from {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+}
+
+// Inicializar quando o DOM estiver carregado
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar se estamos na página de relatórios
+    if (document.querySelector('.reports-fullscreen')) {
+        window.relatoriosOptimized = new RelatoriosOptimized();
+    }
+});
+
+                        if (valorOutrosNum !== null) {
+                            row.push({ value: valorOutrosNum, type: 'monetary' });
+                        } else {
+                            row.push(item.valorOutros || '');
+                        }
+                    } else if (headerLower.includes('status')) {
+                        row.push(getStatusDisplay(item.status));
+                    } else if (headerLower.includes('prioridade')) {
+                        row.push(getPriorityDisplay(item.priority));
+                    } else if (headerLower.includes('criação') || headerLower.includes('criacao')) {
+                        row.push(formatDate(item.dataCriacao || ''));
+                    } else if (headerLower.includes('pagamento')) {
+                        row.push(formatDate(item.dataPagamento || ''));
+                    } else {
+                        // Para qualquer outro header não mapeado, adicionar string vazia
+                        row.push('');
+                    }
+                });
+                
+                // Garantir que a linha tenha exatamente o mesmo número de colunas dos headers
+                if (row.length === headers.length && row.length > 0) {
+                    rows.push(row);
+                }
+            });
+
+            // Preparar dados para o worksheet, convertendo objetos monetários
+            const wsData = [headers];
+            rows.forEach(row => {
+                const processedRow = row.map(cell => {
+                    if (typeof cell === 'object' && cell.type === 'monetary') {
+                        return cell.value;
+                    }
+                    return cell;
+                });
+                wsData.push(processedRow);
+            });
+            
+            // Criar workbook
+            const wb = XLSX.utils.book_new();
+            
+            // Converter dados para worksheet
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            
+            // Configurar larguras de colunas
+            const colWidths = headers.map((header) => {
+                const headerLower = header.toLowerCase();
+                // Larguras baseadas no tipo de conteúdo
+                if (headerLower.includes('valor') || headerLower.includes('receita') || headerLower.includes('km') || 
+                    headerLower.includes('pedágio') || headerLower.includes('pedagio') || headerLower.includes('hospedagem') || 
+                    headerLower.includes('fluvial') || headerLower.includes('outros') || headerLower.includes('em rota')) {
+                    return { wch: 18 };
+                } else if (headerLower.includes('data') || headerLower.includes('criação') || headerLower.includes('criacao') || 
+                          headerLower.includes('pagamento')) {
+                    return { wch: 12 };
+                } else if (headerLower.includes('status') || headerLower.includes('prioridade')) {
+                    return { wch: 12 };
+                } else if (headerLower.includes('id') || headerLower.includes('título') || headerLower.includes('titulo')) {
+                    return { wch: 15 };
+                } else {
+                    return { wch: 20 };
+                }
+            });
+            ws['!cols'] = colWidths;
+            
+            // Aplicar formatação aos valores monetários
+            rows.forEach((row, rowIdx) => {
+                row.forEach((cell, colIdx) => {
+                    if (typeof cell === 'object' && cell.type === 'monetary') {
+                        const cellAddress = XLSX.utils.encode_cell({ r: rowIdx + 1, c: colIdx });
+                        const cellObj = ws[cellAddress];
+                        if (cellObj && typeof cellObj.v === 'number') {
+                            // Formato monetário brasileiro: R$ 1.234,56
+                            cellObj.z = '"R$"#,##0.00';
+                            cellObj.t = 'n';
+                        }
+                    }
+                    // Datas serão mantidas como texto formatado (dd/mm/yyyy já está correto)
+                });
+            });
+            
+            // Congelar primeira linha (cabeçalho)
+            ws['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' };
+            
+            // Auto-filtrar (opcional - pode ser ativado pelo usuário no Excel)
+            ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length, c: headers.length - 1 } }) };
+            
+            // Adicionar worksheet ao workbook
+            XLSX.utils.book_append_sheet(wb, ws, "Relatórios Financeiros");
+            
+            // Gerar arquivo e fazer download
+            const dateStr = new Date().toISOString().split('T')[0];
+            const fileName = `relatorios_financeiros_${dateStr}.xlsx`;
+            
+            XLSX.writeFile(wb, fileName);
+            
+            // Mostrar mensagem de sucesso
+            this.showNotification('Arquivo Excel exportado com sucesso!', 'success');
+            
+        } catch (error) {
+            console.error('Erro ao exportar para Excel:', error);
+            alert('Erro ao exportar para Excel: ' + error.message);
+        }
+    }
+
+    exportToPDF() {
+        try {
+            // Verificar se jsPDF está disponível
+            if (typeof window.jspdf === 'undefined') {
+                alert('Biblioteca jsPDF não carregada. Por favor, recarregue a página.');
+                console.error('jsPDF não encontrado');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape', 'mm', 'a4');
+
+            // Cores e estilos
+            const primaryColor = [255, 203, 87]; // #FFCB57
+            const darkColor = [84, 67, 80]; // #544350
+            const lightGray = [245, 245, 245];
+            
+            // Título do relatório
+            doc.setFillColor(...primaryColor);
+            doc.rect(10, 10, 277, 15, 'F');
+            doc.setTextColor(28, 28, 28);
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Relatórios Financeiros', 148.5, 20, { align: 'center' });
+            
+            // Data de geração
+            doc.setFontSize(10);
+            doc.setTextColor(84, 67, 80);
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('pt-BR', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            doc.text(`Gerado em: ${dateStr}`, 148.5, 32, { align: 'center' });
+
+            // Headers da tabela
+            const headers = ['ID', 'Título', 'Solicitante', 'Supervisor', 'Recebedor', 'Serviço', 'Valor', 'Status', 'Prioridade', 'Criação', 'Pagamento'];
+            const colWidths = [20, 40, 30, 30, 30, 30, 25, 20, 20, 25, 25];
+            
+            let startY = 40;
+            let currentY = startY;
+            
+            // Definir altura da linha
+            const lineHeight = 8;
+            
+            // Adicionar cabeçalhos
+            doc.setFillColor(...primaryColor);
+            doc.rect(10, currentY, 277, lineHeight, 'F');
+            doc.setTextColor(28, 28, 28);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            
+            let currentX = 10;
+            headers.forEach((header, index) => {
+                doc.text(header, currentX + 2, currentY + 5);
+                currentX += colWidths[index];
+            });
+            
+            currentY += lineHeight;
+            
+            // Adicionar linhas de dados
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            
+            // ✅ IMPORTANTE: Usar TODOS os dados filtrados, não apenas a página atual
+            const allFilteredData = this.filteredData || [];
+            console.log(`📊 Exportando ${allFilteredData.length} solicitações para PDF (todas as páginas)`);
+            
+            // Funções auxiliares
+            const getStatusDisplay = (status) => {
+                const statusMap = {
+                    'pendente': 'Pendente',
+                    'aprovado': 'Aprovado',
+                    'recusado': 'Recusado',
+                    'concluido': 'Concluído'
+                };
+                return statusMap[status?.toLowerCase()] || status || '';
+            };
+            
+            const getPriorityDisplay = (priority) => {
+                const priorityMap = {
+                    'baixa': 'Baixa',
+                    'media': 'Média',
+                    'alta': 'Alta'
+                };
+                return priorityMap[priority?.toLowerCase()] || priority || '';
+            };
+            
+            const formatDate = (dateStr) => {
+                if (!dateStr) return '';
+                if (dateStr.includes('/')) return dateStr;
+                if (dateStr.includes('-') && dateStr.length >= 10) {
+                    const parts = dateStr.split(' ')[0].split('-');
+                    if (parts.length === 3) {
+                        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    }
+                }
+                return dateStr;
+            };
+            
+            allFilteredData.forEach((item, rowIndex) => {
+                // Verificar se precisa de nova página
+                if (currentY > 180) {
+                    doc.addPage('landscape', 'a4');
+                    currentY = 10;
+                    
+                    // Re-impressão do cabeçalho
+                    doc.setFillColor(...primaryColor);
+                    doc.rect(10, currentY, 277, lineHeight, 'F');
+                    doc.setTextColor(28, 28, 28);
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'bold');
+                    
+                    let headerX = 10;
+                    headers.forEach((header, index) => {
+                        doc.text(header, headerX + 2, currentY + 5);
+                        headerX += colWidths[index];
+                    });
+                    
+                    currentY += lineHeight;
+                    doc.setFontSize(7);
+                    doc.setFont('helvetica', 'normal');
+                }
+                
+                // Cor de fundo alternada
+                if (rowIndex % 2 === 0) {
+                    doc.setFillColor(...lightGray);
+                    doc.rect(10, currentY, 277, lineHeight, 'F');
+                }
+                
+                // Dados da linha - construir a partir de item
+                let cellX = 10;
+                let colIndex = 0;
+                
+                // Construir linha na ordem: ID, Título, Solicitante, Supervisor, Recebedor, Serviço, Valor, Status, Prioridade, Criação, Pagamento
+                const rowData = [
+                    item.ticket || item.id || '',
+                    (item.title || '').substring(0, 30),
+                    (item.solicitante || '').substring(0, 20),
+                    (item.supervisor || '-').substring(0, 20),
+                    (item.recebedor || '-').substring(0, 20),
+                    (item.service || 'N/A').substring(0, 20),
+                    item.valor || '',
+                    getStatusDisplay(item.status),
+                    getPriorityDisplay(item.priority),
+                    formatDate(item.dataCriacao || ''),
+                    formatDate(item.dataPagamento || '')
+                ];
+                
+                rowData.forEach((cellValue, idx) => {
+                    if (colIndex < colWidths.length) {
+                    // Truncar texto muito longo
+                        const maxLength = colWidths[colIndex] / 2;
+                        if (cellValue && cellValue.length > maxLength) {
+                        cellValue = cellValue.substring(0, maxLength - 3) + '...';
+                    }
+                    
+                    doc.setTextColor(84, 67, 80);
+                        doc.text(cellValue || '', cellX + 2, currentY + 5);
+                        cellX += colWidths[colIndex];
+                        colIndex++;
+                    }
+                });
+                
+                currentY += lineHeight;
+            });
+            
+            // Rodapé
+            const finalY = currentY + 5;
+            doc.setDrawColor(...darkColor);
+            doc.setLineWidth(0.5);
+            doc.line(10, finalY, 287, finalY);
+            
+            doc.setTextColor(84, 67, 80);
+            doc.setFontSize(8);
+            doc.text(`Total de solicitações: ${allFilteredData.length}`, 10, finalY + 8);
+            doc.text('Sistema de Gestão Financeira - Attend Finance', 148.5, finalY + 8, { align: 'center' });
+            doc.text('Página ' + doc.internal.getCurrentPageInfo().pageNumber, 280, finalY + 8, { align: 'right' });
+            
+            // Salvar PDF
+            const dateStrFile = now.toISOString().split('T')[0];
+            const fileName = `relatorios_financeiros_${dateStrFile}.pdf`;
+            doc.save(fileName);
+            
+            // Mostrar mensagem de sucesso
+            this.showNotification('Arquivo PDF exportado com sucesso!', 'success');
+            
+        } catch (error) {
+            console.error('Erro ao exportar para PDF:', error);
+            alert('Erro ao exportar para PDF: ' + error.message);
+        }    }
+
+    // Funções CSV removidas - usando apenas XLSX formatado
+
+    // Métodos auxiliares otimizados
+    getServiceName(service) {
+        const services = {
+            'consultoria_TI': 'Consultoria em TI',
+            'desenvolvimento': 'Desenvolvimento de Software',
+            'manutencao_equipamentos': 'Manutenção de Equipamentos',
+            'treinamento_corporativo': 'Treinamento Corporativo'
+        };
+        return services[service] || service;
+    }
+
+    getStatusName(status) {
+        const statuses = {
+            'pendente': 'Pendente',
+            'aprovado': 'Aprovado',
+            'recusado': 'Recusado',
+            'concluido': 'Concluído'
+        };
+        return statuses[status] || status;
+    }
+
+    getPriorityName(priority) {
+        const priorities = {
+            'baixa': 'Baixa',
+            'media': 'Média',
+            'alta': 'Alta'
+        };
+        return priorities[priority] || priority;
+    }
+
+    formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR');
+    }
+
+    showNotification(message, type = 'info') {
+        // Criar elemento de notificação
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10000;
+            font-weight: 500;
+            animation: slideInRight 0.3s ease;
+        `;
+        notification.textContent = message;
+        
+        // Adicionar ao body
+        document.body.appendChild(notification);
+        
+        // Remover após 3 segundos
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 3000);
+        
+        // Adicionar animações CSS se não existirem
+        if (!document.getElementById('notificationStyles')) {
+            const style = document.createElement('style');
+            style.id = 'notificationStyles';
+            style.textContent = `
+                @keyframes slideInRight {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                @keyframes slideOutRight {
+                    from {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+}
+
+// Inicializar quando o DOM estiver carregado
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar se estamos na página de relatórios
+    if (document.querySelector('.reports-fullscreen')) {
+        window.relatoriosOptimized = new RelatoriosOptimized();
+    }
+});

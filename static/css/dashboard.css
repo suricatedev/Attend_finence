@@ -1144,3 +1144,517 @@ body:has(#dashboardView) .header .btn-primary i {
     }
     
 }
+
+}
+
+.info-value {
+    color: #FFCB57;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+
+
+/* Seção do gráfico */
+.chart-section {
+    flex: 1;
+    width: 100%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #e8ea66 0%, #ff9900 100%);
+    opacity: 0.8;
+}
+
+/* Responsividade */
+@media (max-width: 1200px) {
+    .dashboard-main-content {
+        flex-direction: column;
+    }
+    
+    .metrics-sidebar {
+        flex: 1;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .metrics-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .secondary-charts-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-view {
+        padding: 0.5rem;
+    }
+    
+    .dashboard-main-content {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .metrics-sidebar {
+        flex: 1;
+        width: 100%;
+    }
+    
+    .metrics-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .period-filter-container {
+        width: 100%;
+    }
+    
+    .metric-card {
+        padding: 0.75rem;
+        min-height: 70px;
+    }
+    
+    .metric-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1.1rem;
+    }
+    
+    .metric-value {
+        font-size: 1.1rem;
+    }
+    
+    .metric-label {
+        font-size: 0.65rem;
+    }
+    
+    .metric-change {
+        font-size: 0.6rem;
+    }
+    
+    .main-chart-container {
+        padding: 1rem;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+    
+    
+    .chart-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .chart-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .period-selector {
+        gap: 0.5rem;
+    }
+    
+    .period-button {
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+        min-width: 100px;
+    }
+    
+    .custom-period-selector {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        padding: 0.75rem;
+    }
+    
+    .date-range-inputs {
+        gap: 0.75rem;
+    }
+    
+    .date-range-inputs label {
+        font-size: 0.85rem;
+        min-width: 45px;
+    }
+    
+    .date-input {
+        min-width: 140px;
+        font-size: 0.85rem;
+        padding: 0.65rem 1rem;
+    }
+    
+    .apply-date-btn,
+    .clear-date-btn {
+        padding: 0.65rem 1.25rem;
+        font-size: 0.85rem;
+    }
+    
+    .chart-period-btn {
+        flex: 1;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-view {
+        padding: 0.25rem;
+    }
+    
+    .metrics-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .metric-card {
+        padding: 0.75rem;
+        min-height: 60px;
+    }
+    
+    .metric-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+    
+    .metric-value {
+        font-size: 1rem;
+    }
+    
+    .metric-label {
+        font-size: 0.6rem;
+    }
+    
+    .metric-change {
+        font-size: 0.55rem;
+    }
+    
+    .period-selector {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .period-button {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .custom-period-selector {
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        padding: 0.75rem;
+    }
+    
+    .date-range-inputs {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    
+    .date-range-inputs label {
+        font-size: 0.85rem;
+        min-width: auto;
+        justify-content: flex-start;
+    }
+    
+    .date-input {
+        width: 100%;
+        min-width: auto;
+        font-size: 0.85rem;
+        padding: 0.65rem 1rem;
+    }
+    
+    .apply-date-btn,
+    .clear-date-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.65rem 1rem;
+        font-size: 0.85rem;
+    }
+    
+    .main-chart-container {
+        padding: 0.75rem;
+    }
+    
+    .chart-container {
+        height: 200px;
+    }
+    
+}
+
+}
+
+.info-value {
+    color: #FFCB57;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+
+
+/* Seção do gráfico */
+.chart-section {
+    flex: 1;
+    width: 100%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #e8ea66 0%, #ff9900 100%);
+    opacity: 0.8;
+}
+
+/* Responsividade */
+@media (max-width: 1200px) {
+    .dashboard-main-content {
+        flex-direction: column;
+    }
+    
+    .metrics-sidebar {
+        flex: 1;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .metrics-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .secondary-charts-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-view {
+        padding: 0.5rem;
+    }
+    
+    .dashboard-main-content {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .metrics-sidebar {
+        flex: 1;
+        width: 100%;
+    }
+    
+    .metrics-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .period-filter-container {
+        width: 100%;
+    }
+    
+    .metric-card {
+        padding: 0.75rem;
+        min-height: 70px;
+    }
+    
+    .metric-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1.1rem;
+    }
+    
+    .metric-value {
+        font-size: 1.1rem;
+    }
+    
+    .metric-label {
+        font-size: 0.65rem;
+    }
+    
+    .metric-change {
+        font-size: 0.6rem;
+    }
+    
+    .main-chart-container {
+        padding: 1rem;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+    
+    
+    .chart-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .chart-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .period-selector {
+        gap: 0.5rem;
+    }
+    
+    .period-button {
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+        min-width: 100px;
+    }
+    
+    .custom-period-selector {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        padding: 0.75rem;
+    }
+    
+    .date-range-inputs {
+        gap: 0.75rem;
+    }
+    
+    .date-range-inputs label {
+        font-size: 0.85rem;
+        min-width: 45px;
+    }
+    
+    .date-input {
+        min-width: 140px;
+        font-size: 0.85rem;
+        padding: 0.65rem 1rem;
+    }
+    
+    .apply-date-btn,
+    .clear-date-btn {
+        padding: 0.65rem 1.25rem;
+        font-size: 0.85rem;
+    }
+    
+    .chart-period-btn {
+        flex: 1;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-view {
+        padding: 0.25rem;
+    }
+    
+    .metrics-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .metric-card {
+        padding: 0.75rem;
+        min-height: 60px;
+    }
+    
+    .metric-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+    
+    .metric-value {
+        font-size: 1rem;
+    }
+    
+    .metric-label {
+        font-size: 0.6rem;
+    }
+    
+    .metric-change {
+        font-size: 0.55rem;
+    }
+    
+    .period-selector {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .period-button {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .custom-period-selector {
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        padding: 0.75rem;
+    }
+    
+    .date-range-inputs {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    
+    .date-range-inputs label {
+        font-size: 0.85rem;
+        min-width: auto;
+        justify-content: flex-start;
+    }
+    
+    .date-input {
+        width: 100%;
+        min-width: auto;
+        font-size: 0.85rem;
+        padding: 0.65rem 1rem;
+    }
+    
+    .apply-date-btn,
+    .clear-date-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.65rem 1rem;
+        font-size: 0.85rem;
+    }
+    
+    .main-chart-container {
+        padding: 0.75rem;
+    }
+    
+    .chart-container {
+        height: 200px;
+    }
+    
+}

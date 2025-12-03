@@ -57,6 +57,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'servicos.context_processors.servicos_context',
+                'solicitacoes.context_processors.recebedores_context',
             ],
         },
     },
@@ -150,3 +151,5 @@ else:
     print('⚠️ ATENÇÃO: Email SMTP não configurado. Usando console backend (emails aparecerão no terminal).')
     print('   Para enviar emails reais, configure EMAIL_HOST_USER e EMAIL_HOST_PASSWORD no arquivo .env')
     print('   Veja instruções em: CONFIGURAR_EMAIL.md')
+
+

@@ -1809,3 +1809,219 @@ function initializeSecondaryCharts() {
     initializeDepartmentChart();
 }
 
+
+            ? (window.dashboardData.aprovadas + window.dashboardData.recusadas + window.dashboardData.concluidas) / window.dashboardData.totalSolicitacoes 
+            : 0;
+        const pendentes = processadas.map(p => Math.round(p * (1 - taxaProcessamento)));
+        
+        dataToUse = {
+            labels: labels,
+            datasets: [
+                {
+                    ...statusAnalysisData.datasets[0],
+                    label: 'Processadas',
+                    data: processadas
+                },
+                {
+                    ...statusAnalysisData.datasets[1],
+                    label: 'Pendentes',
+                    data: pendentes
+                }
+            ]
+        };
+    } else if (window.dashboardData && window.dashboardData.statusData) {
+        // Usar dados de status se disponíveis
+        const statusLabels = ['Aprovadas', 'Concluídas', 'Recusadas', 'Pendentes'];
+        const processadas = [
+            window.dashboardData.statusData.aprovado || 0,
+            window.dashboardData.statusData.concluido || 0,
+            window.dashboardData.statusData.recusado || 0,
+            window.dashboardData.statusData.pendente || 0
+        ];
+        
+        dataToUse = {
+            labels: statusLabels,
+            datasets: [
+                {
+                    ...statusAnalysisData.datasets[0],
+                    label: 'Quantidade',
+                    data: processadas
+                }
+            ]
+        };
+    }
+    
+    statusAnalysisChart = new Chart(ctx, {
+        ...statusAnalysisConfig,
+        data: dataToUse
+    });
+}
+
+function initializeDepartmentChart() {
+    const ctx = document.getElementById('departmentChart');
+    if (!ctx) return;
+    if (departmentChart) departmentChart.destroy();
+    
+    // Usar dados reais se disponíveis
+    let dataToUse = departmentData;
+    if (window.dashboardData && window.dashboardData.solicitacoesPorServico) {
+        const servicos = window.dashboardData.solicitacoesPorServico.slice(0, 4);
+        const labels = servicos.map(s => s.servico__nome || 'Sem serviço');
+        const values = servicos.map(s => s.total || 0);
+        
+        // Cores para os gráficos
+        const colors = ['#3b82f6', '#10b981', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899'];
+        
+        dataToUse = {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: colors.slice(0, labels.length),
+                borderColor: '#1C1C1C',
+                borderWidth: 2,
+                cutout: '60%'
+            }]
+        };
+    } else if (window.dashboardData && window.dashboardData.statusData) {
+        // Fallback para dados de status
+        const labels = ['Aprovadas', 'Concluídas', 'Recusadas', 'Pendentes'];
+        const values = [
+            window.dashboardData.statusData.aprovado || 0,
+            window.dashboardData.statusData.concluido || 0,
+            window.dashboardData.statusData.recusado || 0,
+            window.dashboardData.statusData.pendente || 0
+        ];
+        
+        dataToUse = {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: ['#10b981', '#3b82f6', '#ef4444', '#f59e0b'],
+                borderColor: '#1C1C1C',
+                borderWidth: 2,
+                cutout: '60%'
+            }]
+        };
+    }
+    
+    departmentChart = new Chart(ctx, {
+        ...departmentConfig,
+        data: dataToUse
+    });
+}
+
+function initializeSecondaryCharts() {
+    initializeFlowChart();
+    initializePreferencesChart();
+    initializeStatusAnalysisChart();
+    initializeDepartmentChart();
+}
+
+
+            ? (window.dashboardData.aprovadas + window.dashboardData.recusadas + window.dashboardData.concluidas) / window.dashboardData.totalSolicitacoes 
+            : 0;
+        const pendentes = processadas.map(p => Math.round(p * (1 - taxaProcessamento)));
+        
+        dataToUse = {
+            labels: labels,
+            datasets: [
+                {
+                    ...statusAnalysisData.datasets[0],
+                    label: 'Processadas',
+                    data: processadas
+                },
+                {
+                    ...statusAnalysisData.datasets[1],
+                    label: 'Pendentes',
+                    data: pendentes
+                }
+            ]
+        };
+    } else if (window.dashboardData && window.dashboardData.statusData) {
+        // Usar dados de status se disponíveis
+        const statusLabels = ['Aprovadas', 'Concluídas', 'Recusadas', 'Pendentes'];
+        const processadas = [
+            window.dashboardData.statusData.aprovado || 0,
+            window.dashboardData.statusData.concluido || 0,
+            window.dashboardData.statusData.recusado || 0,
+            window.dashboardData.statusData.pendente || 0
+        ];
+        
+        dataToUse = {
+            labels: statusLabels,
+            datasets: [
+                {
+                    ...statusAnalysisData.datasets[0],
+                    label: 'Quantidade',
+                    data: processadas
+                }
+            ]
+        };
+    }
+    
+    statusAnalysisChart = new Chart(ctx, {
+        ...statusAnalysisConfig,
+        data: dataToUse
+    });
+}
+
+function initializeDepartmentChart() {
+    const ctx = document.getElementById('departmentChart');
+    if (!ctx) return;
+    if (departmentChart) departmentChart.destroy();
+    
+    // Usar dados reais se disponíveis
+    let dataToUse = departmentData;
+    if (window.dashboardData && window.dashboardData.solicitacoesPorServico) {
+        const servicos = window.dashboardData.solicitacoesPorServico.slice(0, 4);
+        const labels = servicos.map(s => s.servico__nome || 'Sem serviço');
+        const values = servicos.map(s => s.total || 0);
+        
+        // Cores para os gráficos
+        const colors = ['#3b82f6', '#10b981', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899'];
+        
+        dataToUse = {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: colors.slice(0, labels.length),
+                borderColor: '#1C1C1C',
+                borderWidth: 2,
+                cutout: '60%'
+            }]
+        };
+    } else if (window.dashboardData && window.dashboardData.statusData) {
+        // Fallback para dados de status
+        const labels = ['Aprovadas', 'Concluídas', 'Recusadas', 'Pendentes'];
+        const values = [
+            window.dashboardData.statusData.aprovado || 0,
+            window.dashboardData.statusData.concluido || 0,
+            window.dashboardData.statusData.recusado || 0,
+            window.dashboardData.statusData.pendente || 0
+        ];
+        
+        dataToUse = {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: ['#10b981', '#3b82f6', '#ef4444', '#f59e0b'],
+                borderColor: '#1C1C1C',
+                borderWidth: 2,
+                cutout: '60%'
+            }]
+        };
+    }
+    
+    departmentChart = new Chart(ctx, {
+        ...departmentConfig,
+        data: dataToUse
+    });
+}
+
+function initializeSecondaryCharts() {
+    initializeFlowChart();
+    initializePreferencesChart();
+    initializeStatusAnalysisChart();
+    initializeDepartmentChart();
+}
+

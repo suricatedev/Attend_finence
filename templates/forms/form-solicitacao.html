@@ -69,9 +69,11 @@
                             </div>
                             <div class="form-group route-recebedor-field">
                                 <label for="routeRecebedor1">Recebedor <span class="required">*</span></label>
-                                <input type="text" id="routeRecebedor1" name="route_recebedor_1" class="recebedor-input" list="recebedores-list-1" placeholder="Digite ou selecione o recebedor" autocomplete="off" required>
-                                <datalist id="recebedores-list-1" class="recebedores-datalist"></datalist>
-                                <small class="form-help">Digite o nome do recebedor</small>
+                                <div class="recebedor-dropdown-wrapper">
+                                    <input type="text" id="routeRecebedor1" name="route_recebedor_1" class="recebedor-input" placeholder="Digite ou selecione o recebedor" autocomplete="off" required>
+                                    <div class="recebedor-dropdown" id="recebedor-dropdown-1" style="display: none;"></div>
+                                </div>
+                                <small class="form-help">Digite para buscar ou clique para ver todos os recebedores</small>
                             </div>
                             <div class="form-group route-pix-field">
                                 <label for="routePix1">Chave PIX</label>
@@ -150,9 +152,11 @@
                             </div>
                             <div class="form-group route-recebedor-field">
                                 <label for="routeRecebedor2">Recebedor <span class="required">*</span></label>
-                                <input type="text" id="routeRecebedor2" name="route_recebedor_2" class="recebedor-input" list="recebedores-list-2" placeholder="Digite ou selecione o recebedor" autocomplete="off" required>
-                                <datalist id="recebedores-list-2" class="recebedores-datalist"></datalist>
-                                <small class="form-help">Digite o nome do recebedor</small>
+                                <div class="recebedor-dropdown-wrapper">
+                                    <input type="text" id="routeRecebedor2" name="route_recebedor_2" class="recebedor-input" placeholder="Digite ou selecione o recebedor" autocomplete="off" required>
+                                    <div class="recebedor-dropdown" id="recebedor-dropdown-2" style="display: none;"></div>
+                                </div>
+                                <small class="form-help">Digite para buscar ou clique para ver todos os recebedores</small>
                             </div>
                             <div class="form-group route-pix-field">
                                 <label for="routePix2">Chave PIX</label>
@@ -291,11 +295,13 @@
                 </div>
                 
                 <div class="form-row">
-                    <div class="form-group">
+                    <div class="form-group route-recebedor-field">
                         <label for="campaignRecebedor">Nome do Recebedor <span class="required">*</span></label>
-                        <input type="text" id="campaignRecebedor" name="casual_recebedor" class="recebedor-input" list="recebedores-list-casual" placeholder="Digite ou selecione o recebedor" autocomplete="off" required>
-                        <datalist id="recebedores-list-casual" class="recebedores-datalist"></datalist>
-                        <small class="form-help">Digite o nome do recebedor</small>
+                        <div class="recebedor-dropdown-wrapper">
+                            <input type="text" id="campaignRecebedor" name="casual_recebedor" class="recebedor-input" placeholder="Digite ou selecione o recebedor" autocomplete="off" required>
+                            <div class="recebedor-dropdown" id="recebedor-dropdown-casual" style="display: none;"></div>
+                        </div>
+                        <small class="form-help">Digite para buscar ou clique para ver todos os recebedores</small>
                     </div>
                     <div class="form-group">
                         <label for="campaignPix">Chave PIX</label>
@@ -485,6 +491,7 @@
                     ...novoId.querySelectorAll('[id*="routeValor2"]'),
                     ...novoId.querySelectorAll('[id*="routeServico2"]'),
                     ...novoId.querySelectorAll('[id*="routeRecebedor2"]'),
+                    ...novoId.querySelectorAll('datalist[id*="recebedores-list-2"]'),
                     ...novoId.querySelectorAll('[id*="routePix2"]'),
                     ...novoId.querySelectorAll('[id*="routeClienteEmpresa2"]'),
                     ...novoId.querySelectorAll('[id*="routeCnpj2"]'),
@@ -496,7 +503,6 @@
                     ...novoId.querySelectorAll('[id*="routeValorTotal2"]'),
                     ...novoId.querySelectorAll('[name*="_2"]'),
                     ...novoId.querySelectorAll('label[for*="2"]'),
-                    ...novoId.querySelectorAll('datalist[id*="recebedores-list-2"]'),
                     ...novoId.querySelectorAll('datalist[id*="clientes-list-2"]')
                 ];
                 
@@ -755,22 +761,52 @@
                     console.log('✅ Event delegation atualizado no container');
                 }
                 
-                // Atualizar datalists para o novo ID dinâmico
+                // Popular datalist de recebedores para o novo ID dinâmico
                 setTimeout(() => {
-                    // Buscar datalists dentro do novo ID
-                    const recebedoresDatalist = novoId.querySelector(`datalist[id*="recebedores-list-${novoNumero}"]`);
-                    const clientesDatalist = novoId.querySelector(`datalist[id*="clientes-list-${novoNumero}"]`);
-                    
-                    // Preencher datalists se existirem
-                    if (recebedoresDatalist && window.carregarRecebedores) {
-                        // A função carregarRecebedores já preenche todos os datalists
-                        window.carregarRecebedores();
+                    const recebedorInput = novoId.querySelector(`input[id*="routeRecebedor${novoNumero}"]`);
+                    if (recebedorInput) {
+                        const datalistId = `recebedores-list-${novoNumero}`;
+                        
+                        // Verificar se datalist já existe no clonado
+                        let datalist = novoId.querySelector(`#${datalistId}`);
+                        
+                        // Se não existe no clonado, procurar no documento completo
+                        if (!datalist) {
+                            datalist = document.getElementById(datalistId);
+                        }
+                        
+                        // Se ainda não existe, criar
+                        if (!datalist) {
+                            datalist = document.createElement('datalist');
+                            datalist.id = datalistId;
+                            recebedorInput.setAttribute('list', datalistId);
+                            recebedorInput.parentElement.appendChild(datalist);
+                        }
+                        
+                        // Buscar recebedores via AJAX e popular o datalist
+                        fetch('/solicitacoes/buscar-recebedores/')
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success && data.recebedores) {
+                                    // Limpar datalist existente
+                                    datalist.innerHTML = '';
+                                    
+                                    // Adicionar recebedores
+                                    data.recebedores.forEach(recebedor => {
+                                        const option = document.createElement('option');
+                                        option.value = recebedor.nome;
+                                        option.textContent = recebedor.nome;
+                                        option.setAttribute('data-pix', recebedor.chave_pix || '');
+                                        datalist.appendChild(option);
+                                    });
+                                    
+                                    console.log(`✅ Datalist de recebedores populado para ID ${novoNumero}`);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Erro ao popular datalist de recebedores:', error);
+                            });
                     }
-                    if (clientesDatalist && window.carregarClientesEmpresas) {
-                        // A função carregarClientesEmpresas já preenche todos os datalists
-                        window.carregarClientesEmpresas();
-                    }
-                    console.log('✅ Datalists atualizados para ID', novoNumero);
                 }, 100);
                 
                 // Calcular total inicial após adicionar ao DOM
@@ -1996,31 +2032,277 @@
             // FUNCIONALIDADE DE RECEBEDOR E CHAVE PIX
             // ============================================
             
+            // Armazenar lista global de recebedores
+            let recebedoresGlobal = [];
+            
             // Carregar lista de recebedores ao carregar a página
             function carregarRecebedores() {
-                fetch('/solicitacoes/buscar-recebedores/')
+                return fetch('/solicitacoes/buscar-recebedores/')
                     .then(response => response.json())
                     .then(data => {
                         if (data.success && data.recebedores) {
-                            // Preencher todos os datalists (incluindo o do Casual)
-                            document.querySelectorAll('.recebedores-datalist').forEach(datalist => {
-                                datalist.innerHTML = '';
-                                data.recebedores.forEach(recebedor => {
-                                    const option = document.createElement('option');
-                                    option.value = recebedor.nome;
-                                    option.setAttribute('data-pix', recebedor.chave_pix);
-                                    datalist.appendChild(option);
-                                });
-                            });
+                            recebedoresGlobal = data.recebedores || [];
+                            return recebedoresGlobal;
+                        } else {
+                            recebedoresGlobal = [];
+                            return [];
                         }
                     })
                     .catch(error => {
                         console.error('Erro ao carregar recebedores:', error);
+                        recebedoresGlobal = [];
+                        return [];
                     });
             }
             
-            // Função para preencher chave PIX automaticamente
-            function preencherChavePix(recebedorInput, pixInput) {
+            // Função para mostrar dropdown de recebedores
+            function mostrarDropdownRecebedores(input, dropdownId) {
+                // VALIDAÇÃO: Garantir que o input passado é realmente um input de recebedor
+                if (!input || !input.classList || !input.classList.contains('recebedor-input')) {
+                    console.error('❌ Erro: Input não é um campo de recebedor!', input);
+                    return;
+                }
+                
+                // VALIDAÇÃO: Verificar se o ID do input corresponde a um recebedor
+                const isValidRecebedorInput = input.id && (
+                    input.id.startsWith('routeRecebedor') || 
+                    input.id === 'campaignRecebedor'
+                );
+                
+                if (!isValidRecebedorInput) {
+                    console.error('❌ Erro: ID do input não é de recebedor!', input.id);
+                    return;
+                }
+                
+                // Garantir que estamos usando o input correto
+                const recebedorInput = input.classList.contains('recebedor-input') 
+                    ? input 
+                    : document.getElementById(input.id);
+                
+                if (!recebedorInput || !recebedorInput.classList.contains('recebedor-input')) {
+                    console.error('❌ Erro: Não foi possível encontrar o input de recebedor correto!');
+                    return;
+                }
+                
+                const dropdown = document.getElementById(dropdownId);
+                if (!dropdown) {
+                    console.error('❌ Erro: Dropdown não encontrado!', dropdownId);
+                    return;
+                }
+                
+                // Fechar todos os outros dropdowns de recebedor antes de abrir este
+                document.querySelectorAll('.recebedor-dropdown').forEach(otherDropdown => {
+                    if (otherDropdown.id !== dropdownId && otherDropdown.classList.contains('active')) {
+                        otherDropdown.classList.remove('active');
+                        otherDropdown.style.display = 'none';
+                        const otherFormGroup = recebedorInput.closest('.route-recebedor-field');
+                        if (otherFormGroup) {
+                            otherFormGroup.classList.remove('has-active-dropdown');
+                        }
+                    }
+                });
+                
+                // Se recebedores ainda não foram carregados, carregar primeiro
+                if (!recebedoresGlobal || recebedoresGlobal.length === 0) {
+                    carregarRecebedores().then(() => {
+                        setTimeout(() => mostrarDropdownRecebedores(recebedorInput, dropdownId), 100);
+                    });
+                    return;
+                }
+                
+                // Limpar dropdown anterior
+                dropdown.innerHTML = '';
+                
+                // Filtrar recebedores baseado no texto digitado
+                const textoBusca = recebedorInput.value.toLowerCase().trim();
+                let recebedoresFiltrados;
+                
+                if (textoBusca && textoBusca.length > 0) {
+                    recebedoresFiltrados = recebedoresGlobal.filter(r => 
+                        r && r.nome && r.nome.toLowerCase().includes(textoBusca)
+                    );
+                } else {
+                    recebedoresFiltrados = recebedoresGlobal.filter(r => r && r.nome);
+                }
+                
+                // Se não há recebedores, mostrar mensagem
+                if (!recebedoresFiltrados || recebedoresFiltrados.length === 0) {
+                    dropdown.innerHTML = '<div class="recebedor-dropdown-item empty">Nenhum recebedor encontrado</div>';
+                    
+                    // Fechar outros dropdowns
+                    document.querySelectorAll('.recebedor-dropdown').forEach(otherDropdown => {
+                        if (otherDropdown.id !== dropdownId) {
+                            otherDropdown.classList.remove('active');
+                            otherDropdown.style.display = 'none';
+                        }
+                    });
+                    
+                    // Calcular posição usando getBoundingClientRect para position: fixed
+                    const inputRect = recebedorInput.getBoundingClientRect();
+                    
+                    // Mostrar dropdown
+                    dropdown.style.display = 'block';
+                    
+                    // Usar position: fixed para garantir que apareça acima de TUDO
+                    dropdown.style.position = 'fixed';
+                    dropdown.style.top = (inputRect.bottom + window.scrollY) + 'px';
+                    dropdown.style.left = (inputRect.left + window.scrollX) + 'px';
+                    dropdown.style.width = inputRect.width + 'px';
+                    dropdown.style.setProperty('z-index', '2147483647', 'important'); // Z-index máximo absoluto
+                    dropdown.style.margin = '0';
+                    
+                    // Adicionar classe ao form-group
+                    const formGroup = recebedorInput.closest('.route-recebedor-field');
+                    if (formGroup) {
+                        formGroup.classList.add('has-active-dropdown');
+                    }
+                    
+                    setTimeout(() => {
+                        dropdown.classList.add('active');
+                        // Recalcular posição após renderização
+                        const newRect = recebedorInput.getBoundingClientRect();
+                        dropdown.style.top = (newRect.bottom + window.scrollY) + 'px';
+                        dropdown.style.left = (newRect.left + window.scrollX) + 'px';
+                        dropdown.style.width = newRect.width + 'px';
+                        dropdown.style.position = 'fixed';
+                        dropdown.style.setProperty('z-index', '2147483647', 'important'); // Z-index máximo absoluto
+                    }, 10);
+                    
+                    return;
+                }
+                
+                // Criar itens do dropdown
+                recebedoresFiltrados.forEach(recebedor => {
+                    if (!recebedor || !recebedor.nome) return;
+                    
+                    const item = document.createElement('div');
+                    item.className = 'recebedor-dropdown-item';
+                    item.innerHTML = `
+                        <div class="recebedor-item-content">
+                            <span class="recebedor-nome"><i class="fas fa-user"></i> ${recebedor.nome}</span>
+                            ${recebedor.chave_pix ? `<span class="recebedor-pix"><i class="fas fa-qrcode"></i> ${recebedor.chave_pix}</span>` : ''}
+                        </div>
+                    `;
+                    item.dataset.nome = recebedor.nome;
+                    item.dataset.pix = recebedor.chave_pix || '';
+                    
+                    item.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Preencher input com o nome selecionado
+                        recebedorInput.value = recebedor.nome;
+                        
+                        // Preencher chave PIX
+                        const pixInput = recebedorInput.id.includes('routeRecebedor') 
+                            ? document.getElementById(recebedorInput.id.replace('routeRecebedor', 'routePix'))
+                            : document.getElementById('campaignPix');
+                        
+                        if (pixInput) {
+                            pixInput.value = recebedor.chave_pix || '';
+                        }
+                        
+                        // Fechar dropdown
+                        fecharDropdownRecebedor(dropdownId);
+                        
+                        // Disparar evento change
+                        recebedorInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    });
+                    
+                    dropdown.appendChild(item);
+                });
+                
+                // Fechar todos os outros dropdowns primeiro
+                document.querySelectorAll('.recebedor-dropdown').forEach(otherDropdown => {
+                    if (otherDropdown.id !== dropdownId) {
+                        otherDropdown.classList.remove('active');
+                        otherDropdown.style.display = 'none';
+                        const otherFormGroup = recebedorInput.closest('.route-recebedor-field');
+                        if (otherFormGroup) {
+                            otherFormGroup.classList.remove('has-active-dropdown');
+                        }
+                    }
+                });
+                
+                // Calcular posição usando getBoundingClientRect para position: fixed
+                const inputRect = recebedorInput.getBoundingClientRect();
+                
+                // Mostrar dropdown
+                dropdown.style.display = 'block';
+                
+                // Usar position: fixed para garantir que apareça acima de TUDO
+                dropdown.style.position = 'fixed';
+                dropdown.style.top = (inputRect.bottom + window.scrollY) + 'px';
+                dropdown.style.left = (inputRect.left + window.scrollX) + 'px';
+                dropdown.style.width = inputRect.width + 'px';
+                dropdown.style.setProperty('z-index', '2147483647', 'important'); // Z-index máximo absoluto
+                dropdown.style.margin = '0';
+                
+                // Adicionar classe ao form-group para ajustar z-index
+                const formGroup = recebedorInput.closest('.route-recebedor-field');
+                if (formGroup) {
+                    formGroup.classList.add('has-active-dropdown');
+                }
+                
+                // Adicionar classe active após pequeno delay para animação
+                setTimeout(() => {
+                    dropdown.classList.add('active');
+                    // Recalcular posição após renderização
+                    const newRect = recebedorInput.getBoundingClientRect();
+                    dropdown.style.top = (newRect.bottom + window.scrollY) + 'px';
+                    dropdown.style.left = (newRect.left + window.scrollX) + 'px';
+                    dropdown.style.width = newRect.width + 'px';
+                    dropdown.style.position = 'fixed';
+                    dropdown.style.setProperty('z-index', '2147483647', 'important'); // Z-index máximo absoluto
+                }, 10);
+            }
+            
+            // Função para fechar dropdown e remover classe
+            function fecharDropdownRecebedor(dropdownId) {
+                const dropdown = document.getElementById(dropdownId);
+                if (dropdown) {
+                    dropdown.style.display = 'none';
+                    dropdown.classList.remove('active');
+                    
+                    // Remover listeners de scroll e resize
+                    if (dropdown._scrollListener) {
+                        window.removeEventListener('scroll', dropdown._scrollListener, true);
+                        delete dropdown._scrollListener;
+                    }
+                    if (dropdown._resizeListener) {
+                        window.removeEventListener('resize', dropdown._resizeListener, true);
+                        delete dropdown._resizeListener;
+                    }
+                    
+                    // Remover classe do form-group
+                    const formGroup = dropdown.closest('.route-recebedor-field');
+                    if (formGroup) {
+                        formGroup.classList.remove('has-active-dropdown');
+                    }
+                }
+            }
+            
+            // Função para fechar dropdown ao clicar fora
+            function configurarFecharDropdown(input, dropdownId) {
+                const handler = function(e) {
+                    const dropdown = document.getElementById(dropdownId);
+                    if (!dropdown) return;
+                    
+                    // Se clicou fora do input e do dropdown, fechar
+                    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                        fecharDropdownRecebedor(dropdownId);
+                        document.removeEventListener('click', handler);
+                    }
+                };
+                
+                // Adicionar listener temporário
+                setTimeout(() => {
+                    document.addEventListener('click', handler);
+                }, 100);
+            }
+            
+            // Função para preencher chave PIX automaticamente quando selecionar/digitar recebedor
+            function preencherChavePixInput(recebedorInput, pixInput) {
                 const nomeRecebedor = recebedorInput.value.trim();
                 
                 if (!nomeRecebedor) {
@@ -2028,25 +2310,33 @@
                     return;
                 }
                 
-                // Buscar recebedor via AJAX
+                // Buscar recebedor na lista global primeiro
+                if (recebedoresGlobal && recebedoresGlobal.length > 0) {
+                    const recebedor = recebedoresGlobal.find(r => 
+                        r.nome && r.nome.toLowerCase() === nomeRecebedor.toLowerCase()
+                    );
+                    
+                    if (recebedor) {
+                        pixInput.value = recebedor.chave_pix || '';
+                        return;
+                    }
+                }
+                
+                // Se não encontrou, buscar via AJAX
                 fetch(`/solicitacoes/buscar-recebedores/?q=${encodeURIComponent(nomeRecebedor)}`)
                     .then(response => response.json())
                     .then(data => {
-                        if (data.success && data.recebedores) {
-                            // Procurar recebedor exato
+                        if (data.success && data.recebedores && data.recebedores.length > 0) {
                             const recebedor = data.recebedores.find(r => 
                                 r.nome.toLowerCase() === nomeRecebedor.toLowerCase()
                             );
                             
                             if (recebedor) {
-                                pixInput.value = recebedor.chave_pix;
+                                pixInput.value = recebedor.chave_pix || '';
+                            } else if (data.recebedores.length > 0) {
+                                pixInput.value = data.recebedores[0].chave_pix || '';
                             } else {
-                                // Se não encontrar exato, tentar o primeiro resultado
-                                if (data.recebedores.length > 0) {
-                                    pixInput.value = data.recebedores[0].chave_pix;
-                                } else {
-                                    pixInput.value = '';
-                                }
+                                pixInput.value = '';
                             }
                         } else {
                             pixInput.value = '';
@@ -2060,18 +2350,39 @@
             
             // Adicionar event listeners para campos de recebedor existentes
             function configurarRecebedores() {
+                // Carregar recebedores primeiro
+                carregarRecebedores();
+                
                 // Para campos estáticos (ID 1 e 2)
                 for (let i = 1; i <= 2; i++) {
                     const recebedorInput = document.getElementById(`routeRecebedor${i}`);
                     const pixInput = document.getElementById(`routePix${i}`);
+                    const dropdownId = `recebedor-dropdown-${i}`;
                     
                     if (recebedorInput && pixInput) {
-                        recebedorInput.addEventListener('input', function() {
-                            preencherChavePix(this, pixInput);
+                        // Ao clicar/focar, mostrar dropdown
+                        recebedorInput.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            console.log('🖱️ Clique no input de recebedor:', dropdownId);
+                            mostrarDropdownRecebedores(this, dropdownId);
+                            configurarFecharDropdown(this, dropdownId);
                         });
                         
+                        recebedorInput.addEventListener('focus', function() {
+                            console.log('👁️ Foco no input de recebedor:', dropdownId);
+                            mostrarDropdownRecebedores(this, dropdownId);
+                            configurarFecharDropdown(this, dropdownId);
+                        });
+                        
+                        // Ao digitar, filtrar e mostrar dropdown
+                        recebedorInput.addEventListener('input', function() {
+                            mostrarDropdownRecebedores(this, dropdownId);
+                            preencherChavePixInput(this, pixInput);
+                        });
+                        
+                        // Ao mudar o valor, preencher chave PIX
                         recebedorInput.addEventListener('change', function() {
-                            preencherChavePix(this, pixInput);
+                            preencherChavePixInput(this, pixInput);
                         });
                     }
                 }
@@ -2081,34 +2392,93 @@
                 const campaignPix = document.getElementById('campaignPix');
                 
                 if (campaignRecebedor && campaignPix) {
-                    campaignRecebedor.addEventListener('input', function() {
-                        preencherChavePix(this, campaignPix);
+                    // Ao clicar/focar, mostrar dropdown
+                    campaignRecebedor.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        mostrarDropdownRecebedores(this, 'recebedor-dropdown-casual');
+                        configurarFecharDropdown(this, 'recebedor-dropdown-casual');
                     });
                     
+                    campaignRecebedor.addEventListener('focus', function() {
+                        mostrarDropdownRecebedores(this, 'recebedor-dropdown-casual');
+                        configurarFecharDropdown(this, 'recebedor-dropdown-casual');
+                    });
+                    
+                    // Ao digitar, filtrar e mostrar dropdown
+                    campaignRecebedor.addEventListener('input', function() {
+                        mostrarDropdownRecebedores(this, 'recebedor-dropdown-casual');
+                        preencherChavePixInput(this, campaignPix);
+                    });
+                    
+                    // Ao mudar o valor, preencher chave PIX
                     campaignRecebedor.addEventListener('change', function() {
-                        preencherChavePix(this, campaignPix);
+                        preencherChavePixInput(this, campaignPix);
                     });
                 }
                 
                 // Para campos dinâmicos (usar event delegation)
+                document.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('recebedor-input')) {
+                        const recebedorInput = e.target;
+                        let dropdownId = '';
+                        
+                        if (recebedorInput.id.startsWith('routeRecebedor')) {
+                            const numeroID = recebedorInput.id.replace('routeRecebedor', '');
+                            dropdownId = `recebedor-dropdown-${numeroID}`;
+                            
+                            // Criar dropdown se não existir
+                            if (!document.getElementById(dropdownId)) {
+                                const wrapper = recebedorInput.closest('.recebedor-dropdown-wrapper') || recebedorInput.parentElement;
+                                const dropdown = document.createElement('div');
+                                dropdown.className = 'recebedor-dropdown';
+                                dropdown.id = dropdownId;
+                                dropdown.style.display = 'none';
+                                wrapper.appendChild(dropdown);
+                            }
+                            
+                            mostrarDropdownRecebedores(recebedorInput, dropdownId);
+                            configurarFecharDropdown(recebedorInput, dropdownId);
+                        }
+                    }
+                });
+                
                 document.addEventListener('input', function(e) {
                     if (e.target.classList.contains('recebedor-input')) {
                         const recebedorInput = e.target;
                         
-                        // Verificar se é campo de rota dinâmico
+                        if (recebedorInput.id.startsWith('routeRecebedor')) {
+                            const numeroID = recebedorInput.id.replace('routeRecebedor', '');
+                            const dropdownId = `recebedor-dropdown-${numeroID}`;
+                            const pixInput = document.getElementById(`routePix${numeroID}`);
+                            
+                            mostrarDropdownRecebedores(recebedorInput, dropdownId);
+                            if (pixInput) {
+                                preencherChavePixInput(recebedorInput, pixInput);
+                            }
+                        } else if (recebedorInput.id === 'campaignRecebedor') {
+                            mostrarDropdownRecebedores(recebedorInput, 'recebedor-dropdown-casual');
+                            const pixInput = document.getElementById('campaignPix');
+                            if (pixInput) {
+                                preencherChavePixInput(recebedorInput, pixInput);
+                            }
+                        }
+                    }
+                });
+                
+                document.addEventListener('change', function(e) {
+                    if (e.target.classList.contains('recebedor-input')) {
+                        const recebedorInput = e.target;
+                        
                         if (recebedorInput.id.startsWith('routeRecebedor')) {
                             const numeroID = recebedorInput.id.replace('routeRecebedor', '');
                             const pixInput = document.getElementById(`routePix${numeroID}`);
-                            
                             if (pixInput) {
-                                preencherChavePix(recebedorInput, pixInput);
+                                preencherChavePixInput(recebedorInput, pixInput);
                             }
-                        }
-                        // Verificar se é campo Casual
-                        else if (recebedorInput.id === 'campaignRecebedor') {
+                        } else if (recebedorInput.id === 'campaignRecebedor') {
                             const pixInput = document.getElementById('campaignPix');
                             if (pixInput) {
-                                preencherChavePix(recebedorInput, pixInput);
+                                preencherChavePixInput(recebedorInput, pixInput);
                             }
                         }
                     }
@@ -2238,17 +2608,13 @@
                 });
             }
             
-            // Carregar recebedores e clientes/empresas e configurar quando o DOM estiver pronto
+            // Carregar e configurar quando o DOM estiver pronto
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', function() {
-                    carregarRecebedores();
-                    carregarClientesEmpresas();
                     configurarRecebedores();
                     configurarClientesEmpresas();
                 });
             } else {
-                carregarRecebedores();
-                carregarClientesEmpresas();
                 configurarRecebedores();
                 configurarClientesEmpresas();
             }
@@ -2259,19 +2625,1440 @@
                 window.criarNovoRouteId = function(e) {
                     const resultado = criarNovoRouteIdOriginal(e);
                     
-                    // Após criar novo ID, adicionar listeners para recebedor
+                    // Após criar novo ID, configurar listener para input de recebedor
                     setTimeout(function() {
                         const novoNumero = window.routeIdCounter - 1;
                         const recebedorInput = document.getElementById(`routeRecebedor${novoNumero}`);
                         const pixInput = document.getElementById(`routePix${novoNumero}`);
                         
                         if (recebedorInput && pixInput) {
+                            // Adicionar listeners para preencher PIX quando digitar/selecionar recebedor
                             recebedorInput.addEventListener('input', function() {
-                                preencherChavePix(this, pixInput);
+                                preencherChavePixInput(this, pixInput);
                             });
                             
                             recebedorInput.addEventListener('change', function() {
-                                preencherChavePix(this, pixInput);
+                                preencherChavePixInput(this, pixInput);
+                            });
+                            
+                            recebedorInput.addEventListener('blur', function() {
+                                preencherChavePixInput(this, pixInput);
+                            });
+                        }
+                    }, 100);
+                    
+                    return resultado;
+                };
+            }
+            
+            // ============================================
+            // VALIDAÇÃO EM TEMPO REAL DE ID DUPLICADO
+            // ============================================
+            
+            let timeoutVerificacaoId = null;
+            
+            /**
+             * Verifica se um ID (ticket) já está cadastrado no sistema
+             * @param {string} ticket - O ID a verificar
+             * @param {HTMLElement} inputElement - O elemento input que contém o ID
+             * @param {string} solicitacaoId - ID da solicitação em edição (opcional)
+             */
+            async function verificarIdExistente(ticket, inputElement, solicitacaoId = null) {
+                if (!ticket || !ticket.trim()) {
+                    limparAvisoIdDuplicado(inputElement);
+                    return;
+                }
+                
+                try {
+                    let url = `/solicitacoes/verificar-id-existente/?ticket=${encodeURIComponent(ticket.trim())}`;
+                    if (solicitacaoId) {
+                        url += `&solicitacao_id=${encodeURIComponent(solicitacaoId)}`;
+                    }
+                    
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        credentials: 'same-origin'
+                    });
+                    
+                    const data = await response.json();
+                    console.log('📡 Resposta da verificação de ID:', data);
+                    
+                    if (data.existe) {
+                        console.log('⚠️ ID existe! Mostrando aviso...');
+                        mostrarAvisoIdDuplicado(inputElement, data.message, data.detalhes);
+                    } else {
+                        console.log('✅ ID não existe, limpando aviso...');
+                        limparAvisoIdDuplicado(inputElement);
+                    }
+                } catch (error) {
+                    console.error('Erro ao verificar ID:', error);
+                    // Em caso de erro, não bloqueamos o campo
+                    limparAvisoIdDuplicado(inputElement);
+                }
+            }
+            
+            /**
+             * Mostra um aviso visual de que o ID já está cadastrado
+             * @param {HTMLElement} inputElement - O elemento input
+             * @param {string} mensagem - Mensagem de aviso
+             * @param {object} detalhes - Detalhes adicionais (opcional)
+             */
+            function mostrarAvisoIdDuplicado(inputElement, mensagem, detalhes = null) {
+                console.log('🚨 MOSTRANDO AVISO DE ID DUPLICADO:', mensagem);
+                
+                // Remover avisos anteriores
+                limparAvisoIdDuplicado(inputElement);
+                
+                // Adicionar classe de erro ao input
+                inputElement.classList.add('id-duplicado');
+                inputElement.style.borderColor = '#dc3545';
+                inputElement.style.backgroundColor = '#fff5f5';
+                
+                // Encontrar o form-group do campo - tentar múltiplas formas
+                let formGroup = inputElement.closest('.form-group');
+                
+                if (!formGroup) {
+                    // Tentar pelo parent
+                    formGroup = inputElement.parentElement;
+                    let tentativas = 0;
+                    while (formGroup && !formGroup.classList.contains('form-group') && tentativas < 5) {
+                        formGroup = formGroup.parentElement;
+                        tentativas++;
+                    }
+                }
+                
+                if (!formGroup) {
+                    console.error('❌ Form-group não encontrado! Tentando criar container...');
+                    // Criar um wrapper se não existir
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'form-group';
+                    inputElement.parentNode.insertBefore(wrapper, inputElement.nextSibling);
+                    wrapper.appendChild(inputElement);
+                    formGroup = wrapper;
+                }
+                
+                if (formGroup) {
+                    console.log('✅ Form-group encontrado/criado:', formGroup);
+                    
+                    // Adicionar classe de erro
+                    formGroup.classList.add('error');
+                    
+                    // Remover mensagens anteriores
+                    const existingError = formGroup.querySelector('.error-message.id-duplicado-message');
+                    if (existingError) {
+                        existingError.remove();
+                    }
+                    
+                    // Criar DIV do aviso
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message id-duplicado-message';
+                    errorDiv.setAttribute('role', 'alert');
+                    
+                    // Montar mensagem
+                    let msgHTML = `<i class="fas fa-exclamation-circle"></i> <strong>ID Já Cadastrado:</strong> ${mensagem}`;
+                    if (detalhes && detalhes.tipo) {
+                        msgHTML += `<br><small style="margin-left: 24px; display: block; margin-top: 4px;">Tipo: ${detalhes.tipo}${detalhes.status ? ' | Status: ' + detalhes.status : ''}</small>`;
+                    }
+                    
+                    errorDiv.innerHTML = msgHTML;
+                    
+                    // ESTILO INLINE FORÇADO - VERMELHO BRILHANTE
+                    errorDiv.style.cssText = `
+                        color: white !important;
+                        font-size: 14px !important;
+                        font-weight: 500 !important;
+                        margin-top: 12px !important;
+                        margin-bottom: 12px !important;
+                        padding: 14px 18px !important;
+                        background-color: #dc3545 !important;
+                        border: 2px solid #dc3545 !important;
+                        border-radius: 8px !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        align-items: flex-start !important;
+                        gap: 4px !important;
+                        visibility: visible !important;
+                        opacity: 1 !important;
+                        position: relative !important;
+                        z-index: 9999 !important;
+                        width: 100% !important;
+                        max-width: 100% !important;
+                        box-sizing: border-box !important;
+                        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4) !important;
+                    `;
+                    
+                    // Garantir que ícone e texto tenham cor branca
+                    errorDiv.querySelectorAll('i, strong, small').forEach(el => {
+                        el.style.color = 'white !important';
+                    });
+                    
+                    // ADICIONAR DEPOIS DO INPUT OU DO FORM-HELP
+                    const formHelp = formGroup.querySelector('.form-help');
+                    if (formHelp && formHelp.nextSibling) {
+                        formGroup.insertBefore(errorDiv, formHelp.nextSibling);
+                    } else if (formHelp) {
+                        formGroup.appendChild(errorDiv);
+                    } else {
+                        // Adicionar após o input
+                        formGroup.appendChild(errorDiv);
+                    }
+                    
+                    console.log('✅✅✅ AVISO ADICIONADO AO DOM!');
+                    console.log('✅ Form-group filhos:', formGroup.children.length);
+                    
+                    // Forçar reflow para garantir renderização
+                    void errorDiv.offsetHeight;
+                    
+                    // Scroll para o campo
+                    setTimeout(() => {
+                        errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }, 300);
+                } else {
+                    console.error('❌ Não foi possível criar/encontrar form-group!');
+                }
+            }
+            
+            /**
+             * Remove o aviso visual de ID duplicado
+             * @param {HTMLElement} inputElement - O elemento input
+             */
+            function limparAvisoIdDuplicado(inputElement) {
+                if (inputElement) {
+                    inputElement.classList.remove('id-duplicado');
+                    
+                    const formGroup = inputElement.closest('.form-group');
+                    if (formGroup) {
+                        // Remover classe de erro
+                        const errorMessage = formGroup.querySelector('.error-message.id-duplicado-message');
+                        if (errorMessage) {
+                            errorMessage.remove();
+                        }
+                        
+                        // Só remover a classe 'error' se não houver outros erros
+                        const outrosErros = formGroup.querySelectorAll('.error-message:not(.id-duplicado-message)');
+                        if (outrosErros.length === 0) {
+                            formGroup.classList.remove('error');
+                        }
+                    }
+                }
+            }
+            
+            /**
+             * Configura validação em tempo real para um campo de ID
+             * @param {HTMLElement} inputElement - O elemento input do ID
+             */
+            window.configurarValidacaoId = function(inputElement) {
+                if (!inputElement) return;
+                
+                // Limpar timeout anterior se existir
+                inputElement.addEventListener('input', function(e) {
+                    const ticket = e.target.value.trim();
+                    
+                    // Limpar aviso quando o campo estiver vazio
+                    if (!ticket) {
+                        limparAvisoIdDuplicado(e.target);
+                        return;
+                    }
+                    
+                    // Debounce: aguardar 500ms após o usuário parar de digitar
+                    clearTimeout(timeoutVerificacaoId);
+                    timeoutVerificacaoId = setTimeout(() => {
+                        // Obter ID da solicitação em edição (se houver)
+                        const solicitacaoIdField = document.getElementById('solicitacaoId');
+                        const solicitacaoId = solicitacaoIdField && solicitacaoIdField.value ? solicitacaoIdField.value : null;
+                        
+                        verificarIdExistente(ticket, e.target, solicitacaoId);
+                    }, 500);
+                });
+                
+                // Também verificar ao perder o foco
+                inputElement.addEventListener('blur', function(e) {
+                    clearTimeout(timeoutVerificacaoId);
+                    const ticket = e.target.value.trim();
+                    if (ticket) {
+                        const solicitacaoIdField = document.getElementById('solicitacaoId');
+                        const solicitacaoId = solicitacaoIdField && solicitacaoIdField.value ? solicitacaoIdField.value : null;
+                        verificarIdExistente(ticket, e.target, solicitacaoId);
+                    }
+                });
+            }
+            
+            // Função para configurar validação de forma mais direta e confiável
+            function configurarValidacaoQuandoModalAbrir() {
+                console.log('🔍 Configurando validação de ID quando modal abrir...');
+                
+                // Aguardar um pouco para garantir que o modal esteja totalmente carregado
+                setTimeout(() => {
+                    // Configurar para campo Casual
+                    const campaignIdInput = document.getElementById('campaignId');
+                    if (campaignIdInput) {
+                        console.log('✅ Campo campaignId encontrado, configurando validação...');
+                        if (typeof window.configurarValidacaoId === 'function') {
+                            window.configurarValidacaoId(campaignIdInput);
+                            console.log('✅ Validação configurada para campaignId');
+                        } else {
+                            console.error('❌ Função configurarValidacaoId não está disponível!');
+                        }
+                    } else {
+                        console.warn('⚠️ Campo campaignId não encontrado ainda');
+                    }
+                    
+                    // Configurar para campos de rota
+                    const routeIdInputs = document.querySelectorAll('[id^="routeId"]');
+                    console.log(`✅ Encontrados ${routeIdInputs.length} campos de rota`);
+                    routeIdInputs.forEach(input => {
+                        if (typeof window.configurarValidacaoId === 'function') {
+                            window.configurarValidacaoId(input);
+                        }
+                    });
+                }, 500);
+            }
+            
+            // Configurar validação quando DOM carregar
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('✅ DOM carregado, configurando validação...');
+                    configurarValidacaoQuandoModalAbrir();
+                });
+            } else {
+                console.log('✅ DOM já carregado, configurando validação agora...');
+                configurarValidacaoQuandoModalAbrir();
+            }
+            
+            // Observar quando o modal for aberto
+            const modal = document.getElementById('createCampaignModal');
+            if (modal) {
+                const observerModal = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                            if (modal.classList.contains('show')) {
+                                console.log('✅ Modal aberto, configurando validação...');
+                                configurarValidacaoQuandoModalAbrir();
+                            }
+                        }
+                    });
+                });
+                
+                observerModal.observe(modal, {
+                    attributes: true,
+                    attributeFilter: ['class']
+                });
+            }
+            
+            // MutationObserver para campos dinâmicos
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1 && typeof window.configurarValidacaoId === 'function') {
+                            if (node.id && node.id.startsWith('routeId')) {
+                                console.log(`✅ Novo campo de ID encontrado: ${node.id}`);
+                                window.configurarValidacaoId(node);
+                            }
+                            const routeIdInputs = node.querySelectorAll && node.querySelectorAll('[id^="routeId"]');
+                            if (routeIdInputs && routeIdInputs.length > 0) {
+                                routeIdInputs.forEach(input => {
+                                    console.log(`✅ Campo de ID encontrado dentro do nó: ${input.id}`);
+                                    window.configurarValidacaoId(input);
+                                });
+                            }
+                        }
+                    });
+                });
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        });
+    </script>
+</div>
+
+
+                        window.removeEventListener('resize', dropdown._resizeListener, true);
+                        delete dropdown._resizeListener;
+                    }
+                    
+                    // Remover classe do form-group
+                    const formGroup = dropdown.closest('.route-recebedor-field');
+                    if (formGroup) {
+                        formGroup.classList.remove('has-active-dropdown');
+                    }
+                }
+            }
+            
+            // Função para fechar dropdown ao clicar fora
+            function configurarFecharDropdown(input, dropdownId) {
+                const handler = function(e) {
+                    const dropdown = document.getElementById(dropdownId);
+                    if (!dropdown) return;
+                    
+                    // Se clicou fora do input e do dropdown, fechar
+                    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                        fecharDropdownRecebedor(dropdownId);
+                        document.removeEventListener('click', handler);
+                    }
+                };
+                
+                // Adicionar listener temporário
+                setTimeout(() => {
+                    document.addEventListener('click', handler);
+                }, 100);
+            }
+            
+            // Função para preencher chave PIX automaticamente quando selecionar/digitar recebedor
+            function preencherChavePixInput(recebedorInput, pixInput) {
+                const nomeRecebedor = recebedorInput.value.trim();
+                
+                if (!nomeRecebedor) {
+                    pixInput.value = '';
+                    return;
+                }
+                
+                // Buscar recebedor na lista global primeiro
+                if (recebedoresGlobal && recebedoresGlobal.length > 0) {
+                    const recebedor = recebedoresGlobal.find(r => 
+                        r.nome && r.nome.toLowerCase() === nomeRecebedor.toLowerCase()
+                    );
+                    
+                    if (recebedor) {
+                        pixInput.value = recebedor.chave_pix || '';
+                        return;
+                    }
+                }
+                
+                // Se não encontrou, buscar via AJAX
+                fetch(`/solicitacoes/buscar-recebedores/?q=${encodeURIComponent(nomeRecebedor)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.recebedores && data.recebedores.length > 0) {
+                            const recebedor = data.recebedores.find(r => 
+                                r.nome.toLowerCase() === nomeRecebedor.toLowerCase()
+                            );
+                            
+                            if (recebedor) {
+                                pixInput.value = recebedor.chave_pix || '';
+                            } else if (data.recebedores.length > 0) {
+                                pixInput.value = data.recebedores[0].chave_pix || '';
+                            } else {
+                                pixInput.value = '';
+                            }
+                        } else {
+                            pixInput.value = '';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar chave PIX:', error);
+                        pixInput.value = '';
+                    });
+            }
+            
+            // Adicionar event listeners para campos de recebedor existentes
+            function configurarRecebedores() {
+                // Carregar recebedores primeiro
+                carregarRecebedores();
+                
+                // Para campos estáticos (ID 1 e 2)
+                for (let i = 1; i <= 2; i++) {
+                    const recebedorInput = document.getElementById(`routeRecebedor${i}`);
+                    const pixInput = document.getElementById(`routePix${i}`);
+                    const dropdownId = `recebedor-dropdown-${i}`;
+                    
+                    if (recebedorInput && pixInput) {
+                        // Ao clicar/focar, mostrar dropdown
+                        recebedorInput.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            console.log('🖱️ Clique no input de recebedor:', dropdownId);
+                            mostrarDropdownRecebedores(this, dropdownId);
+                            configurarFecharDropdown(this, dropdownId);
+                        });
+                        
+                        recebedorInput.addEventListener('focus', function() {
+                            console.log('👁️ Foco no input de recebedor:', dropdownId);
+                            mostrarDropdownRecebedores(this, dropdownId);
+                            configurarFecharDropdown(this, dropdownId);
+                        });
+                        
+                        // Ao digitar, filtrar e mostrar dropdown
+                        recebedorInput.addEventListener('input', function() {
+                            mostrarDropdownRecebedores(this, dropdownId);
+                            preencherChavePixInput(this, pixInput);
+                        });
+                        
+                        // Ao mudar o valor, preencher chave PIX
+                        recebedorInput.addEventListener('change', function() {
+                            preencherChavePixInput(this, pixInput);
+                        });
+                    }
+                }
+                
+                // Para formulário Casual
+                const campaignRecebedor = document.getElementById('campaignRecebedor');
+                const campaignPix = document.getElementById('campaignPix');
+                
+                if (campaignRecebedor && campaignPix) {
+                    // Ao clicar/focar, mostrar dropdown
+                    campaignRecebedor.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        mostrarDropdownRecebedores(this, 'recebedor-dropdown-casual');
+                        configurarFecharDropdown(this, 'recebedor-dropdown-casual');
+                    });
+                    
+                    campaignRecebedor.addEventListener('focus', function() {
+                        mostrarDropdownRecebedores(this, 'recebedor-dropdown-casual');
+                        configurarFecharDropdown(this, 'recebedor-dropdown-casual');
+                    });
+                    
+                    // Ao digitar, filtrar e mostrar dropdown
+                    campaignRecebedor.addEventListener('input', function() {
+                        mostrarDropdownRecebedores(this, 'recebedor-dropdown-casual');
+                        preencherChavePixInput(this, campaignPix);
+                    });
+                    
+                    // Ao mudar o valor, preencher chave PIX
+                    campaignRecebedor.addEventListener('change', function() {
+                        preencherChavePixInput(this, campaignPix);
+                    });
+                }
+                
+                // Para campos dinâmicos (usar event delegation)
+                document.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('recebedor-input')) {
+                        const recebedorInput = e.target;
+                        let dropdownId = '';
+                        
+                        if (recebedorInput.id.startsWith('routeRecebedor')) {
+                            const numeroID = recebedorInput.id.replace('routeRecebedor', '');
+                            dropdownId = `recebedor-dropdown-${numeroID}`;
+                            
+                            // Criar dropdown se não existir
+                            if (!document.getElementById(dropdownId)) {
+                                const wrapper = recebedorInput.closest('.recebedor-dropdown-wrapper') || recebedorInput.parentElement;
+                                const dropdown = document.createElement('div');
+                                dropdown.className = 'recebedor-dropdown';
+                                dropdown.id = dropdownId;
+                                dropdown.style.display = 'none';
+                                wrapper.appendChild(dropdown);
+                            }
+                            
+                            mostrarDropdownRecebedores(recebedorInput, dropdownId);
+                            configurarFecharDropdown(recebedorInput, dropdownId);
+                        }
+                    }
+                });
+                
+                document.addEventListener('input', function(e) {
+                    if (e.target.classList.contains('recebedor-input')) {
+                        const recebedorInput = e.target;
+                        
+                        if (recebedorInput.id.startsWith('routeRecebedor')) {
+                            const numeroID = recebedorInput.id.replace('routeRecebedor', '');
+                            const dropdownId = `recebedor-dropdown-${numeroID}`;
+                            const pixInput = document.getElementById(`routePix${numeroID}`);
+                            
+                            mostrarDropdownRecebedores(recebedorInput, dropdownId);
+                            if (pixInput) {
+                                preencherChavePixInput(recebedorInput, pixInput);
+                            }
+                        } else if (recebedorInput.id === 'campaignRecebedor') {
+                            mostrarDropdownRecebedores(recebedorInput, 'recebedor-dropdown-casual');
+                            const pixInput = document.getElementById('campaignPix');
+                            if (pixInput) {
+                                preencherChavePixInput(recebedorInput, pixInput);
+                            }
+                        }
+                    }
+                });
+                
+                document.addEventListener('change', function(e) {
+                    if (e.target.classList.contains('recebedor-input')) {
+                        const recebedorInput = e.target;
+                        
+                        if (recebedorInput.id.startsWith('routeRecebedor')) {
+                            const numeroID = recebedorInput.id.replace('routeRecebedor', '');
+                            const pixInput = document.getElementById(`routePix${numeroID}`);
+                            if (pixInput) {
+                                preencherChavePixInput(recebedorInput, pixInput);
+                            }
+                        } else if (recebedorInput.id === 'campaignRecebedor') {
+                            const pixInput = document.getElementById('campaignPix');
+                            if (pixInput) {
+                                preencherChavePixInput(recebedorInput, pixInput);
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // ============================================
+            // FUNCIONALIDADE DE CLIENTE/EMPRESA
+            // ============================================
+            
+            // Carregar lista de clientes/empresas ao carregar a página
+            function carregarClientesEmpresas() {
+                fetch('/solicitacoes/buscar-clientes-empresas/')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.clientes_empresas) {
+                            // Preencher todos os datalists de clientes
+                            document.querySelectorAll('.clientes-datalist').forEach(datalist => {
+                                datalist.innerHTML = '';
+                                data.clientes_empresas.forEach(cliente => {
+                                    const option = document.createElement('option');
+                                    option.value = cliente.nome;
+                                    option.setAttribute('data-cnpj', cliente.cnpj || '');
+                                    datalist.appendChild(option);
+                                });
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar clientes/empresas:', error);
+                    });
+            }
+            
+            // Função para preencher CNPJ automaticamente
+            function preencherCnpj(clienteInput, cnpjInput) {
+                const nomeCliente = clienteInput.value.trim();
+                
+                if (!nomeCliente) {
+                    cnpjInput.value = '';
+                    return;
+                }
+                
+                // Buscar cliente via AJAX
+                fetch(`/solicitacoes/buscar-clientes-empresas/?q=${encodeURIComponent(nomeCliente)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.clientes_empresas) {
+                            // Procurar cliente exato
+                            const cliente = data.clientes_empresas.find(c => 
+                                c.nome.toLowerCase() === nomeCliente.toLowerCase()
+                            );
+                            
+                            if (cliente) {
+                                cnpjInput.value = cliente.cnpj || '';
+                            } else {
+                                // Se não encontrar exato, tentar o primeiro resultado
+                                if (data.clientes_empresas.length > 0) {
+                                    cnpjInput.value = data.clientes_empresas[0].cnpj || '';
+                                } else {
+                                    cnpjInput.value = '';
+                                }
+                            }
+                        } else {
+                            cnpjInput.value = '';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar CNPJ:', error);
+                        cnpjInput.value = '';
+                    });
+            }
+            
+            // Adicionar event listeners para campos de cliente/empresa
+            function configurarClientesEmpresas() {
+                // Para campos estáticos (ID 1 e 2)
+                for (let i = 1; i <= 2; i++) {
+                    const clienteInput = document.getElementById(`routeClienteEmpresa${i}`);
+                    const cnpjInput = document.getElementById(`routeCnpj${i}`);
+                    
+                    if (clienteInput && cnpjInput) {
+                        clienteInput.addEventListener('input', function() {
+                            preencherCnpj(this, cnpjInput);
+                        });
+                        
+                        clienteInput.addEventListener('change', function() {
+                            preencherCnpj(this, cnpjInput);
+                        });
+                    }
+                }
+                
+                // Para formulário Casual
+                const campaignClienteEmpresa = document.getElementById('campaignClienteEmpresa');
+                const campaignCnpj = document.getElementById('campaignCnpj');
+                
+                if (campaignClienteEmpresa && campaignCnpj) {
+                    campaignClienteEmpresa.addEventListener('input', function() {
+                        preencherCnpj(this, campaignCnpj);
+                    });
+                    
+                    campaignClienteEmpresa.addEventListener('change', function() {
+                        preencherCnpj(this, campaignCnpj);
+                    });
+                }
+                
+                // Para campos dinâmicos (usar event delegation)
+                document.addEventListener('input', function(e) {
+                    if (e.target.classList.contains('cliente-empresa-input')) {
+                        const clienteInput = e.target;
+                        
+                        // Verificar se é campo de rota dinâmico
+                        if (clienteInput.id.startsWith('routeClienteEmpresa')) {
+                            const numeroID = clienteInput.id.replace('routeClienteEmpresa', '');
+                            const cnpjInput = document.getElementById(`routeCnpj${numeroID}`);
+                            
+                            if (cnpjInput) {
+                                preencherCnpj(clienteInput, cnpjInput);
+                            }
+                        }
+                        // Verificar se é campo Casual
+                        else if (clienteInput.id === 'campaignClienteEmpresa') {
+                            const cnpjInput = document.getElementById('campaignCnpj');
+                            if (cnpjInput) {
+                                preencherCnpj(clienteInput, cnpjInput);
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Carregar e configurar quando o DOM estiver pronto
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    configurarRecebedores();
+                    configurarClientesEmpresas();
+                });
+            } else {
+                configurarRecebedores();
+                configurarClientesEmpresas();
+            }
+            
+            // Atualizar função criarNovoRouteId para adicionar listeners aos novos campos
+            const criarNovoRouteIdOriginal = window.criarNovoRouteId;
+            if (criarNovoRouteIdOriginal) {
+                window.criarNovoRouteId = function(e) {
+                    const resultado = criarNovoRouteIdOriginal(e);
+                    
+                    // Após criar novo ID, configurar listener para input de recebedor
+                    setTimeout(function() {
+                        const novoNumero = window.routeIdCounter - 1;
+                        const recebedorInput = document.getElementById(`routeRecebedor${novoNumero}`);
+                        const pixInput = document.getElementById(`routePix${novoNumero}`);
+                        
+                        if (recebedorInput && pixInput) {
+                            // Adicionar listeners para preencher PIX quando digitar/selecionar recebedor
+                            recebedorInput.addEventListener('input', function() {
+                                preencherChavePixInput(this, pixInput);
+                            });
+                            
+                            recebedorInput.addEventListener('change', function() {
+                                preencherChavePixInput(this, pixInput);
+                            });
+                            
+                            recebedorInput.addEventListener('blur', function() {
+                                preencherChavePixInput(this, pixInput);
+                            });
+                        }
+                    }, 100);
+                    
+                    return resultado;
+                };
+            }
+            
+            // ============================================
+            // VALIDAÇÃO EM TEMPO REAL DE ID DUPLICADO
+            // ============================================
+            
+            let timeoutVerificacaoId = null;
+            
+            /**
+             * Verifica se um ID (ticket) já está cadastrado no sistema
+             * @param {string} ticket - O ID a verificar
+             * @param {HTMLElement} inputElement - O elemento input que contém o ID
+             * @param {string} solicitacaoId - ID da solicitação em edição (opcional)
+             */
+            async function verificarIdExistente(ticket, inputElement, solicitacaoId = null) {
+                if (!ticket || !ticket.trim()) {
+                    limparAvisoIdDuplicado(inputElement);
+                    return;
+                }
+                
+                try {
+                    let url = `/solicitacoes/verificar-id-existente/?ticket=${encodeURIComponent(ticket.trim())}`;
+                    if (solicitacaoId) {
+                        url += `&solicitacao_id=${encodeURIComponent(solicitacaoId)}`;
+                    }
+                    
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        credentials: 'same-origin'
+                    });
+                    
+                    const data = await response.json();
+                    console.log('📡 Resposta da verificação de ID:', data);
+                    
+                    if (data.existe) {
+                        console.log('⚠️ ID existe! Mostrando aviso...');
+                        mostrarAvisoIdDuplicado(inputElement, data.message, data.detalhes);
+                    } else {
+                        console.log('✅ ID não existe, limpando aviso...');
+                        limparAvisoIdDuplicado(inputElement);
+                    }
+                } catch (error) {
+                    console.error('Erro ao verificar ID:', error);
+                    // Em caso de erro, não bloqueamos o campo
+                    limparAvisoIdDuplicado(inputElement);
+                }
+            }
+            
+            /**
+             * Mostra um aviso visual de que o ID já está cadastrado
+             * @param {HTMLElement} inputElement - O elemento input
+             * @param {string} mensagem - Mensagem de aviso
+             * @param {object} detalhes - Detalhes adicionais (opcional)
+             */
+            function mostrarAvisoIdDuplicado(inputElement, mensagem, detalhes = null) {
+                console.log('🚨 MOSTRANDO AVISO DE ID DUPLICADO:', mensagem);
+                
+                // Remover avisos anteriores
+                limparAvisoIdDuplicado(inputElement);
+                
+                // Adicionar classe de erro ao input
+                inputElement.classList.add('id-duplicado');
+                inputElement.style.borderColor = '#dc3545';
+                inputElement.style.backgroundColor = '#fff5f5';
+                
+                // Encontrar o form-group do campo - tentar múltiplas formas
+                let formGroup = inputElement.closest('.form-group');
+                
+                if (!formGroup) {
+                    // Tentar pelo parent
+                    formGroup = inputElement.parentElement;
+                    let tentativas = 0;
+                    while (formGroup && !formGroup.classList.contains('form-group') && tentativas < 5) {
+                        formGroup = formGroup.parentElement;
+                        tentativas++;
+                    }
+                }
+                
+                if (!formGroup) {
+                    console.error('❌ Form-group não encontrado! Tentando criar container...');
+                    // Criar um wrapper se não existir
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'form-group';
+                    inputElement.parentNode.insertBefore(wrapper, inputElement.nextSibling);
+                    wrapper.appendChild(inputElement);
+                    formGroup = wrapper;
+                }
+                
+                if (formGroup) {
+                    console.log('✅ Form-group encontrado/criado:', formGroup);
+                    
+                    // Adicionar classe de erro
+                    formGroup.classList.add('error');
+                    
+                    // Remover mensagens anteriores
+                    const existingError = formGroup.querySelector('.error-message.id-duplicado-message');
+                    if (existingError) {
+                        existingError.remove();
+                    }
+                    
+                    // Criar DIV do aviso
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message id-duplicado-message';
+                    errorDiv.setAttribute('role', 'alert');
+                    
+                    // Montar mensagem
+                    let msgHTML = `<i class="fas fa-exclamation-circle"></i> <strong>ID Já Cadastrado:</strong> ${mensagem}`;
+                    if (detalhes && detalhes.tipo) {
+                        msgHTML += `<br><small style="margin-left: 24px; display: block; margin-top: 4px;">Tipo: ${detalhes.tipo}${detalhes.status ? ' | Status: ' + detalhes.status : ''}</small>`;
+                    }
+                    
+                    errorDiv.innerHTML = msgHTML;
+                    
+                    // ESTILO INLINE FORÇADO - VERMELHO BRILHANTE
+                    errorDiv.style.cssText = `
+                        color: white !important;
+                        font-size: 14px !important;
+                        font-weight: 500 !important;
+                        margin-top: 12px !important;
+                        margin-bottom: 12px !important;
+                        padding: 14px 18px !important;
+                        background-color: #dc3545 !important;
+                        border: 2px solid #dc3545 !important;
+                        border-radius: 8px !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        align-items: flex-start !important;
+                        gap: 4px !important;
+                        visibility: visible !important;
+                        opacity: 1 !important;
+                        position: relative !important;
+                        z-index: 9999 !important;
+                        width: 100% !important;
+                        max-width: 100% !important;
+                        box-sizing: border-box !important;
+                        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4) !important;
+                    `;
+                    
+                    // Garantir que ícone e texto tenham cor branca
+                    errorDiv.querySelectorAll('i, strong, small').forEach(el => {
+                        el.style.color = 'white !important';
+                    });
+                    
+                    // ADICIONAR DEPOIS DO INPUT OU DO FORM-HELP
+                    const formHelp = formGroup.querySelector('.form-help');
+                    if (formHelp && formHelp.nextSibling) {
+                        formGroup.insertBefore(errorDiv, formHelp.nextSibling);
+                    } else if (formHelp) {
+                        formGroup.appendChild(errorDiv);
+                    } else {
+                        // Adicionar após o input
+                        formGroup.appendChild(errorDiv);
+                    }
+                    
+                    console.log('✅✅✅ AVISO ADICIONADO AO DOM!');
+                    console.log('✅ Form-group filhos:', formGroup.children.length);
+                    
+                    // Forçar reflow para garantir renderização
+                    void errorDiv.offsetHeight;
+                    
+                    // Scroll para o campo
+                    setTimeout(() => {
+                        errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }, 300);
+                } else {
+                    console.error('❌ Não foi possível criar/encontrar form-group!');
+                }
+            }
+            
+            /**
+             * Remove o aviso visual de ID duplicado
+             * @param {HTMLElement} inputElement - O elemento input
+             */
+            function limparAvisoIdDuplicado(inputElement) {
+                if (inputElement) {
+                    inputElement.classList.remove('id-duplicado');
+                    
+                    const formGroup = inputElement.closest('.form-group');
+                    if (formGroup) {
+                        // Remover classe de erro
+                        const errorMessage = formGroup.querySelector('.error-message.id-duplicado-message');
+                        if (errorMessage) {
+                            errorMessage.remove();
+                        }
+                        
+                        // Só remover a classe 'error' se não houver outros erros
+                        const outrosErros = formGroup.querySelectorAll('.error-message:not(.id-duplicado-message)');
+                        if (outrosErros.length === 0) {
+                            formGroup.classList.remove('error');
+                        }
+                    }
+                }
+            }
+            
+            /**
+             * Configura validação em tempo real para um campo de ID
+             * @param {HTMLElement} inputElement - O elemento input do ID
+             */
+            window.configurarValidacaoId = function(inputElement) {
+                if (!inputElement) return;
+                
+                // Limpar timeout anterior se existir
+                inputElement.addEventListener('input', function(e) {
+                    const ticket = e.target.value.trim();
+                    
+                    // Limpar aviso quando o campo estiver vazio
+                    if (!ticket) {
+                        limparAvisoIdDuplicado(e.target);
+                        return;
+                    }
+                    
+                    // Debounce: aguardar 500ms após o usuário parar de digitar
+                    clearTimeout(timeoutVerificacaoId);
+                    timeoutVerificacaoId = setTimeout(() => {
+                        // Obter ID da solicitação em edição (se houver)
+                        const solicitacaoIdField = document.getElementById('solicitacaoId');
+                        const solicitacaoId = solicitacaoIdField && solicitacaoIdField.value ? solicitacaoIdField.value : null;
+                        
+                        verificarIdExistente(ticket, e.target, solicitacaoId);
+                    }, 500);
+                });
+                
+                // Também verificar ao perder o foco
+                inputElement.addEventListener('blur', function(e) {
+                    clearTimeout(timeoutVerificacaoId);
+                    const ticket = e.target.value.trim();
+                    if (ticket) {
+                        const solicitacaoIdField = document.getElementById('solicitacaoId');
+                        const solicitacaoId = solicitacaoIdField && solicitacaoIdField.value ? solicitacaoIdField.value : null;
+                        verificarIdExistente(ticket, e.target, solicitacaoId);
+                    }
+                });
+            }
+            
+            // Função para configurar validação de forma mais direta e confiável
+            function configurarValidacaoQuandoModalAbrir() {
+                console.log('🔍 Configurando validação de ID quando modal abrir...');
+                
+                // Aguardar um pouco para garantir que o modal esteja totalmente carregado
+                setTimeout(() => {
+                    // Configurar para campo Casual
+                    const campaignIdInput = document.getElementById('campaignId');
+                    if (campaignIdInput) {
+                        console.log('✅ Campo campaignId encontrado, configurando validação...');
+                        if (typeof window.configurarValidacaoId === 'function') {
+                            window.configurarValidacaoId(campaignIdInput);
+                            console.log('✅ Validação configurada para campaignId');
+                        } else {
+                            console.error('❌ Função configurarValidacaoId não está disponível!');
+                        }
+                    } else {
+                        console.warn('⚠️ Campo campaignId não encontrado ainda');
+                    }
+                    
+                    // Configurar para campos de rota
+                    const routeIdInputs = document.querySelectorAll('[id^="routeId"]');
+                    console.log(`✅ Encontrados ${routeIdInputs.length} campos de rota`);
+                    routeIdInputs.forEach(input => {
+                        if (typeof window.configurarValidacaoId === 'function') {
+                            window.configurarValidacaoId(input);
+                        }
+                    });
+                }, 500);
+            }
+            
+            // Configurar validação quando DOM carregar
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('✅ DOM carregado, configurando validação...');
+                    configurarValidacaoQuandoModalAbrir();
+                });
+            } else {
+                console.log('✅ DOM já carregado, configurando validação agora...');
+                configurarValidacaoQuandoModalAbrir();
+            }
+            
+            // Observar quando o modal for aberto
+            const modal = document.getElementById('createCampaignModal');
+            if (modal) {
+                const observerModal = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                            if (modal.classList.contains('show')) {
+                                console.log('✅ Modal aberto, configurando validação...');
+                                configurarValidacaoQuandoModalAbrir();
+                            }
+                        }
+                    });
+                });
+                
+                observerModal.observe(modal, {
+                    attributes: true,
+                    attributeFilter: ['class']
+                });
+            }
+            
+            // MutationObserver para campos dinâmicos
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1 && typeof window.configurarValidacaoId === 'function') {
+                            if (node.id && node.id.startsWith('routeId')) {
+                                console.log(`✅ Novo campo de ID encontrado: ${node.id}`);
+                                window.configurarValidacaoId(node);
+                            }
+                            const routeIdInputs = node.querySelectorAll && node.querySelectorAll('[id^="routeId"]');
+                            if (routeIdInputs && routeIdInputs.length > 0) {
+                                routeIdInputs.forEach(input => {
+                                    console.log(`✅ Campo de ID encontrado dentro do nó: ${input.id}`);
+                                    window.configurarValidacaoId(input);
+                                });
+                            }
+                        }
+                    });
+                });
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        });
+    </script>
+</div>
+
+
+                        window.removeEventListener('resize', dropdown._resizeListener, true);
+                        delete dropdown._resizeListener;
+                    }
+                    
+                    // Remover classe do form-group
+                    const formGroup = dropdown.closest('.route-recebedor-field');
+                    if (formGroup) {
+                        formGroup.classList.remove('has-active-dropdown');
+                    }
+                }
+            }
+            
+            // Função para fechar dropdown ao clicar fora
+            function configurarFecharDropdown(input, dropdownId) {
+                const handler = function(e) {
+                    const dropdown = document.getElementById(dropdownId);
+                    if (!dropdown) return;
+                    
+                    // Se clicou fora do input e do dropdown, fechar
+                    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                        fecharDropdownRecebedor(dropdownId);
+                        document.removeEventListener('click', handler);
+                    }
+                };
+                
+                // Adicionar listener temporário
+                setTimeout(() => {
+                    document.addEventListener('click', handler);
+                }, 100);
+            }
+            
+            // Função para preencher chave PIX automaticamente quando selecionar/digitar recebedor
+            function preencherChavePixInput(recebedorInput, pixInput) {
+                const nomeRecebedor = recebedorInput.value.trim();
+                
+                if (!nomeRecebedor) {
+                    pixInput.value = '';
+                    return;
+                }
+                
+                // Buscar recebedor na lista global primeiro
+                if (recebedoresGlobal && recebedoresGlobal.length > 0) {
+                    const recebedor = recebedoresGlobal.find(r => 
+                        r.nome && r.nome.toLowerCase() === nomeRecebedor.toLowerCase()
+                    );
+                    
+                    if (recebedor) {
+                        pixInput.value = recebedor.chave_pix || '';
+                        return;
+                    }
+                }
+                
+                // Se não encontrou, buscar via AJAX
+                fetch(`/solicitacoes/buscar-recebedores/?q=${encodeURIComponent(nomeRecebedor)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.recebedores && data.recebedores.length > 0) {
+                            const recebedor = data.recebedores.find(r => 
+                                r.nome.toLowerCase() === nomeRecebedor.toLowerCase()
+                            );
+                            
+                            if (recebedor) {
+                                pixInput.value = recebedor.chave_pix || '';
+                            } else if (data.recebedores.length > 0) {
+                                pixInput.value = data.recebedores[0].chave_pix || '';
+                            } else {
+                                pixInput.value = '';
+                            }
+                        } else {
+                            pixInput.value = '';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar chave PIX:', error);
+                        pixInput.value = '';
+                    });
+            }
+            
+            // Adicionar event listeners para campos de recebedor existentes
+            function configurarRecebedores() {
+                // Carregar recebedores primeiro
+                carregarRecebedores();
+                
+                // Para campos estáticos (ID 1 e 2)
+                for (let i = 1; i <= 2; i++) {
+                    const recebedorInput = document.getElementById(`routeRecebedor${i}`);
+                    const pixInput = document.getElementById(`routePix${i}`);
+                    const dropdownId = `recebedor-dropdown-${i}`;
+                    
+                    if (recebedorInput && pixInput) {
+                        // Ao clicar/focar, mostrar dropdown
+                        recebedorInput.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            console.log('🖱️ Clique no input de recebedor:', dropdownId);
+                            mostrarDropdownRecebedores(this, dropdownId);
+                            configurarFecharDropdown(this, dropdownId);
+                        });
+                        
+                        recebedorInput.addEventListener('focus', function() {
+                            console.log('👁️ Foco no input de recebedor:', dropdownId);
+                            mostrarDropdownRecebedores(this, dropdownId);
+                            configurarFecharDropdown(this, dropdownId);
+                        });
+                        
+                        // Ao digitar, filtrar e mostrar dropdown
+                        recebedorInput.addEventListener('input', function() {
+                            mostrarDropdownRecebedores(this, dropdownId);
+                            preencherChavePixInput(this, pixInput);
+                        });
+                        
+                        // Ao mudar o valor, preencher chave PIX
+                        recebedorInput.addEventListener('change', function() {
+                            preencherChavePixInput(this, pixInput);
+                        });
+                    }
+                }
+                
+                // Para formulário Casual
+                const campaignRecebedor = document.getElementById('campaignRecebedor');
+                const campaignPix = document.getElementById('campaignPix');
+                
+                if (campaignRecebedor && campaignPix) {
+                    // Ao clicar/focar, mostrar dropdown
+                    campaignRecebedor.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        mostrarDropdownRecebedores(this, 'recebedor-dropdown-casual');
+                        configurarFecharDropdown(this, 'recebedor-dropdown-casual');
+                    });
+                    
+                    campaignRecebedor.addEventListener('focus', function() {
+                        mostrarDropdownRecebedores(this, 'recebedor-dropdown-casual');
+                        configurarFecharDropdown(this, 'recebedor-dropdown-casual');
+                    });
+                    
+                    // Ao digitar, filtrar e mostrar dropdown
+                    campaignRecebedor.addEventListener('input', function() {
+                        mostrarDropdownRecebedores(this, 'recebedor-dropdown-casual');
+                        preencherChavePixInput(this, campaignPix);
+                    });
+                    
+                    // Ao mudar o valor, preencher chave PIX
+                    campaignRecebedor.addEventListener('change', function() {
+                        preencherChavePixInput(this, campaignPix);
+                    });
+                }
+                
+                // Para campos dinâmicos (usar event delegation)
+                document.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('recebedor-input')) {
+                        const recebedorInput = e.target;
+                        let dropdownId = '';
+                        
+                        if (recebedorInput.id.startsWith('routeRecebedor')) {
+                            const numeroID = recebedorInput.id.replace('routeRecebedor', '');
+                            dropdownId = `recebedor-dropdown-${numeroID}`;
+                            
+                            // Criar dropdown se não existir
+                            if (!document.getElementById(dropdownId)) {
+                                const wrapper = recebedorInput.closest('.recebedor-dropdown-wrapper') || recebedorInput.parentElement;
+                                const dropdown = document.createElement('div');
+                                dropdown.className = 'recebedor-dropdown';
+                                dropdown.id = dropdownId;
+                                dropdown.style.display = 'none';
+                                wrapper.appendChild(dropdown);
+                            }
+                            
+                            mostrarDropdownRecebedores(recebedorInput, dropdownId);
+                            configurarFecharDropdown(recebedorInput, dropdownId);
+                        }
+                    }
+                });
+                
+                document.addEventListener('input', function(e) {
+                    if (e.target.classList.contains('recebedor-input')) {
+                        const recebedorInput = e.target;
+                        
+                        if (recebedorInput.id.startsWith('routeRecebedor')) {
+                            const numeroID = recebedorInput.id.replace('routeRecebedor', '');
+                            const dropdownId = `recebedor-dropdown-${numeroID}`;
+                            const pixInput = document.getElementById(`routePix${numeroID}`);
+                            
+                            mostrarDropdownRecebedores(recebedorInput, dropdownId);
+                            if (pixInput) {
+                                preencherChavePixInput(recebedorInput, pixInput);
+                            }
+                        } else if (recebedorInput.id === 'campaignRecebedor') {
+                            mostrarDropdownRecebedores(recebedorInput, 'recebedor-dropdown-casual');
+                            const pixInput = document.getElementById('campaignPix');
+                            if (pixInput) {
+                                preencherChavePixInput(recebedorInput, pixInput);
+                            }
+                        }
+                    }
+                });
+                
+                document.addEventListener('change', function(e) {
+                    if (e.target.classList.contains('recebedor-input')) {
+                        const recebedorInput = e.target;
+                        
+                        if (recebedorInput.id.startsWith('routeRecebedor')) {
+                            const numeroID = recebedorInput.id.replace('routeRecebedor', '');
+                            const pixInput = document.getElementById(`routePix${numeroID}`);
+                            if (pixInput) {
+                                preencherChavePixInput(recebedorInput, pixInput);
+                            }
+                        } else if (recebedorInput.id === 'campaignRecebedor') {
+                            const pixInput = document.getElementById('campaignPix');
+                            if (pixInput) {
+                                preencherChavePixInput(recebedorInput, pixInput);
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // ============================================
+            // FUNCIONALIDADE DE CLIENTE/EMPRESA
+            // ============================================
+            
+            // Carregar lista de clientes/empresas ao carregar a página
+            function carregarClientesEmpresas() {
+                fetch('/solicitacoes/buscar-clientes-empresas/')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.clientes_empresas) {
+                            // Preencher todos os datalists de clientes
+                            document.querySelectorAll('.clientes-datalist').forEach(datalist => {
+                                datalist.innerHTML = '';
+                                data.clientes_empresas.forEach(cliente => {
+                                    const option = document.createElement('option');
+                                    option.value = cliente.nome;
+                                    option.setAttribute('data-cnpj', cliente.cnpj || '');
+                                    datalist.appendChild(option);
+                                });
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar clientes/empresas:', error);
+                    });
+            }
+            
+            // Função para preencher CNPJ automaticamente
+            function preencherCnpj(clienteInput, cnpjInput) {
+                const nomeCliente = clienteInput.value.trim();
+                
+                if (!nomeCliente) {
+                    cnpjInput.value = '';
+                    return;
+                }
+                
+                // Buscar cliente via AJAX
+                fetch(`/solicitacoes/buscar-clientes-empresas/?q=${encodeURIComponent(nomeCliente)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.clientes_empresas) {
+                            // Procurar cliente exato
+                            const cliente = data.clientes_empresas.find(c => 
+                                c.nome.toLowerCase() === nomeCliente.toLowerCase()
+                            );
+                            
+                            if (cliente) {
+                                cnpjInput.value = cliente.cnpj || '';
+                            } else {
+                                // Se não encontrar exato, tentar o primeiro resultado
+                                if (data.clientes_empresas.length > 0) {
+                                    cnpjInput.value = data.clientes_empresas[0].cnpj || '';
+                                } else {
+                                    cnpjInput.value = '';
+                                }
+                            }
+                        } else {
+                            cnpjInput.value = '';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar CNPJ:', error);
+                        cnpjInput.value = '';
+                    });
+            }
+            
+            // Adicionar event listeners para campos de cliente/empresa
+            function configurarClientesEmpresas() {
+                // Para campos estáticos (ID 1 e 2)
+                for (let i = 1; i <= 2; i++) {
+                    const clienteInput = document.getElementById(`routeClienteEmpresa${i}`);
+                    const cnpjInput = document.getElementById(`routeCnpj${i}`);
+                    
+                    if (clienteInput && cnpjInput) {
+                        clienteInput.addEventListener('input', function() {
+                            preencherCnpj(this, cnpjInput);
+                        });
+                        
+                        clienteInput.addEventListener('change', function() {
+                            preencherCnpj(this, cnpjInput);
+                        });
+                    }
+                }
+                
+                // Para formulário Casual
+                const campaignClienteEmpresa = document.getElementById('campaignClienteEmpresa');
+                const campaignCnpj = document.getElementById('campaignCnpj');
+                
+                if (campaignClienteEmpresa && campaignCnpj) {
+                    campaignClienteEmpresa.addEventListener('input', function() {
+                        preencherCnpj(this, campaignCnpj);
+                    });
+                    
+                    campaignClienteEmpresa.addEventListener('change', function() {
+                        preencherCnpj(this, campaignCnpj);
+                    });
+                }
+                
+                // Para campos dinâmicos (usar event delegation)
+                document.addEventListener('input', function(e) {
+                    if (e.target.classList.contains('cliente-empresa-input')) {
+                        const clienteInput = e.target;
+                        
+                        // Verificar se é campo de rota dinâmico
+                        if (clienteInput.id.startsWith('routeClienteEmpresa')) {
+                            const numeroID = clienteInput.id.replace('routeClienteEmpresa', '');
+                            const cnpjInput = document.getElementById(`routeCnpj${numeroID}`);
+                            
+                            if (cnpjInput) {
+                                preencherCnpj(clienteInput, cnpjInput);
+                            }
+                        }
+                        // Verificar se é campo Casual
+                        else if (clienteInput.id === 'campaignClienteEmpresa') {
+                            const cnpjInput = document.getElementById('campaignCnpj');
+                            if (cnpjInput) {
+                                preencherCnpj(clienteInput, cnpjInput);
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Carregar e configurar quando o DOM estiver pronto
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    configurarRecebedores();
+                    configurarClientesEmpresas();
+                });
+            } else {
+                configurarRecebedores();
+                configurarClientesEmpresas();
+            }
+            
+            // Atualizar função criarNovoRouteId para adicionar listeners aos novos campos
+            const criarNovoRouteIdOriginal = window.criarNovoRouteId;
+            if (criarNovoRouteIdOriginal) {
+                window.criarNovoRouteId = function(e) {
+                    const resultado = criarNovoRouteIdOriginal(e);
+                    
+                    // Após criar novo ID, configurar listener para input de recebedor
+                    setTimeout(function() {
+                        const novoNumero = window.routeIdCounter - 1;
+                        const recebedorInput = document.getElementById(`routeRecebedor${novoNumero}`);
+                        const pixInput = document.getElementById(`routePix${novoNumero}`);
+                        
+                        if (recebedorInput && pixInput) {
+                            // Adicionar listeners para preencher PIX quando digitar/selecionar recebedor
+                            recebedorInput.addEventListener('input', function() {
+                                preencherChavePixInput(this, pixInput);
+                            });
+                            
+                            recebedorInput.addEventListener('change', function() {
+                                preencherChavePixInput(this, pixInput);
+                            });
+                            
+                            recebedorInput.addEventListener('blur', function() {
+                                preencherChavePixInput(this, pixInput);
                             });
                         }
                     }, 100);

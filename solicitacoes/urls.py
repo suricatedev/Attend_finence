@@ -14,3 +14,5 @@ urlpatterns = [
     path("excluir-solicitacoes-recusadas/", views.excluir_solicitacoes_recusadas, name='excluir_solicitacoes_recusadas'),
     path("verificar-id-existente/", views.verificar_id_existente, name='verificar_id_existente'),
 ]
+
+
