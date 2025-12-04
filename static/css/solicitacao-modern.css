@@ -1486,19 +1486,51 @@ body:has(.route-recebedor-field.has-active-dropdown) .modal-body,
     flex-shrink: 0;
 }
 
+.recebedor-pix-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 24px;
+    line-height: 1.3;
+}
+
+.recebedor-icon-svg {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    color: #6b7280;
+}
+
 .recebedor-pix {
     font-size: 0.8125rem;
     color: #6b7280;
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-left: 24px;
-    line-height: 1.3;
 }
 
-.recebedor-pix i {
-    color: #9ca3af;
-    font-size: 0.75rem;
+/* Mensagem de erro para recebedor não encontrado */
+.recebedor-error-message {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.875rem;
+    color: #dc2626;
+    font-weight: 500;
+    padding: 8px 12px;
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    line-height: 1.5;
+}
+
+/* Input com erro */
+.recebedor-input-error {
+    border-color: #dc2626 !important;
+    background-color: #fef2f2 !important;
+}
+
+.recebedor-input-error:focus {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
 }
 
 /* Scrollbar do dropdown - discreto */

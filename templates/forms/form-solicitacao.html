@@ -1805,7 +1805,28 @@
             if (createCampaignForm) {
                 // Usar capture phase para executar ANTES do FormManager
                 createCampaignForm.addEventListener('submit', function(e) {
-                    console.log('🔍 Formulário sendo submetido - calculando valor Casual final (capture phase)');
+                    console.log('🔍 Formulário sendo submetido - validando recebedores e calculando valor Casual final (capture phase)');
+                    
+                    // VALIDAÇÃO: Verificar se todos os recebedores são válidos
+                    const validacaoRecebedores = validarTodosRecebedores();
+                    if (!validacaoRecebedores.todosValidos) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Rolagem até o primeiro recebedor inválido
+                        const primeiroRecebedorInvalido = document.querySelector('.recebedor-input-error');
+                        if (primeiroRecebedorInvalido) {
+                            primeiroRecebedorInvalido.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            primeiroRecebedorInvalido.focus();
+                        }
+                        
+                        alert('❌ Não é possível criar a solicitação!\n\n' +
+                              'Por favor, corrija os seguintes campos:\n' +
+                              validacaoRecebedores.recebedoresInvalidos.map(r => `• ${r}`).join('\n') +
+                              '\n\nTodos os recebedores devem estar cadastrados no sistema.');
+                        console.error('❌ Formulário bloqueado - há recebedores inválidos:', validacaoRecebedores.recebedoresInvalidos);
+                        return false;
+                    }
                     
                     // Garantir que o valor Casual seja calculado antes do submit
                     const formCasual = document.getElementById('formCasual');
@@ -2055,6 +2076,164 @@
                     });
             }
             
+            // Função para validar se o recebedor existe
+            function validarRecebedor(recebedorInput) {
+                const nomeRecebedor = recebedorInput.value.trim();
+                const formGroup = recebedorInput.closest('.route-recebedor-field');
+                
+                // Remover mensagem de erro anterior
+                const errorMsg = formGroup?.querySelector('.recebedor-error-message');
+                if (errorMsg) {
+                    errorMsg.remove();
+                }
+                
+                // Remover classe de erro do input
+                recebedorInput.classList.remove('recebedor-input-error');
+                
+                // Se o campo estiver vazio, não validar
+                if (!nomeRecebedor) {
+                    return true;
+                }
+                
+                // Verificar se recebedor existe na lista global
+                if (recebedoresGlobal && recebedoresGlobal.length > 0) {
+                    const recebedorExiste = recebedoresGlobal.some(r => 
+                        r && r.nome && r.nome.toLowerCase() === nomeRecebedor.toLowerCase()
+                    );
+                    
+                    if (!recebedorExiste) {
+                        // Criar e mostrar mensagem de erro
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'recebedor-error-message';
+                        errorDiv.textContent = '⚠️ Este recebedor não está cadastrado no sistema.';
+                        
+                        // Inserir após o form-help
+                        const formHelp = formGroup?.querySelector('.form-help');
+                        if (formHelp) {
+                            formHelp.insertAdjacentElement('afterend', errorDiv);
+                        } else {
+                            // Se não houver form-help, inserir após o wrapper
+                            const wrapper = recebedorInput.closest('.recebedor-dropdown-wrapper');
+                            if (wrapper) {
+                                wrapper.insertAdjacentElement('afterend', errorDiv);
+                            }
+                        }
+                        
+                        // Adicionar classe de erro ao input
+                        recebedorInput.classList.add('recebedor-input-error');
+                        
+                        return false;
+                    }
+                }
+                
+                return true;
+            }
+            
+            // Função para validar todos os recebedores do formulário
+            function validarTodosRecebedores() {
+                let todosValidos = true;
+                const recebedoresInvalidos = [];
+                
+                // Buscar todos os inputs de recebedor visíveis (apenas nos formulários ativos)
+                const formEmRota = document.getElementById('formEmRota');
+                const formCasual = document.getElementById('formCasual');
+                const routeEmRota = document.getElementById('routeEmRota');
+                const routeCasual = document.getElementById('routeCasual');
+                
+                let recebedorInputs = [];
+                
+                // Verificar qual formulário está ativo
+                if (routeEmRota && routeEmRota.checked && formEmRota && window.getComputedStyle(formEmRota).display !== 'none') {
+                    // Formulário "Em Rota" está ativo
+                    recebedorInputs = formEmRota.querySelectorAll('.recebedor-input');
+                } else if (routeCasual && routeCasual.checked && formCasual && window.getComputedStyle(formCasual).display !== 'none') {
+                    // Formulário "Casual" está ativo
+                    recebedorInputs = formCasual.querySelectorAll('.recebedor-input');
+                }
+                
+                recebedorInputs.forEach(recebedorInput => {
+                    const nomeRecebedor = recebedorInput.value.trim();
+                    
+                    // Pular campos vazios (serão validados pelo required HTML)
+                    if (!nomeRecebedor) {
+                        return;
+                    }
+                    
+                    // Verificar se recebedor existe na lista global (comparação case-insensitive)
+                    const recebedorExiste = recebedoresGlobal && recebedoresGlobal.length > 0 && 
+                        recebedoresGlobal.some(r => 
+                            r && r.nome && r.nome.trim().toLowerCase() === nomeRecebedor.toLowerCase()
+                        );
+                    
+                    // Se não encontrou na lista global e a lista está vazia, pode ser que ainda não foi carregada
+                    // Nesse caso, vamos considerar inválido para forçar o usuário a selecionar do dropdown
+                    if (!recebedorExiste && (!recebedoresGlobal || recebedoresGlobal.length === 0)) {
+                        // Tentar carregar recebedores antes de validar
+                        console.warn('⚠️ Lista de recebedores vazia - não foi possível validar');
+                    }
+                    
+                    if (!recebedorExiste) {
+                        todosValidos = false;
+                        
+                        // Criar ou atualizar mensagem de erro
+                        const formGroup = recebedorInput.closest('.route-recebedor-field');
+                        const label = formGroup?.querySelector('label')?.textContent?.trim() || 'Recebedor';
+                        recebedoresInvalidos.push(label);
+                        
+                        // Verificar se já existe mensagem de erro
+                        const errorMsg = formGroup?.querySelector('.recebedor-error-message');
+                        if (!errorMsg) {
+                            // Criar mensagem de erro
+                            const errorDiv = document.createElement('div');
+                            errorDiv.className = 'recebedor-error-message';
+                            errorDiv.textContent = '⚠️ Este recebedor não está cadastrado no sistema.';
+                            
+                            const formHelp = formGroup?.querySelector('.form-help');
+                            if (formHelp) {
+                                formHelp.insertAdjacentElement('afterend', errorDiv);
+                            } else {
+                                const wrapper = recebedorInput.closest('.recebedor-dropdown-wrapper');
+                                if (wrapper) {
+                                    wrapper.insertAdjacentElement('afterend', errorDiv);
+                                }
+                            }
+                        }
+                        
+                        // Adicionar classe de erro ao input
+                        recebedorInput.classList.add('recebedor-input-error');
+                    }
+                });
+                
+                return {
+                    todosValidos: todosValidos,
+                    recebedoresInvalidos: recebedoresInvalidos
+                };
+            }
+            
+            // Configurar event listeners globais para validação
+            document.addEventListener('blur', function(e) {
+                if (e.target.classList.contains('recebedor-input')) {
+                    const recebedorInput = e.target;
+                    // Aguardar um pouco para não interferir com o clique no dropdown
+                    setTimeout(() => {
+                        validarRecebedor(recebedorInput);
+                    }, 200);
+                }
+            }, true);
+            
+            // Remover mensagem de erro enquanto digita
+            document.addEventListener('input', function(e) {
+                if (e.target.classList.contains('recebedor-input')) {
+                    const recebedorInput = e.target;
+                    const formGroup = recebedorInput.closest('.route-recebedor-field');
+                    const errorMsg = formGroup?.querySelector('.recebedor-error-message');
+                    if (errorMsg) {
+                        errorMsg.remove();
+                        recebedorInput.classList.remove('recebedor-input-error');
+                    }
+                }
+            });
+            
             // Função para mostrar dropdown de recebedores
             function mostrarDropdownRecebedores(input, dropdownId) {
                 // VALIDAÇÃO: Garantir que o input passado é realmente um input de recebedor
@@ -2180,7 +2359,14 @@
                     item.innerHTML = `
                         <div class="recebedor-item-content">
                             <span class="recebedor-nome"><i class="fas fa-user"></i> ${recebedor.nome}</span>
-                            ${recebedor.chave_pix ? `<span class="recebedor-pix"><i class="fas fa-qrcode"></i> ${recebedor.chave_pix}</span>` : ''}
+                            ${recebedor.chave_pix ? `
+                                <div class="recebedor-pix-line">
+                                    <svg class="recebedor-icon-svg" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 50 50">
+                                        <path d="M 25 0.0390625 C 22.84 0.0390625 20.799531 0.88015625 19.269531 2.4101562 L 9.6796875 12 L 12.929688 12 C 14.529687 12 16.039922 12.619766 17.169922 13.759766 L 23.939453 20.529297 C 24.519453 21.109297 25.480547 21.109531 26.060547 20.519531 L 32.830078 13.759766 C 33.960078 12.619766 35.470312 12 37.070312 12 L 40.320312 12 L 30.730469 2.4101562 C 29.200469 0.88015625 27.16 0.0390625 25 0.0390625 z M 7.6796875 14 L 2.4101562 19.269531 C -0.74984375 22.429531 -0.74984375 27.570469 2.4101562 30.730469 L 7.6796875 36 L 12.929688 36 C 13.999687 36 14.999766 35.580078 15.759766 34.830078 L 22.529297 28.060547 C 23.889297 26.700547 26.110703 26.700547 27.470703 28.060547 L 34.240234 34.830078 C 35.000234 35.580078 36.000312 36 37.070312 36 L 42.320312 36 L 47.589844 30.730469 C 50.749844 27.570469 50.749844 22.429531 47.589844 19.269531 L 42.320312 14 L 37.070312 14 C 36.000313 14 35.000234 14.419922 34.240234 15.169922 L 27.470703 21.939453 C 26.790703 22.619453 25.9 22.960938 25 22.960938 C 24.1 22.960937 23.209297 22.619453 22.529297 21.939453 L 15.759766 15.169922 C 14.999766 14.419922 13.999688 14 12.929688 14 L 7.6796875 14 z M 25 29.037109 C 24.615 29.038359 24.229453 29.185469 23.939453 29.480469 L 17.169922 36.240234 C 16.039922 37.380234 14.529687 38 12.929688 38 L 9.6796875 38 L 19.269531 47.589844 C 20.799531 49.119844 22.84 49.960938 25 49.960938 C 27.16 49.960938 29.200469 49.119844 30.730469 47.589844 L 40.320312 38 L 37.070312 38 C 35.470313 38 33.960078 37.380234 32.830078 36.240234 L 26.060547 29.470703 C 25.770547 29.180703 25.385 29.035859 25 29.037109 z" fill="#6b7280"/>
+                                    </svg>
+                                    <span class="recebedor-pix">${recebedor.chave_pix}</span>
+                                </div>
+                            ` : ''}
                         </div>
                     `;
                     item.dataset.nome = recebedor.nome;
@@ -2192,6 +2378,14 @@
                         
                         // Preencher input com o nome selecionado
                         recebedorInput.value = recebedor.nome;
+                        
+                        // Remover mensagem de erro se existir
+                        const formGroup = recebedorInput.closest('.route-recebedor-field');
+                        const errorMsg = formGroup?.querySelector('.recebedor-error-message');
+                        if (errorMsg) {
+                            errorMsg.remove();
+                            recebedorInput.classList.remove('recebedor-input-error');
+                        }
                         
                         // Preencher chave PIX
                         const pixInput = recebedorInput.id.includes('routeRecebedor') 
@@ -3722,7 +3916,7 @@
                 const nomeRecebedor = recebedorInput.value.trim();
                 
                 if (!nomeRecebedor) {
-                    pixInput.value = '';
+                                    pixInput.value = '';
                     return;
                 }
                 
