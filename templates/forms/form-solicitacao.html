@@ -218,25 +218,6 @@
                         </button>
                     </div>
 
-                    <!-- Campo EM ROTA (ID Opcional) -->
-                    <div class="em-rota-container" style="margin-top: 2rem; padding: 1.5rem; background: #f8f9fa; border-radius: 12px; border-left: 4px solid #FF6B6B;">
-                        <h4 style="margin-bottom: 1rem; color: #FF6B6B;">
-                            <i class="fas fa-credit-card"></i> EM ROTA - Forma de Pagamento (Opcional)
-                        </h4>
-                        <div class="form-row">
-                            <div class="form-group" style="flex: 1;">
-                                <label for="routeValorEmRota">Valor EM ROTA</label>
-                                <input type="text" id="routeValorEmRota" name="route_valor_em_rota" class="valor-em-rota" placeholder="R$ 0,00">
-                                <small class="form-help">Valor para forma de pagamento EM ROTA</small>
-                        </div>
-                            </div>
-                        <div class="form-group" style="margin-top: 1rem;">
-                            <label for="routeDescricaoEmRota">Descrição do Pagamento</label>
-                            <textarea id="routeDescricaoEmRota" name="route_descricao_em_rota" rows="3" placeholder="Descreva detalhes do pagamento EM ROTA (opcional)" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; resize: vertical;"></textarea>
-                            <small class="form-help">Descrição opcional sobre este pagamento</small>
-                        </div>
-                    </div>
-                    
                     <!-- Valores Gerais para Em Rota -->
                     <div class="valores-gerais-rota" style="margin-top: 2rem;">
                         <h4><i class="fas fa-calculator"></i> Resumo Geral</h4>
@@ -1285,26 +1266,6 @@
             }
             
             // Formatação para Valor EM ROTA (Em Rota)
-            const routeValorEmRota = document.getElementById('routeValorEmRota');
-            if (routeValorEmRota) {
-                routeValorEmRota.addEventListener('input', function(e) {
-                    let value = e.target.value.replace(/\D/g, '');
-                    if (value) {
-                        value = value.replace(/^0+/, '');
-                        if (!value) value = '0';
-                        const numericValue = parseFloat(value) / 100;
-                        e.target.value = formatarValorMonetario(numericValue);
-                    } else {
-                        e.target.value = '';
-                    }
-                });
-                
-                routeValorEmRota.addEventListener('blur', function(e) {
-                    const valor = parseValorMonetario(e.target.value);
-                    e.target.value = formatarValorMonetario(valor);
-                });
-            }
-            
             // Formatação para Valor de Receita (Em Rota)
             const routeValorReceita = document.getElementById('routeValorReceita');
             if (routeValorReceita) {
@@ -1506,15 +1467,7 @@
                         if (prioridadeField) {
                             prioridadeField.value = dados.prioridade || 'baixa';
                         }
-                        const valorEmRotaField = document.getElementById('routeValorEmRota');
-                        if (valorEmRotaField) {
-                            valorEmRotaField.value = formatarValor(dados.valor_em_rota, dados.valor_em_rota_raw);
-                        }
                         const valorReceitaFieldElement = document.getElementById('routeValorReceita');
-                        const descricaoEmRotaField = document.getElementById('routeDescricaoEmRota');
-                        if (descricaoEmRotaField) {
-                            descricaoEmRotaField.value = dados.descricao_em_rota || '';
-                        }
                         
                         const valorTotalTodos = document.getElementById('routeValorTotalTodos');
                         if (valorTotalTodos) {
