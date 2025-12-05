@@ -4,9 +4,10 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
-from .models import Solicitacoes, SolicitacaoRotaItem, Recebedor, ClienteEmpresa
+from .models import Solicitacoes, SolicitacaoRotaItem, Recebedor, ClienteEmpresa, SolicitacaoTecnico
 from servicos.models import Servico
 from django.utils import timezone
+from datetime import time, datetime
 import json
 
 STATUS_VALIDOS = {choice[0] for choice in Solicitacoes._meta.get_field('status').choices}
@@ -294,6 +295,135 @@ def receber_dados(request):
             print(f"🔍 DEBUG EDIÇÃO - Modo edição ativado: {is_edit_mode}")
             success_message = 'Solicitação atualizada com sucesso!' if is_edit_mode else 'Solicitação criada com sucesso!'
             
+            # Verificar se é uma solicitação de técnico ANTES de processar outros tipos
+            tecnico_recebedor = request.POST.get('tecnico_recebedor', '').strip()
+            is_solicitacao_tecnico = bool(tecnico_recebedor)
+            
+            if is_solicitacao_tecnico:
+                # Processar solicitação de técnico
+                print(f"🔍 DEBUG: Processando solicitação de técnico")
+                
+                # Capturar dados do formulário de técnico
+                tecnico_id_solicitacao = request.POST.get('tecnico_solicitacao', '').strip()
+                tecnico_pix = request.POST.get('tecnico_pix', '').strip()
+                tecnico_servico_id = request.POST.get('tecnico_servico', '').strip()
+                tecnico_valor_pagamento_raw = request.POST.get('tecnico_valor_pagamento', '').strip()
+                tecnico_valor_extra_raw = request.POST.get('tecnico_valor_extra', '').strip()
+                tecnico_descricao = request.POST.get('tecnico_descricao', '').strip()
+                tecnico_data_realizacao_str = request.POST.get('tecnico_data_realizacao', '').strip()
+                tecnico_atividade_produtiva = request.POST.get('tecnico_atividade_produtiva', 'true').strip().lower() == 'true'
+                
+                # Validações
+                if not tecnico_recebedor:
+                    messages.error(request, 'O campo "Nome do Técnico" é obrigatório.')
+                    return redirect('/solicitacoes/home/')
+                
+                if not tecnico_id_solicitacao:
+                    messages.error(request, 'O campo "ID da Solicitação" é obrigatório.')
+                    return redirect('/solicitacoes/home/')
+                
+                if not tecnico_servico_id:
+                    messages.error(request, 'O campo "Tipo de Serviço" é obrigatório.')
+                    return redirect('/solicitacoes/home/')
+                
+                # Buscar recebedor
+                try:
+                    recebedor_obj = Recebedor.objects.get(nome=tecnico_recebedor)
+                except Recebedor.DoesNotExist:
+                    messages.error(request, f'Recebedor "{tecnico_recebedor}" não encontrado no sistema.')
+                    return redirect('/solicitacoes/home/')
+                
+                # Buscar serviço
+                try:
+                    servico_obj = Servico.objects.get(id=tecnico_servico_id, ativo=True)
+                except Servico.DoesNotExist:
+                    messages.error(request, 'Serviço selecionado não foi encontrado ou está inativo.')
+                    return redirect('/solicitacoes/home/')
+                
+                # Converter valores monetários
+                valor_pagamento_tecnico = limpar_valor_monetario(tecnico_valor_pagamento_raw)
+                valor_extra = limpar_valor_monetario(tecnico_valor_extra_raw) if tecnico_valor_extra_raw else 0.0
+                
+                if valor_pagamento_tecnico <= 0:
+                    messages.error(request, 'O valor a pagar para o técnico deve ser maior que zero.')
+                    return redirect('/solicitacoes/home/')
+                
+                # Validar e converter data de realização
+                data_realizacao_atividade = None
+                if tecnico_data_realizacao_str:
+                    try:
+                        data_realizacao_atividade = datetime.strptime(tecnico_data_realizacao_str, '%Y-%m-%d').date()
+                    except (ValueError, TypeError):
+                        messages.error(request, 'Data da realização da atividade inválida. Use o formato correto.')
+                        return redirect('/solicitacoes/home/')
+                else:
+                    messages.error(request, 'O campo "Data da Realização da Atividade" é obrigatório.')
+                    return redirect('/solicitacoes/home/')
+                
+                # Criar solicitação principal para aparecer no Kanban
+                status = normalizar_status(request.POST.get('status') or 'pendente')
+                agora = timezone.now()
+                data_aprovacao_inicial = None
+                if status in ['aprovado', 'concluido']:
+                    data_aprovacao_inicial = agora
+                
+                valor_total = valor_pagamento_tecnico + valor_extra
+                
+                try:
+                    with transaction.atomic():
+                        # Criar solicitação principal
+                        solicitacao_principal = Solicitacoes.objects.create(
+                            ticket=tecnico_id_solicitacao,
+                            status=status,
+                            titulo=f"Solicitação de Técnico - {tecnico_recebedor}",
+                            nome_solicitante=request.user,
+                            nome_do_recebedor=tecnico_recebedor,
+                            chave_pix=tecnico_pix or recebedor_obj.chave_pix,
+                            valor=valor_total,
+                            descricao=tecnico_descricao or f'Solicitação de técnico: {tecnico_recebedor}',
+                            data_de_pagamento=agora.date(),
+                            data_de_criacao=agora.date(),
+                            tempo_criacao=agora.time(),
+                            tempo_fila=timezone.now().time().replace(hour=0, minute=0, second=0, microsecond=0),
+                            data_entrada_status=agora,
+                            data_aprovacao=data_aprovacao_inicial,
+                            prioridade=request.POST.get('tecnico_priority', 'baixa'),
+                            servico=servico_obj,
+                            tipo='casual'  # Usar tipo casual para aparecer no Kanban
+                        )
+                        
+                        # Criar registro específico de técnico
+                        solicitacao_tecnico = SolicitacaoTecnico.objects.create(
+                            solicitacao=solicitacao_principal,
+                            recebedor=recebedor_obj,
+                            servico=servico_obj,
+                            valor_pagamento_tecnico=valor_pagamento_tecnico,
+                            valor_extra=valor_extra,
+                            descricao=tecnico_descricao,
+                            data_realizacao_atividade=data_realizacao_atividade,
+                            atividade_produtiva=tecnico_atividade_produtiva
+                        )
+                        
+                        print(f"✅ Solicitação de técnico criada com sucesso! ID Principal: {solicitacao_principal.id}, ID Técnico: {solicitacao_tecnico.id}")
+                        
+                        # Verificar se é requisição AJAX
+                        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                        if is_ajax:
+                            return JsonResponse({
+                                'success': True,
+                                'message': 'Solicitação de técnico criada com sucesso!'
+                            })
+                        
+                        messages.success(request, 'Solicitação de técnico criada com sucesso!')
+                        return redirect('/solicitacoes/home/')
+                        
+                except Exception as e:
+                    import traceback
+                    traceback.print_exc()
+                    print(f"❌ ERRO ao criar solicitação de técnico: {e}")
+                    messages.error(request, f'Erro ao criar solicitação de técnico: {str(e)}')
+                    return redirect('/solicitacoes/home/')
+            
             # Verificar tipo de solicitação
             tipo_raw = request.POST.get('route', 'Casual')
             tipo = tipo_raw.lower().strip()
@@ -402,7 +532,6 @@ def receber_dados(request):
                 return redirect('/solicitacoes/home/')
             
             # Converter string de data para objeto Date
-            from datetime import datetime
             try:
                 data_de_pagamento = datetime.strptime(data_de_pagamento_str, '%Y-%m-%d').date()
             except (ValueError, TypeError):
@@ -415,7 +544,6 @@ def receber_dados(request):
             tempo_criacao_auto = timezone.now().time()
             
             # ✅ Tempo na fila começa em 00:00:00 (será calculado dinamicamente no frontend)
-            from datetime import time
             tempo_fila_inicial = time(0, 0, 0)
             
             if tipo == 'em_rota':
@@ -929,7 +1057,8 @@ def receber_dados(request):
             try:
                 # Otimização: Buscar todas as solicitações de uma vez
                 # e usar select_related e prefetch_related para otimizar queries
-                todas_solicitacoes = Solicitacoes.objects.select_related('nome_solicitante', 'servico').prefetch_related('itens_rota__servico').all()
+                # Retornar todas as solicitações (o filtro será aplicado no frontend)
+                todas_solicitacoes = Solicitacoes.objects.select_related('nome_solicitante', 'servico').prefetch_related('itens_rota__servico', 'solicitacoes_tecnico').all()
                 
                 solicitacoes_por_status = {
                     'pendente': [],
@@ -1398,11 +1527,20 @@ def atualizar_status(request):
         solicitacao.status = status_db
         solicitacao.save()
         
+        # Buscar contadores atualizados do banco de dados
+        contadores = {
+            'pendente': Solicitacoes.objects.filter(status='pendente').count(),
+            'recusado': Solicitacoes.objects.filter(status='recusado').count(),
+            'aprovado': Solicitacoes.objects.filter(status='aprovado').count(),
+            'concluido': Solicitacoes.objects.filter(status='concluido').count(),
+        }
+        
         return JsonResponse({
             'success': True,
             'message': f'Status atualizado para {status_db}',
             'card_id': card_id,
-            'new_status': status_db
+            'new_status': status_db,
+            'counters': contadores
         })
     except Solicitacoes.DoesNotExist:
         return JsonResponse({
@@ -1958,3 +2096,4 @@ def verificar_id_existente(request):
             'existe': False,
             'message': f'Erro ao verificar ID: {str(e)}'
         }, status=500)
+SolicitacaoTecnico

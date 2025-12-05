@@ -17,6 +17,82 @@
     <script>
         window.MODAL_CONTROLLED_BY_BASE = true;
         window.USER_CAN_CHANGE_STATUS = {% if user|can_change_status %}true{% else %}false{% endif %};
+        
+        // Função para atualizar contadores após filtrar (disponível globalmente)
+        window.updateCardCountersAfterFilter = function() {
+            const columns = ['planning', 'test', 'launch', 'success'];
+            
+            columns.forEach(column => {
+                const columnElement = document.querySelector(`[data-column="${column}"]`);
+                if (columnElement) {
+                    const columnContent = columnElement.querySelector('.column-content');
+                    const counter = columnElement.querySelector('.card-count');
+                    
+                    if (columnContent && counter) {
+                        // Contar apenas cards visíveis (não ocultos pelo filtro)
+                        const visibleCards = Array.from(columnContent.querySelectorAll('.card')).filter(card => {
+                            return card.style.display !== 'none' && 
+                                   window.getComputedStyle(card).display !== 'none';
+                        });
+                        counter.textContent = visibleCards.length;
+                    }
+                }
+            });
+        };
+        
+        // Função global para aplicar filtro IMEDIATAMENTE
+        window.applyFilterFast = function() {
+            const filterType = localStorage.getItem('filterType') || 'tecnico';
+            const cards = document.querySelectorAll('.card');
+            
+            if (cards.length === 0) return;
+            
+            cards.forEach(card => {
+                const isTecnico = card.getAttribute('data-is-tecnico') === 'true';
+                
+                if (filterType === 'tecnico') {
+                    if (isTecnico) {
+                        card.style.display = '';
+                        card.style.opacity = '1';
+                        card.style.pointerEvents = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                } else if (filterType === 'deslocamento') {
+                    if (!isTecnico) {
+                        card.style.display = '';
+                        card.style.opacity = '1';
+                        card.style.pointerEvents = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+            
+            // Atualizar contadores após aplicar o filtro
+            window.updateCardCountersAfterFilter();
+        };
+        
+        // Aplicar quando DOM estiver pronto - MÚLTIPLAS VEZES para garantir velocidade
+        (function checkAndApply() {
+            function applyMultiple() {
+                window.applyFilterFast();
+                requestAnimationFrame(window.applyFilterFast);
+                setTimeout(window.applyFilterFast, 1);
+                setTimeout(window.applyFilterFast, 10);
+                setTimeout(window.applyFilterFast, 50);
+                setTimeout(window.applyFilterFast, 100);
+            }
+            
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                applyMultiple();
+            } else {
+                document.addEventListener('DOMContentLoaded', applyMultiple);
+            }
+            
+            // Também aplicar após um delay para garantir
+            setTimeout(applyMultiple, 200);
+        })();
     </script>
 {% endblock %}
 
@@ -205,7 +281,7 @@
                     </div>
                     <div class="column-content" data-column="planning">
                         {% for solicitacao in solicitacoes_pendentes %}
-            <div class="card card-status-pending" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}">
+            <div class="card card-status-pending" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -228,7 +304,7 @@
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
-                            <span class="info-value">R$ {{ solicitacao.get_valor_detalhados|floatformat:2 }}</span>
+                            <span class="info-value">R$ {{ solicitacao.valor|floatformat:2 }}</span>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
@@ -294,7 +370,7 @@
                     </div>
                     <div class="column-content" data-column="test">
             {% for solicitacao in solicitacoes_recusados %}
-            <div class="card card-status-rejected" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}">
+            <div class="card card-status-rejected" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -317,7 +393,7 @@
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
-                            <span class="info-value">R$ {{ solicitacao.get_valor_detalhados|floatformat:2 }}</span>
+                            <span class="info-value">R$ {{ solicitacao.valor|floatformat:2 }}</span>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
@@ -388,7 +464,7 @@
                     </div>
                     <div class="column-content" data-column="launch">
                         {% for solicitacao in solicitacoes_aprovado %}
-            <div class="card card-status-approved" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}">
+            <div class="card card-status-approved" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -411,7 +487,7 @@
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
-                            <span class="info-value">R$ {{ solicitacao.get_valor_detalhados|floatformat:2 }}</span>
+                            <span class="info-value">R$ {{ solicitacao.valor|floatformat:2 }}</span>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
@@ -477,7 +553,7 @@
                     </div>
                     <div class="column-content" data-column="success">
                         {% for solicitacao in solicitacoes_concluido %}
-            <div class="card card-status-completed" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}">
+            <div class="card card-status-completed" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -500,7 +576,7 @@
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
-                            <span class="info-value">R$ {{ solicitacao.get_valor_detalhados|floatformat:2 }}</span>
+                            <span class="info-value">R$ {{ solicitacao.valor|floatformat:2 }}</span>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
@@ -890,18 +966,53 @@
                 });
             });
             
-            // Filtrar por hoje por padrão ao carregar a página
+            // Filtrar por hoje por padrão ao carregar a página (mas não se o filtro de técnico estiver ativo)
             function initializeTodayFilter() {
+                // Verificar se o filtro de técnico está ativo
+                const filterType = localStorage.getItem('filterType') || 'tecnico';
+                if (filterType === 'tecnico') {
+                    // Se for técnico, mostrar todos os cards (não filtrar por data)
+                    const columns = ['planning', 'test', 'launch', 'success'];
+                    columns.forEach(column => {
+                        showAllCards(column);
+                    });
+                    return;
+                }
+                
+                // Para deslocamento, aplicar filtro de hoje normalmente
                 const columns = ['planning', 'test', 'launch', 'success'];
                 columns.forEach(column => {
                     filterByToday(column);
                 });
             }
             
-            // Aguardar um pouco para garantir que os cards estejam carregados
+            // Aplicar filtro de tipo PRIMEIRO, antes do filtro de data
             setTimeout(() => {
-                initializeTodayFilter();
-            }, 500);
+                const savedFilter = localStorage.getItem('filterType') || 'tecnico';
+                if (typeof filterCardsByType === 'function') {
+                    if (savedFilter === 'tecnico') {
+                        filterCardsByType('tecnico');
+                    } else if (savedFilter === 'deslocamento') {
+                        filterCardsByType('deslocamento');
+                    }
+                }
+                
+                // Depois aplicar o filtro de data (se necessário)
+                setTimeout(() => {
+                    initializeTodayFilter();
+                    
+                    // Reaplicar filtro de tipo após o filtro de data
+                    setTimeout(() => {
+                        if (typeof filterCardsByType === 'function') {
+                            if (savedFilter === 'tecnico') {
+                                filterCardsByType('tecnico');
+                            } else if (savedFilter === 'deslocamento') {
+                                filterCardsByType('deslocamento');
+                            }
+                        }
+                    }, 50);
+                }, 50);
+            }, 100);
             
             // Função para ocultar a data selecionada (substituída por showAll)
             function hideSelectedDate(column) {

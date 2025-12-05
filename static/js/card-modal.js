@@ -1555,14 +1555,44 @@ function moveCardToFila(cardId, targetFila) {
                 }
             }
             
-            // Atualizar contadores das colunas
-            updateColumnCounters();
+            // Atualizar contadores usando os valores do backend
+            if (data.counters) {
+                const statusMapping = {
+                    'pendente': 'planning',
+                    'recusado': 'test',
+                    'aprovado': 'launch',
+                    'concluido': 'success'
+                };
+                
+                Object.keys(data.counters).forEach(status => {
+                    const columnType = statusMapping[status];
+                    if (columnType) {
+                        const columnElement = document.querySelector(`[data-column="${columnType}"]`);
+                        if (columnElement) {
+                            const counter = columnElement.querySelector('.card-count');
+                            if (counter) {
+                                counter.textContent = data.counters[status];
+                            }
+                        }
+                    }
+                });
+            } else {
+                // Fallback: usar função updateColumnCounters se não houver dados do backend
+                if (typeof updateColumnCounters === 'function') {
+                    updateColumnCounters();
+                }
+            }
             
             // Fechar modal
             closeCardDetailModal();
             
             // Mostrar notificação de sucesso
             showNotification(`✅ Status atualizado para ${getFilaName(targetFila)}!`, 'success');
+            
+            // Recarregar a página para garantir que todos os dados sejam atualizados do banco
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
         } else {
             showNotification(`❌ Erro: ${data.message}`, 'error');
         }
@@ -2004,13 +2034,6 @@ function clearAllFilters() {
     });
 }
 
-        'test': 'Recusado',
-        'launch': 'Aprovado',
-        'success': 'Concluído'
-    };
-    return filas[filaValue] || filaValue;
-}
-
 // Função para atualizar contadores das colunas
 function updateColumnCounters() {
     const columns = document.querySelectorAll('.kanban-column');
@@ -2192,444 +2215,6 @@ function closeCardDetailModal() {
     }
 })();
 
-// Inicialização quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 card-modal.js: DOMContentLoaded disparado');
-    
-    calculateQueueTime();
-    
-    // Atualizar a cada minuto
-    setInterval(calculateQueueTime, 60000);
-    
-    // Inicializar expansão dos cards do Django
-    console.log('🚀 card-modal.js: Inicializando cards...');
-    initializeCardExpansion();
-    
-    // Re-inicializar após um delay para garantir que todos os scripts carregaram
-    setTimeout(() => {
-        console.log('🚀 card-modal.js: Re-inicializando cards após delay...');
-        initializeCardExpansion();
-    }, 1000);
-    
-    // Inicializar filtros das colunas
-    initializeColumnFilters();
-    
-    // Expor função globalmente para debug
-    window.initializeCardExpansion = initializeCardExpansion;
-    window.openCardDetailModal = openCardDetailModal;
-    console.log('✅ card-modal.js: Funções expostas globalmente');
-});
-
-// ========================================
-// SISTEMA DE FILTROS DAS COLUNAS
-// ========================================
-
-// Função para inicializar filtros das colunas
-function initializeColumnFilters() {
-    const filterInputs = document.querySelectorAll('.filter-input');
-    
-    filterInputs.forEach(input => {
-        const column = input.getAttribute('data-column');
-        const clearBtn = input.parentElement.querySelector('.filter-clear-btn');
-        
-        // Event listener para digitação
-        input.addEventListener('input', function() {
-            const searchTerm = this.value.trim();
-            filterCardsInColumn(column, searchTerm);
-            updateClearButton(clearBtn, searchTerm);
-        });
-        
-        // Event listener para botão limpar
-        clearBtn.addEventListener('click', function() {
-            input.value = '';
-            filterCardsInColumn(column, '');
-            updateClearButton(clearBtn, '');
-            input.focus();
-        });
-        
-        // Event listener para Enter
-        input.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                this.value = '';
-                filterCardsInColumn(column, '');
-                updateClearButton(clearBtn, '');
-            }
-        });
-    });
-}
-
-// Função para normalizar texto removendo acentos
-function normalizeText(text) {
-    if (!text) return '';
-    
-    // Converter para string se não for
-    text = String(text);
-    
-    // Usar método mais robusto com String.normalize() - remove todos os acentos Unicode
-    try {
-        return text
-            .normalize('NFD')  // Decompõe caracteres acentuados (ex: é -> e + ́)
-            .replace(/[\u0300-\u036f]/g, '')  // Remove todos os diacríticos (acentos)
-            .toLowerCase();  // Converte para minúsculo
-    } catch (e) {
-        // Fallback se normalize não estiver disponível
-        const accents = 'ÀÁÂÃÄÅàáâãäåÈÉÊËèéêëÌÍÎÏìíîïÒÓÔÕÖòóôõöÙÚÛÜùúûüÇçÑñÝý';
-        const noAccents = 'AAAAAAaaaaaaEEEEeeeeIIIIiiiiOOOOOOooooooUUUUuuuuCcNnYy';
-        
-        return text.split('').map(char => {
-            const index = accents.indexOf(char);
-            return index !== -1 ? noAccents[index] : char;
-        }).join('').toLowerCase();
-    }
-}
-
-// Função para filtrar cards em uma coluna específica
-function filterCardsInColumn(column, searchTerm) {
-    const columnContent = document.querySelector(`[data-column="${column}"].column-content`);
-    if (!columnContent) return;
-    
-    const cards = columnContent.querySelectorAll('.card');
-    let visibleCount = 0;
-    
-    // Normalizar o termo de busca (remover acentos e converter para minúsculo)
-    // normalizeText já faz toLowerCase, então não precisa fazer duas vezes
-    const normalizedSearchTerm = normalizeText(searchTerm.trim());
-    
-    cards.forEach(card => {
-        const cardText = getCardSearchableText(card);
-        // Normalizar o texto do card também (remover acentos e converter para minúsculo)
-        const normalizedCardText = normalizeText(cardText);
-        
-        // Debug apenas para o primeiro card quando há busca (remover depois)
-        if (normalizedSearchTerm && normalizedSearchTerm.length > 0 && visibleCount === 0 && cards.length > 0) {
-            console.log('🔍 Buscando termo original:', searchTerm);
-            console.log('🔍 Termo normalizado:', normalizedSearchTerm);
-            console.log('📄 Texto original do card:', cardText);
-            console.log('📄 Texto normalizado do card:', normalizedCardText);
-            console.log('📋 Solicitante capturado:', getCardSearchableText(card).split(' ').find(w => w.toLowerCase().includes('gean')));
-            console.log('✅ Match encontrado?', normalizedCardText.includes(normalizedSearchTerm));
-        }
-        
-        const isMatch = normalizedSearchTerm === '' || normalizedCardText.includes(normalizedSearchTerm);
-        
-        if (isMatch) {
-            card.style.display = '';
-            card.style.visibility = 'visible';
-            card.style.opacity = '1';
-            card.classList.remove('filtered-out');
-            card.classList.add('filtered-in');
-            visibleCount++;
-        } else {
-            card.style.display = 'none';
-            card.style.visibility = 'hidden';
-            card.classList.remove('filtered-in');
-            card.classList.add('filtered-out');
-        }
-    });
-    
-    // Atualizar contador da coluna
-    updateColumnCounter(column, visibleCount);
-}
-
-// Função para extrair texto pesquisável do card
-function getCardSearchableText(card) {
-    const title = card.querySelector('.card-title')?.textContent || '';
-    
-    // Buscar todos os valores de info-value
-    const allInfoValues = card.querySelectorAll('.info-value');
-    const id = allInfoValues[0]?.textContent || '';
-    
-    // Buscar solicitante e recebedor de forma mais robusta
-    const infoItems = card.querySelectorAll('.info-item');
-    let solicitante = '';
-    let recebedor = '';
-    let valor = '';
-    
-    infoItems.forEach(item => {
-        const labelElement = item.querySelector('.info-label');
-        const valueElement = item.querySelector('.info-value');
-        
-        if (labelElement && valueElement) {
-            const label = labelElement.textContent.trim().toUpperCase();
-            const value = valueElement.textContent.trim();
-            
-            if (label.includes('SOLICITANTE')) {
-                solicitante = value;
-            } else if (label.includes('RECEBEDOR')) {
-                recebedor = value;
-            } else if (label.includes('VALOR')) {
-                valor = value;
-            }
-        }
-    });
-    
-    // Fallback: tentar pelos índices se não encontrou pelo label
-    if (!solicitante && allInfoValues.length > 1) {
-        solicitante = allInfoValues[1]?.textContent || '';
-    }
-    if (!recebedor && allInfoValues.length > 2) {
-        recebedor = allInfoValues[2]?.textContent || '';
-    }
-    if (!valor && allInfoValues.length > 3) {
-        valor = allInfoValues[3]?.textContent || '';
-    }
-    
-    const prioridade = card.querySelector('.priority')?.textContent || '';
-    const status = card.querySelector('.card-stage')?.textContent || '';
-    
-    // Combinar todos os textos pesquisáveis
-    const searchableText = `${title} ${id} ${solicitante} ${recebedor} ${valor} ${prioridade} ${status}`.trim();
-    
-    return searchableText;
-}
-
-// Função para atualizar botão limpar
-function updateClearButton(clearBtn, searchTerm) {
-    if (searchTerm.length > 0) {
-        clearBtn.classList.add('show');
-    } else {
-        clearBtn.classList.remove('show');
-    }
-}
-
-// Função para atualizar contador da coluna
-function updateColumnCounter(column, visibleCount) {
-    const columnElement = document.querySelector(`[data-column="${column}"].kanban-column`);
-    if (!columnElement) return;
-    
-    const counter = columnElement.querySelector('.card-count');
-    if (counter) {
-        counter.textContent = visibleCount;
-    }
-}
-
-// Função para limpar todos os filtros
-function clearAllFilters() {
-    const filterInputs = document.querySelectorAll('.filter-input');
-    filterInputs.forEach(input => {
-        input.value = '';
-        const column = input.getAttribute('data-column');
-        const clearBtn = input.parentElement.querySelector('.filter-clear-btn');
-        filterCardsInColumn(column, '');
-        updateClearButton(clearBtn, '');
-    });
-}
-
-        'test': 'Recusado',
-        'launch': 'Aprovado',
-        'success': 'Concluído'
-    };
-    return filas[filaValue] || filaValue;
-}
-
-// Função para atualizar contadores das colunas
-function updateColumnCounters() {
-    const columns = document.querySelectorAll('.kanban-column');
-    columns.forEach(column => {
-        const content = column.querySelector('.column-content');
-        const counter = column.querySelector('.card-count');
-        if (content && counter) {
-            // Contar apenas elementos com classe 'card', ignorando 'empty-column' e outros
-            const cards = content.querySelectorAll('.card:not(.empty-column)');
-            const cardCount = cards.length;
-            counter.textContent = cardCount;
-            
-            // Mostrar/ocultar mensagem de coluna vazia
-            const emptyMessage = content.querySelector('.empty-column');
-            if (cardCount === 0 && !emptyMessage) {
-                // Adicionar mensagem se não tiver cards
-                const empty = document.createElement('div');
-                empty.className = 'empty-column';
-                empty.innerHTML = `
-                    <i class="fas fa-inbox"></i>
-                    <p>Nenhuma solicitação</p>
-                `;
-                content.appendChild(empty);
-            } else if (cardCount > 0 && emptyMessage) {
-                // Remover mensagem se tiver cards
-                emptyMessage.remove();
-            }
-        }
-    });
-}
-
-// Função para mostrar notificação
-function showNotification(message, type = 'info') {
-    // Criar elemento de notificação
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
-        <span>${message}</span>
-    `;
-    
-    // Adicionar ao body
-    document.body.appendChild(notification);
-    
-    // Mostrar notificação
-    setTimeout(() => notification.classList.add('show'), 100);
-    
-    // Remover após 3 segundos
-    setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
-
-async function iniciarEdicaoSolicitacao(solicitacaoId) {
-    console.log('🟡 Iniciando edição da solicitação', solicitacaoId);
-    try {
-        const response = await fetch(`/solicitacoes/obter-detalhes-completos/${solicitacaoId}/`);
-        if (!response.ok) {
-            throw new Error(`Erro ${response.status}`);
-        }
-        const resultado = await response.json();
-        if (!resultado.success || !resultado.dados) {
-            showNotification(resultado.message || 'Erro ao carregar dados da solicitação.', 'error');
-            return;
-        }
-        
-        if (typeof window.preencherFormularioEdicao === 'function') {
-            window.preencherFormularioEdicao(resultado.dados);
-        } else {
-            console.error('⚠️ Função window.preencherFormularioEdicao não encontrada.');
-            showNotification('Não foi possível preparar o formulário de edição.', 'error');
-            return;
-        }
-        
-        closeCardDetailModal();
-        abrirModalEdicaoSolicitacao();
-    } catch (error) {
-        console.error('❌ Erro ao iniciar edição da solicitação:', error);
-        showNotification('Erro ao carregar dados para edição.', 'error');
-    }
-}
-
-function abrirModalEdicaoSolicitacao() {
-    const modalCriacao = document.getElementById('createCampaignModal');
-    if (modalCriacao) {
-        modalCriacao.style.display = 'flex';
-        modalCriacao.classList.add('show');
-        document.body.style.overflow = 'hidden';
-        
-        const primeiroCampo = modalCriacao.querySelector('input[required]:not([disabled])');
-        if (primeiroCampo) {
-            setTimeout(() => primeiroCampo.focus(), 100);
-        }
-    } else {
-        console.error('⚠️ Modal de criação não encontrado ao tentar abrir para edição.');
-    }
-}
-
-// Função para fechar modal de detalhes
-function closeCardDetailModal() {
-    console.log('🔴 Fechando modal de detalhes do card...');
-    const modal = document.getElementById('cardDetailModal');
-    if (modal) {
-        modal.classList.remove('show');
-        modal.style.display = 'none';
-        document.body.style.overflow = '';
-        console.log('✅ Modal fechado com sucesso');
-    } else {
-        console.error('❌ Modal não encontrado ao tentar fechar');
-    }
-}
-
-// Função para BLOQUEAR fechamento ao clicar fora - executar imediatamente
-(function() {
-    'use strict';
-    // Aguardar DOM estar pronto
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', blockModalClose);
-    } else {
-        blockModalClose();
-    }
-    
-    function blockModalClose() {
-        const modal = document.getElementById('cardDetailModal');
-        if (!modal) {
-            // Tentar novamente após um delay se o modal ainda não existir
-            setTimeout(blockModalClose, 100);
-            return;
-        }
-        
-        // Observar quando o modal é exibido e bloquear fechamento
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                    if (modal.classList.contains('show')) {
-                        // Modal foi aberto, bloquear fechamento
-                        setTimeout(function() {
-                            const overlay = modal.querySelector('.modal-overlay');
-                            if (overlay) {
-                                // Remover todos os listeners
-                                const newOverlay = overlay.cloneNode(true);
-                                overlay.parentNode.replaceChild(newOverlay, overlay);
-                                
-                                // Bloquear completamente
-                                newOverlay.addEventListener('click', function(e) {
-                                    e.stopPropagation();
-                                    e.stopImmediatePropagation();
-                                    e.preventDefault();
-                                    console.log('🚫🚫🚫 BLOQUEIO ATIVO: Overlay clicado - FECHAMENTO IMPEDIDO');
-                                    return false;
-                                }, true);
-                            }
-                            
-                            // Bloquear cliques no modal
-                            modal.addEventListener('click', function(e) {
-                                const modalContent = modal.querySelector('.modal-content');
-                                if (modalContent && !modalContent.contains(e.target)) {
-                                    e.stopPropagation();
-                                    e.stopImmediatePropagation();
-                                    e.preventDefault();
-                                    console.log('🚫🚫🚫 BLOQUEIO ATIVO: Clique no modal (fora do conteúdo) - FECHAMENTO IMPEDIDO');
-                                    return false;
-                                }
-                            }, true);
-                        }, 50);
-                    }
-                }
-            });
-        });
-        
-        // Observar mudanças no atributo class do modal
-        observer.observe(modal, {
-            attributes: true,
-            attributeFilter: ['class']
-        });
-        
-        console.log('🛡️ Sistema de bloqueio de fechamento do modal ativado');
-    }
-})();
-
-// Inicialização quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 card-modal.js: DOMContentLoaded disparado');
-    
-    calculateQueueTime();
-    
-    // Atualizar a cada minuto
-    setInterval(calculateQueueTime, 60000);
-    
-    // Inicializar expansão dos cards do Django
-    console.log('🚀 card-modal.js: Inicializando cards...');
-    initializeCardExpansion();
-    
-    // Re-inicializar após um delay para garantir que todos os scripts carregaram
-    setTimeout(() => {
-        console.log('🚀 card-modal.js: Re-inicializando cards após delay...');
-        initializeCardExpansion();
-    }, 1000);
-    
-    // Inicializar filtros das colunas
-    initializeColumnFilters();
-    
-    // Expor função globalmente para debug
-    window.initializeCardExpansion = initializeCardExpansion;
-    window.openCardDetailModal = openCardDetailModal;
-    console.log('✅ card-modal.js: Funções expostas globalmente');
-});
 
 // ========================================
 // SISTEMA DE FILTROS DAS COLUNAS

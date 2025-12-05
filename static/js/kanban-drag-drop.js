@@ -133,15 +133,38 @@
                     }
                 }
                 
-                // Atualizar contadores
-                document.querySelectorAll('.kanban-column').forEach(column => {
-                    const columnContent = column.querySelector('.column-content');
-                    const counter = column.querySelector('.card-count');
-                    if (columnContent && counter) {
-                        const cards = columnContent.querySelectorAll('.card:not(.empty-column)');
-                        counter.textContent = cards.length;
-                    }
-                });
+                // Atualizar contadores usando os valores do backend
+                if (data.counters) {
+                    const statusMapping = {
+                        'pendente': 'planning',
+                        'recusado': 'test',
+                        'aprovado': 'launch',
+                        'concluido': 'success'
+                    };
+                    
+                    Object.keys(data.counters).forEach(status => {
+                        const columnType = statusMapping[status];
+                        if (columnType) {
+                            const columnElement = document.querySelector(`[data-column="${columnType}"]`);
+                            if (columnElement) {
+                                const counter = columnElement.querySelector('.card-count');
+                                if (counter) {
+                                    counter.textContent = data.counters[status];
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    // Fallback: atualizar contadores manualmente se não houver dados do backend
+                    document.querySelectorAll('.kanban-column').forEach(column => {
+                        const columnContent = column.querySelector('.column-content');
+                        const counter = column.querySelector('.card-count');
+                        if (columnContent && counter) {
+                            const cards = columnContent.querySelectorAll('.card:not(.empty-column)');
+                            counter.textContent = cards.length;
+                        }
+                    });
+                }
                 
                 // Recalcular tempo
                 if (typeof calculateQueueTime === 'function') {
@@ -159,6 +182,11 @@
                 if (typeof Utils !== 'undefined' && typeof Utils.showNotification === 'function') {
                     Utils.showNotification(`✅ Solicitação movida para "${columnNames[newColumn]}" com sucesso!`, 'success');
                 }
+                
+                // Recarregar a página para garantir que todos os dados sejam atualizados do banco
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
                 
                 console.log('✅ Card movido com sucesso');
             } else {

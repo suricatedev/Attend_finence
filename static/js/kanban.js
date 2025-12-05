@@ -471,19 +471,41 @@ class KanbanManager {
                     }
                 }
                 
-                // Atualizar contadores
-                if (typeof updateColumnCounters === 'function') {
-                    updateColumnCounters();
-                } else {
-                    // Atualizar contadores manualmente
-                    document.querySelectorAll('.kanban-column').forEach(column => {
-                        const columnContent = column.querySelector('.column-content');
-                        const counter = column.querySelector('.card-count');
-                        if (columnContent && counter) {
-                            const cards = columnContent.querySelectorAll('.card:not(.empty-column)');
-                            counter.textContent = cards.length;
+                // Atualizar contadores usando os valores do backend
+                if (data.counters) {
+                    const statusMapping = {
+                        'pendente': 'planning',
+                        'recusado': 'test',
+                        'aprovado': 'launch',
+                        'concluido': 'success'
+                    };
+                    
+                    Object.keys(data.counters).forEach(status => {
+                        const columnType = statusMapping[status];
+                        if (columnType) {
+                            const columnElement = document.querySelector(`[data-column="${columnType}"]`);
+                            if (columnElement) {
+                                const counter = columnElement.querySelector('.card-count');
+                                if (counter) {
+                                    counter.textContent = data.counters[status];
+                                }
+                            }
                         }
                     });
+                } else {
+                    // Fallback: atualizar contadores manualmente se não houver dados do backend
+                    if (typeof updateColumnCounters === 'function') {
+                        updateColumnCounters();
+                    } else {
+                        document.querySelectorAll('.kanban-column').forEach(column => {
+                            const columnContent = column.querySelector('.column-content');
+                            const counter = column.querySelector('.card-count');
+                            if (columnContent && counter) {
+                                const cards = columnContent.querySelectorAll('.card:not(.empty-column)');
+                                counter.textContent = cards.length;
+                            }
+                        });
+                    }
                 }
                 
                 // Recalcular o tempo
@@ -508,268 +530,11 @@ class KanbanManager {
                 };
                 
                 Utils.showNotification(`✅ Solicitação movida para "${columnNames[newColumn]}" com sucesso!`, 'success');
-            } else {
-                // Erro
-                console.error('❌ Erro do backend:', data.message);
-                Utils.showNotification(`❌ Erro: ${data.message || 'Erro ao mover solicitação'}`, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('❌ Erro ao atualizar status:', error);
-            Utils.showNotification('❌ Erro ao salvar. Tente novamente.', 'error');
-        });
-    }
-    
-    getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    getStatusByColumn(column) {
-        const columnMap = {
-            'planning': 'pendente',
-            'test': 'recusado',
-            'launch': 'aprovado',
-            'success': 'concluido'
-        };
-        return columnMap[column] || 'pendente';
-    }
-
-    addCardToColumn(column) {
-        // Implementar adição rápida de card
-        console.log('Adicionar card à coluna:', column);
-        Utils.showNotification('Funcionalidade de adição rápida em desenvolvimento', 'info');
-    }
-
-    showColumnMenu(button) {
-        // Implementar menu da coluna
-        console.log('Mostrar menu da coluna');
-        Utils.showNotification('Menu da coluna em desenvolvimento', 'info');
-    }
-
-    updateCardCounts() {
-        const counts = {
-            planning: 0,
-            test: 0,
-            launch: 0,
-            success: 0
-        };
-
-        this.cards.forEach(card => {
-            const column = this.getColumnByStatus(card.status);
-            if (column) {
-                const columnType = column.closest('.kanban-column').dataset.column;
-                counts[columnType]++;
-            }
-        });
-
-        // Atualizar contadores na interface
-        Object.keys(counts).forEach(columnType => {
-            const countElement = document.querySelector(`[data-column="${columnType}"] .card-count`);
-            if (countElement) {
-                countElement.textContent = counts[columnType];
-            }
-        });
-    }
-
-    saveCards() {
-        localStorage.setItem('kanbanCards', JSON.stringify(this.cards));
-    }
-
-    // Métodos utilitários
-    getCardById(id) {
-        return this.cards.find(card => card.id == id);
-    }
-
-    deleteCard(id) {
-        this.cards = this.cards.filter(card => card.id != id);
-        this.renderCards();
-        this.saveCards();
-        Utils.showNotification('Card excluído com sucesso!', 'success');
-    }
-
-    updateCard(id, updates) {
-        const card = this.getCardById(id);
-        if (card) {
-            Object.assign(card, updates);
-            card.updatedAt = new Date();
-            this.renderCards();
-            this.saveCards();
-            Utils.showNotification('Card atualizado com sucesso!', 'success');
-        }
-    }
-}
-
-// Inicializar quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', function() {
-    window.kanbanManager = new KanbanManager();
-});
-
-                }
                 
-                // Recalcular o tempo
-                if (typeof calculateQueueTime === 'function') {
-                    calculateQueueTime();
-                }
-                
-                // Atualizar no array this.cards se existir
-                const card = this.cards.find(c => c.id == cardId);
-                if (card) {
-                    card.status = newStatus;
-                    card.updatedAt = new Date();
-                    this.saveCards();
-                }
-                
-                // Notificação de sucesso
-                const columnNames = {
-                    'planning': 'Pendente',
-                    'test': 'Recusado',
-                    'launch': 'Aprovado',
-                    'success': 'Concluído'
-                };
-                
-                Utils.showNotification(`✅ Solicitação movida para "${columnNames[newColumn]}" com sucesso!`, 'success');
-            } else {
-                // Erro
-                console.error('❌ Erro do backend:', data.message);
-                Utils.showNotification(`❌ Erro: ${data.message || 'Erro ao mover solicitação'}`, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('❌ Erro ao atualizar status:', error);
-            Utils.showNotification('❌ Erro ao salvar. Tente novamente.', 'error');
-        });
-    }
-    
-    getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    getStatusByColumn(column) {
-        const columnMap = {
-            'planning': 'pendente',
-            'test': 'recusado',
-            'launch': 'aprovado',
-            'success': 'concluido'
-        };
-        return columnMap[column] || 'pendente';
-    }
-
-    addCardToColumn(column) {
-        // Implementar adição rápida de card
-        console.log('Adicionar card à coluna:', column);
-        Utils.showNotification('Funcionalidade de adição rápida em desenvolvimento', 'info');
-    }
-
-    showColumnMenu(button) {
-        // Implementar menu da coluna
-        console.log('Mostrar menu da coluna');
-        Utils.showNotification('Menu da coluna em desenvolvimento', 'info');
-    }
-
-    updateCardCounts() {
-        const counts = {
-            planning: 0,
-            test: 0,
-            launch: 0,
-            success: 0
-        };
-
-        this.cards.forEach(card => {
-            const column = this.getColumnByStatus(card.status);
-            if (column) {
-                const columnType = column.closest('.kanban-column').dataset.column;
-                counts[columnType]++;
-            }
-        });
-
-        // Atualizar contadores na interface
-        Object.keys(counts).forEach(columnType => {
-            const countElement = document.querySelector(`[data-column="${columnType}"] .card-count`);
-            if (countElement) {
-                countElement.textContent = counts[columnType];
-            }
-        });
-    }
-
-    saveCards() {
-        localStorage.setItem('kanbanCards', JSON.stringify(this.cards));
-    }
-
-    // Métodos utilitários
-    getCardById(id) {
-        return this.cards.find(card => card.id == id);
-    }
-
-    deleteCard(id) {
-        this.cards = this.cards.filter(card => card.id != id);
-        this.renderCards();
-        this.saveCards();
-        Utils.showNotification('Card excluído com sucesso!', 'success');
-    }
-
-    updateCard(id, updates) {
-        const card = this.getCardById(id);
-        if (card) {
-            Object.assign(card, updates);
-            card.updatedAt = new Date();
-            this.renderCards();
-            this.saveCards();
-            Utils.showNotification('Card atualizado com sucesso!', 'success');
-        }
-    }
-}
-
-// Inicializar quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', function() {
-    window.kanbanManager = new KanbanManager();
-});
-
-                }
-                
-                // Recalcular o tempo
-                if (typeof calculateQueueTime === 'function') {
-                    calculateQueueTime();
-                }
-                
-                // Atualizar no array this.cards se existir
-                const card = this.cards.find(c => c.id == cardId);
-                if (card) {
-                    card.status = newStatus;
-                    card.updatedAt = new Date();
-                    this.saveCards();
-                }
-                
-                // Notificação de sucesso
-                const columnNames = {
-                    'planning': 'Pendente',
-                    'test': 'Recusado',
-                    'launch': 'Aprovado',
-                    'success': 'Concluído'
-                };
-                
-                Utils.showNotification(`✅ Solicitação movida para "${columnNames[newColumn]}" com sucesso!`, 'success');
+                // Recarregar a página para garantir que todos os dados sejam atualizados do banco
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
             } else {
                 // Erro
                 console.error('❌ Erro do backend:', data.message);

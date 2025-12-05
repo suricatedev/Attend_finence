@@ -361,6 +361,8 @@ class FormManager {
 
     validateField(field) {
         const formGroup = field.closest('.form-group');
+        if (!formGroup) return; // Se não encontrar form-group, não validar
+        
         const value = field.value.trim();
         
         // Remover estados anteriores
@@ -2037,30 +2039,6 @@ document.addEventListener('DOMContentLoaded', function() {
     style.textContent = `
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-    `;
-    document.head.appendChild(style);
-    
-    console.log('Sistema inicializado com sucesso!');
-});
-
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-    `;
-    document.head.appendChild(style);
-    
-    console.log('Sistema inicializado com sucesso!');
-});
-
             to { transform: translateX(0); opacity: 1; }
         }
         @keyframes slideOut {

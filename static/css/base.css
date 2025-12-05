@@ -299,6 +299,86 @@ body {
     box-shadow: 0 6px 20px rgba(255, 203, 87, 0.4);
 }
 
+/* Select customizado para tipo de solicitação */
+.request-type-selector {
+    position: relative;
+    display: inline-block;
+}
+
+.btn-primary-select {
+    background: linear-gradient(135deg, #FFCB57 0%, #FFD700 50%, #FFE066 100%);
+    color: #1C1C1C;
+    border: none;
+    padding: 14px 48px 14px 20px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 203, 87, 0.4), 0 2px 8px rgba(255, 203, 87, 0.3);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath fill='%231C1C1C' d='M7 10L2 5h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 18px center;
+    background-size: 14px;
+    min-width: 280px;
+    outline: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary-select::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-primary-select:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(255, 203, 87, 0.5), 0 4px 12px rgba(255, 203, 87, 0.4);
+    background: linear-gradient(135deg, #FFD700 0%, #FFCB57 50%, #FFE066 100%);
+}
+
+.btn-primary-select:hover::before {
+    left: 100%;
+}
+
+.btn-primary-select:focus {
+    box-shadow: 0 6px 25px rgba(255, 203, 87, 0.5), 0 0 0 4px rgba(255, 203, 87, 0.3);
+    background: linear-gradient(135deg, #FFD700 0%, #FFCB57 50%, #FFE066 100%);
+}
+
+.btn-primary-select:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(255, 203, 87, 0.4);
+}
+
+.btn-primary-select option {
+    background: white;
+    color: #1C1C1C;
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.btn-primary-select option:hover {
+    background: #FFCB57;
+    color: #1C1C1C;
+}
+
+.btn-primary-select option:checked {
+    background: #FFCB57;
+    color: #1C1C1C;
+    font-weight: 700;
+}
+
 .view-tabs {
     display: flex;
     gap: 8px;

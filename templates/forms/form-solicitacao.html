@@ -12,6 +12,7 @@
                 {% csrf_token %}
                 <input type="hidden" id="solicitacaoId" name="solicitacao_id" value="">
                 <input type="hidden" id="formMode" name="form_mode" value="create">
+                <input type="hidden" id="modoTecnico" name="modo_tecnico" value="false">
                 
                 <!-- Seletor de Tipo de Solicitação -->
                 <div class="route-classic">
@@ -217,7 +218,7 @@
                             Adicionar Novo ID
                         </button>
                     </div>
-
+                    
                     <!-- Valores Gerais para Em Rota -->
                     <div class="valores-gerais-rota" style="margin-top: 2rem;">
                         <h4><i class="fas fa-calculator"></i> Resumo Geral</h4>
@@ -388,6 +389,92 @@
                         <option value="alta">Alta</option>
                     </select>
                     </div>                </div>
+                
+                <!-- Formulário para "Técnico" -->
+                <div id="formTecnico" class="form-tecnico" style="display: none;">
+                    <div class="route-section-header">
+                        <h3><i class="fas fa-user-tie"></i> Solicitação de Técnico</h3>
+                        <p>Preencha os dados da solicitação de técnico</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tecnicoSolicitacao">ID da Solicitação <span class="required">*</span></label>
+                        <input type="text" id="tecnicoSolicitacao" name="tecnico_solicitacao" placeholder="Ex: INCXXXXX" required>
+                        <small class="form-help">ID da solicitação relacionada</small>
+                    </div>
+                    
+                    <div class="form-group route-recebedor-field">
+                        <label for="tecnicoRecebedor">Nome do Técnico <span class="required">*</span></label>
+                        <div class="recebedor-dropdown-wrapper">
+                            <input type="text" id="tecnicoRecebedor" name="tecnico_recebedor" class="recebedor-input" placeholder="Digite ou selecione o técnico" autocomplete="off" required>
+                            <div class="recebedor-dropdown" id="recebedor-dropdown-tecnico" style="display: none;"></div>
+                        </div>
+                        <small class="form-help">Digite para buscar ou clique para ver todos os técnicos</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tecnicoPix">Chave PIX</label>
+                        <input type="text" id="tecnicoPix" name="tecnico_pix" class="pix-input" placeholder="Chave PIX será preenchida automaticamente" readonly style="background-color: #f0f0f0;">
+                        <small class="form-help">Preenchido automaticamente</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tecnicoServico">Tipo de Serviço <span class="required">*</span></label>
+                        <select id="tecnicoServico" name="tecnico_servico" required>
+                            <option value="">Selecione o serviço</option>
+                            {% for servico in servicos_disponiveis %}
+                            <option value="{{ servico.id }}">{{ servico.nome }}</option>
+                            {% empty %}
+                            <option value="" disabled>Nenhum serviço disponível</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tecnicoValorPagamento">Valor que vai pagar para o técnico <span class="required">*</span></label>
+                        <input type="text" id="tecnicoValorPagamento" name="tecnico_valor_pagamento" class="valor-tecnico" placeholder="R$ 0,00" required>
+                        <small class="form-help">Valor a ser pago para o técnico</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tecnicoValorExtra">Valor Extra</label>
+                        <input type="text" id="tecnicoValorExtra" name="tecnico_valor_extra" class="valor-tecnico-extra" placeholder="R$ 0,00">
+                        <small class="form-help">Valor extra (opcional)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tecnicoDescricao">Descrição</label>
+                        <textarea id="tecnicoDescricao" name="tecnico_descricao" rows="4" placeholder="Descreva detalhes da solicitação de técnico..."></textarea>
+                        <small class="form-help">Campo opcional</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tecnicoDataRealizacao">Data da Realização da Atividade <span class="required">*</span></label>
+                        <input type="date" id="tecnicoDataRealizacao" name="tecnico_data_realizacao" required>
+                        <small class="form-help">Data em que a atividade foi realizada</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="atividadeType">Tipo de Atividade <span class="required">*</span></label>
+                        <div class="atividade-options">
+                            <label class="atividade-option">
+                                <input type="radio" id="atividadeProdutiva" name="tecnico_atividade_produtiva" value="true" checked>
+                                <span class="atividade-label atividade-produtiva">
+                                    <i class="fas fa-check-circle"></i>
+                                    Produtiva
+                                </span>
+                            </label>
+                            <label class="atividade-option">
+                                <input type="radio" id="atividadeImprodutiva" name="tecnico_atividade_produtiva" value="false">
+                                <span class="atividade-label atividade-improdutiva">
+                                    <i class="fas fa-times-circle"></i>
+                                    Improdutiva
+                                </span>
+                            </label>
+                        </div>
+                        <small class="form-help">Selecione se a atividade é produtiva ou improdutiva</small>
+                    </div>
+                </div>
             </form>
         </div>
         <div class="modal-footer">
@@ -406,21 +493,21 @@
         // ============================================
         // Esta função PRECISA estar disponível globalmente IMEDIATAMENTE
         window.criarNovoRouteId = function(e) {
-
+            
             // Prevenir múltiplas execuções simultâneas
             if (window.criandoNovoId) {
                 
                 return false;
             }
             window.criandoNovoId = true;
-
+            
             try {
                 if (e) {
                     e.preventDefault();
                     e.stopPropagation();
                     
                 }
-
+                
                 // PASSO 1: Encontrar container
                 const container = document.getElementById('route-ids-dinamicos');
                 if (!container) {
@@ -429,11 +516,11 @@
                     window.criandoNovoId = false;
                     return false;
                 }
-
+                
                 // Garantir que o container está visível
                 container.style.display = 'block';
                 container.style.visibility = 'visible';
-
+                
                 // PASSO 2: Encontrar template
                 let template = document.querySelector('.route-id-group[data-route-id="2"]');
                 if (!template) {
@@ -448,12 +535,12 @@
                         return false;
                     }
                 }
-
+                
                 // PASSO 3: Clonar template
                 const novoId = template.cloneNode(true);
                 const novoNumero = window.routeIdCounter ? window.routeIdCounter++ : (window.routeIdCounter = 3, window.routeIdCounter++);
                 novoId.setAttribute('data-route-id', novoNumero);
-
+                
                 // Atualizar IDs, names e labels de forma OTIMIZADA
                 const elementosParaAtualizar = [
                     ...novoId.querySelectorAll('[id*="routeId2"]'),
@@ -553,7 +640,7 @@
                 }
                 
                 // PASSO 4: ADICIONAR O ELEMENTO AO DOM
-
+                
                 try {
                     container.appendChild(novoId);
 
@@ -576,12 +663,12 @@
                     verificarAdicionado.style.marginBottom = '1.25rem';
                     
                     const rect = verificarAdicionado.getBoundingClientRect();
-
+                    
                     if (rect.width === 0 || rect.height === 0) {
                         
                         verificarAdicionado.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; width: 100% !important; height: auto !important; margin-bottom: 1.25rem !important; position: relative !important;';
                     }
-
+                    
                     // Configurar validação para o campo de ID recém-criado
                     const novoRouteIdInput = verificarAdicionado.querySelector(`#routeId${novoNumero}`);
                     if (novoRouteIdInput) {
@@ -590,7 +677,7 @@
                             if (typeof window.configurarValidacaoId === 'function') {
                                 window.configurarValidacaoId(novoRouteIdInput);
                                 
-                            } else {
+                } else {
                                 
                             }
                         }, 100);
@@ -603,7 +690,7 @@
                 
                 // ⚠️ CRÍTICO: Adicionar event listeners para TODOS os campos de valor do novo ID
                 // Adicionar listeners ANTES de adicionar ao DOM para garantir que funcionem imediatamente
-
+                
                 // Lista de TODOS os campos que afetam o total (incluindo Valor Atividade)
                 const camposValores = [
                     `routeValor${novoNumero}`, // Valor Atividade (opcional)
@@ -619,7 +706,7 @@
                     let campo = novoId.querySelector(`#${nomeCampo}`);
                     
                     if (campo) {
-
+                        
                         // Criar funções de cálculo que capturam o novoNumero
                         const calcularTotal = function() {
                             
@@ -691,7 +778,7 @@
                             
                             // Processar tanto IDs fixos (1, 2) quanto dinâmicos (3+)
                             if (numeroID && numeroID >= 1) {
-
+                                
                                 // Usar requestAnimationFrame para garantir que o DOM foi atualizado
                                 requestAnimationFrame(() => {
                                     setTimeout(() => {
@@ -801,7 +888,7 @@
                 return false;
             }
         };
-
+        
         // ============================================
         // FIM DA DEFINIÇÃO GLOBAL
         // ============================================
@@ -1160,7 +1247,7 @@
                 const containerDinamicos = document.getElementById('route-ids-dinamicos');
                 if (containerDinamicos) {
                     const idsDinamicos = containerDinamicos.querySelectorAll('.route-id-group[data-route-id]');
-
+                    
                     idsDinamicos.forEach(idGroup => {
                         const routeId = idGroup.getAttribute('data-route-id');
                         if (routeId && window.calcularTotalID) {
@@ -1531,7 +1618,7 @@
                             if (window.calcularTotalID) {
                                 window.calcularTotalID(numero);
                             }
-
+                            
                         });
                         
                         if (valorReceitaFieldElement) {
@@ -1643,7 +1730,7 @@
                             window.calcularTotalTodosIDs();
                         }
                     }
-
+                    
                 } catch (error) {
                     
                 }
@@ -1759,9 +1846,34 @@
                     const isCasualActive = routeCasual && routeCasual.checked;
                     
                     if (isCasualActive && formCasual && window.getComputedStyle(formCasual).display !== 'none') {
+                        // Garantir que TODOS os campos do formulário Casual estejam habilitados antes do envio
+                        formCasual.querySelectorAll('input, select, textarea').forEach(field => {
+                            if (field.type !== 'file' && field.type !== 'hidden') {
+                                field.disabled = false;
+                            }
+                        });
+                        
+                        // Garantir que o campo de recebedor esteja habilitado e preenchido
+                        const recebedorInput = document.getElementById('campaignRecebedor');
+                        if (recebedorInput) {
+                            // Habilitar o campo se estiver desabilitado
+                            recebedorInput.disabled = false;
+                            
+                            // Validar se o campo está preenchido
+                            const nomeRecebedor = recebedorInput.value.trim();
+                            if (!nomeRecebedor || nomeRecebedor.length === 0) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                alert('O campo "Nome do Recebedor" é obrigatório. Por favor, preencha ou selecione um recebedor.');
+                                recebedorInput.focus();
+                                recebedorInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                return false;
+                            }
+                        }
+                        
                         // Formulário Casual está visível - calcular valor IMEDIATAMENTE
                         const valorFinal = calcularValorTotalCasual();
-
+                        
                         // Validação: valor deve ser maior que zero
                         if (valorFinal <= 0) {
                             e.preventDefault();
@@ -1794,7 +1906,7 @@
                                 return false;
                             }
                         }
-
+                        
                     }
                 }, true); // Usar capture phase para executar antes
             }
@@ -1914,7 +2026,7 @@
             }
             
             // Função já está definida globalmente acima, apenas confirmar
-
+            
             // Event listener usando event delegation como backup
             document.addEventListener('click', function(e) {
                 const clickedElement = e.target;
@@ -1949,7 +2061,7 @@
                         }
                         return false;
                     };
-
+                    
                 } else {
                     
                 }
@@ -2169,7 +2281,8 @@
                 // VALIDAÇÃO: Verificar se o ID do input corresponde a um recebedor
                 const isValidRecebedorInput = input.id && (
                     input.id.startsWith('routeRecebedor') || 
-                    input.id === 'campaignRecebedor'
+                    input.id === 'campaignRecebedor' ||
+                    input.id === 'tecnicoRecebedor'
                 );
                 
                 if (!isValidRecebedorInput) {
@@ -2312,9 +2425,14 @@
                         }
                         
                         // Preencher chave PIX
-                        const pixInput = recebedorInput.id.includes('routeRecebedor') 
-                            ? document.getElementById(recebedorInput.id.replace('routeRecebedor', 'routePix'))
-                            : document.getElementById('campaignPix');
+                        let pixInput = null;
+                        if (recebedorInput.id.includes('routeRecebedor')) {
+                            pixInput = document.getElementById(recebedorInput.id.replace('routeRecebedor', 'routePix'));
+                        } else if (recebedorInput.id === 'tecnicoRecebedor') {
+                            pixInput = document.getElementById('tecnicoPix');
+                        } else {
+                            pixInput = document.getElementById('campaignPix');
+                        }
                         
                         if (pixInput) {
                             pixInput.value = recebedor.chave_pix || '';
@@ -2453,8 +2571,8 @@
                                 pixInput.value = recebedor.chave_pix || '';
                             } else if (data.recebedores.length > 0) {
                                 pixInput.value = data.recebedores[0].chave_pix || '';
-                            } else {
-                                pixInput.value = '';
+                                } else {
+                                    pixInput.value = '';
                             }
                         } else {
                             pixInput.value = '';
@@ -2556,6 +2674,10 @@
                             
                             mostrarDropdownRecebedores(recebedorInput, dropdownId);
                             configurarFecharDropdown(recebedorInput, dropdownId);
+                        } else if (recebedorInput.id === 'tecnicoRecebedor') {
+                            dropdownId = 'recebedor-dropdown-tecnico';
+                            mostrarDropdownRecebedores(recebedorInput, dropdownId);
+                            configurarFecharDropdown(recebedorInput, dropdownId);
                         }
                     }
                 });
@@ -2579,6 +2701,12 @@
                             if (pixInput) {
                                 preencherChavePixInput(recebedorInput, pixInput);
                             }
+                        } else if (recebedorInput.id === 'tecnicoRecebedor') {
+                            mostrarDropdownRecebedores(recebedorInput, 'recebedor-dropdown-tecnico');
+                            const pixInput = document.getElementById('tecnicoPix');
+                            if (pixInput) {
+                                preencherChavePixInput(recebedorInput, pixInput);
+                            }
                         }
                     }
                 });
@@ -2598,9 +2726,80 @@
                             if (pixInput) {
                                 preencherChavePixInput(recebedorInput, pixInput);
                             }
+                        } else if (recebedorInput.id === 'tecnicoRecebedor') {
+                            const pixInput = document.getElementById('tecnicoPix');
+                            if (pixInput) {
+                                preencherChavePixInput(recebedorInput, pixInput);
+                            }
                         }
                     }
                 });
+                
+                // Configurar recebedor para formulário de técnico
+                const tecnicoRecebedor = document.getElementById('tecnicoRecebedor');
+                const tecnicoPix = document.getElementById('tecnicoPix');
+                if (tecnicoRecebedor && tecnicoPix) {
+                    tecnicoRecebedor.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        mostrarDropdownRecebedores(this, 'recebedor-dropdown-tecnico');
+                        configurarFecharDropdown(this, 'recebedor-dropdown-tecnico');
+                    });
+                    
+                    tecnicoRecebedor.addEventListener('focus', function() {
+                        mostrarDropdownRecebedores(this, 'recebedor-dropdown-tecnico');
+                        configurarFecharDropdown(this, 'recebedor-dropdown-tecnico');
+                    });
+                    
+                    tecnicoRecebedor.addEventListener('input', function() {
+                        mostrarDropdownRecebedores(this, 'recebedor-dropdown-tecnico');
+                        preencherChavePixInput(this, tecnicoPix);
+                    });
+                    
+                    tecnicoRecebedor.addEventListener('change', function() {
+                        preencherChavePixInput(this, tecnicoPix);
+                    });
+                }
+                
+                // Formatação monetária para campos de valor do técnico
+                const tecnicoValorPagamento = document.getElementById('tecnicoValorPagamento');
+                if (tecnicoValorPagamento) {
+                    tecnicoValorPagamento.addEventListener('input', function(e) {
+                        let value = e.target.value.replace(/\D/g, '');
+                        if (value) {
+                            value = value.replace(/^0+/, '');
+                            if (!value) value = '0';
+                            const numericValue = parseFloat(value) / 100;
+                            e.target.value = formatarValorMonetario(numericValue);
+                        } else {
+                            e.target.value = '';
+                        }
+                    });
+                    
+                    tecnicoValorPagamento.addEventListener('blur', function(e) {
+                        const valor = parseValorMonetario(e.target.value);
+                        e.target.value = formatarValorMonetario(valor);
+                    });
+                }
+                
+                const tecnicoValorExtra = document.getElementById('tecnicoValorExtra');
+                if (tecnicoValorExtra) {
+                    tecnicoValorExtra.addEventListener('input', function(e) {
+                        let value = e.target.value.replace(/\D/g, '');
+                        if (value) {
+                            value = value.replace(/^0+/, '');
+                            if (!value) value = '0';
+                            const numericValue = parseFloat(value) / 100;
+                            e.target.value = formatarValorMonetario(numericValue);
+                        } else {
+                            e.target.value = '';
+                        }
+                    });
+                    
+                    tecnicoValorExtra.addEventListener('blur', function(e) {
+                        const valor = parseValorMonetario(e.target.value);
+                        e.target.value = formatarValorMonetario(valor);
+                    });
+                }
             }
             
             // ============================================

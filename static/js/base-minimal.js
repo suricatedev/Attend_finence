@@ -3,49 +3,253 @@
 // Esperar a página carregar
 window.addEventListener('DOMContentLoaded', function() {
     
-    // Pegar o botão e o modal
-    const botao = document.getElementById('createCampaignBtn');
+    // Pegar o select e o modal
+    const requestTypeSelect = document.getElementById('requestTypeSelect');
     const modal = document.getElementById('createCampaignModal');
     const btnFechar = document.getElementById('closeModal');
     const btnCancelar = document.getElementById('cancelCreate');
     const modalContent = modal ? modal.querySelector('.modal-content') : null;
     
-    // Quando clicar no botão amarelo, ABRIR o modal
-    if (botao && modal) {
-        botao.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation(); // IMPORTANTE: Evitar propagação
-            console.log('✅ Abrindo modal...');
-            // Limpar formulário antes de abrir
-            const form = document.getElementById('createCampaignForm');
-            if (form) {
-                form.reset();
-                
-                // Resetar o tipo de rota para "Casual" (padrão)
-                const routeCasual = document.getElementById('routeCasual');
-                const routeEmRota = document.getElementById('routeEmRota');
-                const formEmRota = document.getElementById('formEmRota');
-                const formCasual = document.getElementById('formCasual');
-                
+    // Função para abrir o modal
+    function openModal() {
+        if (!modal) return;
+        
+        console.log('✅ Abrindo modal...');
+        // Limpar formulário antes de abrir
+        const form = document.getElementById('createCampaignForm');
+        if (form) {
+            form.reset();
+            
+            // Verificar se está em modo técnico
+            const filterType = localStorage.getItem('filterType');
+            const modoTecnico = filterType === 'tecnico';
+            const modoTecnicoInput = document.getElementById('modoTecnico');
+            
+            if (modoTecnicoInput) {
+                modoTecnicoInput.value = modoTecnico ? 'true' : 'false';
+            }
+            
+            const routeCasual = document.getElementById('routeCasual');
+            const routeEmRota = document.getElementById('routeEmRota');
+            const formEmRota = document.getElementById('formEmRota');
+            const formCasual = document.getElementById('formCasual');
+            const formTecnico = document.getElementById('formTecnico');
+            const routeClassic = document.querySelector('.route-classic');
+            const modalTitulo = document.getElementById('modalSolicitacaoTitulo');
+            
+            if (modoTecnico) {
+                // Modo técnico ativo - mostrar formulário de técnico
+                if (modalTitulo) {
+                    modalTitulo.textContent = 'Nova Solicitação de Técnico';
+                }
+                if (routeClassic) {
+                    routeClassic.style.display = 'none';
+                }
+                if (formCasual) {
+                    formCasual.style.display = 'none';
+                }
+                if (formEmRota) {
+                    formEmRota.style.display = 'none';
+                }
+                if (formTecnico) {
+                    formTecnico.style.display = 'block';
+                }
+                console.log('✅ Formulário de técnico ativado');
+            } else {
+                // Modo normal - mostrar formulário Casual
+                if (modalTitulo) {
+                    modalTitulo.textContent = 'Nova Solicitação Financeira';
+                }
+                if (routeClassic) {
+                    routeClassic.style.display = 'block';
+                }
                 if (routeCasual) {
                     routeCasual.checked = true;
                 }
                 if (routeEmRota) {
                     routeEmRota.checked = false;
                 }
-                
-                // Garantir que o formulário Casual esteja visível
                 if (formCasual) {
                     formCasual.style.display = 'block';
                 }
                 if (formEmRota) {
                     formEmRota.style.display = 'none';
                 }
-                
+                if (formTecnico) {
+                    formTecnico.style.display = 'none';
+                }
                 console.log('✅ Formulário limpo e resetado para padrão (Casual)');
             }
-            modal.style.display = 'flex';
-            modal.classList.add('show');
+        }
+        modal.style.display = 'flex';
+        modal.classList.add('show');
+    }
+    
+    // Botão para abrir modal de criação
+    const createCampaignBtn = document.getElementById('createCampaignBtn');
+    if (createCampaignBtn && modal) {
+        createCampaignBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openModal();
+        });
+    }
+    
+    // Quando selecionar uma opção no select (apenas filtrar, não abrir modal)
+    if (requestTypeSelect) {
+        requestTypeSelect.addEventListener('change', function(e) {
+            const selectedValue = e.target.value;
+            const appTitle = document.querySelector('.app-title');
+            
+            if (selectedValue && selectedValue !== '') {
+                // Se selecionou "técnico", mudar o título e filtrar
+                if (selectedValue === 'tecnico') {
+                    if (appTitle) {
+                        appTitle.textContent = 'Solicitação financeira por tecnico';
+                    }
+                    // Salvar filtro no localStorage
+                    localStorage.setItem('filterType', 'tecnico');
+                    // Filtrar cards para mostrar apenas solicitações de técnico
+                    setTimeout(() => {
+                        filterCardsByType('tecnico');
+                    }, 100);
+                } else if (selectedValue === 'deslocamento') {
+                    // Se selecionou "deslocamento", voltar ao título padrão
+                    if (appTitle) {
+                        appTitle.textContent = 'Solicitação de deslocamento';
+                    }
+                    // Salvar filtro no localStorage
+                    localStorage.setItem('filterType', 'deslocamento');
+                    // Filtrar cards para mostrar apenas solicitações de deslocamento (não técnico)
+                    setTimeout(() => {
+                        filterCardsByType('deslocamento');
+                    }, 100);
+                }
+            }
+        });
+    }
+    
+    // Aplicar filtro salvo ao carregar a página ou usar técnico como padrão
+    window.addEventListener('DOMContentLoaded', function() {
+        const savedFilter = localStorage.getItem('filterType');
+        const appTitle = document.querySelector('.app-title');
+        const requestTypeSelect = document.getElementById('requestTypeSelect');
+        
+        // Por padrão, mostrar solicitações de técnico (a menos que haja um filtro salvo diferente)
+        let filterToApply = savedFilter || 'tecnico';
+        
+        // Se o select já tem um valor, usar esse valor (tem prioridade sobre localStorage)
+        if (requestTypeSelect && requestTypeSelect.value) {
+            filterToApply = requestTypeSelect.value;
+        }
+        
+        // Garantir que o filtro seja salvo e o select tenha o valor correto
+        localStorage.setItem('filterType', filterToApply);
+        if (requestTypeSelect) {
+            requestTypeSelect.value = filterToApply;
+        }
+        
+        if (filterToApply === 'tecnico') {
+            if (appTitle) {
+                appTitle.textContent = 'Solicitação financeira por tecnico';
+            }
+            // Aplicar filtro de técnico imediatamente (antes do filtro de data)
+            // Usar função rápida se disponível, senão usar função normal
+            if (typeof window.applyFilterFast === 'function') {
+                window.applyFilterFast();
+            }
+            filterCardsByType('tecnico');
+        } else if (filterToApply === 'deslocamento') {
+            if (appTitle) {
+                appTitle.textContent = 'Solicitação de deslocamento';
+            }
+            // Aplicar filtro de deslocamento imediatamente (antes do filtro de data)
+            // Usar função rápida se disponível, senão usar função normal
+            if (typeof window.applyFilterFast === 'function') {
+                window.applyFilterFast();
+            }
+            filterCardsByType('deslocamento');
+        }
+    });
+    
+    // Também aplicar filtro quando a página terminar de carregar completamente
+    window.addEventListener('load', function() {
+        const savedFilter = localStorage.getItem('filterType') || 'tecnico';
+        const requestTypeSelect = document.getElementById('requestTypeSelect');
+        
+        // Verificar o valor do select também (tem prioridade)
+        let filterToApply = savedFilter;
+        if (requestTypeSelect && requestTypeSelect.value) {
+            filterToApply = requestTypeSelect.value;
+            // Atualizar localStorage com o valor do select
+            localStorage.setItem('filterType', filterToApply);
+        }
+        
+        // Aplicar o filtro imediatamente (sem delay) e depois novamente após pequenos delays
+        if (filterToApply === 'tecnico') {
+            filterCardsByType('tecnico');
+            setTimeout(() => filterCardsByType('tecnico'), 10);
+            setTimeout(() => filterCardsByType('tecnico'), 100);
+            setTimeout(() => filterCardsByType('tecnico'), 500);
+        } else if (filterToApply === 'deslocamento') {
+            filterCardsByType('deslocamento');
+            setTimeout(() => filterCardsByType('deslocamento'), 10);
+            setTimeout(() => filterCardsByType('deslocamento'), 100);
+            setTimeout(() => filterCardsByType('deslocamento'), 500);
+        }
+    });
+    
+    // Função para filtrar cards por tipo
+    function filterCardsByType(tipo) {
+        const allCards = document.querySelectorAll('.card');
+        
+        allCards.forEach(card => {
+            if (tipo === 'tecnico') {
+                // Verificar se o card é de técnico
+                const isTecnico = card.getAttribute('data-is-tecnico') === 'true';
+                
+                if (isTecnico) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            } else if (tipo === 'deslocamento') {
+                const isTecnico = card.getAttribute('data-is-tecnico') === 'true';
+                
+                if (isTecnico) {
+                    card.style.display = 'none';
+                } else {
+                    card.style.display = '';
+                }
+            } else {
+                // Mostrar todos os cards
+                card.style.display = '';
+            }
+        });
+        
+        // Atualizar contadores de cards
+        updateCardCounts();
+    }
+    
+    // Função para atualizar contadores de cards
+    function updateCardCounts() {
+        const columns = ['planning', 'test', 'launch', 'success'];
+        
+        columns.forEach(column => {
+            const columnElement = document.querySelector(`[data-column="${column}"]`);
+            if (columnElement) {
+                const columnContent = columnElement.querySelector('.column-content');
+                const counter = columnElement.querySelector('.card-count');
+                
+                if (columnContent && counter) {
+                    // Contar apenas cards visíveis (não ocultos pelo filtro)
+                    const visibleCards = Array.from(columnContent.querySelectorAll('.card')).filter(card => {
+                        return card.style.display !== 'none' && 
+                               window.getComputedStyle(card).display !== 'none';
+                    });
+                    counter.textContent = visibleCards.length;
+                }
+            }
         });
     }
     

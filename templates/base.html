@@ -247,10 +247,19 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <div class="logo-section">
+                        <h1 class="app-title">Solicitação financeira por tecnico</h1>
                     </div>
                 </div>
 
                 <div class="header-center">
+                    <div class="request-type-selector">
+                        <select class="btn-primary-select" id="requestTypeSelect">
+                            <option value="" disabled hidden>Selecione uma opção</option>
+                            <option value="deslocamento">Solicitação de deslocamento</option>
+                            <option value="tecnico" selected>Solicitação de técnico</option>
+                        </select>
+                    </div>
+                    
                     <button class="btn-primary" id="createCampaignBtn">
                         <i class="fas fa-plus"></i>
                         <span>Nova Solicitação Financeira</span>
@@ -323,9 +332,5 @@
     <script src="{% static 'js/base-minimal.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>
-
-</html>
-
-</html>
 
 </html>

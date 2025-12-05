@@ -98,12 +98,22 @@ class Solicitacoes(models.Model):
     def __str__(self):
         return f"{self.titulo} - {self.status}"
     
+    def is_tecnico(self):
+        """Verifica se esta solicitação é de técnico"""
+        return hasattr(self, 'solicitacoes_tecnico') and self.solicitacoes_tecnico.exists()
+    
     def get_valor_detalhados(self):
         """
         Retorna a soma apenas dos valores detalhados (sem incluir valor da atividade/receita).
         Para Em Rota: soma os valores detalhados de todos os itens
         Para Casual: soma apenas os valores detalhados do próprio modelo
+        Para Solicitações de Técnico: retorna o valor total da solicitação (já que não há valores detalhados)
         """
+        # Verificar se é uma solicitação de técnico
+        if hasattr(self, 'solicitacoes_tecnico') and self.solicitacoes_tecnico.exists():
+            # Para solicitações de técnico, retornar o valor total
+            return self.valor or 0.0
+        
         if self.tipo == 'em_rota':
             # Para Em Rota, somar valores detalhados de todos os itens
             total = 0.0
@@ -146,3 +156,34 @@ class SolicitacaoRotaItem(models.Model):
 
     def __str__(self):
         return f"{self.solicitacao.titulo} - Item {self.ordem}: {self.ticket_item}"
+
+class SolicitacaoTecnico(models.Model):
+    """Modelo para armazenar solicitações de técnico"""
+    solicitacao = models.ForeignKey(Solicitacoes, on_delete=models.CASCADE, related_name='solicitacoes_tecnico', verbose_name="ID da Solicitação")
+    recebedor = models.ForeignKey(Recebedor, on_delete=models.CASCADE, related_name='solicitacoes_tecnico', verbose_name="Nome do Técnico")
+    servico = models.ForeignKey('servicos.Servico', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Tipo de Serviço")
+    valor_pagamento_tecnico = models.FloatField(verbose_name="Valor que vai pagar para o técnico")
+    valor_extra = models.FloatField(default=0.0, blank=True, null=True, verbose_name="Valor Extra")
+    descricao = models.TextField(blank=True, null=True, verbose_name="Descrição")
+    data_realizacao_atividade = models.DateField(verbose_name="Data da Realização da Atividade", null=True, blank=True)
+    atividade_produtiva = models.BooleanField(default=True, verbose_name="Atividade Produtiva")
+    data_criacao = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
+    data_atualizacao = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
+    
+    class Meta:
+        verbose_name = "Solicitação de Técnico"
+        verbose_name_plural = "Solicitações de Técnico"
+        ordering = ['-data_criacao']
+    
+    def __str__(self):
+        return f"{self.recebedor.nome} - {self.solicitacao.ticket if self.solicitacao else 'N/A'}"
+    
+    @property
+    def chave_pix(self):
+        """Retorna a chave PIX do recebedor"""
+        return self.recebedor.chave_pix if self.recebedor else ''
+    
+    @property
+    def nome_tecnico(self):
+        """Retorna o nome do técnico (recebedor)"""
+        return self.recebedor.nome if self.recebedor else ''

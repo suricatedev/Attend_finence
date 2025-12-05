@@ -1007,6 +1007,92 @@ body:has(.route-recebedor-field.has-active-dropdown) .modal-body {
     transform: translateY(-1px);
 }
 
+/* Estilos para seleção de atividade produtiva/improdutiva */
+.atividade-options {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.atividade-option {
+    flex: 1;
+    min-width: 150px;
+    cursor: pointer;
+    position: relative;
+}
+
+.atividade-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.atividade-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #64748b;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
+    width: 100%;
+}
+
+.atividade-label i {
+    font-size: 1.2rem;
+}
+
+.atividade-produtiva i {
+    color: #10b981;
+}
+
+.atividade-improdutiva i {
+    color: #ef4444;
+}
+
+.atividade-option input[type="radio"]:checked + .atividade-label.atividade-produtiva {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-color: #10b981;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    transform: translateY(-2px);
+}
+
+.atividade-option input[type="radio"]:checked + .atividade-label.atividade-produtiva i {
+    color: #ffffff;
+}
+
+.atividade-option input[type="radio"]:checked + .atividade-label.atividade-improdutiva {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border-color: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    transform: translateY(-2px);
+}
+
+.atividade-option input[type="radio"]:checked + .atividade-label.atividade-improdutiva i {
+    color: #ffffff;
+}
+
+.atividade-label:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.atividade-produtiva:hover {
+    border-color: #10b981;
+}
+
+.atividade-improdutiva:hover {
+    border-color: #ef4444;
+}
+
 /* Estilos para formulário Em Rota */
 .form-route {
     margin-top: 1rem;
