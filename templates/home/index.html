@@ -766,28 +766,19 @@
             // Garantir que os cards tenham os event listeners do modal
             function setupCardClickListeners() {
                 if (typeof initializeCardExpansion === 'function') {
-                    console.log('🔧 Inicializando listeners de clique nos cards...');
                     initializeCardExpansion();
                 } else {
-                    console.error('❌ Função initializeCardExpansion não encontrada!');
-                    console.log('Aguardando carregamento do script...');
                     // Tentar novamente após um delay
                     setTimeout(() => {
                         if (typeof initializeCardExpansion === 'function') {
-                            console.log('✅ Função encontrada agora, inicializando...');
                             initializeCardExpansion();
                         }
                     }, 1000);
                 }
             }
             
-            // Inicializar imediatamente
-            setupCardClickListeners();
-            
-            // Re-inicializar após delays para garantir
+            // Inicializar após um pequeno delay para garantir que os cards foram renderizados
             setTimeout(setupCardClickListeners, 500);
-            setTimeout(setupCardClickListeners, 1000);
-            setTimeout(setupCardClickListeners, 2000);
             
             // Observar quando novos cards são adicionados ao DOM
             const observer = new MutationObserver(function(mutations) {
@@ -795,7 +786,6 @@
                     if (mutation.addedNodes.length) {
                         mutation.addedNodes.forEach(function(node) {
                             if (node.nodeType === 1 && (node.classList && node.classList.contains('card'))) {
-                                console.log('🆕 Novo card detectado, reinicializando listeners...');
                                 setupCardClickListeners();
                             }
                         });
@@ -969,7 +959,10 @@
             // Filtrar por hoje por padrão ao carregar a página (mas não se o filtro de técnico estiver ativo)
             function initializeTodayFilter() {
                 // Verificar se o filtro de técnico está ativo
-                const filterType = localStorage.getItem('filterType') || 'tecnico';
+                const requestTypeSelect = document.getElementById('requestTypeSelect');
+                const savedFilter = localStorage.getItem('filterType');
+                const filterType = (requestTypeSelect && requestTypeSelect.value) ? requestTypeSelect.value : (savedFilter || 'deslocamento');
+                
                 if (filterType === 'tecnico') {
                     // Se for técnico, mostrar todos os cards (não filtrar por data)
                     const columns = ['planning', 'test', 'launch', 'success'];
@@ -988,11 +981,14 @@
             
             // Aplicar filtro de tipo PRIMEIRO, antes do filtro de data
             setTimeout(() => {
-                const savedFilter = localStorage.getItem('filterType') || 'tecnico';
+                const requestTypeSelect = document.getElementById('requestTypeSelect');
+                const savedFilter = localStorage.getItem('filterType');
+                const filterToApply = savedFilter || (requestTypeSelect && requestTypeSelect.value) || 'tecnico';
+                
                 if (typeof filterCardsByType === 'function') {
-                    if (savedFilter === 'tecnico') {
+                    if (filterToApply === 'tecnico') {
                         filterCardsByType('tecnico');
-                    } else if (savedFilter === 'deslocamento') {
+                    } else if (filterToApply === 'deslocamento') {
                         filterCardsByType('deslocamento');
                     }
                 }
@@ -1004,9 +1000,9 @@
                     // Reaplicar filtro de tipo após o filtro de data
                     setTimeout(() => {
                         if (typeof filterCardsByType === 'function') {
-                            if (savedFilter === 'tecnico') {
+                            if (filterToApply === 'tecnico') {
                                 filterCardsByType('tecnico');
-                            } else if (savedFilter === 'deslocamento') {
+                            } else if (filterToApply === 'deslocamento') {
                                 filterCardsByType('deslocamento');
                             }
                         }
@@ -1059,7 +1055,6 @@
                     initializeCardExpansion();
                 }
                 
-                console.log(`✅ Filtrado ${column}: ${visibleCount} cards para a data ${date}`);
             }
             
             // Função para limpar filtro de data (mostrar todos os cards)
@@ -1087,7 +1082,6 @@
                     initializeCardExpansion();
                 }
                 
-                console.log(`🔄 Filtro de data removido da coluna ${column}`);
             }
             
             // Função para atualizar contador de cards

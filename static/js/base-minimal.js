@@ -129,17 +129,24 @@ window.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Aplicar filtro salvo ao carregar a página ou usar técnico como padrão
+    // Aplicar filtro salvo ao carregar a página
     window.addEventListener('DOMContentLoaded', function() {
-        const savedFilter = localStorage.getItem('filterType');
         const appTitle = document.querySelector('.app-title');
         const requestTypeSelect = document.getElementById('requestTypeSelect');
+        const savedFilter = localStorage.getItem('filterType');
         
-        // Por padrão, mostrar solicitações de técnico (a menos que haja um filtro salvo diferente)
-        let filterToApply = savedFilter || 'tecnico';
+        // Prioridade: 1) localStorage (preserva seleção após reload), 2) Valor do select, 3) Padrão (deslocamento)
+        let filterToApply = 'deslocamento'; // Padrão
         
-        // Se o select já tem um valor, usar esse valor (tem prioridade sobre localStorage)
-        if (requestTypeSelect && requestTypeSelect.value) {
+        // Se houver filtro salvo no localStorage, usar ele (preserva seleção após reload/movimentação)
+        if (savedFilter) {
+            filterToApply = savedFilter;
+            // Atualizar o select com o valor do localStorage para garantir consistência visual
+            if (requestTypeSelect) {
+                requestTypeSelect.value = filterToApply;
+            }
+        } else if (requestTypeSelect && requestTypeSelect.value) {
+            // Se não houver localStorage, usar o valor do select
             filterToApply = requestTypeSelect.value;
         }
         
@@ -174,16 +181,34 @@ window.addEventListener('DOMContentLoaded', function() {
     
     // Também aplicar filtro quando a página terminar de carregar completamente
     window.addEventListener('load', function() {
-        const savedFilter = localStorage.getItem('filterType') || 'tecnico';
         const requestTypeSelect = document.getElementById('requestTypeSelect');
+        const savedFilter = localStorage.getItem('filterType');
         
-        // Verificar o valor do select também (tem prioridade)
-        let filterToApply = savedFilter;
-        if (requestTypeSelect && requestTypeSelect.value) {
+        // Prioridade: 1) localStorage (filtro preservado), 2) Valor do select, 3) Padrão (deslocamento)
+        let filterToApply = 'deslocamento'; // Padrão mudado para deslocamento
+        if (savedFilter) {
+            // Se houver filtro salvo no localStorage, usar ele (preserva seleção do usuário)
+            filterToApply = savedFilter;
+            // Atualizar o select com o valor do localStorage para garantir consistência
+            if (requestTypeSelect) {
+                requestTypeSelect.value = filterToApply;
+                // Atualizar título da página
+                const appTitle = document.querySelector('.app-title');
+                if (appTitle) {
+                    if (filterToApply === 'tecnico') {
+                        appTitle.textContent = 'Solicitação financeira por tecnico';
+                    } else {
+                        appTitle.textContent = 'Solicitação de deslocamento';
+                    }
+                }
+            }
+        } else if (requestTypeSelect && requestTypeSelect.value) {
+            // Se não houver localStorage, usar o valor do select
             filterToApply = requestTypeSelect.value;
-            // Atualizar localStorage com o valor do select
-            localStorage.setItem('filterType', filterToApply);
         }
+        
+        // Garantir que o filtro seja salvo
+        localStorage.setItem('filterType', filterToApply);
         
         // Aplicar o filtro imediatamente (sem delay) e depois novamente após pequenos delays
         if (filterToApply === 'tecnico') {

@@ -1386,8 +1386,8 @@ class FormManager {
     }
 }
 
-// Gerenciador específico para Kanban
-class KanbanManager {
+// Gerenciador específico para Kanban - REMOVIDO: agora está em kanban.js
+// class KanbanManager {
     constructor() {
         this.cards = [];
         this.currentCardId = 1;
@@ -2021,16 +2021,9 @@ document.addEventListener('DOMContentLoaded', function() {
         window.settingsManager = new SettingsManager();
         console.log('APP.JS: SettingsManager inicializado');
         
-        // Inicializar KanbanManager apenas se estivermos na página do Kanban
-        const kanbanBoard = document.querySelector('.kanban-board');
-        console.log('APP.JS: Kanban board encontrado:', !!kanbanBoard);
-        if (kanbanBoard) {
-            console.log('APP.JS: Inicializando KanbanManager...');
-            window.kanbanManager = new KanbanManager();
-            console.log('APP.JS: KanbanManager inicializado:', !!window.kanbanManager);
-        } else {
-            console.log('APP.JS: Kanban board não encontrado');
-        }
+        // KanbanManager agora é inicializado pelo kanban.js
+        // Não inicializar aqui para evitar conflito com a declaração em kanban.js
+        console.log('APP.JS: KanbanManager será inicializado pelo kanban.js se necessário');
     } catch (error) {
         console.error('APP.JS: Erro ao inicializar sistema:', error);    }
 

@@ -2,7 +2,6 @@
 // MODAL DE DETALHES DO CARD
 // ========================================
 
-console.log('card-modal.js v20251111-3');
 
 // Flag para evitar registrar listeners duplicados
 let modalListenersSetup = false;
@@ -59,8 +58,7 @@ function initializeCardExpansion() {
     const allCards = document.querySelectorAll('.card');
     const cards = Array.from(allCards).filter(card => !card.hasAttribute('data-modal-initialized'));
     
-    console.log(`🔧 Inicializando ${cards.length} cards de ${allCards.length} total`);
-    
+    // Apenas inicializar se houver cards novos para processar
     cards.forEach(card => {
         // Marcar card como inicializado para evitar duplicar listeners
         card.setAttribute('data-modal-initialized', 'true');
@@ -82,11 +80,9 @@ function initializeCardExpansion() {
             }
 
             if (card.classList.contains('dragging')) {
-                console.log('❌ Clique ignorado - card em drag');
                 return;
             }
 
-            console.log('✅ Clique válido - abrindo modal para', card.dataset.cardId);
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
@@ -112,7 +108,6 @@ function initializeCardExpansion() {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
-            console.log('✅ Indicador clicado - abrindo modal');
             openCardDetailModal(card);
         }, true);
         
@@ -121,20 +116,6 @@ function initializeCardExpansion() {
             card.style.cursor = 'pointer';
         }
     });
-    
-    console.log(`✅ ${cards.length} cards inicializados para abertura de modal`);
-    
-    // Log adicional para debug
-    if (cards.length === 0) {
-        console.warn('⚠️ Nenhum card encontrado para inicializar!');
-    } else {
-        console.log('📋 Cards encontrados:', cards.length);
-        cards.forEach((card, index) => {
-            console.log(`  ${index + 1}. Card ID: ${card.getAttribute('data-card-id') || 'sem ID'}`);
-        });
-    }
-    
-    console.log('✅ Total de cards no DOM:', document.querySelectorAll('.card').length);
 }
 
 // Função para abrir modal de detalhes do card
@@ -1589,6 +1570,21 @@ function moveCardToFila(cardId, targetFila) {
             // Mostrar notificação de sucesso
             showNotification(`✅ Status atualizado para ${getFilaName(targetFila)}!`, 'success');
             
+            // Salvar filtro atual ANTES de recarregar - preservar o valor que o usuário selecionou
+            const requestTypeSelect = document.getElementById('requestTypeSelect');
+            if (requestTypeSelect && requestTypeSelect.value) {
+                // Salvar o valor atual do select (que o usuário escolheu)
+                localStorage.setItem('filterType', requestTypeSelect.value);
+                console.log('✅ Filtro salvo antes do reload:', requestTypeSelect.value);
+            } else {
+                // Se não houver valor no select, manter o que está no localStorage
+                const currentFilter = localStorage.getItem('filterType');
+                if (!currentFilter) {
+                    // Se não houver nada salvo, usar deslocamento como padrão
+                    localStorage.setItem('filterType', 'deslocamento');
+                }
+            }
+            
             // Recarregar a página para garantir que todos os dados sejam atualizados do banco
             setTimeout(() => {
                 window.location.reload();
@@ -1813,20 +1809,16 @@ function closeCardDetailModal() {
 
 // Inicialização quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 card-modal.js: DOMContentLoaded disparado');
-    
     calculateQueueTime();
     
     // Atualizar a cada minuto
     setInterval(calculateQueueTime, 60000);
     
     // Inicializar expansão dos cards do Django
-    console.log('🚀 card-modal.js: Inicializando cards...');
     initializeCardExpansion();
     
     // Re-inicializar após um delay para garantir que todos os scripts carregaram
     setTimeout(() => {
-        console.log('🚀 card-modal.js: Re-inicializando cards após delay...');
         initializeCardExpansion();
     }, 1000);
     
@@ -1836,7 +1828,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Expor função globalmente para debug
     window.initializeCardExpansion = initializeCardExpansion;
     window.openCardDetailModal = openCardDetailModal;
-    console.log('✅ card-modal.js: Funções expostas globalmente');
 });
 
 // ========================================

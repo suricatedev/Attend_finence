@@ -183,6 +183,21 @@
                     Utils.showNotification(`✅ Solicitação movida para "${columnNames[newColumn]}" com sucesso!`, 'success');
                 }
                 
+                // Salvar filtro atual ANTES de recarregar - preservar o valor que o usuário selecionou
+                const requestTypeSelect = document.getElementById('requestTypeSelect');
+                if (requestTypeSelect && requestTypeSelect.value) {
+                    // Salvar o valor atual do select (que o usuário escolheu)
+                    localStorage.setItem('filterType', requestTypeSelect.value);
+                    console.log('✅ Filtro salvo antes do reload:', requestTypeSelect.value);
+                } else {
+                    // Se não houver valor no select, manter o que está no localStorage
+                    const currentFilter = localStorage.getItem('filterType');
+                    if (!currentFilter) {
+                        // Se não houver nada salvo, usar deslocamento como padrão
+                        localStorage.setItem('filterType', 'deslocamento');
+                    }
+                }
+                
                 // Recarregar a página para garantir que todos os dados sejam atualizados do banco
                 setTimeout(() => {
                     window.location.reload();
