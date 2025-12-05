@@ -211,17 +211,17 @@ class KanbanManager {
                     <div class="info-item">
                         <i class="fas fa-dollar-sign"></i>
                         <span class="info-label">VALOR</span>
-                        <span class="info-value">${Utils.formatCurrency(card.valor)}</span>
+                        <span class="info-value">${typeof Utils !== 'undefined' && Utils.formatCurrency ? Utils.formatCurrency(card.valor) : card.valor || 'R$ 0,00'}</span>
                     </div>
                     <div class="info-item">
                         <i class="fas fa-calendar-plus"></i>
                         <span class="info-label">CRIAÇÃO</span>
-                        <span class="info-value">${Utils.formatDate(card.dataCriacao)}</span>
+                        <span class="info-value">${typeof Utils !== 'undefined' && Utils.formatDate ? Utils.formatDate(card.dataCriacao) : card.dataCriacao || ''}</span>
                     </div>
                     <div class="info-item">
                         <i class="fas fa-calendar-check"></i>
                         <span class="info-label">PAGAMENTO</span>
-                        <span class="info-value">${Utils.formatDate(card.dataPagamento)}</span>
+                        <span class="info-value">${typeof Utils !== 'undefined' && Utils.formatDate ? Utils.formatDate(card.dataPagamento) : card.dataPagamento || ''}</span>
                     </div>
                 </div>
                 <div class="card-time">
@@ -263,7 +263,11 @@ class KanbanManager {
         const cardElements = document.querySelectorAll(`[data-card-id="${cardId}"]`);
         if (cardElements.length === 0) {
             console.error('❌ Card não encontrado no DOM:', cardId);
-            Utils.showNotification('❌ Erro: Card não encontrado', 'error');
+            if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                Utils.showNotification('❌ Erro: Card não encontrado', 'error');
+            } else {
+                alert('❌ Erro: Card não encontrado');
+            }
             return;
         }
         
@@ -283,7 +287,11 @@ class KanbanManager {
         
         if (!targetColumnContent) {
             console.error('❌ Coluna destino não encontrada:', newColumn);
-            Utils.showNotification('❌ Erro: Coluna destino não encontrada', 'error');
+            if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                Utils.showNotification('❌ Erro: Coluna destino não encontrada', 'error');
+            } else {
+                alert('❌ Erro: Coluna destino não encontrada');
+            }
             return;
         }
         
@@ -471,41 +479,26 @@ class KanbanManager {
                     }
                 }
                 
-                // Atualizar contadores usando os valores do backend
-                if (data.counters) {
-                    const statusMapping = {
-                        'pendente': 'planning',
-                        'recusado': 'test',
-                        'aprovado': 'launch',
-                        'concluido': 'success'
-                    };
-                    
-                    Object.keys(data.counters).forEach(status => {
-                        const columnType = statusMapping[status];
-                        if (columnType) {
-                            const columnElement = document.querySelector(`[data-column="${columnType}"]`);
-                            if (columnElement) {
-                                const counter = columnElement.querySelector('.card-count');
-                                if (counter) {
-                                    counter.textContent = data.counters[status];
-                                }
-                            }
+                // Atualizar contadores - SEMPRE contar apenas cards visíveis (não usar valores do backend que são totais)
+                if (typeof window.updateCardCountersAfterFilter === 'function') {
+                    window.updateCardCountersAfterFilter();
+                } else {
+                    // Fallback: contar cards visíveis manualmente
+                    document.querySelectorAll('.kanban-column').forEach(column => {
+                        const columnContent = column.querySelector('.column-content');
+                        const counter = column.querySelector('.card-count');
+                        if (columnContent && counter) {
+                            const allCards = columnContent.querySelectorAll('.card');
+                            const visibleCards = Array.from(allCards).filter(card => {
+                                const style = window.getComputedStyle(card);
+                                return style.display !== 'none' && 
+                                       card.style.display !== 'none' &&
+                                       style.visibility !== 'hidden' &&
+                                       style.opacity !== '0';
+                            });
+                            counter.textContent = visibleCards.length;
                         }
                     });
-                } else {
-                    // Fallback: atualizar contadores manualmente se não houver dados do backend
-                    if (typeof updateColumnCounters === 'function') {
-                        updateColumnCounters();
-                    } else {
-                        document.querySelectorAll('.kanban-column').forEach(column => {
-                            const columnContent = column.querySelector('.column-content');
-                            const counter = column.querySelector('.card-count');
-                            if (columnContent && counter) {
-                                const cards = columnContent.querySelectorAll('.card:not(.empty-column)');
-                                counter.textContent = cards.length;
-                            }
-                        });
-                    }
                 }
                 
                 // Recalcular o tempo
@@ -529,7 +522,11 @@ class KanbanManager {
                     'success': 'Concluído'
                 };
                 
-                Utils.showNotification(`✅ Solicitação movida para "${columnNames[newColumn]}" com sucesso!`, 'success');
+                if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                    Utils.showNotification(`✅ Solicitação movida para "${columnNames[newColumn]}" com sucesso!`, 'success');
+                } else {
+                    console.log(`✅ Solicitação movida para "${columnNames[newColumn]}" com sucesso!`);
+                }
                 
                 // Salvar filtro atual ANTES de recarregar - preservar o valor que o usuário selecionou
                 const requestTypeSelect = document.getElementById('requestTypeSelect');
@@ -553,12 +550,20 @@ class KanbanManager {
             } else {
                 // Erro
                 console.error('❌ Erro do backend:', data.message);
-                Utils.showNotification(`❌ Erro: ${data.message || 'Erro ao mover solicitação'}`, 'error');
+                if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                    Utils.showNotification(`❌ Erro: ${data.message || 'Erro ao mover solicitação'}`, 'error');
+                } else {
+                    alert(`❌ Erro: ${data.message || 'Erro ao mover solicitação'}`);
+                }
             }
         })
         .catch(error => {
             console.error('❌ Erro ao atualizar status:', error);
-            Utils.showNotification('❌ Erro ao salvar. Tente novamente.', 'error');
+            if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                Utils.showNotification('❌ Erro ao salvar. Tente novamente.', 'error');
+            } else {
+                alert('❌ Erro ao salvar. Tente novamente.');
+            }
         });
     }
     
@@ -590,13 +595,21 @@ class KanbanManager {
     addCardToColumn(column) {
         // Implementar adição rápida de card
         console.log('Adicionar card à coluna:', column);
-        Utils.showNotification('Funcionalidade de adição rápida em desenvolvimento', 'info');
+        if (typeof Utils !== 'undefined' && Utils.showNotification) {
+            Utils.showNotification('Funcionalidade de adição rápida em desenvolvimento', 'info');
+        } else {
+            console.log('Funcionalidade de adição rápida em desenvolvimento');
+        }
     }
 
     showColumnMenu(button) {
         // Implementar menu da coluna
         console.log('Mostrar menu da coluna');
-        Utils.showNotification('Menu da coluna em desenvolvimento', 'info');
+        if (typeof Utils !== 'undefined' && Utils.showNotification) {
+            Utils.showNotification('Menu da coluna em desenvolvimento', 'info');
+        } else {
+            console.log('Menu da coluna em desenvolvimento');
+        }
     }
 
     updateCardCounts() {
@@ -637,7 +650,11 @@ class KanbanManager {
         this.cards = this.cards.filter(card => card.id != id);
         this.renderCards();
         this.saveCards();
-        Utils.showNotification('Card excluído com sucesso!', 'success');
+        if (typeof Utils !== 'undefined' && Utils.showNotification) {
+            Utils.showNotification('Card excluído com sucesso!', 'success');
+        } else {
+            console.log('Card excluído com sucesso!');
+        }
     }
 
     updateCard(id, updates) {
@@ -647,7 +664,11 @@ class KanbanManager {
             card.updatedAt = new Date();
             this.renderCards();
             this.saveCards();
-            Utils.showNotification('Card atualizado com sucesso!', 'success');
+            if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                Utils.showNotification('Card atualizado com sucesso!', 'success');
+            } else {
+                console.log('Card atualizado com sucesso!');
+            }
         }
     }
 }

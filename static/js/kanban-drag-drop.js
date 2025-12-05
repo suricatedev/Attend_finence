@@ -133,35 +133,24 @@
                     }
                 }
                 
-                // Atualizar contadores usando os valores do backend
-                if (data.counters) {
-                    const statusMapping = {
-                        'pendente': 'planning',
-                        'recusado': 'test',
-                        'aprovado': 'launch',
-                        'concluido': 'success'
-                    };
-                    
-                    Object.keys(data.counters).forEach(status => {
-                        const columnType = statusMapping[status];
-                        if (columnType) {
-                            const columnElement = document.querySelector(`[data-column="${columnType}"]`);
-                            if (columnElement) {
-                                const counter = columnElement.querySelector('.card-count');
-                                if (counter) {
-                                    counter.textContent = data.counters[status];
-                                }
-                            }
-                        }
-                    });
+                // Atualizar contadores - SEMPRE contar apenas cards visíveis (não usar valores do backend que são totais)
+                if (typeof window.updateCardCountersAfterFilter === 'function') {
+                    window.updateCardCountersAfterFilter();
                 } else {
-                    // Fallback: atualizar contadores manualmente se não houver dados do backend
+                    // Fallback: contar cards visíveis manualmente
                     document.querySelectorAll('.kanban-column').forEach(column => {
                         const columnContent = column.querySelector('.column-content');
                         const counter = column.querySelector('.card-count');
                         if (columnContent && counter) {
-                            const cards = columnContent.querySelectorAll('.card:not(.empty-column)');
-                            counter.textContent = cards.length;
+                            const allCards = columnContent.querySelectorAll('.card');
+                            const visibleCards = Array.from(allCards).filter(card => {
+                                const style = window.getComputedStyle(card);
+                                return style.display !== 'none' && 
+                                       card.style.display !== 'none' &&
+                                       style.visibility !== 'hidden' &&
+                                       style.opacity !== '0';
+                            });
+                            counter.textContent = visibleCards.length;
                         }
                     });
                 }

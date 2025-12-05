@@ -59,6 +59,14 @@ body:has(#dashboardView) .header .user-avatar-btn img {
     border: 2px solid white !important;
 }
 
+/* Ajustar cor do ícone do avatar do usuário */
+body:has(.dashboard-view) .header .user-avatar-btn i,
+body:has(#dashboardView) .header .user-avatar-btn i,
+body:has(.dashboard-view) .header .user-avatar i,
+body:has(#dashboardView) .header .user-avatar i {
+    color: white !important;
+}
+
 /* Ajustar botão "Nova Solicitação Financeira" para amarelo na página de dashboards */
 body:has(.dashboard-view) .header .btn-primary,
 body:has(#dashboardView) .header .btn-primary {

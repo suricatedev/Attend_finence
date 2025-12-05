@@ -18,8 +18,17 @@
         window.MODAL_CONTROLLED_BY_BASE = true;
         window.USER_CAN_CHANGE_STATUS = {% if user|can_change_status %}true{% else %}false{% endif %};
         
+        // Salvar valores originais dos contadores do backend
+        window.originalCounters = {
+            planning: {{ num_solicitacoes_pendentes|default:0 }},
+            test: {{ num_solicitacoes_recusados|default:0 }},
+            launch: {{ num_solicitacoes_aprovado|default:0 }},
+            success: {{ num_solicitacoes_concluido|default:0 }}
+        };
+        
         // Função para atualizar contadores após filtrar (disponível globalmente)
         window.updateCardCountersAfterFilter = function() {
+            const filterType = localStorage.getItem('filterType') || 'deslocamento';
             const columns = ['planning', 'test', 'launch', 'success'];
             
             columns.forEach(column => {
@@ -29,10 +38,22 @@
                     const counter = columnElement.querySelector('.card-count');
                     
                     if (columnContent && counter) {
-                        // Contar apenas cards visíveis (não ocultos pelo filtro)
-                        const visibleCards = Array.from(columnContent.querySelectorAll('.card')).filter(card => {
-                            return card.style.display !== 'none' && 
-                                   window.getComputedStyle(card).display !== 'none';
+                        // Se for "Solicitação de deslocamento", mostrar valores originais do backend
+                        if (filterType === 'deslocamento') {
+                            if (window.originalCounters && window.originalCounters[column] !== undefined) {
+                                counter.textContent = window.originalCounters[column];
+                                return;
+                            }
+                        }
+                        
+                        // Se for "Solicitação de técnico", contar apenas cards visíveis
+                        const allCards = columnContent.querySelectorAll('.card');
+                        const visibleCards = Array.from(allCards).filter(card => {
+                            const style = window.getComputedStyle(card);
+                            return style.display !== 'none' && 
+                                   card.style.display !== 'none' &&
+                                   style.visibility !== 'hidden' &&
+                                   style.opacity !== '0';
                         });
                         counter.textContent = visibleCards.length;
                     }
@@ -42,7 +63,7 @@
         
         // Função global para aplicar filtro IMEDIATAMENTE
         window.applyFilterFast = function() {
-            const filterType = localStorage.getItem('filterType') || 'tecnico';
+            const filterType = localStorage.getItem('filterType') || 'deslocamento';
             const cards = document.querySelectorAll('.card');
             
             if (cards.length === 0) return;

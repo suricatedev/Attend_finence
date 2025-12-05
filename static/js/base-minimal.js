@@ -123,6 +123,10 @@ window.addEventListener('DOMContentLoaded', function() {
                     // Filtrar cards para mostrar apenas solicitações de deslocamento (não técnico)
                     setTimeout(() => {
                         filterCardsByType('deslocamento');
+                        // Restaurar contadores originais do backend quando for deslocamento
+                        if (typeof window.updateCardCountersAfterFilter === 'function') {
+                            window.updateCardCountersAfterFilter();
+                        }
                     }, 100);
                 }
             }
@@ -176,6 +180,12 @@ window.addEventListener('DOMContentLoaded', function() {
                 window.applyFilterFast();
             }
             filterCardsByType('deslocamento');
+            // Restaurar contadores originais do backend quando for deslocamento
+            setTimeout(() => {
+                if (typeof window.updateCardCountersAfterFilter === 'function') {
+                    window.updateCardCountersAfterFilter();
+                }
+            }, 150);
         }
     });
     
@@ -222,6 +232,14 @@ window.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => filterCardsByType('deslocamento'), 100);
             setTimeout(() => filterCardsByType('deslocamento'), 500);
         }
+        
+        // Atualizar contadores após aplicar filtro no load
+        setTimeout(() => {
+            updateCardCounts();
+            if (typeof window.updateCardCountersAfterFilter === 'function') {
+                window.updateCardCountersAfterFilter();
+            }
+        }, 600);
     });
     
     // Função para filtrar cards por tipo
@@ -254,10 +272,16 @@ window.addEventListener('DOMContentLoaded', function() {
         
         // Atualizar contadores de cards
         updateCardCounts();
+        
+        // Garantir que a função global também seja chamada
+        if (typeof window.updateCardCountersAfterFilter === 'function') {
+            window.updateCardCountersAfterFilter();
+        }
     }
     
     // Função para atualizar contadores de cards
     function updateCardCounts() {
+        const filterType = localStorage.getItem('filterType') || 'deslocamento';
         const columns = ['planning', 'test', 'launch', 'success'];
         
         columns.forEach(column => {
@@ -267,10 +291,20 @@ window.addEventListener('DOMContentLoaded', function() {
                 const counter = columnElement.querySelector('.card-count');
                 
                 if (columnContent && counter) {
-                    // Contar apenas cards visíveis (não ocultos pelo filtro)
-                    const visibleCards = Array.from(columnContent.querySelectorAll('.card')).filter(card => {
-                        return card.style.display !== 'none' && 
-                               window.getComputedStyle(card).display !== 'none';
+                    // Se for "Solicitação de deslocamento", usar função global que restaura valores originais
+                    if (filterType === 'deslocamento' && typeof window.updateCardCountersAfterFilter === 'function') {
+                        window.updateCardCountersAfterFilter();
+                        return;
+                    }
+                    
+                    // Se for "Solicitação de técnico", contar apenas cards visíveis
+                    const allCards = columnContent.querySelectorAll('.card');
+                    const visibleCards = Array.from(allCards).filter(card => {
+                        const style = window.getComputedStyle(card);
+                        return style.display !== 'none' && 
+                               card.style.display !== 'none' &&
+                               style.visibility !== 'hidden' &&
+                               style.opacity !== '0';
                     });
                     counter.textContent = visibleCards.length;
                 }
