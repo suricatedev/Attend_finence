@@ -559,10 +559,19 @@ class KanbanManager {
         })
         .catch(error => {
             console.error('❌ Erro ao atualizar status:', error);
+            
+            // Verificar se é erro de conexão
+            let errorMessage = '❌ Erro ao salvar. Tente novamente.';
+            if (error.message && error.message.includes('Failed to fetch')) {
+                errorMessage = '❌ Servidor não disponível. Verifique se o servidor Django está rodando.';
+            } else if (error.message && error.message.includes('ERR_CONNECTION_REFUSED')) {
+                errorMessage = '❌ Não foi possível conectar ao servidor. Inicie o servidor Django.';
+            }
+            
             if (typeof Utils !== 'undefined' && Utils.showNotification) {
-                Utils.showNotification('❌ Erro ao salvar. Tente novamente.', 'error');
+                Utils.showNotification(errorMessage, 'error');
             } else {
-                alert('❌ Erro ao salvar. Tente novamente.');
+                alert(errorMessage);
             }
         });
     }

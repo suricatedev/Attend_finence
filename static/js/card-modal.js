@@ -1592,7 +1592,16 @@ function moveCardToFila(cardId, targetFila) {
     })
     .catch(error => {
         console.error('Erro ao atualizar status:', error);
-        showNotification('❌ Erro ao salvar. Tente novamente.', 'error');
+        
+        // Verificar se é erro de conexão
+        let errorMessage = '❌ Erro ao salvar. Tente novamente.';
+        if (error.message && error.message.includes('Failed to fetch')) {
+            errorMessage = '❌ Servidor não disponível. Verifique se o servidor Django está rodando.';
+        } else if (error.message && error.message.includes('ERR_CONNECTION_REFUSED')) {
+            errorMessage = '❌ Não foi possível conectar ao servidor. Inicie o servidor Django.';
+        }
+        
+        showNotification(errorMessage, 'error');
     });
 }
 
