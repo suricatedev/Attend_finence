@@ -51,3 +51,5 @@ def listar_solicitacoes_tecnico(request):
         }, status=500)
 
 
+
+

@@ -53,6 +53,13 @@ window.addEventListener('DOMContentLoaded', function() {
                 }
                 if (formTecnico) {
                     formTecnico.style.display = 'block';
+                    // Garantir que o botão de adicionar ID esteja visível
+                    const btnAddTecnicoId = document.getElementById('btnAddTecnicoId');
+                    const addContainerTecnico = btnAddTecnicoId ? btnAddTecnicoId.closest('.add-id-container') : null;
+                    if (addContainerTecnico) {
+                        addContainerTecnico.style.display = 'flex';
+                        addContainerTecnico.style.visibility = 'visible';
+                    }
                 }
                 console.log('✅ Formulário de técnico ativado');
             } else {

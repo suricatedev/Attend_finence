@@ -394,85 +394,102 @@
                 <div id="formTecnico" class="form-tecnico" style="display: none;">
                     <div class="route-section-header">
                         <h3><i class="fas fa-user-tie"></i> Solicitação de Técnico</h3>
-                        <p>Preencha os dados da solicitação de técnico</p>
+                        <p>Preencha os IDs de solicitação de técnico (mínimo 1 obrigatório, adicione quantos precisar)</p>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="tecnicoSolicitacao">ID da Solicitação <span class="required">*</span></label>
-                        <input type="text" id="tecnicoSolicitacao" name="tecnico_solicitacao" placeholder="Ex: INCXXXXX" required>
-                        <small class="form-help">ID da solicitação relacionada</small>
-                    </div>
-                    
-                    <div class="form-group route-recebedor-field">
-                        <label for="tecnicoRecebedor">Nome do Técnico <span class="required">*</span></label>
-                        <div class="recebedor-dropdown-wrapper">
-                            <input type="text" id="tecnicoRecebedor" name="tecnico_recebedor" class="recebedor-input" placeholder="Digite ou selecione o técnico" autocomplete="off" required>
-                            <div class="recebedor-dropdown" id="recebedor-dropdown-tecnico" style="display: none;"></div>
+                    <!-- ID 1 - Obrigatório -->
+                    <div class="tecnico-id-group" data-tecnico-id="1">
+                        <div class="route-id-header">
+                            <label for="tecnicoSolicitacao1">ID da Solicitação 1 <span class="required">*</span></label>
                         </div>
-                        <small class="form-help">Digite para buscar ou clique para ver todos os técnicos</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="tecnicoPix">Chave PIX</label>
-                        <input type="text" id="tecnicoPix" name="tecnico_pix" class="pix-input" placeholder="Chave PIX será preenchida automaticamente" readonly style="background-color: #f0f0f0;">
-                        <small class="form-help">Preenchido automaticamente</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="tecnicoServico">Tipo de Serviço <span class="required">*</span></label>
-                        <select id="tecnicoServico" name="tecnico_servico" required>
-                            <option value="">Selecione o serviço</option>
-                            {% for servico in servicos_disponiveis %}
-                            <option value="{{ servico.id }}">{{ servico.nome }}</option>
-                            {% empty %}
-                            <option value="" disabled>Nenhum serviço disponível</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="tecnicoValorPagamento">Valor que vai pagar para o técnico <span class="required">*</span></label>
-                        <input type="text" id="tecnicoValorPagamento" name="tecnico_valor_pagamento" class="valor-tecnico" placeholder="R$ 0,00" required>
-                        <small class="form-help">Valor a ser pago para o técnico</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="tecnicoValorExtra">Valor Extra</label>
-                        <input type="text" id="tecnicoValorExtra" name="tecnico_valor_extra" class="valor-tecnico-extra" placeholder="R$ 0,00">
-                        <small class="form-help">Valor extra (opcional)</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="tecnicoDescricao">Descrição</label>
-                        <textarea id="tecnicoDescricao" name="tecnico_descricao" rows="4" placeholder="Descreva detalhes da solicitação de técnico..."></textarea>
-                        <small class="form-help">Campo opcional</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="tecnicoDataRealizacao">Data da Realização da Atividade <span class="required">*</span></label>
-                        <input type="date" id="tecnicoDataRealizacao" name="tecnico_data_realizacao" required>
-                        <small class="form-help">Data em que a atividade foi realizada</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="atividadeType">Tipo de Atividade <span class="required">*</span></label>
-                        <div class="atividade-options">
-                            <label class="atividade-option">
-                                <input type="radio" id="atividadeProdutiva" name="tecnico_atividade_produtiva" value="true" checked>
-                                <span class="atividade-label atividade-produtiva">
-                                    <i class="fas fa-check-circle"></i>
-                                    Produtiva
-                                </span>
-                            </label>
-                            <label class="atividade-option">
-                                <input type="radio" id="atividadeImprodutiva" name="tecnico_atividade_produtiva" value="false">
-                                <span class="atividade-label atividade-improdutiva">
-                                    <i class="fas fa-times-circle"></i>
-                                    Improdutiva
-                                </span>
-                            </label>
+                        <div class="route-id-inputs tecnico-inputs-grid">
+                            <!-- Primeira linha: ID, Técnico, PIX, Serviço -->
+                            <div class="form-group route-id-field">
+                                <input type="text" id="tecnicoSolicitacao1" name="tecnico_solicitacao_1" placeholder="Ex: INCXXXXX" required>
+                                <small class="form-help">ID obrigatório</small>
+                            </div>
+                            <div class="form-group route-recebedor-field">
+                                <label for="tecnicoRecebedor1">Nome do Técnico <span class="required">*</span></label>
+                                <div class="recebedor-dropdown-wrapper">
+                                    <input type="text" id="tecnicoRecebedor1" name="tecnico_recebedor_1" class="recebedor-input" placeholder="Digite ou selecione o técnico" autocomplete="off" required>
+                                    <div class="recebedor-dropdown" id="recebedor-dropdown-tecnico-1" style="display: none;"></div>
+                                </div>
+                                <small class="form-help">Digite para buscar ou clique para ver todos os técnicos</small>
+                            </div>
+                            <div class="form-group route-pix-field">
+                                <label for="tecnicoPix1">Chave PIX</label>
+                                <input type="text" id="tecnicoPix1" name="tecnico_pix_1" class="pix-input" placeholder="Chave PIX será preenchida automaticamente" readonly style="background-color: #f0f0f0;">
+                                <small class="form-help">Preenchido automaticamente</small>
+                            </div>
+                            <div class="form-group route-servico-field">
+                                <label for="tecnicoServico1">Tipo de Serviço <span class="required">*</span></label>
+                                <select id="tecnicoServico1" name="tecnico_servico_1" required>
+                                    <option value="">Selecione o serviço</option>
+                                    {% for servico in servicos_disponiveis %}
+                                    <option value="{{ servico.id }}">{{ servico.nome }}</option>
+                                    {% empty %}
+                                    <option value="" disabled>Nenhum serviço disponível</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- Segunda linha: Valores -->
+                            <div class="form-group tecnico-valor-field">
+                                <label for="tecnicoValorPagamento1">Valor que vai pagar para o técnico <span class="required">*</span></label>
+                                <input type="text" id="tecnicoValorPagamento1" name="tecnico_valor_pagamento_1" class="valor-tecnico" placeholder="R$ 0,00" required>
+                                <small class="form-help">Valor a ser pago para o técnico</small>
+                            </div>
+                            <div class="form-group tecnico-valor-extra-field">
+                                <label for="tecnicoValorExtra1">Valor Extra</label>
+                                <input type="text" id="tecnicoValorExtra1" name="tecnico_valor_extra_1" class="valor-tecnico-extra" placeholder="R$ 0,00">
+                                <small class="form-help">Valor extra (opcional)</small>
+                            </div>
+                            
+                            <!-- Terceira linha: Data e Tipo de Atividade -->
+                            <div class="form-group tecnico-data-field">
+                                <label for="tecnicoDataRealizacao1">Data da Realização da Atividade <span class="required">*</span></label>
+                                <input type="date" id="tecnicoDataRealizacao1" name="tecnico_data_realizacao_1" required>
+                                <small class="form-help">Data em que a atividade foi realizada</small>
+                            </div>
+                            <div class="form-group tecnico-atividade-field">
+                                <label for="atividadeType1">Tipo de Atividade <span class="required">*</span></label>
+                                <div class="atividade-options">
+                                    <label class="atividade-option">
+                                        <input type="radio" id="atividadeProdutiva1" name="tecnico_atividade_produtiva_1" value="true" checked>
+                                        <span class="atividade-label atividade-produtiva">
+                                            <i class="fas fa-check-circle"></i>
+                                            Produtiva
+                                        </span>
+                                    </label>
+                                    <label class="atividade-option">
+                                        <input type="radio" id="atividadeImprodutiva1" name="tecnico_atividade_produtiva_1" value="false">
+                                        <span class="atividade-label atividade-improdutiva">
+                                            <i class="fas fa-times-circle"></i>
+                                            Improdutiva
+                                        </span>
+                                    </label>
+                                </div>
+                                <small class="form-help">Selecione se a atividade é produtiva ou improdutiva</small>
+                            </div>
+                            
+                            <!-- Quarta linha: Descrição (largura total) -->
+                            <div class="form-group tecnico-descricao-field" style="grid-column: 1 / -1;">
+                                <label for="tecnicoDescricao1">Descrição</label>
+                                <textarea id="tecnicoDescricao1" name="tecnico_descricao_1" rows="3" placeholder="Descreva detalhes da solicitação de técnico..."></textarea>
+                                <small class="form-help">Campo opcional</small>
+                            </div>
                         </div>
-                        <small class="form-help">Selecione se a atividade é produtiva ou improdutiva</small>
+                    </div>
+
+                    <!-- Container para IDs dinâmicos adicionais -->
+                    <div id="tecnico-ids-dinamicos" style="display: block; visibility: visible;"></div>
+                    
+                    <!-- Botão para adicionar novo ID -->
+                    <div class="add-id-container" style="display: flex !important; visibility: visible !important;">
+                        <button type="button" id="btnAddTecnicoId" class="btn-add-route-id" onclick="if(window.criarNovoTecnicoId){ window.criarNovoTecnicoId(event);} else { alert('Erro: Função não encontrada. Recarregue a página.');} return false;" style="pointer-events: auto; cursor: pointer;">
+                            <i class="fas fa-plus"></i>
+                            Adicionar Novo ID
+                        </button>
                     </div>
                 </div>
             </form>
@@ -885,6 +902,239 @@
 
                 alert('Erro ao criar novo ID: ' + error.message);
                 window.criandoNovoId = false;
+                return false;
+            }
+        };
+        
+        // ============================================
+        // FUNÇÃO PARA CRIAR NOVO ID DE TÉCNICO
+        // ============================================
+        window.criarNovoTecnicoId = function(e) {
+            // Prevenir múltiplas execuções simultâneas
+            if (window.criandoNovoTecnicoId) {
+                return false;
+            }
+            window.criandoNovoTecnicoId = true;
+            
+            try {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                
+                // PASSO 1: Encontrar container
+                const container = document.getElementById('tecnico-ids-dinamicos');
+                if (!container) {
+                    alert('Erro: Container não encontrado. Recarregue a página.');
+                    window.criandoNovoTecnicoId = false;
+                    return false;
+                }
+                
+                // Garantir que o container está visível
+                container.style.display = 'block';
+                container.style.visibility = 'visible';
+                
+                // PASSO 2: Encontrar template (usar o primeiro grupo como template)
+                let template = document.querySelector('.tecnico-id-group[data-tecnico-id="1"]');
+                if (!template) {
+                    alert('Erro: Template não encontrado. Recarregue a página.');
+                    window.criandoNovoTecnicoId = false;
+                    return false;
+                }
+                
+                // PASSO 3: Clonar template
+                const novoId = template.cloneNode(true);
+                const novoNumero = window.tecnicoIdCounter ? window.tecnicoIdCounter++ : (window.tecnicoIdCounter = 2, window.tecnicoIdCounter++);
+                novoId.setAttribute('data-tecnico-id', novoNumero);
+                
+                // Garantir que o grid está aplicado
+                const inputsContainer = novoId.querySelector('.route-id-inputs');
+                if (inputsContainer && !inputsContainer.classList.contains('tecnico-inputs-grid')) {
+                    inputsContainer.classList.add('tecnico-inputs-grid');
+                }
+                
+                // Atualizar IDs, names e labels
+                const elementosParaAtualizar = [
+                    ...novoId.querySelectorAll('[id*="tecnicoSolicitacao1"]'),
+                    ...novoId.querySelectorAll('[id*="tecnicoRecebedor1"]'),
+                    ...novoId.querySelectorAll('[id*="tecnicoPix1"]'),
+                    ...novoId.querySelectorAll('[id*="tecnicoServico1"]'),
+                    ...novoId.querySelectorAll('[id*="tecnicoValorPagamento1"]'),
+                    ...novoId.querySelectorAll('[id*="tecnicoValorExtra1"]'),
+                    ...novoId.querySelectorAll('[id*="tecnicoDescricao1"]'),
+                    ...novoId.querySelectorAll('[id*="tecnicoDataRealizacao1"]'),
+                    ...novoId.querySelectorAll('[id*="atividadeProdutiva1"]'),
+                    ...novoId.querySelectorAll('[id*="atividadeImprodutiva1"]'),
+                    ...novoId.querySelectorAll('[id*="recebedor-dropdown-tecnico-1"]'),
+                    ...novoId.querySelectorAll('[name*="_1"]'),
+                    ...novoId.querySelectorAll('label[for*="1"]')
+                ];
+                
+                elementosParaAtualizar.forEach(elemento => {
+                    if (elemento.id && elemento.id.includes('1')) {
+                        elemento.id = elemento.id.replace(/1(?![0-9])/g, novoNumero);
+                    }
+                    if (elemento.name && elemento.name.includes('_1')) {
+                        elemento.name = elemento.name.replace(/_1(?![0-9])/g, `_${novoNumero}`);
+                    }
+                    if (elemento.htmlFor && elemento.htmlFor.includes('1')) {
+                        elemento.htmlFor = elemento.htmlFor.replace(/1(?![0-9])/g, novoNumero);
+                    }
+                    if ((elemento.tagName === 'INPUT' || elemento.tagName === 'SELECT' || elemento.tagName === 'TEXTAREA') && 
+                        elemento.type !== 'file' && elemento.type !== 'button' && 
+                        elemento.type !== 'submit' && elemento.type !== 'radio') {
+                        elemento.value = '';
+                    }
+                    if (elemento.type === 'radio') {
+                        if (novoNumero === 2) {
+                            elemento.checked = false;
+                        }
+                    }
+                });
+                
+                // Atualizar texto dos labels
+                novoId.querySelectorAll('label').forEach(label => {
+                    const texto = label.textContent || label.innerHTML || '';
+                    if (texto.includes('ID da Solicitação 1') || texto.includes('Solicitação 1')) {
+                        label.innerHTML = label.innerHTML.replace(/Solicitação 1/g, `Solicitação ${novoNumero}`);
+                        label.innerHTML = label.innerHTML.replace(/ID da Solicitação 1/g, `ID da Solicitação ${novoNumero}`);
+                        if (!label.innerHTML.includes('(Opcional)')) {
+                            label.innerHTML += ' <span class="optional">(Opcional)</span>';
+                        }
+                    }
+                });
+                
+                // Remover required dos campos opcionais (exceto o primeiro que é obrigatório)
+                novoId.querySelectorAll('input[required], select[required]').forEach(campo => {
+                    if (campo.id.includes('tecnicoSolicitacao') || campo.id.includes('tecnicoRecebedor') || 
+                        campo.id.includes('tecnicoServico') || campo.id.includes('tecnicoValorPagamento') ||
+                        campo.id.includes('tecnicoDataRealizacao') || campo.name.includes('tecnico_atividade_produtiva')) {
+                        // Manter required para campos obrigatórios
+                    } else {
+                        campo.removeAttribute('required');
+                    }
+                });
+                
+                // Adicionar botão de remover
+                const header = novoId.querySelector('.route-id-header');
+                if (header) {
+                    const btnRemover = document.createElement('button');
+                    btnRemover.type = 'button';
+                    btnRemover.className = 'btn-remove-route-id';
+                    btnRemover.innerHTML = '<i class="fas fa-times"></i>';
+                    btnRemover.title = 'Remover este ID';
+                    btnRemover.onclick = function() {
+                        novoId.remove();
+                    };
+                    header.appendChild(btnRemover);
+                }
+                
+                // PASSO 4: ADICIONAR O ELEMENTO AO DOM
+                try {
+                    container.appendChild(novoId);
+                } catch (error) {
+                    window.criandoNovoTecnicoId = false;
+                    return false;
+                }
+                
+                // PASSO 5: Configurar autocomplete para o novo ticket
+                const recebedorInput = novoId.querySelector(`#tecnicoRecebedor${novoNumero}`);
+                const pixInput = novoId.querySelector(`#tecnicoPix${novoNumero}`);
+                const dropdownId = `recebedor-dropdown-tecnico-${novoNumero}`;
+                
+                if (recebedorInput) {
+                    // Garantir que o input tem a classe correta
+                    recebedorInput.classList.add('recebedor-input');
+                    
+                    // Verificar se o dropdown existe, se não, criar
+                    let dropdown = novoId.querySelector(`#${dropdownId}`);
+                    if (!dropdown) {
+                        const wrapper = recebedorInput.closest('.recebedor-dropdown-wrapper');
+                        if (wrapper) {
+                            dropdown = document.createElement('div');
+                            dropdown.id = dropdownId;
+                            dropdown.className = 'recebedor-dropdown';
+                            dropdown.style.display = 'none';
+                            wrapper.appendChild(dropdown);
+                        }
+                    }
+                    
+                    // Configurar event listeners para autocomplete (os listeners globais já devem estar ativos)
+                    // Mas vamos garantir que o PIX seja preenchido quando um recebedor for selecionado
+                    recebedorInput.addEventListener('blur', function() {
+                        // A validação e preenchimento do PIX será feito pelos listeners globais
+                        // Mas podemos adicionar um fallback aqui se necessário
+                        setTimeout(() => {
+                            if (recebedoresGlobal && recebedoresGlobal.length > 0) {
+                                const nomeRecebedor = recebedorInput.value.trim();
+                                const recebedor = recebedoresGlobal.find(r => 
+                                    r && r.nome && r.nome.trim().toLowerCase() === nomeRecebedor.toLowerCase()
+                                );
+                                if (recebedor && pixInput) {
+                                    pixInput.value = recebedor.chave_pix || '';
+                                }
+                            }
+                        }, 300);
+                    });
+                }
+                
+                // Formatação monetária para campos de valor
+                const valorPagamentoInput = novoId.querySelector(`#tecnicoValorPagamento${novoNumero}`);
+                if (valorPagamentoInput) {
+                    valorPagamentoInput.addEventListener('input', function(e) {
+                        let value = e.target.value.replace(/\D/g, '');
+                        if (value) {
+                            value = value.replace(/^0+/, '');
+                            if (!value) value = '0';
+                            const numericValue = parseFloat(value) / 100;
+                            e.target.value = formatarValorMonetario(numericValue);
+                        } else {
+                            e.target.value = '';
+                        }
+                    });
+                    
+                    valorPagamentoInput.addEventListener('blur', function(e) {
+                        const valor = parseValorMonetario(e.target.value);
+                        e.target.value = formatarValorMonetario(valor);
+                    });
+                }
+                
+                const valorExtraInput = novoId.querySelector(`#tecnicoValorExtra${novoNumero}`);
+                if (valorExtraInput) {
+                    valorExtraInput.addEventListener('input', function(e) {
+                        let value = e.target.value.replace(/\D/g, '');
+                        if (value) {
+                            value = value.replace(/^0+/, '');
+                            if (!value) value = '0';
+                            const numericValue = parseFloat(value) / 100;
+                            e.target.value = formatarValorMonetario(numericValue);
+                        } else {
+                            e.target.value = '';
+                        }
+                    });
+                    
+                    valorExtraInput.addEventListener('blur', function(e) {
+                        const valor = parseValorMonetario(e.target.value);
+                        e.target.value = formatarValorMonetario(valor);
+                    });
+                }
+                
+                // Scroll suave para o novo ID
+                setTimeout(() => {
+                    const elemento = document.querySelector(`[data-tecnico-id="${novoNumero}"]`);
+                    if (elemento) {
+                        elemento.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }, 200);
+                
+                // Liberar flag e finalizar
+                window.criandoNovoTecnicoId = false;
+                
+                return true;
+                
+            } catch (error) {
+                alert('Erro ao criar novo ID de técnico: ' + error.message);
+                window.criandoNovoTecnicoId = false;
                 return false;
             }
         };
@@ -2173,6 +2423,7 @@
                 // Buscar todos os inputs de recebedor visíveis (apenas nos formulários ativos)
                 const formEmRota = document.getElementById('formEmRota');
                 const formCasual = document.getElementById('formCasual');
+                const formTecnico = document.getElementById('formTecnico');
                 const routeEmRota = document.getElementById('routeEmRota');
                 const routeCasual = document.getElementById('routeCasual');
                 
@@ -2185,6 +2436,9 @@
                 } else if (routeCasual && routeCasual.checked && formCasual && window.getComputedStyle(formCasual).display !== 'none') {
                     // Formulário "Casual" está ativo
                     recebedorInputs = formCasual.querySelectorAll('.recebedor-input');
+                } else if (formTecnico && window.getComputedStyle(formTecnico).display !== 'none') {
+                    // Formulário "Técnico" está ativo
+                    recebedorInputs = formTecnico.querySelectorAll('.recebedor-input');
                 }
                 
                 recebedorInputs.forEach(recebedorInput => {
@@ -2282,7 +2536,7 @@
                 const isValidRecebedorInput = input.id && (
                     input.id.startsWith('routeRecebedor') || 
                     input.id === 'campaignRecebedor' ||
-                    input.id === 'tecnicoRecebedor'
+                    input.id.startsWith('tecnicoRecebedor')
                 );
                 
                 if (!isValidRecebedorInput) {
@@ -2428,8 +2682,10 @@
                         let pixInput = null;
                         if (recebedorInput.id.includes('routeRecebedor')) {
                             pixInput = document.getElementById(recebedorInput.id.replace('routeRecebedor', 'routePix'));
-                        } else if (recebedorInput.id === 'tecnicoRecebedor') {
-                            pixInput = document.getElementById('tecnicoPix');
+                        } else if (recebedorInput.id.startsWith('tecnicoRecebedor')) {
+                            // Suportar tanto tecnicoRecebedor quanto tecnicoRecebedor1, tecnicoRecebedor2, etc.
+                            const numeroID = recebedorInput.id.replace('tecnicoRecebedor', '');
+                            pixInput = document.getElementById(numeroID ? `tecnicoPix${numeroID}` : 'tecnicoPix');
                         } else {
                             pixInput = document.getElementById('campaignPix');
                         }
@@ -2674,8 +2930,25 @@
                             
                             mostrarDropdownRecebedores(recebedorInput, dropdownId);
                             configurarFecharDropdown(recebedorInput, dropdownId);
-                        } else if (recebedorInput.id === 'tecnicoRecebedor') {
-                            dropdownId = 'recebedor-dropdown-tecnico';
+                        } else if (recebedorInput.id.startsWith('tecnicoRecebedor')) {
+                            // Suportar tanto tecnicoRecebedor quanto tecnicoRecebedor1, tecnicoRecebedor2, etc.
+                            const numeroID = recebedorInput.id.replace('tecnicoRecebedor', '');
+                            dropdownId = numeroID ? `recebedor-dropdown-tecnico-${numeroID}` : 'recebedor-dropdown-tecnico';
+                            
+                            // Criar dropdown se não existir
+                            if (!document.getElementById(dropdownId)) {
+                                const wrapper = recebedorInput.closest('.recebedor-dropdown-wrapper') || recebedorInput.parentElement;
+                                const dropdown = document.createElement('div');
+                                dropdown.className = 'recebedor-dropdown';
+                                dropdown.id = dropdownId;
+                                dropdown.style.display = 'none';
+                                wrapper.appendChild(dropdown);
+                            }
+                            
+                            mostrarDropdownRecebedores(recebedorInput, dropdownId);
+                            configurarFecharDropdown(recebedorInput, dropdownId);
+                        } else if (recebedorInput.id === 'campaignRecebedor') {
+                            dropdownId = 'recebedor-dropdown-casual';
                             mostrarDropdownRecebedores(recebedorInput, dropdownId);
                             configurarFecharDropdown(recebedorInput, dropdownId);
                         }
@@ -2695,15 +2968,19 @@
                             if (pixInput) {
                                 preencherChavePixInput(recebedorInput, pixInput);
                             }
-                        } else if (recebedorInput.id === 'campaignRecebedor') {
-                            mostrarDropdownRecebedores(recebedorInput, 'recebedor-dropdown-casual');
-                            const pixInput = document.getElementById('campaignPix');
+                        } else if (recebedorInput.id.startsWith('tecnicoRecebedor')) {
+                            // Suportar tanto tecnicoRecebedor quanto tecnicoRecebedor1, tecnicoRecebedor2, etc.
+                            const numeroID = recebedorInput.id.replace('tecnicoRecebedor', '');
+                            const dropdownId = numeroID ? `recebedor-dropdown-tecnico-${numeroID}` : 'recebedor-dropdown-tecnico';
+                            const pixInput = document.getElementById(numeroID ? `tecnicoPix${numeroID}` : 'tecnicoPix');
+                            
+                            mostrarDropdownRecebedores(recebedorInput, dropdownId);
                             if (pixInput) {
                                 preencherChavePixInput(recebedorInput, pixInput);
                             }
-                        } else if (recebedorInput.id === 'tecnicoRecebedor') {
-                            mostrarDropdownRecebedores(recebedorInput, 'recebedor-dropdown-tecnico');
-                            const pixInput = document.getElementById('tecnicoPix');
+                        } else if (recebedorInput.id === 'campaignRecebedor') {
+                            mostrarDropdownRecebedores(recebedorInput, 'recebedor-dropdown-casual');
+                            const pixInput = document.getElementById('campaignPix');
                             if (pixInput) {
                                 preencherChavePixInput(recebedorInput, pixInput);
                             }
@@ -2721,13 +2998,15 @@
                             if (pixInput) {
                                 preencherChavePixInput(recebedorInput, pixInput);
                             }
-                        } else if (recebedorInput.id === 'campaignRecebedor') {
-                            const pixInput = document.getElementById('campaignPix');
+                        } else if (recebedorInput.id.startsWith('tecnicoRecebedor')) {
+                            // Suportar tanto tecnicoRecebedor quanto tecnicoRecebedor1, tecnicoRecebedor2, etc.
+                            const numeroID = recebedorInput.id.replace('tecnicoRecebedor', '');
+                            const pixInput = document.getElementById(numeroID ? `tecnicoPix${numeroID}` : 'tecnicoPix');
                             if (pixInput) {
                                 preencherChavePixInput(recebedorInput, pixInput);
                             }
-                        } else if (recebedorInput.id === 'tecnicoRecebedor') {
-                            const pixInput = document.getElementById('tecnicoPix');
+                        } else if (recebedorInput.id === 'campaignRecebedor') {
+                            const pixInput = document.getElementById('campaignPix');
                             if (pixInput) {
                                 preencherChavePixInput(recebedorInput, pixInput);
                             }
@@ -2735,30 +3014,9 @@
                     }
                 });
                 
-                // Configurar recebedor para formulário de técnico
-                const tecnicoRecebedor = document.getElementById('tecnicoRecebedor');
-                const tecnicoPix = document.getElementById('tecnicoPix');
-                if (tecnicoRecebedor && tecnicoPix) {
-                    tecnicoRecebedor.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        mostrarDropdownRecebedores(this, 'recebedor-dropdown-tecnico');
-                        configurarFecharDropdown(this, 'recebedor-dropdown-tecnico');
-                    });
-                    
-                    tecnicoRecebedor.addEventListener('focus', function() {
-                        mostrarDropdownRecebedores(this, 'recebedor-dropdown-tecnico');
-                        configurarFecharDropdown(this, 'recebedor-dropdown-tecnico');
-                    });
-                    
-                    tecnicoRecebedor.addEventListener('input', function() {
-                        mostrarDropdownRecebedores(this, 'recebedor-dropdown-tecnico');
-                        preencherChavePixInput(this, tecnicoPix);
-                    });
-                    
-                    tecnicoRecebedor.addEventListener('change', function() {
-                        preencherChavePixInput(this, tecnicoPix);
-                    });
-                }
+                // Configurar recebedor para formulário de técnico (primeiro ticket)
+                // O autocomplete é configurado automaticamente pelos event listeners globais
+                // Não é necessário código adicional aqui
                 
                 // Formatação monetária para campos de valor do técnico
                 const tecnicoValorPagamento = document.getElementById('tecnicoValorPagamento');

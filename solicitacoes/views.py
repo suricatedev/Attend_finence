@@ -296,125 +296,145 @@ def receber_dados(request):
             success_message = 'Solicitação atualizada com sucesso!' if is_edit_mode else 'Solicitação criada com sucesso!'
             
             # Verificar se é uma solicitação de técnico ANTES de processar outros tipos
-            tecnico_recebedor = request.POST.get('tecnico_recebedor', '').strip()
-            is_solicitacao_tecnico = bool(tecnico_recebedor)
+            # Verificar se há pelo menos um campo de técnico no POST
+            tecnico_ids_encontrados = []
+            for key in request.POST.keys():
+                if key.startswith('tecnico_solicitacao_'):
+                    try:
+                        num_id = int(key.replace('tecnico_solicitacao_', ''))
+                        tecnico_ids_encontrados.append(num_id)
+                    except ValueError:
+                        continue
+            
+            is_solicitacao_tecnico = len(tecnico_ids_encontrados) > 0
             
             if is_solicitacao_tecnico:
-                # Processar solicitação de técnico
-                print(f"🔍 DEBUG: Processando solicitação de técnico")
+                # Processar solicitação de técnico (múltiplos tickets)
+                print(f"🔍 DEBUG: Processando solicitação de técnico - IDs encontrados: {tecnico_ids_encontrados}")
                 
-                # Capturar dados do formulário de técnico
-                tecnico_id_solicitacao = request.POST.get('tecnico_solicitacao', '').strip()
-                tecnico_pix = request.POST.get('tecnico_pix', '').strip()
-                tecnico_servico_id = request.POST.get('tecnico_servico', '').strip()
-                tecnico_valor_pagamento_raw = request.POST.get('tecnico_valor_pagamento', '').strip()
-                tecnico_valor_extra_raw = request.POST.get('tecnico_valor_extra', '').strip()
-                tecnico_descricao = request.POST.get('tecnico_descricao', '').strip()
-                tecnico_data_realizacao_str = request.POST.get('tecnico_data_realizacao', '').strip()
-                tecnico_atividade_produtiva = request.POST.get('tecnico_atividade_produtiva', 'true').strip().lower() == 'true'
+                # Ordenar para processar na ordem correta
+                tecnico_ids_encontrados.sort()
                 
-                # Validações
-                if not tecnico_recebedor:
-                    messages.error(request, 'O campo "Nome do Técnico" é obrigatório.')
-                    return redirect('/solicitacoes/home/')
-                
-                if not tecnico_id_solicitacao:
-                    messages.error(request, 'O campo "ID da Solicitação" é obrigatório.')
-                    return redirect('/solicitacoes/home/')
-                
-                if not tecnico_servico_id:
-                    messages.error(request, 'O campo "Tipo de Serviço" é obrigatório.')
-                    return redirect('/solicitacoes/home/')
-                
-                # Buscar recebedor
-                try:
-                    recebedor_obj = Recebedor.objects.get(nome=tecnico_recebedor)
-                except Recebedor.DoesNotExist:
-                    messages.error(request, f'Recebedor "{tecnico_recebedor}" não encontrado no sistema.')
-                    return redirect('/solicitacoes/home/')
-                
-                # Buscar serviço
-                try:
-                    servico_obj = Servico.objects.get(id=tecnico_servico_id, ativo=True)
-                except Servico.DoesNotExist:
-                    messages.error(request, 'Serviço selecionado não foi encontrado ou está inativo.')
-                    return redirect('/solicitacoes/home/')
-                
-                # Converter valores monetários
-                valor_pagamento_tecnico = limpar_valor_monetario(tecnico_valor_pagamento_raw)
-                valor_extra = limpar_valor_monetario(tecnico_valor_extra_raw) if tecnico_valor_extra_raw else 0.0
-                
-                if valor_pagamento_tecnico <= 0:
-                    messages.error(request, 'O valor a pagar para o técnico deve ser maior que zero.')
-                    return redirect('/solicitacoes/home/')
-                
-                # Validar e converter data de realização
-                data_realizacao_atividade = None
-                if tecnico_data_realizacao_str:
-                    try:
-                        data_realizacao_atividade = datetime.strptime(tecnico_data_realizacao_str, '%Y-%m-%d').date()
-                    except (ValueError, TypeError):
-                        messages.error(request, 'Data da realização da atividade inválida. Use o formato correto.')
-                        return redirect('/solicitacoes/home/')
-                else:
-                    messages.error(request, 'O campo "Data da Realização da Atividade" é obrigatório.')
-                    return redirect('/solicitacoes/home/')
-                
-                # Criar solicitação principal para aparecer no Kanban
                 status = normalizar_status(request.POST.get('status') or 'pendente')
                 agora = timezone.now()
                 data_aprovacao_inicial = None
                 if status in ['aprovado', 'concluido']:
                     data_aprovacao_inicial = agora
                 
-                valor_total = valor_pagamento_tecnico + valor_extra
+                solicitacoes_criadas = []
                 
                 try:
                     with transaction.atomic():
-                        # Criar solicitação principal
-                        solicitacao_principal = Solicitacoes.objects.create(
-                            ticket=tecnico_id_solicitacao,
-                            status=status,
-                            titulo=f"Solicitação de Técnico - {tecnico_recebedor}",
-                            nome_solicitante=request.user,
-                            nome_do_recebedor=tecnico_recebedor,
-                            chave_pix=tecnico_pix or recebedor_obj.chave_pix,
-                            valor=valor_total,
-                            descricao=tecnico_descricao or f'Solicitação de técnico: {tecnico_recebedor}',
-                            data_de_pagamento=agora.date(),
-                            data_de_criacao=agora.date(),
-                            tempo_criacao=agora.time(),
-                            tempo_fila=timezone.now().time().replace(hour=0, minute=0, second=0, microsecond=0),
-                            data_entrada_status=agora,
-                            data_aprovacao=data_aprovacao_inicial,
-                            prioridade=request.POST.get('tecnico_priority', 'baixa'),
-                            servico=servico_obj,
-                            tipo='casual'  # Usar tipo casual para aparecer no Kanban
-                        )
-                        
-                        # Criar registro específico de técnico
-                        solicitacao_tecnico = SolicitacaoTecnico.objects.create(
-                            solicitacao=solicitacao_principal,
-                            recebedor=recebedor_obj,
-                            servico=servico_obj,
-                            valor_pagamento_tecnico=valor_pagamento_tecnico,
-                            valor_extra=valor_extra,
-                            descricao=tecnico_descricao,
-                            data_realizacao_atividade=data_realizacao_atividade,
-                            atividade_produtiva=tecnico_atividade_produtiva
-                        )
-                        
-                        print(f"✅ Solicitação de técnico criada com sucesso! ID Principal: {solicitacao_principal.id}, ID Técnico: {solicitacao_tecnico.id}")
+                        for i in tecnico_ids_encontrados:
+                            # Capturar dados do formulário de técnico para este ID
+                            tecnico_id_solicitacao = request.POST.get(f'tecnico_solicitacao_{i}', '').strip()
+                            tecnico_recebedor = request.POST.get(f'tecnico_recebedor_{i}', '').strip()
+                            tecnico_pix = request.POST.get(f'tecnico_pix_{i}', '').strip()
+                            tecnico_servico_id = request.POST.get(f'tecnico_servico_{i}', '').strip()
+                            tecnico_valor_pagamento_raw = request.POST.get(f'tecnico_valor_pagamento_{i}', '').strip()
+                            tecnico_valor_extra_raw = request.POST.get(f'tecnico_valor_extra_{i}', '').strip()
+                            tecnico_descricao = request.POST.get(f'tecnico_descricao_{i}', '').strip()
+                            tecnico_data_realizacao_str = request.POST.get(f'tecnico_data_realizacao_{i}', '').strip()
+                            tecnico_atividade_produtiva = request.POST.get(f'tecnico_atividade_produtiva_{i}', 'true').strip().lower() == 'true'
+                            
+                            # Validações
+                            if not tecnico_recebedor:
+                                messages.error(request, f'O campo "Nome do Técnico" do ID {i} é obrigatório.')
+                                return redirect('/solicitacoes/home/')
+                            
+                            if not tecnico_id_solicitacao:
+                                messages.error(request, f'O campo "ID da Solicitação" do ID {i} é obrigatório.')
+                                return redirect('/solicitacoes/home/')
+                            
+                            if not tecnico_servico_id:
+                                messages.error(request, f'O campo "Tipo de Serviço" do ID {i} é obrigatório.')
+                                return redirect('/solicitacoes/home/')
+                            
+                            if not tecnico_data_realizacao_str:
+                                messages.error(request, f'O campo "Data da Realização da Atividade" do ID {i} é obrigatório.')
+                                return redirect('/solicitacoes/home/')
+                            
+                            # Buscar recebedor
+                            try:
+                                recebedor_obj = Recebedor.objects.get(nome=tecnico_recebedor)
+                            except Recebedor.DoesNotExist:
+                                messages.error(request, f'Recebedor "{tecnico_recebedor}" do ID {i} não encontrado no sistema.')
+                                return redirect('/solicitacoes/home/')
+                            
+                            # Buscar serviço
+                            try:
+                                servico_obj = Servico.objects.get(id=tecnico_servico_id, ativo=True)
+                            except Servico.DoesNotExist:
+                                messages.error(request, f'Serviço selecionado do ID {i} não foi encontrado ou está inativo.')
+                                return redirect('/solicitacoes/home/')
+                            
+                            # Converter valores monetários
+                            valor_pagamento_tecnico = limpar_valor_monetario(tecnico_valor_pagamento_raw)
+                            valor_extra = limpar_valor_monetario(tecnico_valor_extra_raw) if tecnico_valor_extra_raw else 0.0
+                            
+                            if valor_pagamento_tecnico <= 0:
+                                messages.error(request, f'O valor a pagar para o técnico do ID {i} deve ser maior que zero.')
+                                return redirect('/solicitacoes/home/')
+                            
+                            # Validar e converter data de realização
+                            try:
+                                data_realizacao_atividade = datetime.strptime(tecnico_data_realizacao_str, '%Y-%m-%d').date()
+                            except (ValueError, TypeError):
+                                messages.error(request, f'Data da realização da atividade do ID {i} inválida. Use o formato correto.')
+                                return redirect('/solicitacoes/home/')
+                            
+                            valor_total = valor_pagamento_tecnico + valor_extra
+                            
+                            # Criar solicitação principal para aparecer no Kanban
+                            solicitacao_principal = Solicitacoes.objects.create(
+                                ticket=tecnico_id_solicitacao,
+                                status=status,
+                                titulo=f"Solicitação de Técnico - {tecnico_recebedor}",
+                                nome_solicitante=request.user,
+                                nome_do_recebedor=tecnico_recebedor,
+                                chave_pix=tecnico_pix or recebedor_obj.chave_pix,
+                                valor=valor_total,
+                                descricao=tecnico_descricao or f'Solicitação de técnico: {tecnico_recebedor}',
+                                data_de_pagamento=agora.date(),
+                                data_de_criacao=agora.date(),
+                                tempo_criacao=agora.time(),
+                                tempo_fila=timezone.now().time().replace(hour=0, minute=0, second=0, microsecond=0),
+                                data_entrada_status=agora,
+                                data_aprovacao=data_aprovacao_inicial,
+                                prioridade=request.POST.get('tecnico_priority', 'baixa'),
+                                servico=servico_obj,
+                                tipo='casual'  # Usar tipo casual para aparecer no Kanban
+                            )
+                            
+                            # Criar registro específico de técnico
+                            solicitacao_tecnico = SolicitacaoTecnico.objects.create(
+                                solicitacao=solicitacao_principal,
+                                recebedor=recebedor_obj,
+                                servico=servico_obj,
+                                valor_pagamento_tecnico=valor_pagamento_tecnico,
+                                valor_extra=valor_extra,
+                                descricao=tecnico_descricao,
+                                data_realizacao_atividade=data_realizacao_atividade,
+                                atividade_produtiva=tecnico_atividade_produtiva
+                            )
+                            
+                            solicitacoes_criadas.append({
+                                'principal_id': solicitacao_principal.id,
+                                'tecnico_id': solicitacao_tecnico.id,
+                                'ticket': tecnico_id_solicitacao
+                            })
+                            
+                            print(f"✅ Solicitação de técnico {i} criada com sucesso! ID Principal: {solicitacao_principal.id}, ID Técnico: {solicitacao_tecnico.id}")
                         
                         # Verificar se é requisição AJAX
                         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
                         if is_ajax:
                             return JsonResponse({
                                 'success': True,
-                                'message': 'Solicitação de técnico criada com sucesso!'
+                                'message': f'{len(solicitacoes_criadas)} solicitação(ões) de técnico criada(s) com sucesso!'
                             })
                         
-                        messages.success(request, 'Solicitação de técnico criada com sucesso!')
+                        messages.success(request, f'{len(solicitacoes_criadas)} solicitação(ões) de técnico criada(s) com sucesso!')
                         return redirect('/solicitacoes/home/')
                         
                 except Exception as e:
