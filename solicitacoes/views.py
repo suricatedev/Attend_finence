@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
+from django.db.models import Exists, OuterRef
 from .models import Solicitacoes, SolicitacaoRotaItem, Recebedor, ClienteEmpresa, SolicitacaoTecnico
 from servicos.models import Servico
 from django.utils import timezone
@@ -229,6 +230,36 @@ def garantir_migracao_campos():
                 if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
                     print(f"⚠️ Erro ao adicionar campo cnpj: {e}")
         
+        # Verificar tabela SolicitacaoTecnico e seus campos
+        cursor.execute("""
+            SELECT name FROM sqlite_master 
+            WHERE type='table' AND name='solicitacoes_solicitacaotecnico';
+        """)
+        tabela_tecnico = cursor.fetchone()
+        if tabela_tecnico:
+            cursor.execute("PRAGMA table_info(solicitacoes_solicitacaotecnico)")
+            columns_tecnico = [row[1] for row in cursor.fetchall()]
+            
+            # Verificar e adicionar campo cliente_empresa_id se não existir
+            if 'cliente_empresa_id' not in columns_tecnico:
+                try:
+                    cursor.execute("ALTER TABLE solicitacoes_solicitacaotecnico ADD COLUMN cliente_empresa_id INTEGER DEFAULT NULL REFERENCES solicitacoes_clienteempresa(id);")
+                    print("✅ Campo cliente_empresa_id adicionado à tabela solicitacoes_solicitacaotecnico")
+                    campos_adicionados = True
+                except Exception as e:
+                    if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
+                        print(f"⚠️ Erro ao adicionar campo cliente_empresa_id na tabela SolicitacaoTecnico: {e}")
+            
+            # Verificar e adicionar campo data_pagamento se não existir
+            if 'data_pagamento' not in columns_tecnico:
+                try:
+                    cursor.execute("ALTER TABLE solicitacoes_solicitacaotecnico ADD COLUMN data_pagamento DATE DEFAULT NULL;")
+                    print("✅ Campo data_pagamento adicionado à tabela solicitacoes_solicitacaotecnico")
+                    campos_adicionados = True
+                except Exception as e:
+                    if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
+                        print(f"⚠️ Erro ao adicionar campo data_pagamento na tabela SolicitacaoTecnico: {e}")
+        
         # Se data_entrada_status foi adicionado, atualizar registros existentes
         if campos_adicionados:
             try:
@@ -269,6 +300,10 @@ def garantir_migracao_campos():
 
 def receber_dados(request):
     # Garantir que a migração está aplicada antes de processar qualquer requisição
+    try:
+        garantir_migracao_campos()
+    except Exception as e:
+        print(f"⚠️ Aviso ao garantir migração: {e}")
     garantir_migracao_campos()
     
     if request.method == 'POST':
@@ -296,17 +331,60 @@ def receber_dados(request):
             success_message = 'Solicitação atualizada com sucesso!' if is_edit_mode else 'Solicitação criada com sucesso!'
             
             # Verificar se é uma solicitação de técnico ANTES de processar outros tipos
-            # Verificar se há pelo menos um campo de técnico no POST
+            # IMPORTANTE: Verificar não apenas se o campo existe, mas se está PREENCHIDO
             tecnico_ids_encontrados = []
+            modo_tecnico = request.POST.get('modo_tecnico', '').strip().lower()
+            
+            # Buscar campos de técnico no POST E verificar se estão PREENCHIDOS
+            # IMPORTANTE: Verificar se TODOS os campos obrigatórios estão preenchidos, não apenas o ID
             for key in request.POST.keys():
                 if key.startswith('tecnico_solicitacao_'):
                     try:
                         num_id = int(key.replace('tecnico_solicitacao_', ''))
-                        tecnico_ids_encontrados.append(num_id)
+                        # Verificar se o campo tem valor (não está vazio)
+                        valor_campo = request.POST.get(key, '').strip()
+                        if valor_campo:  # Se o ID existe, verificar se outros campos também estão preenchidos
+                            # Verificar se há recebedor, serviço e valor para este ID
+                            recebedor = request.POST.get(f'tecnico_recebedor_{num_id}', '').strip()
+                            servico = request.POST.get(f'tecnico_servico_{num_id}', '').strip()
+                            valor = request.POST.get(f'tecnico_valor_pagamento_{num_id}', '').strip()
+                            data_realizacao = request.POST.get(f'tecnico_data_realizacao_{num_id}', '').strip()
+                            
+                            # Só adicionar se TODOS os campos obrigatórios estiverem preenchidos
+                            if recebedor and servico and valor and data_realizacao:
+                                tecnico_ids_encontrados.append(num_id)
+                                print(f"✅ ID {num_id} válido - todos os campos obrigatórios preenchidos")
+                            else:
+                                print(f"⚠️ ID {num_id} ignorado - campos obrigatórios faltando (recebedor={bool(recebedor)}, servico={bool(servico)}, valor={bool(valor)}, data={bool(data_realizacao)})")
                     except ValueError:
                         continue
             
-            is_solicitacao_tecnico = len(tecnico_ids_encontrados) > 0
+            # Verificar também se há outros campos de técnico preenchidos para garantir
+            # Só considerar técnico se modo_tecnico for explicitamente 'true' E houver IDs preenchidos
+            # OU se houver pelo menos um ID de técnico com todos os campos obrigatórios preenchidos
+            is_solicitacao_tecnico = False
+            
+            # Se modo_tecnico é 'true', verificar se realmente há dados válidos
+            if modo_tecnico == 'true' and len(tecnico_ids_encontrados) > 0:
+                # Verificar se pelo menos um item de técnico tem todos os campos obrigatórios
+                for i in tecnico_ids_encontrados:
+                    tecnico_recebedor = request.POST.get(f'tecnico_recebedor_{i}', '').strip()
+                    tecnico_servico_id = request.POST.get(f'tecnico_servico_{i}', '').strip()
+                    tecnico_valor_pagamento = request.POST.get(f'tecnico_valor_pagamento_{i}', '').strip()
+                    tecnico_data_realizacao = request.POST.get(f'tecnico_data_realizacao_{i}', '').strip()
+                    
+                    # Se pelo menos um item tem todos os campos obrigatórios, é técnico
+                    if tecnico_recebedor and tecnico_servico_id and tecnico_valor_pagamento and tecnico_data_realizacao:
+                        is_solicitacao_tecnico = True
+                        break
+            
+            # Se modo_tecnico não é 'true', NÃO é solicitação de técnico (mesmo que haja campos vazios)
+            if modo_tecnico != 'true':
+                is_solicitacao_tecnico = False
+                print(f"🔍 DEBUG: modo_tecnico não é 'true' ({modo_tecnico}), ignorando campos de técnico")
+            
+            print(f"🔍 DEBUG: Verificando solicitação de técnico - IDs encontrados: {tecnico_ids_encontrados}, modo_tecnico: {modo_tecnico}, is_solicitacao_tecnico: {is_solicitacao_tecnico}")
+            print(f"🔍 DEBUG: Primeiros 50 campos POST: {list(request.POST.keys())[:50]}")
             
             if is_solicitacao_tecnico:
                 # Processar solicitação de técnico (múltiplos tickets)
@@ -322,126 +400,363 @@ def receber_dados(request):
                     data_aprovacao_inicial = agora
                 
                 solicitacoes_criadas = []
+                itens_tecnico = []  # Armazenar todos os itens antes de criar a solicitação principal
+                valor_total_geral = 0.0
+                tickets_tecnico = []  # Armazenar todos os tickets para o título
+                primeiro_recebedor = ''
+                primeira_chave_pix = ''
                 
                 try:
                     with transaction.atomic():
+                        # Primeiro, validar e coletar todos os dados dos itens
                         for i in tecnico_ids_encontrados:
                             # Capturar dados do formulário de técnico para este ID
                             tecnico_id_solicitacao = request.POST.get(f'tecnico_solicitacao_{i}', '').strip()
                             tecnico_recebedor = request.POST.get(f'tecnico_recebedor_{i}', '').strip()
                             tecnico_pix = request.POST.get(f'tecnico_pix_{i}', '').strip()
                             tecnico_servico_id = request.POST.get(f'tecnico_servico_{i}', '').strip()
+                            tecnico_cliente_empresa_id = request.POST.get(f'tecnico_cliente_empresa_{i}', '').strip()
                             tecnico_valor_pagamento_raw = request.POST.get(f'tecnico_valor_pagamento_{i}', '').strip()
                             tecnico_valor_extra_raw = request.POST.get(f'tecnico_valor_extra_{i}', '').strip()
                             tecnico_descricao = request.POST.get(f'tecnico_descricao_{i}', '').strip()
                             tecnico_data_realizacao_str = request.POST.get(f'tecnico_data_realizacao_{i}', '').strip()
+                            tecnico_data_pagamento_str = request.POST.get(f'tecnico_data_pagamento_{i}', '').strip()
                             tecnico_atividade_produtiva = request.POST.get(f'tecnico_atividade_produtiva_{i}', 'true').strip().lower() == 'true'
+                            
+                            # Verificar se é requisição AJAX para retornar JSON em caso de erro
+                            is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
                             
                             # Validações
                             if not tecnico_recebedor:
-                                messages.error(request, f'O campo "Nome do Técnico" do ID {i} é obrigatório.')
+                                error_msg = f'O campo "Nome do Técnico" do ID {i} é obrigatório.'
+                                if is_ajax:
+                                    return JsonResponse({'success': False, 'message': error_msg}, status=400)
+                                messages.error(request, error_msg)
                                 return redirect('/solicitacoes/home/')
                             
                             if not tecnico_id_solicitacao:
-                                messages.error(request, f'O campo "ID da Solicitação" do ID {i} é obrigatório.')
+                                error_msg = f'O campo "ID da Solicitação" do ID {i} é obrigatório.'
+                                if is_ajax:
+                                    return JsonResponse({'success': False, 'message': error_msg}, status=400)
+                                messages.error(request, error_msg)
                                 return redirect('/solicitacoes/home/')
                             
                             if not tecnico_servico_id:
-                                messages.error(request, f'O campo "Tipo de Serviço" do ID {i} é obrigatório.')
+                                error_msg = f'O campo "Tipo de Serviço" do ID {i} é obrigatório.'
+                                if is_ajax:
+                                    return JsonResponse({'success': False, 'message': error_msg}, status=400)
+                                messages.error(request, error_msg)
                                 return redirect('/solicitacoes/home/')
                             
                             if not tecnico_data_realizacao_str:
-                                messages.error(request, f'O campo "Data da Realização da Atividade" do ID {i} é obrigatório.')
+                                error_msg = f'O campo "Data da Realização da Atividade" do ID {i} é obrigatório.'
+                                if is_ajax:
+                                    return JsonResponse({'success': False, 'message': error_msg}, status=400)
+                                messages.error(request, error_msg)
                                 return redirect('/solicitacoes/home/')
                             
                             # Buscar recebedor
                             try:
                                 recebedor_obj = Recebedor.objects.get(nome=tecnico_recebedor)
                             except Recebedor.DoesNotExist:
-                                messages.error(request, f'Recebedor "{tecnico_recebedor}" do ID {i} não encontrado no sistema.')
+                                error_msg = f'Recebedor "{tecnico_recebedor}" do ID {i} não encontrado no sistema.'
+                                if is_ajax:
+                                    return JsonResponse({'success': False, 'message': error_msg}, status=400)
+                                messages.error(request, error_msg)
                                 return redirect('/solicitacoes/home/')
                             
                             # Buscar serviço
                             try:
                                 servico_obj = Servico.objects.get(id=tecnico_servico_id, ativo=True)
                             except Servico.DoesNotExist:
-                                messages.error(request, f'Serviço selecionado do ID {i} não foi encontrado ou está inativo.')
+                                error_msg = f'Serviço selecionado do ID {i} não foi encontrado ou está inativo.'
+                                if is_ajax:
+                                    return JsonResponse({'success': False, 'message': error_msg}, status=400)
+                                messages.error(request, error_msg)
                                 return redirect('/solicitacoes/home/')
                             
+                            # Buscar cliente/empresa (opcional)
+                            cliente_empresa_obj = None
+                            if tecnico_cliente_empresa_id:
+                                print(f"🔍 DEBUG Item {i}: Buscando Cliente/Empresa ID: '{tecnico_cliente_empresa_id}'")
+                                try:
+                                    cliente_empresa_obj = ClienteEmpresa.objects.get(id=int(tecnico_cliente_empresa_id), ativo=True)
+                                    print(f"✅ DEBUG Item {i}: Cliente/Empresa encontrado: {cliente_empresa_obj.nome}")
+                                except ClienteEmpresa.DoesNotExist:
+                                    # Não é erro crítico, apenas log
+                                    print(f"⚠️ Cliente/Empresa ID {tecnico_cliente_empresa_id} não encontrado ou inativo para o ID {i}")
+                                except (ValueError, TypeError) as e:
+                                    print(f"⚠️ ID de Cliente/Empresa inválido para o ID {i}: '{tecnico_cliente_empresa_id}', Erro: {e}")
+                            
                             # Converter valores monetários
+                            print(f"🔍 DEBUG Item {i}: Valor pagamento raw: '{tecnico_valor_pagamento_raw}', Valor extra raw: '{tecnico_valor_extra_raw}'")
                             valor_pagamento_tecnico = limpar_valor_monetario(tecnico_valor_pagamento_raw)
                             valor_extra = limpar_valor_monetario(tecnico_valor_extra_raw) if tecnico_valor_extra_raw else 0.0
+                            print(f"🔍 DEBUG Item {i}: Valor pagamento convertido: {valor_pagamento_tecnico}, Valor extra convertido: {valor_extra}")
                             
                             if valor_pagamento_tecnico <= 0:
-                                messages.error(request, f'O valor a pagar para o técnico do ID {i} deve ser maior que zero.')
+                                error_msg = f'O valor a pagar para o técnico do ID {i} deve ser maior que zero. Valor recebido: "{tecnico_valor_pagamento_raw}"'
+                                print(f"❌ ERRO: {error_msg}")
+                                if is_ajax:
+                                    return JsonResponse({'success': False, 'message': error_msg}, status=400)
+                                messages.error(request, error_msg)
                                 return redirect('/solicitacoes/home/')
                             
                             # Validar e converter data de realização
                             try:
                                 data_realizacao_atividade = datetime.strptime(tecnico_data_realizacao_str, '%Y-%m-%d').date()
-                            except (ValueError, TypeError):
-                                messages.error(request, f'Data da realização da atividade do ID {i} inválida. Use o formato correto.')
+                                print(f"🔍 DEBUG Item {i}: Data realização convertida: {data_realizacao_atividade}")
+                            except (ValueError, TypeError) as e:
+                                error_msg = f'Data da realização da atividade do ID {i} inválida. Use o formato correto. Valor recebido: "{tecnico_data_realizacao_str}"'
+                                print(f"❌ ERRO: {error_msg}, Exception: {e}")
+                                if is_ajax:
+                                    return JsonResponse({'success': False, 'message': error_msg}, status=400)
+                                messages.error(request, error_msg)
                                 return redirect('/solicitacoes/home/')
                             
-                            valor_total = valor_pagamento_tecnico + valor_extra
+                            # Validar e converter data de pagamento (opcional)
+                            data_pagamento = None
+                            if tecnico_data_pagamento_str:
+                                try:
+                                    data_pagamento = datetime.strptime(tecnico_data_pagamento_str, '%Y-%m-%d').date()
+                                    print(f"🔍 DEBUG Item {i}: Data pagamento convertida: {data_pagamento}")
+                                except (ValueError, TypeError) as e:
+                                    error_msg = f'Data de pagamento do ID {i} inválida. Use o formato correto. Valor recebido: "{tecnico_data_pagamento_str}"'
+                                    print(f"❌ ERRO: {error_msg}, Exception: {e}")
+                                    if is_ajax:
+                                        return JsonResponse({'success': False, 'message': error_msg}, status=400)
+                                    messages.error(request, error_msg)
+                                    return redirect('/solicitacoes/home/')
                             
-                            # Criar solicitação principal para aparecer no Kanban
+                            valor_total = valor_pagamento_tecnico + valor_extra
+                            valor_total_geral += valor_total
+                            
+                            # Armazenar primeiro recebedor e chave PIX para a solicitação principal
+                            if not primeiro_recebedor:
+                                primeiro_recebedor = tecnico_recebedor
+                            if not primeira_chave_pix:
+                                primeira_chave_pix = tecnico_pix or recebedor_obj.chave_pix
+                            
+                            # Armazenar ticket para o título
+                            tickets_tecnico.append(tecnico_id_solicitacao)
+                            
+                            # Armazenar dados do item para criar depois
+                            itens_tecnico.append({
+                                'tecnico_id_solicitacao': tecnico_id_solicitacao,
+                                'recebedor_obj': recebedor_obj,
+                                'tecnico_pix': tecnico_pix or recebedor_obj.chave_pix,
+                                'servico_obj': servico_obj,
+                                'cliente_empresa_obj': cliente_empresa_obj,
+                                'valor_pagamento_tecnico': valor_pagamento_tecnico,
+                                'valor_extra': valor_extra,
+                                'tecnico_descricao': tecnico_descricao,
+                                'data_realizacao_atividade': data_realizacao_atividade,
+                                'data_pagamento': data_pagamento,
+                                'atividade_produtiva': tecnico_atividade_produtiva,
+                                'valor_total': valor_total
+                            })
+                            
+                            print(f"✅ Item de técnico {i} validado e preparado. Ticket: {tecnico_id_solicitacao}, Valor: {valor_total}")
+                        
+                        # Agora criar APENAS UMA solicitação principal
+                        if len(itens_tecnico) == 0:
+                            error_msg = 'Nenhum item de técnico válido encontrado.'
+                            if is_ajax:
+                                return JsonResponse({'success': False, 'message': error_msg}, status=400)
+                            messages.error(request, error_msg)
+                            return redirect('/solicitacoes/home/')
+                        
+                        print(f"🔍 DEBUG: Criando UMA ÚNICA solicitação principal com {len(itens_tecnico)} item(ns)")
+                        print(f"🔍 DEBUG: Tickets coletados: {tickets_tecnico}")
+                        
+                        # Gerar ticket principal (usar o primeiro ticket ou criar um ticket único)
+                        ticket_principal = tickets_tecnico[0]
+                        
+                        # Verificar se o ticket já existe
+                        ticket_existe = Solicitacoes.objects.filter(ticket=ticket_principal).exists()
+                        if ticket_existe:
+                            # Se o ticket principal já existe, gerar um ticket único com timestamp
+                            timestamp = int(timezone.now().timestamp())
+                            ticket_principal = f"TECNICO-{timestamp}"
+                            print(f"⚠️ Ticket '{tickets_tecnico[0]}' já existe. Usando ticket único: '{ticket_principal}'")
+                        else:
+                            print(f"✅ Ticket principal '{ticket_principal}' é único - usando este ticket")
+                        
+                        # Criar título com todos os tickets (similar a Em Rota)
+                        # Limitar o título a 70 caracteres (limite do campo no modelo)
+                        if len(tickets_tecnico) > 3:
+                            titulo_principal = f"Solicitação de Técnico - {', '.join(tickets_tecnico[:3])}... (+{len(tickets_tecnico) - 3})"
+                        else:
+                            titulo_principal = f"Solicitação de Técnico - {', '.join(tickets_tecnico)}"
+                        
+                        # Garantir que o título não ultrapasse 70 caracteres
+                        if len(titulo_principal) > 70:
+                            titulo_principal = titulo_principal[:67] + "..."
+                        
+                        print(f"🔍 DEBUG: Ticket principal: '{ticket_principal}', Título: '{titulo_principal}', Valor total: R$ {valor_total_geral:.2f}")
+                        
+                        # Criar descrição combinada ou usar a primeira
+                        descricao_principal = ''
+                        if itens_tecnico[0]['tecnico_descricao']:
+                            descricao_principal = itens_tecnico[0]['tecnico_descricao']
+                        else:
+                            descricao_principal = f'Solicitação de técnico com {len(itens_tecnico)} item(ns)'
+                        
+                        # Capturar anexos e prioridade para técnico
+                        anexo_tecnico = request.FILES.get('tecnico_anexos')
+                        prioridade_tecnico = request.POST.get('tecnico_priority', 'baixa')
+                        
+                        if is_edit_mode:
+                            # MODO EDIÇÃO: Atualizar solicitação existente
+                            solicitacao_principal = solicitacao_existente
+                            print(f"🔍 DEBUG EDIÇÃO TÉCNICO - Atualizando solicitação ID={solicitacao_principal.id}")
+                            
+                            # Atualizar campos da solicitação principal
+                            solicitacao_principal.titulo = titulo_principal
+                            solicitacao_principal.nome_do_recebedor = primeiro_recebedor
+                            solicitacao_principal.chave_pix = primeira_chave_pix
+                            solicitacao_principal.valor = valor_total_geral
+                            solicitacao_principal.descricao = descricao_principal
+                            solicitacao_principal.prioridade = prioridade_tecnico
+                            solicitacao_principal.servico = itens_tecnico[0]['servico_obj']
+                            if anexo_tecnico:
+                                solicitacao_principal.anexo = anexo_tecnico
+                            solicitacao_principal.save()
+                            
+                            print(f"✅ Solicitação principal atualizada: ID={solicitacao_principal.id}, Ticket={solicitacao_principal.ticket}, Valor Total={valor_total_geral}")
+                            
+                            # Deletar todos os itens de técnico existentes
+                            itens_antigos = SolicitacaoTecnico.objects.filter(solicitacao=solicitacao_principal)
+                            num_itens_antigos = itens_antigos.count()
+                            itens_antigos.delete()
+                            print(f"🗑️ {num_itens_antigos} item(ns) de técnico antigo(s) deletado(s)")
+                            
+                            # Criar novos itens de técnico com os dados atualizados
+                            for idx, item in enumerate(itens_tecnico):
+                                solicitacao_tecnico = SolicitacaoTecnico.objects.create(
+                                    solicitacao=solicitacao_principal,
+                                    ticket_item=item['tecnico_id_solicitacao'],
+                                    recebedor=item['recebedor_obj'],
+                                    servico=item['servico_obj'],
+                                    cliente_empresa=item.get('cliente_empresa_obj'),
+                                    valor_pagamento_tecnico=item['valor_pagamento_tecnico'],
+                                    valor_extra=item['valor_extra'],
+                                    descricao=item['tecnico_descricao'],
+                                    data_realizacao_atividade=item['data_realizacao_atividade'],
+                                    data_pagamento=item.get('data_pagamento'),
+                                    atividade_produtiva=item['atividade_produtiva']
+                                )
+                                
+                                solicitacoes_criadas.append({
+                                    'principal_id': solicitacao_principal.id,
+                                    'tecnico_id': solicitacao_tecnico.id,
+                                    'ticket': item['tecnico_id_solicitacao']
+                                })
+                                
+                                print(f"✅ Item de técnico {idx + 1}/{len(itens_tecnico)} atualizado! ID Técnico: {solicitacao_tecnico.id}, Ticket: {item['tecnico_id_solicitacao']}")
+                        else:
+                            # MODO CRIAÇÃO: Criar nova solicitação
                             solicitacao_principal = Solicitacoes.objects.create(
-                                ticket=tecnico_id_solicitacao,
+                                ticket=ticket_principal,
                                 status=status,
-                                titulo=f"Solicitação de Técnico - {tecnico_recebedor}",
+                                titulo=titulo_principal,
                                 nome_solicitante=request.user,
-                                nome_do_recebedor=tecnico_recebedor,
-                                chave_pix=tecnico_pix or recebedor_obj.chave_pix,
-                                valor=valor_total,
-                                descricao=tecnico_descricao or f'Solicitação de técnico: {tecnico_recebedor}',
+                                nome_do_recebedor=primeiro_recebedor,
+                                chave_pix=primeira_chave_pix,
+                                valor=valor_total_geral,
+                                descricao=descricao_principal,
                                 data_de_pagamento=agora.date(),
                                 data_de_criacao=agora.date(),
                                 tempo_criacao=agora.time(),
                                 tempo_fila=timezone.now().time().replace(hour=0, minute=0, second=0, microsecond=0),
                                 data_entrada_status=agora,
                                 data_aprovacao=data_aprovacao_inicial,
-                                prioridade=request.POST.get('tecnico_priority', 'baixa'),
-                                servico=servico_obj,
+                                prioridade=prioridade_tecnico,
+                                anexo=anexo_tecnico,
+                                servico=itens_tecnico[0]['servico_obj'],
                                 tipo='casual'  # Usar tipo casual para aparecer no Kanban
                             )
                             
-                            # Criar registro específico de técnico
-                            solicitacao_tecnico = SolicitacaoTecnico.objects.create(
-                                solicitacao=solicitacao_principal,
-                                recebedor=recebedor_obj,
-                                servico=servico_obj,
-                                valor_pagamento_tecnico=valor_pagamento_tecnico,
-                                valor_extra=valor_extra,
-                                descricao=tecnico_descricao,
-                                data_realizacao_atividade=data_realizacao_atividade,
-                                atividade_produtiva=tecnico_atividade_produtiva
-                            )
+                            print(f"✅ Solicitação principal criada: ID={solicitacao_principal.id}, Ticket={ticket_principal}, Valor Total={valor_total_geral}")
                             
-                            solicitacoes_criadas.append({
-                                'principal_id': solicitacao_principal.id,
-                                'tecnico_id': solicitacao_tecnico.id,
-                                'ticket': tecnico_id_solicitacao
-                            })
-                            
-                            print(f"✅ Solicitação de técnico {i} criada com sucesso! ID Principal: {solicitacao_principal.id}, ID Técnico: {solicitacao_tecnico.id}")
+                            # Criar todos os registros de SolicitacaoTecnico vinculados à solicitação principal
+                            for idx, item in enumerate(itens_tecnico):
+                                solicitacao_tecnico = SolicitacaoTecnico.objects.create(
+                                    solicitacao=solicitacao_principal,
+                                    ticket_item=item['tecnico_id_solicitacao'],
+                                    recebedor=item['recebedor_obj'],
+                                    servico=item['servico_obj'],
+                                    cliente_empresa=item.get('cliente_empresa_obj'),
+                                    valor_pagamento_tecnico=item['valor_pagamento_tecnico'],
+                                    valor_extra=item['valor_extra'],
+                                    descricao=item['tecnico_descricao'],
+                                    data_realizacao_atividade=item['data_realizacao_atividade'],
+                                    data_pagamento=item.get('data_pagamento'),
+                                    atividade_produtiva=item['atividade_produtiva']
+                                )
+                                
+                                solicitacoes_criadas.append({
+                                    'principal_id': solicitacao_principal.id,
+                                    'tecnico_id': solicitacao_tecnico.id,
+                                    'ticket': item['tecnico_id_solicitacao']
+                                })
+                                
+                                print(f"✅ Item de técnico {idx + 1}/{len(itens_tecnico)} criado! ID Técnico: {solicitacao_tecnico.id}, Ticket: {item['tecnico_id_solicitacao']}, Vinculado à solicitação principal ID={solicitacao_principal.id}")
+                        
+                        # Verificação final: garantir que todos os itens estão vinculados à mesma solicitação principal
+                        itens_criados = SolicitacaoTecnico.objects.filter(solicitacao=solicitacao_principal)
+                        acao = 'atualizado(s)' if is_edit_mode else 'criado(s)'
+                        print(f"✅ Total: {len(solicitacoes_criadas)} item(ns) de técnico {acao} vinculado(s) à solicitação principal ID={solicitacao_principal.id}")
+                        print(f"🔍 DEBUG: Verificação final - {itens_criados.count()} itens encontrados vinculados à solicitação principal ID={solicitacao_principal.id}")
+                        
+                        # Confirmar que apenas UMA solicitação foi criada (apenas em modo criação)
+                        if not is_edit_mode:
+                            solicitacoes_com_ticket = Solicitacoes.objects.filter(ticket=ticket_principal)
+                            if solicitacoes_com_ticket.count() > 1:
+                                print(f"❌ ERRO: Foram criadas {solicitacoes_com_ticket.count()} solicitações com o mesmo ticket '{ticket_principal}'! Isso não deveria acontecer.")
+                            else:
+                                print(f"✅ Confirmado: Apenas 1 solicitação foi criada com o ticket '{ticket_principal}'")
                         
                         # Verificar se é requisição AJAX
                         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
                         if is_ajax:
+                            mensagem = f'1 solicitação de técnico atualizada com {len(solicitacoes_criadas)} item(ns) com sucesso!' if is_edit_mode else f'1 solicitação de técnico criada com {len(solicitacoes_criadas)} item(ns) com sucesso!'
                             return JsonResponse({
                                 'success': True,
-                                'message': f'{len(solicitacoes_criadas)} solicitação(ões) de técnico criada(s) com sucesso!'
+                                'message': mensagem
                             })
                         
-                        messages.success(request, f'{len(solicitacoes_criadas)} solicitação(ões) de técnico criada(s) com sucesso!')
+                        mensagem = f'1 solicitação de técnico atualizada com {len(solicitacoes_criadas)} item(ns) com sucesso!' if is_edit_mode else f'1 solicitação de técnico criada com {len(solicitacoes_criadas)} item(ns) com sucesso!'
+                        messages.success(request, mensagem)
                         return redirect('/solicitacoes/home/')
                         
                 except Exception as e:
                     import traceback
-                    traceback.print_exc()
+                    error_trace = traceback.format_exc()
                     print(f"❌ ERRO ao criar solicitação de técnico: {e}")
-                    messages.error(request, f'Erro ao criar solicitação de técnico: {str(e)}')
+                    print(f"📋 Traceback completo:\n{error_trace}")
+                    
+                    # Verificar se é requisição AJAX
+                    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                    
+                    # Mensagem de erro mais detalhada
+                    error_message = f'Erro ao criar solicitação de técnico: {str(e)}'
+                    
+                    # Se for um erro de integridade ou campo obrigatório, tentar extrair mensagem mais amigável
+                    if 'IntegrityError' in str(type(e)):
+                        error_message = 'Erro: Já existe uma solicitação com esse ticket. Tente usar um ID diferente.'
+                    elif 'DoesNotExist' in str(type(e)):
+                        error_message = f'Erro: Um dos registros referenciados não foi encontrado. Verifique se todos os dados estão corretos. Detalhes: {str(e)}'
+                    elif 'ValueError' in str(type(e)):
+                        error_message = f'Erro: Valor inválido em algum campo. Verifique os dados digitados. Detalhes: {str(e)}'
+                    
+                    if is_ajax:
+                        return JsonResponse({
+                            'success': False,
+                            'message': error_message
+                        }, status=400)
+                    
+                    messages.error(request, error_message)
                     return redirect('/solicitacoes/home/')
             
             # Verificar tipo de solicitação
@@ -1217,6 +1532,84 @@ def obter_itens_rota(request, solicitacao_id):
         }, status=500)
 
 @require_http_methods(["GET"])
+def obter_itens_tecnico(request, solicitacao_id):
+    """
+    View para obter os itens de técnico de uma solicitação via AJAX
+    """
+    try:
+        solicitacao = Solicitacoes.objects.prefetch_related('solicitacoes_tecnico__servico', 'solicitacoes_tecnico__recebedor', 'solicitacoes_tecnico__cliente_empresa').get(id=solicitacao_id)
+        
+        # Verificar se é uma solicitação de técnico
+        if not solicitacao.is_tecnico():
+            return JsonResponse({
+                'success': False,
+                'message': 'Esta solicitação não é do tipo "Técnico"'
+            }, status=400)
+        
+        # Buscar todos os itens de técnico
+        itens_tecnico = solicitacao.solicitacoes_tecnico.all().order_by('id')
+        
+        # Serializar os itens
+        itens_data = []
+        ordem = 1
+        for item in itens_tecnico:
+            valor_total_item = (item.valor_pagamento_tecnico or 0.0) + (item.valor_extra or 0.0)
+            
+            # Usar o ticket_item se existir, senão usar o ticket da solicitação principal
+            ticket_item = item.ticket_item if hasattr(item, 'ticket_item') and item.ticket_item else solicitacao.ticket
+            
+            itens_data.append({
+                'ordem': ordem,
+                'id': solicitacao.ticket,  # Usar o ticket da solicitação principal
+                'ticket_tecnico': ticket_item,  # Ticket original do item
+                'recebedor': item.recebedor.nome if item.recebedor else '',
+                'recebedor_id': item.recebedor.id if item.recebedor else None,
+                'chave_pix': item.recebedor.chave_pix if item.recebedor else '',
+                'servico': item.servico.nome if item.servico else 'N/A',
+                'servico_id': item.servico.id if item.servico else None,
+                'cliente_empresa': item.cliente_empresa.nome if item.cliente_empresa else '',
+                'cliente_empresa_id': item.cliente_empresa.id if item.cliente_empresa else None,
+                'valor_pagamento': f'R$ {item.valor_pagamento_tecnico:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.'),
+                'valor_pagamento_raw': float(item.valor_pagamento_tecnico or 0),
+                'valor_extra': f'R$ {item.valor_extra:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.') if item.valor_extra else 'R$ 0,00',
+                'valor_extra_raw': float(item.valor_extra or 0),
+                'valor': f'R$ {valor_total_item:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.'),
+                'valor_total_item': f'R$ {valor_total_item:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.'),
+                'descricao': item.descricao or '',
+                'data_realizacao': item.data_realizacao_atividade.strftime('%Y-%m-%d') if item.data_realizacao_atividade else '',
+                'data_pagamento': item.data_pagamento.strftime('%Y-%m-%d') if item.data_pagamento else '',
+                'atividade_produtiva': 'Produtiva' if item.atividade_produtiva else 'Improdutiva',
+                'atividade_produtiva_bool': item.atividade_produtiva
+            })
+            ordem += 1
+        
+        # Calcular valor total (soma de todos os itens)
+        valor_total_calculado = sum([
+            (item.valor_pagamento_tecnico or 0.0) + (item.valor_extra or 0.0)
+            for item in itens_tecnico
+        ])
+        
+        return JsonResponse({
+            'success': True,
+            'itens': itens_data,
+            'valor_total': f'R$ {valor_total_calculado:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.'),
+        })
+        
+    except Solicitacoes.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Solicitação não encontrada'
+        }, status=404)
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'message': f'Erro ao obter itens de técnico: {str(e)}'
+        }, status=500)
+
+@require_http_methods(["GET"])
 def obter_valores_detalhados_casual(request, solicitacao_id):
     """
     View para obter os valores detalhados de uma solicitação Casual via AJAX
@@ -1283,7 +1676,10 @@ def obter_detalhes_completos(request, solicitacao_id):
     Inclui todos os valores detalhados e informações completas
     """
     try:
-        solicitacao = Solicitacoes.objects.select_related('servico', 'nome_solicitante').prefetch_related('itens_rota__servico').get(id=solicitacao_id)
+        solicitacao = Solicitacoes.objects.select_related('servico', 'nome_solicitante').prefetch_related('itens_rota__servico', 'solicitacoes_tecnico').get(id=solicitacao_id)
+        
+        # Verificar se é solicitação de técnico
+        is_tecnico = solicitacao.is_tecnico()
         
         # Informações básicas
         dados = {
@@ -1300,6 +1696,7 @@ def obter_detalhes_completos(request, solicitacao_id):
             'tipo': solicitacao.tipo,
             'status': solicitacao.status,
             'prioridade': solicitacao.prioridade,
+            'is_tecnico': is_tecnico,
             'descricao': solicitacao.descricao or 'N/A',
             'data_criacao': solicitacao.data_de_criacao.strftime('%d/%m/%Y') if solicitacao.data_de_criacao else 'N/A',
             'data_pagamento': solicitacao.data_de_pagamento.strftime('%d/%m/%Y') if solicitacao.data_de_pagamento else 'N/A',
@@ -1375,6 +1772,30 @@ def obter_detalhes_completos(request, solicitacao_id):
             dados['valor_receita'] = f'R$ {valor_receita_calculado:.2f}'
             dados['valor_receita_raw'] = float(valor_receita_calculado)
         
+        # Se for solicitação de técnico, adicionar itens de técnico
+        if is_tecnico:
+            itens_tecnico = solicitacao.solicitacoes_tecnico.all().order_by('id')
+            dados['itens_tecnico'] = []
+            for item in itens_tecnico:
+                dados['itens_tecnico'].append({
+                    'ticket_tecnico': item.ticket_item or '',
+                    'recebedor': item.recebedor.nome if item.recebedor else '',
+                    'recebedor_id': item.recebedor.id if item.recebedor else None,
+                    'chave_pix': item.recebedor.chave_pix if item.recebedor else '',
+                    'servico': item.servico.nome if item.servico else '',
+                    'servico_id': item.servico.id if item.servico else None,
+                    'cliente_empresa': item.cliente_empresa.nome if item.cliente_empresa else '',
+                    'cliente_empresa_id': item.cliente_empresa.id if item.cliente_empresa else None,
+                    'valor_pagamento': f'R$ {item.valor_pagamento_tecnico:.2f}',
+                    'valor_pagamento_raw': float(item.valor_pagamento_tecnico or 0),
+                    'valor_extra': f'R$ {item.valor_extra:.2f}',
+                    'valor_extra_raw': float(item.valor_extra or 0),
+                    'descricao': item.descricao or '',
+                    'data_realizacao': item.data_realizacao_atividade.strftime('%Y-%m-%d') if item.data_realizacao_atividade else '',
+                    'data_pagamento': item.data_pagamento.strftime('%Y-%m-%d') if item.data_pagamento else '',
+                    'atividade_produtiva': item.atividade_produtiva if hasattr(item, 'atividade_produtiva') else True,
+                })
+        
         return JsonResponse({
             'success': True,
             'dados': dados
@@ -1387,9 +1808,70 @@ def obter_detalhes_completos(request, solicitacao_id):
         }, status=404)
         
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"❌ Erro ao obter detalhes completos: {str(e)}")
+        print(f"Traceback: {error_trace}")
         return JsonResponse({
             'success': False,
             'message': f'Erro ao obter detalhes: {str(e)}'
+        }, status=500)
+
+@require_http_methods(["GET"])
+def obter_contagens_solicitacoes(request):
+    """
+    View para obter contagens de solicitações por tipo (deslocamento e técnico)
+    """
+    try:
+        # Contar solicitações de deslocamento (que não são de técnico)
+        # Uma solicitação é de deslocamento se não tem nenhum item de técnico associado
+        solicitacoes_deslocamento = Solicitacoes.objects.filter(
+            ~Exists(SolicitacaoTecnico.objects.filter(solicitacao_id=OuterRef('pk')))
+        )
+        
+        # Contar solicitações de técnico (que têm itens de técnico)
+        solicitacoes_tecnico = Solicitacoes.objects.filter(
+            Exists(SolicitacaoTecnico.objects.filter(solicitacao_id=OuterRef('pk')))
+        )
+        
+        # Contar por status para deslocamento
+        deslocamento_por_status = {
+            'pendente': solicitacoes_deslocamento.filter(status='pendente').count(),
+            'recusado': solicitacoes_deslocamento.filter(status='recusado').count(),
+            'aprovado': solicitacoes_deslocamento.filter(status='aprovado').count(),
+            'concluido': solicitacoes_deslocamento.filter(status='concluido').count(),
+        }
+        
+        # Contar por status para técnico
+        tecnico_por_status = {
+            'pendente': solicitacoes_tecnico.filter(status='pendente').count(),
+            'recusado': solicitacoes_tecnico.filter(status='recusado').count(),
+            'aprovado': solicitacoes_tecnico.filter(status='aprovado').count(),
+            'concluido': solicitacoes_tecnico.filter(status='concluido').count(),
+        }
+        
+        # Contar total de itens de técnico (SolicitacaoTecnico)
+        total_itens_tecnico = SolicitacaoTecnico.objects.count()
+        
+        return JsonResponse({
+            'success': True,
+            'deslocamento': {
+                'total': solicitacoes_deslocamento.count(),
+                'por_status': deslocamento_por_status
+            },
+            'tecnico': {
+                'total': solicitacoes_tecnico.count(),
+                'total_itens': total_itens_tecnico,  # Total de itens na tabela SolicitacaoTecnico
+                'por_status': tecnico_por_status
+            }
+        })
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'message': f'Erro ao obter contagens: {str(e)}'
         }, status=500)
 
 @require_http_methods(["GET"])

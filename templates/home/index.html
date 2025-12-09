@@ -38,24 +38,25 @@
                     const counter = columnElement.querySelector('.card-count');
                     
                     if (columnContent && counter) {
-                        // Se for "Solicitação de deslocamento", mostrar valores originais do backend
-                        if (filterType === 'deslocamento') {
-                            if (window.originalCounters && window.originalCounters[column] !== undefined) {
-                                counter.textContent = window.originalCounters[column];
-                                return;
-                            }
-                        }
+                        // SEMPRE contar apenas cards visíveis, independente do tipo de filtro
+                        // Isso garante que filtros de data, busca ou outros filtros sejam respeitados
+                        const allCards = columnContent.querySelectorAll('.card[data-card-id]:not(.empty-column)');
+                        let visibleCount = 0;
                         
-                        // Se for "Solicitação de técnico", contar apenas cards visíveis
-                        const allCards = columnContent.querySelectorAll('.card');
-                        const visibleCards = Array.from(allCards).filter(card => {
+                        allCards.forEach(card => {
+                            // Verificar se o card está realmente visível
                             const style = window.getComputedStyle(card);
-                            return style.display !== 'none' && 
-                                   card.style.display !== 'none' &&
-                                   style.visibility !== 'hidden' &&
-                                   style.opacity !== '0';
+                            const isVisible = style.display !== 'none' && 
+                                             style.visibility !== 'hidden' && 
+                                             !card.classList.contains('filtered-out') &&
+                                             card.offsetParent !== null; // offsetParent é null se o elemento está oculto
+                            
+                            if (isVisible) {
+                                visibleCount++;
+                            }
                         });
-                        counter.textContent = visibleCards.length;
+                        
+                        counter.textContent = visibleCount;
                     }
                 }
             });
@@ -264,6 +265,19 @@
                 }, 300);
             }, 5000);
         });
+
+        // Garantir que os contadores das colunas reflitam apenas os cards renderizados
+        // Chamamos a função global se existir (definida em card-modal.js)
+        if (typeof window.updateColumnCounters === 'function') {
+            window.updateColumnCounters();
+        }
+    });
+
+    // Fallback para garantir atualização após todos os recursos carregarem
+    window.addEventListener('load', function() {
+        if (typeof window.updateColumnCounters === 'function') {
+            window.updateColumnCounters();
+        }
     });
 </script>
 {% endif %}

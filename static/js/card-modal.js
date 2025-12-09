@@ -309,17 +309,20 @@ async function extractCardData(card) {
     const title = card.querySelector('.card-title');
     data.titulo = title ? title.textContent : 'Sem título';
     
-    // Verificar se é uma solicitação "Em Rota" ou "Casual"
+    // Verificar se é uma solicitação "Em Rota", "Casual" ou "Técnico"
     const tipo = card.getAttribute('data-tipo');
+    const isTecnico = card.getAttribute('data-is-tecnico') === 'true';
     const tituloTexto = data.titulo ? data.titulo.toLowerCase() : '';
     // Detectar se é "Em Rota" pelo atributo data-tipo ou pelo título
     data.isEmRota = tipo === 'em_rota' || tituloTexto.includes('em rota') || tituloTexto.includes('em_rota');
     data.isCasual = tipo === 'casual' || tituloTexto.includes('casual');
+    data.isTecnico = isTecnico || tituloTexto.includes('técnico') || tituloTexto.includes('tecnico');
     console.log('🔍 Verificando tipo de solicitação:', {
         tipo: tipo,
         titulo: tituloTexto,
         isEmRota: data.isEmRota,
-        isCasual: data.isCasual
+        isCasual: data.isCasual,
+        isTecnico: data.isTecnico
     });
     
     // ✅ Extrair ID (primeiro info-item que não tem label - é o ticket)
@@ -361,6 +364,51 @@ async function extractCardData(card) {
             }
         }
     });
+    
+    // Se for "Técnico", extrair os itens de técnico
+    if (data.isTecnico) {
+        console.log('🔍 Extraindo itens de técnico...');
+        data.itensTecnico = [];
+        
+        // Buscar ID da solicitação
+        const solicitacaoId = card.getAttribute('data-card-id') ||
+                             card.getAttribute('data-solicitacao-id') ||
+                             card.getAttribute('id')?.replace('card-', '') ||
+                             card.closest('.card')?.getAttribute('data-card-id');
+        
+        console.log('🔍 ID da solicitação de técnico encontrado:', solicitacaoId);
+        
+        // Buscar itens via AJAX
+        if (solicitacaoId) {
+            try {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                                 document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+                
+                console.log('📡 Fazendo requisição AJAX para itens de técnico:', `/solicitacoes/obter-itens-tecnico/${solicitacaoId}/`);
+                
+                const response = await fetch(`/solicitacoes/obter-itens-tecnico/${solicitacaoId}/`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('📦 Resposta AJAX itens de técnico recebida:', result);
+                    
+                    if (result.success && result.itens && result.itens.length > 0) {
+                        console.log('✅ Itens de técnico obtidos via AJAX:', result.itens);
+                        data.itensTecnico = result.itens;
+                        data.valorTotalTecnico = result.valor_total;
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Erro ao buscar itens de técnico:', error);
+            }
+        }
+    }
     
     // Se for "Em Rota", extrair os itens individuais da rota
     if (data.isEmRota) {
@@ -1050,6 +1098,155 @@ function populateCardDetails(data) {
         routeItemsSection.appendChild(itemsList);
         console.log('✅ Lista de itens adicionada ao modal');
         
+    } else if (data.isTecnico && data.itensTecnico && data.itensTecnico.length > 0) {
+        console.log('✅ É solicitação de Técnico com itens. Exibindo detalhamento...');
+        
+        // Para solicitação "Técnico", mostrar itens individuais no mesmo formato de "Em Rota"
+        
+        // Mudar o título da seção para "Itens da Solicitação de Técnico"
+        if (valoresStatusSection) {
+            const sectionTitle = valoresStatusSection.querySelector('.section-title');
+            if (sectionTitle) {
+                sectionTitle.innerHTML = '<i class="fas fa-user-tie"></i> Itens da Solicitação de Técnico';
+                console.log('✅ Título da seção alterado para "Itens da Solicitação de Técnico"');
+            }
+        }
+        
+        // MOSTRAR o campo "Valor Total"
+        if (valorContainer && valorElement) {
+            valorContainer.style.display = '';
+            const valorLabel = valorContainer.querySelector('.detail-label');
+            if (valorLabel) {
+                valorLabel.textContent = 'Valor Total';
+                valorLabel.style.display = '';
+            }
+            valorElement.textContent = data.valorTotalTecnico || data.valor || 'R$ 0,00';
+            valorElement.style.display = '';
+            console.log('✅ Campo Valor Total configurado:', data.valorTotalTecnico);
+        }
+        
+        // Remover seção anterior se existir
+        let tecnicoItemsSection = document.getElementById('modal-tecnico-items');
+        if (tecnicoItemsSection) {
+            tecnicoItemsSection.remove();
+        }
+        
+        // Criar nova seção de itens de técnico dentro da seção "Valores e Status"
+        tecnicoItemsSection = document.createElement('div');
+        tecnicoItemsSection.id = 'modal-tecnico-items';
+        tecnicoItemsSection.className = 'route-items-modal-section'; // Usar mesma classe para manter estilo
+        
+        if (valoresStatusSection) {
+            const prioridadeItem = valoresStatusSection.querySelector('.detail-item:nth-of-type(2)');
+            if (prioridadeItem) {
+                valoresStatusSection.insertBefore(tecnicoItemsSection, prioridadeItem);
+            } else {
+                const valorTotalItem = valorContainer;
+                if (valorTotalItem && valorTotalItem.nextSibling) {
+                    valoresStatusSection.insertBefore(tecnicoItemsSection, valorTotalItem.nextSibling);
+                } else {
+                    valoresStatusSection.appendChild(tecnicoItemsSection);
+                }
+            }
+        }
+        
+        // Criar header para os itens individuais
+        const itemsHeader = document.createElement('div');
+        itemsHeader.className = 'route-items-modal-header';
+        itemsHeader.innerHTML = '<i class="fas fa-list-ul"></i> <span>Detalhamento por ID</span>';
+        tecnicoItemsSection.appendChild(itemsHeader);
+        console.log('✅ Header de detalhamento de técnico criado');
+        
+        // Criar lista de itens
+        const itemsList = document.createElement('div');
+        itemsList.className = 'route-items-modal-list';
+        
+        console.log(`🔍 Criando ${data.itensTecnico.length} itens de técnico na lista...`);
+        
+        data.itensTecnico.forEach((item, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'route-item-modal';
+            
+            console.log(`🔍 Criando item de técnico ${index + 1}:`, item);
+            
+            // Construir HTML dos valores detalhados
+            const valoresDetalhados = [];
+            if (item.valor_pagamento_tecnico && item.valor_pagamento_tecnico !== 'R$ 0,00') {
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Valor Pagamento:</span><span>${item.valor_pagamento_tecnico}</span></div>`);
+            }
+            if (item.valor_extra && item.valor_extra !== 'R$ 0,00') {
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Valor Extra:</span><span>${item.valor_extra}</span></div>`);
+            }
+            
+            const valoresDetalhadosHTML = valoresDetalhados.length > 0 
+                ? `<div class="route-item-valores-detalhados">
+                    <div class="valores-detalhados-title-mini"><i class="fas fa-list"></i> Valores Detalhados</div>
+                    <div class="valores-detalhados-grid-mini">
+                        ${valoresDetalhados.join('')}
+                    </div>
+                </div>` 
+                : '';
+            
+            // Construir informações adicionais
+            const infoAdicional = [];
+            if (item.recebedor) {
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-user-check"></i> Recebedor:</span><span class="route-item-modal-value">${item.recebedor}</span></div>`);
+            }
+            if (item.chave_pix) {
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-qrcode"></i> Chave PIX:</span><span class="route-item-modal-value">${item.chave_pix}</span></div>`);
+            }
+            if (item.data_realizacao && item.data_realizacao !== 'N/A') {
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-calendar"></i> Data Realização:</span><span class="route-item-modal-value">${item.data_realizacao}</span></div>`);
+            }
+            if (item.data_pagamento && item.data_pagamento !== 'N/A') {
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-calendar-check"></i> Data Pagamento:</span><span class="route-item-modal-value">${item.data_pagamento}</span></div>`);
+            }
+            if (item.atividade_produtiva) {
+                const badgeColor = item.atividade_produtiva_bool ? '#28a745' : '#dc3545';
+                const badgeText = item.atividade_produtiva;
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-check-circle"></i> Atividade:</span><span class="route-item-modal-value" style="color: ${badgeColor}; font-weight: bold;">${badgeText}</span></div>`);
+            }
+            if (item.descricao) {
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-comment"></i> Descrição:</span><span class="route-item-modal-value">${item.descricao}</span></div>`);
+            }
+            
+            const infoAdicionalHTML = infoAdicional.length > 0 
+                ? `<div class="route-item-info-adicional">
+                    <div class="route-item-info-title"><i class="fas fa-info-circle"></i> Informações Adicionais</div>
+                    <div class="route-item-info-grid">
+                        ${infoAdicional.join('')}
+                    </div>
+                </div>` 
+                : '';
+            
+            itemDiv.innerHTML = `
+                <div class="route-item-modal-header">
+                    <div class="route-item-header-left">
+                        <span class="route-item-modal-number">ID ${item.ordem}</span>
+                        <span class="route-item-modal-id">#${item.ticket_tecnico || item.id || 'N/A'}</span>
+                    </div>
+                    <div class="route-item-header-right">
+                        <span class="route-item-modal-total">${item.valor_total_item || item.valor || 'R$ 0,00'}</span>
+                    </div>
+                </div>
+                <div class="route-item-modal-details">
+                    <div class="route-item-modal-main-info">
+                        <div class="route-item-modal-info">
+                            <span class="route-item-modal-label"><i class="fas fa-cog"></i> Serviço:</span>
+                            <span class="route-item-modal-service">${item.servico || 'N/A'}</span>
+                        </div>
+                    </div>
+                    ${infoAdicionalHTML}
+                    ${valoresDetalhadosHTML}
+                </div>
+            `;
+            
+            itemsList.appendChild(itemDiv);
+        });
+        
+        tecnicoItemsSection.appendChild(itemsList);
+        console.log('✅ Lista de itens de técnico adicionada ao modal');
+        
     } else if (data.isCasual && data.valoresDetalhados) {
         // Para solicitação "Casual", exibir valores detalhados
         
@@ -1639,14 +1836,29 @@ function updateColumnCounters() {
         const content = column.querySelector('.column-content');
         const counter = column.querySelector('.card-count');
         if (content && counter) {
-            // Contar apenas elementos com classe 'card', ignorando 'empty-column' e outros
-            const cards = content.querySelectorAll('.card:not(.empty-column)');
-            const cardCount = cards.length;
-            counter.textContent = cardCount;
+            // Contar apenas cards que são solicitações válidas (têm data-card-id) E estão visíveis
+            // Isso garante que estamos contando apenas solicitações da tabela que estão realmente visíveis
+            const allCards = content.querySelectorAll('.card[data-card-id]:not(.empty-column)');
+            let visibleCount = 0;
+            
+            allCards.forEach(card => {
+                // Verificar se o card está realmente visível
+                const style = window.getComputedStyle(card);
+                const isVisible = style.display !== 'none' && 
+                                 style.visibility !== 'hidden' && 
+                                 !card.classList.contains('filtered-out') &&
+                                 card.offsetParent !== null; // offsetParent é null se o elemento está oculto
+                
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+            
+            counter.textContent = visibleCount;
             
             // Mostrar/ocultar mensagem de coluna vazia
             const emptyMessage = content.querySelector('.empty-column');
-            if (cardCount === 0 && !emptyMessage) {
+            if (visibleCount === 0 && !emptyMessage) {
                 // Adicionar mensagem se não tiver cards
                 const empty = document.createElement('div');
                 empty.className = 'empty-column';
@@ -1655,7 +1867,7 @@ function updateColumnCounters() {
                     <p>Nenhuma solicitação</p>
                 `;
                 content.appendChild(empty);
-            } else if (cardCount > 0 && emptyMessage) {
+            } else if (visibleCount > 0 && emptyMessage) {
                 // Remover mensagem se tiver cards
                 emptyMessage.remove();
             }
@@ -2038,14 +2250,29 @@ function updateColumnCounters() {
         const content = column.querySelector('.column-content');
         const counter = column.querySelector('.card-count');
         if (content && counter) {
-            // Contar apenas elementos com classe 'card', ignorando 'empty-column' e outros
-            const cards = content.querySelectorAll('.card:not(.empty-column)');
-            const cardCount = cards.length;
-            counter.textContent = cardCount;
+            // Contar apenas cards que são solicitações válidas (têm data-card-id) E estão visíveis
+            // Isso garante que estamos contando apenas solicitações da tabela que estão realmente visíveis
+            const allCards = content.querySelectorAll('.card[data-card-id]:not(.empty-column)');
+            let visibleCount = 0;
+            
+            allCards.forEach(card => {
+                // Verificar se o card está realmente visível
+                const style = window.getComputedStyle(card);
+                const isVisible = style.display !== 'none' && 
+                                 style.visibility !== 'hidden' && 
+                                 !card.classList.contains('filtered-out') &&
+                                 card.offsetParent !== null; // offsetParent é null se o elemento está oculto
+                
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+            
+            counter.textContent = visibleCount;
             
             // Mostrar/ocultar mensagem de coluna vazia
             const emptyMessage = content.querySelector('.empty-column');
-            if (cardCount === 0 && !emptyMessage) {
+            if (visibleCount === 0 && !emptyMessage) {
                 // Adicionar mensagem se não tiver cards
                 const empty = document.createElement('div');
                 empty.className = 'empty-column';
@@ -2054,7 +2281,7 @@ function updateColumnCounters() {
                     <p>Nenhuma solicitação</p>
                 `;
                 content.appendChild(empty);
-            } else if (cardCount > 0 && emptyMessage) {
+            } else if (visibleCount > 0 && emptyMessage) {
                 // Remover mensagem se tiver cards
                 emptyMessage.remove();
             }

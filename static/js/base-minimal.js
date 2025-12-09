@@ -34,7 +34,7 @@ window.addEventListener('DOMContentLoaded', function() {
             const formEmRota = document.getElementById('formEmRota');
             const formCasual = document.getElementById('formCasual');
             const formTecnico = document.getElementById('formTecnico');
-            const routeClassic = document.querySelector('.route-classic');
+            const routeClassic = document.getElementById('routeClassicSelector') || document.querySelector('.route-classic');
             const modalTitulo = document.getElementById('modalSolicitacaoTitulo');
             
             if (modoTecnico) {
@@ -42,8 +42,10 @@ window.addEventListener('DOMContentLoaded', function() {
                 if (modalTitulo) {
                     modalTitulo.textContent = 'Nova Solicitação de Técnico';
                 }
+                // Ocultar seletor de tipo de solicitação (Agrupados/Individual)
                 if (routeClassic) {
                     routeClassic.style.display = 'none';
+                    routeClassic.style.visibility = 'hidden';
                 }
                 if (formCasual) {
                     formCasual.style.display = 'none';
@@ -53,12 +55,52 @@ window.addEventListener('DOMContentLoaded', function() {
                 }
                 if (formTecnico) {
                     formTecnico.style.display = 'block';
+                    formTecnico.style.visibility = 'visible';
+                    
+                    // Garantir que TODOS os campos do formulário de técnico estejam habilitados
+                    formTecnico.querySelectorAll('input, select, textarea').forEach(field => {
+                        if (field.type !== 'file' && field.type !== 'hidden' && field.type !== 'button' && field.type !== 'submit') {
+                            field.disabled = false;
+                            field.removeAttribute('readonly');
+                        }
+                    });
+                    
                     // Garantir que o botão de adicionar ID esteja visível
                     const btnAddTecnicoId = document.getElementById('btnAddTecnicoId');
                     const addContainerTecnico = btnAddTecnicoId ? btnAddTecnicoId.closest('.add-id-container') : null;
                     if (addContainerTecnico) {
                         addContainerTecnico.style.display = 'flex';
                         addContainerTecnico.style.visibility = 'visible';
+                    }
+                    
+                    // Carregar clientes/empresas no select quando o modal abrir
+                    if (typeof window.carregarClientesEmpresasTecnico === 'function') {
+                        // Pequeno delay para garantir que o DOM está pronto
+                        setTimeout(function() {
+                            window.carregarClientesEmpresasTecnico();
+                        }, 100);
+                    } else {
+                        // Tentar carregar diretamente se a função não estiver disponível ainda
+                        const clienteEmpresaSelect1 = document.getElementById('tecnicoClienteEmpresa1');
+                        if (clienteEmpresaSelect1 && clienteEmpresaSelect1.options.length <= 1) {
+                            fetch('/solicitacoes/buscar-clientes-empresas/?q=')
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success && data.clientes_empresas) {
+                                        clienteEmpresaSelect1.innerHTML = '<option value="">Selecione o cliente/empresa</option>';
+                                        data.clientes_empresas.forEach(cliente => {
+                                            const option = document.createElement('option');
+                                            option.value = cliente.id;
+                                            option.textContent = cliente.nome;
+                                            clienteEmpresaSelect1.appendChild(option);
+                                        });
+                                        console.log(`✅ ${data.clientes_empresas.length} clientes/empresas carregados`);
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('❌ Erro ao carregar clientes/empresas:', error);
+                                });
+                        }
                     }
                 }
                 console.log('✅ Formulário de técnico ativado');
@@ -67,8 +109,10 @@ window.addEventListener('DOMContentLoaded', function() {
                 if (modalTitulo) {
                     modalTitulo.textContent = 'Nova Solicitação Financeira';
                 }
+                // Mostrar seletor de tipo de solicitação (Agrupados/Individual)
                 if (routeClassic) {
-                    routeClassic.style.display = 'block';
+                    routeClassic.style.display = '';
+                    routeClassic.style.visibility = 'visible';
                 }
                 if (routeCasual) {
                     routeCasual.checked = true;
@@ -102,6 +146,32 @@ window.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Função para atualizar contador de solicitações por tipo
+    function atualizarContadorTipoSolicitacao(tipo) {
+        const countElement = document.getElementById('requestTypeCount');
+        if (!countElement) return;
+        
+        // Buscar contagens do backend
+        fetch('/solicitacoes/obter-contagens-solicitacoes/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (tipo === 'tecnico') {
+                        // Mostrar total de solicitações de técnico (solicitações principais)
+                        countElement.textContent = `Total: ${data.tecnico.total} solicitações (${data.tecnico.total_itens} itens)`;
+                        countElement.title = `Total de ${data.tecnico.total} solicitações de técnico com ${data.tecnico.total_itens} itens`;
+                    } else {
+                        // Mostrar total de solicitações de deslocamento
+                        countElement.textContent = `Total: ${data.deslocamento.total} solicitações`;
+                        countElement.title = `Total de ${data.deslocamento.total} solicitações de deslocamento`;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao buscar contagens:', error);
+            });
+    }
+    
     // Quando selecionar uma opção no select (apenas filtrar, não abrir modal)
     if (requestTypeSelect) {
         requestTypeSelect.addEventListener('change', function(e) {
@@ -116,6 +186,8 @@ window.addEventListener('DOMContentLoaded', function() {
                     }
                     // Salvar filtro no localStorage
                     localStorage.setItem('filterType', 'tecnico');
+                    // Atualizar contador
+                    atualizarContadorTipoSolicitacao('tecnico');
                     // Filtrar cards para mostrar apenas solicitações de técnico
                     setTimeout(() => {
                         filterCardsByType('tecnico');
@@ -127,6 +199,8 @@ window.addEventListener('DOMContentLoaded', function() {
                     }
                     // Salvar filtro no localStorage
                     localStorage.setItem('filterType', 'deslocamento');
+                    // Atualizar contador
+                    atualizarContadorTipoSolicitacao('deslocamento');
                     // Filtrar cards para mostrar apenas solicitações de deslocamento (não técnico)
                     setTimeout(() => {
                         filterCardsByType('deslocamento');
@@ -298,22 +372,25 @@ window.addEventListener('DOMContentLoaded', function() {
                 const counter = columnElement.querySelector('.card-count');
                 
                 if (columnContent && counter) {
-                    // Se for "Solicitação de deslocamento", usar função global que restaura valores originais
-                    if (filterType === 'deslocamento' && typeof window.updateCardCountersAfterFilter === 'function') {
-                        window.updateCardCountersAfterFilter();
-                        return;
-                    }
+                    // SEMPRE contar apenas cards visíveis, independente do tipo de filtro
+                    // Isso garante que filtros de data, busca ou outros filtros sejam respeitados
+                    const allCards = columnContent.querySelectorAll('.card[data-card-id]:not(.empty-column)');
+                    let visibleCount = 0;
                     
-                    // Se for "Solicitação de técnico", contar apenas cards visíveis
-                    const allCards = columnContent.querySelectorAll('.card');
-                    const visibleCards = Array.from(allCards).filter(card => {
+                    allCards.forEach(card => {
+                        // Verificar se o card está realmente visível
                         const style = window.getComputedStyle(card);
-                        return style.display !== 'none' && 
-                               card.style.display !== 'none' &&
-                               style.visibility !== 'hidden' &&
-                               style.opacity !== '0';
+                        const isVisible = style.display !== 'none' && 
+                                         style.visibility !== 'hidden' && 
+                                         !card.classList.contains('filtered-out') &&
+                                         card.offsetParent !== null; // offsetParent é null se o elemento está oculto
+                        
+                        if (isVisible) {
+                            visibleCount++;
+                        }
                     });
-                    counter.textContent = visibleCards.length;
+                    
+                    counter.textContent = visibleCount;
                 }
             }
         });

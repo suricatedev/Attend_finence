@@ -30,19 +30,19 @@ class SolicitacaoRotaItemAdmin(admin.ModelAdmin):
 
 @admin.register(SolicitacaoTecnico)
 class SolicitacaoTecnicoAdmin(admin.ModelAdmin):
-    list_display = ('solicitacao', 'recebedor', 'servico', 'valor_pagamento_tecnico', 'valor_extra', 'data_realizacao_atividade', 'atividade_produtiva', 'data_criacao')
-    list_filter = ('atividade_produtiva', 'servico', 'data_realizacao_atividade', 'data_criacao')
-    search_fields = ('solicitacao__ticket', 'recebedor__nome', 'servico__nome', 'descricao')
+    list_display = ('id', 'ticket_item', 'solicitacao', 'recebedor', 'servico', 'cliente_empresa', 'valor_pagamento_tecnico', 'valor_extra', 'data_realizacao_atividade', 'data_pagamento', 'atividade_produtiva', 'data_criacao')
+    list_filter = ('atividade_produtiva', 'servico', 'data_realizacao_atividade', 'data_pagamento', 'data_criacao')
+    search_fields = ('ticket_item', 'solicitacao__ticket', 'recebedor__nome', 'servico__nome', 'descricao')
     readonly_fields = ('data_criacao', 'data_atualizacao')
     fieldsets = (
         ('Informações da Solicitação', {
-            'fields': ('solicitacao', 'recebedor', 'servico')
+            'fields': ('solicitacao', 'ticket_item', 'recebedor', 'servico', 'cliente_empresa')
         }),
         ('Valores', {
             'fields': ('valor_pagamento_tecnico', 'valor_extra')
         }),
         ('Detalhes', {
-            'fields': ('descricao', 'data_realizacao_atividade', 'atividade_produtiva')
+            'fields': ('descricao', 'data_realizacao_atividade', 'data_pagamento', 'atividade_produtiva')
         }),
         ('Datas', {
             'fields': ('data_criacao', 'data_atualizacao'),

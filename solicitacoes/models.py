@@ -160,12 +160,15 @@ class SolicitacaoRotaItem(models.Model):
 class SolicitacaoTecnico(models.Model):
     """Modelo para armazenar solicitações de técnico"""
     solicitacao = models.ForeignKey(Solicitacoes, on_delete=models.CASCADE, related_name='solicitacoes_tecnico', verbose_name="ID da Solicitação")
+    ticket_item = models.CharField(max_length=25, blank=True, default='', verbose_name="ID/Ticket do Item", help_text="Ticket original informado no formulário")
     recebedor = models.ForeignKey(Recebedor, on_delete=models.CASCADE, related_name='solicitacoes_tecnico', verbose_name="Nome do Técnico")
     servico = models.ForeignKey('servicos.Servico', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Tipo de Serviço")
+    cliente_empresa = models.ForeignKey(ClienteEmpresa, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Cliente/Empresa")
     valor_pagamento_tecnico = models.FloatField(verbose_name="Valor que vai pagar para o técnico")
     valor_extra = models.FloatField(default=0.0, blank=True, null=True, verbose_name="Valor Extra")
     descricao = models.TextField(blank=True, null=True, verbose_name="Descrição")
     data_realizacao_atividade = models.DateField(verbose_name="Data da Realização da Atividade", null=True, blank=True)
+    data_pagamento = models.DateField(verbose_name="Data de Pagamento", null=True, blank=True)
     atividade_produtiva = models.BooleanField(default=True, verbose_name="Atividade Produtiva")
     data_criacao = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     data_atualizacao = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")

@@ -238,6 +238,24 @@ class FormManager {
                     formCasualExists: !!formCasual
                 });
                 
+                // Verificar se o formulário de técnico está ativo
+                const formTecnico = document.getElementById('formTecnico');
+                const isTecnicoActive = formTecnico && window.getComputedStyle(formTecnico).display !== 'none';
+                
+                // Se for formulário de técnico, não desabilitar seus campos
+                if (isTecnicoActive) {
+                    console.log('✅ Formulário de técnico ativo - não desabilitar campos de técnico');
+                    // Garantir que campos de técnico estejam habilitados
+                    formTecnico.querySelectorAll('input, select, textarea').forEach(field => {
+                        if (field.type !== 'file' && field.type !== 'hidden' && field.type !== 'button' && field.type !== 'submit') {
+                            field.disabled = false;
+                            field.removeAttribute('readonly');
+                        }
+                    });
+                    // Não processar validação de Casual/Em Rota
+                    return true;
+                }
+                
                 if (formEmRota && formCasual) {
                     // ⚠️ ESTRATÉGIA DEFINITIVA: 
                     // 1. DESABILITAR TODOS os campos do formulário inativo
@@ -882,6 +900,17 @@ class FormManager {
                 }            }
         });
 
+        // Verificar se é formulário de técnico - se for, pular validação padrão do FormManager
+        const formTecnico = document.getElementById('formTecnico');
+        const isTecnicoActive = formTecnico && window.getComputedStyle(formTecnico).display !== 'none';
+        
+        if (isTecnicoActive) {
+            console.log('✅ Formulário de técnico ativo - pulando validação padrão do FormManager');
+            // Permitir que o submit continue - a validação específica do técnico já foi feita no listener anterior
+            // NÃO fazer preventDefault - deixar o submit continuar
+            return true;
+        }
+
         console.log(`Validação: ${isValid ? 'Válido' : 'Inválido'} (${errorCount} erros)`);
         console.log(`Tipo de formulário ativo: ${isEmRotaActive ? 'Em Rota' : 'Casual'}`);
         if (errors.length > 0) {
@@ -1131,8 +1160,200 @@ class FormManager {
         form.classList.add('form-loading');
         
         try {
+            // GARANTIR que todos os campos de técnico estão habilitados antes de criar FormData
+            const formTecnico = document.getElementById('formTecnico');
+            const isTecnicoActive = formTecnico && window.getComputedStyle(formTecnico).display !== 'none';
+            const modoTecnicoInput = form.querySelector('#modoTecnico');
+            
+            if (isTecnicoActive) {
+                // IMPORTANTE: Garantir que modo_tecnico seja 'true' quando formulário de técnico está ativo
+                if (modoTecnicoInput) {
+                    modoTecnicoInput.value = 'true';
+                    console.log('✅ modoTecnico definido como true - formulário de técnico está ativo');
+                }
+                // Garantir que TODOS os campos de técnico estão habilitados
+                formTecnico.querySelectorAll('input, select, textarea').forEach(field => {
+                    if (field.type !== 'file' && field.type !== 'hidden' && field.type !== 'button' && field.type !== 'submit') {
+                        field.disabled = false;
+                        field.removeAttribute('readonly');
+                        
+                        // Se for select, garantir que está populado
+                        if (field.tagName === 'SELECT' && field.options.length === 0) {
+                            console.warn(`⚠️ Select ${field.id || field.name} está vazio - tentando popular`);
+                            const selectRef = document.querySelector('#tecnicoServico1');
+                            if (selectRef && selectRef.options.length > 0) {
+                                field.innerHTML = '';
+                                const optionPadrao = document.createElement('option');
+                                optionPadrao.value = '';
+                                optionPadrao.textContent = 'Selecione o serviço';
+                                field.appendChild(optionPadrao);
+                                for (let i = 1; i < selectRef.options.length; i++) {
+                                    const option = selectRef.options[i];
+                                    const novaOption = document.createElement('option');
+                                    novaOption.value = option.value;
+                                    novaOption.textContent = option.textContent;
+                                    field.appendChild(novaOption);
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                // IMPORTANTE: Se NÃO for técnico, garantir que modo_tecnico seja 'false' e campos de técnico não sejam enviados
+                if (modoTecnicoInput) {
+                    modoTecnicoInput.value = 'false';
+                    console.log('✅ modoTecnico definido como false - não é solicitação de técnico');
+                }
+                // Desabilitar todos os campos de técnico para que não sejam incluídos no FormData
+                if (formTecnico) {
+                    formTecnico.querySelectorAll('input, select, textarea').forEach(campo => {
+                        if (campo.name && campo.name.includes('tecnico')) {
+                            campo.disabled = true;
+                            // Não remover o name aqui, apenas desabilitar
+                        }
+                    });
+                }
+            }
+            
+            // Normalizar valores monetários antes de criar FormData
+            if (isTecnicoActive) {
+                // Normalizar todos os valores monetários dos campos de técnico
+                form.querySelectorAll('[name^="tecnico_valor_pagamento_"], [name^="tecnico_valor_extra_"]').forEach(input => {
+                    if (input.value && input.value.trim() !== '') {
+                        const valorNormalizado = (window.parseValorMonetario || parseFloat)(input.value);
+                        // Converter de volta para formato numérico simples (sem formatação) para o backend
+                        // O backend espera receber o valor formatado (com R$ e vírgulas) ou numérico simples
+                        // Vamos enviar como numérico simples para evitar problemas de parsing
+                        const valorNumerico = typeof valorNormalizado === 'number' ? valorNormalizado : parseFloat(valorNormalizado);
+                        if (!isNaN(valorNumerico) && valorNumerico > 0) {
+                            // Manter o valor formatado no input para o usuário ver, mas enviar como numérico simples
+                            // Na verdade, vamos enviar como está formatado e deixar o backend fazer o parse
+                            // Mas garantir que está no formato esperado
+                            if (!input.value.includes('R$') && !input.value.includes(',')) {
+                                // Se está sem formatação, formatar
+                                input.value = (window.formatarValorMonetario || function(v) { return `R$ ${v.toFixed(2).replace('.', ',')}` })(valorNumerico);
+                            }
+                        }
+                    }
+                });
+            }
+            
             // Criar FormData do formulário
             const formData = new FormData(form);
+            
+            // Converter IDs de cliente/empresa para nomes antes de enviar
+            // O backend espera receber o nome, não o ID
+            form.querySelectorAll('select.cliente-empresa-select').forEach(select => {
+                if (select.value) {
+                    const selectedOption = select.options[select.selectedIndex];
+                    if (selectedOption && selectedOption.textContent) {
+                        // Substituir o valor (ID) pelo nome do cliente
+                        formData.set(select.name, selectedOption.textContent);
+                    }
+                }
+            });
+            
+            // DEBUG: Log dos dados que serão enviados (especialmente para técnico)
+            if (isTecnicoActive) {
+                console.log('📤 Enviando dados de técnico via AJAX:');
+                const tecnicoData = [];
+                for (let pair of formData.entries()) {
+                    if (pair[0].includes('tecnico') || pair[0] === 'modo_tecnico' || pair[0] === 'csrfmiddlewaretoken') {
+                        tecnicoData.push(`${pair[0]}: ${pair[1]}`);
+                        console.log(`  ${pair[0]}: ${pair[1]}`);
+                    }
+                }
+                
+                // Verificar se os campos essenciais estão presentes
+                const hasIds = Array.from(formData.keys()).some(k => k.startsWith('tecnico_solicitacao_'));
+                const hasRecebedores = Array.from(formData.keys()).some(k => k.startsWith('tecnico_recebedor_'));
+                const hasServicos = Array.from(formData.keys()).some(k => k.startsWith('tecnico_servico_'));
+                const hasValores = Array.from(formData.keys()).some(k => k.startsWith('tecnico_valor_pagamento_'));
+                const hasModoTecnico = formData.get('modo_tecnico') === 'true';
+                
+                console.log('🔍 Verificação de campos:', {
+                    hasIds,
+                    hasRecebedores,
+                    hasServicos,
+                    hasValores,
+                    hasModoTecnico,
+                    totalFields: tecnicoData.length,
+                    modoTecnicoValue: formData.get('modo_tecnico')
+                });
+                
+                // Se modo_tecnico não está como 'true', corrigir AGORA antes de enviar
+                if (!hasModoTecnico) {
+                    console.warn('⚠️ modo_tecnico não está como true! Corrigindo...');
+                    if (modoTecnicoInput) {
+                        modoTecnicoInput.value = 'true';
+                        // Recriar FormData para incluir o valor correto
+                        formData.set('modo_tecnico', 'true');
+                        console.log('✅ modo_tecnico corrigido para true no FormData');
+                    }
+                }
+                
+                if (!hasIds || !hasRecebedores || !hasServicos || !hasValores) {
+                    console.error('❌ ERRO: Campos de técnico faltando no FormData!');
+                    console.error('❌ Campos encontrados:', Array.from(formData.keys()).filter(k => k.includes('tecnico')));
+                    
+                    // Tentar corrigir: garantir que campos estão habilitados e têm name
+                    console.log('🔧 Tentando corrigir: habilitando campos de técnico e restaurando names...');
+                    formTecnico.querySelectorAll('input, select, textarea').forEach(field => {
+                        if (field.type !== 'file' && field.type !== 'hidden' && field.type !== 'button' && field.type !== 'submit') {
+                            field.disabled = false;
+                            // Restaurar name se foi removido
+                            if (!field.name && field.dataset.originalName) {
+                                field.name = field.dataset.originalName;
+                                delete field.dataset.originalName;
+                            }
+                            // Se ainda não tem name, tentar restaurar do id
+                            if (!field.name && field.id) {
+                                const idMatch = field.id.match(/tecnico(\w+)(\d+)/);
+                                if (idMatch) {
+                                    const campoNome = idMatch[1].charAt(0).toLowerCase() + idMatch[1].slice(1);
+                                    const numero = idMatch[2];
+                                    field.name = `tecnico_${campoNome}_${numero}`;
+                                    console.log(`✅ Name restaurado para ${field.id}: ${field.name}`);
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Garantir que modo_tecnico está como true
+                    if (modoTecnicoInput) {
+                        modoTecnicoInput.value = 'true';
+                    }
+                    
+                    // Recriar FormData após habilitar campos
+                    formData = new FormData(form);
+                    
+                    // Converter IDs de cliente/empresa para nomes novamente
+                    form.querySelectorAll('select.cliente-empresa-select').forEach(select => {
+                        if (select.value) {
+                            const selectedOption = select.options[select.selectedIndex];
+                            if (selectedOption && selectedOption.textContent) {
+                                formData.set(select.name, selectedOption.textContent);
+                            }
+                        }
+                    });
+                    
+                    console.log('✅ FormData recriado após habilitar campos');
+                    
+                    // Verificar novamente
+                    const hasIdsAfter = Array.from(formData.keys()).some(k => k.startsWith('tecnico_solicitacao_'));
+                    const hasRecebedoresAfter = Array.from(formData.keys()).some(k => k.startsWith('tecnico_recebedor_'));
+                    const hasServicosAfter = Array.from(formData.keys()).some(k => k.startsWith('tecnico_servico_'));
+                    const hasValoresAfter = Array.from(formData.keys()).some(k => k.startsWith('tecnico_valor_pagamento_'));
+                    
+                    console.log('🔍 Verificação após correção:', {
+                        hasIds: hasIdsAfter,
+                        hasRecebedores: hasRecebedoresAfter,
+                        hasServicos: hasServicosAfter,
+                        hasValores: hasValoresAfter,
+                        modoTecnico: formData.get('modo_tecnico')
+                    });
+                }
+            }
             
             // Enviar via AJAX
             const response = await fetch(form.action, {
@@ -1140,15 +1361,23 @@ class FormManager {
                 body: formData,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
-                }
+                },
+                credentials: 'same-origin' // Incluir cookies (CSRF token)
             });
             
             // Verificar se a resposta é HTML (redirect com erro) ou JSON
             const contentType = response.headers.get('content-type');
+            console.log('📥 Resposta do servidor:', {
+                status: response.status,
+                contentType: contentType,
+                contentType: contentType,
+                ok: response.ok
+            });
             
             if (contentType && contentType.includes('application/json')) {
                 // Resposta JSON
                 const data = await response.json();
+                console.log('📥 Dados JSON recebidos:', data);
                 if (data.success) {
                     // Sucesso - fechar modal e recarregar
                     if (typeof Utils !== 'undefined' && Utils.showNotification) {
@@ -1180,6 +1409,31 @@ class FormManager {
                             errorField = form.querySelector('#campaignRecebedor, [name="casual_recebedor"]');
                         } else if (errorMessage.includes('Data de Pagamento') || errorMessage.includes('Pagamento')) {
                             errorField = form.querySelector('#campaignDataPagamento, [name="casual_dataPagamento"], [name="route_dataPagamento"]');
+                        } else if (errorMessage.includes('Data da Realização') || errorMessage.includes('Realização da Atividade')) {
+                            // Procurar campo de data de realização de técnico
+                            errorField = form.querySelector('[name^="tecnico_data_realizacao_"]:not([value])');
+                            if (!errorField) {
+                                // Se não encontrou vazio, pegar o primeiro campo de data de realização
+                                errorField = form.querySelector('[name^="tecnico_data_realizacao_"]');
+                            }
+                        } else if (errorMessage.includes('Tipo de Serviço')) {
+                            // Procurar campo de serviço de técnico vazio
+                            errorField = form.querySelector('[name^="tecnico_servico_"]:not([value]), [name^="tecnico_servico_"] option[value=""]:checked');
+                            if (!errorField) {
+                                errorField = form.querySelector('[name^="tecnico_servico_"]');
+                            }
+                        } else if (errorMessage.includes('ID 2') || errorMessage.includes('do ID 2')) {
+                            // Erro específico do ID 2 - encontrar campos do segundo grupo
+                            const grupo2 = form.querySelector('.tecnico-id-group[data-tecnico-id="2"]');
+                            if (grupo2) {
+                                if (errorMessage.includes('Data')) {
+                                    errorField = grupo2.querySelector('[name^="tecnico_data_realizacao_"]');
+                                } else if (errorMessage.includes('Serviço')) {
+                                    errorField = grupo2.querySelector('[name^="tecnico_servico_"]');
+                                } else if (errorMessage.includes('Técnico') || errorMessage.includes('Recebedor')) {
+                                    errorField = grupo2.querySelector('[name^="tecnico_recebedor_"]');
+                                }
+                            }
                         }
                     }
                     
@@ -1222,7 +1476,12 @@ class FormManager {
                 }
             } else {
                 // Resposta HTML (pode ser redirect ou página de erro)
+                console.log('⚠️ Resposta não é JSON, é HTML. Status:', response.status, 'URL:', response.url);
                 const html = await response.text();
+                
+                // DEBUG: Ver primeiras linhas do HTML para identificar o problema
+                const preview = html.substring(0, 1000);
+                console.log('📄 Preview do HTML recebido (primeiros 1000 chars):', preview);
                 
                 // Verificar se há mensagens de erro do Django
                 const parser = new DOMParser();
