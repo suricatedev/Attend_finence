@@ -406,8 +406,9 @@
                             <label for="tecnicoSolicitacao1">ID da Solicitação 1 <span class="required">*</span></label>
                         </div>
                         <div class="route-id-inputs tecnico-inputs-grid">
-                            <!-- Primeira linha: ID, Técnico, PIX, Serviço -->
+                            <!-- Primeira linha: ID, Técnico, PIX -->
                             <div class="form-group route-id-field">
+                                <label for="tecnicoSolicitacao1">ID da Solicitação 1 <span class="required">*</span></label>
                                 <input type="text" id="tecnicoSolicitacao1" name="tecnico_solicitacao_1" placeholder="Ex: INCXXXXX" required>
                                 <small class="form-help">ID obrigatório</small>
                             </div>
@@ -424,6 +425,8 @@
                                 <input type="text" id="tecnicoPix1" name="tecnico_pix_1" class="pix-input" placeholder="Chave PIX será preenchida automaticamente" readonly style="background-color: #f0f0f0;">
                                 <small class="form-help">Preenchido automaticamente</small>
                             </div>
+                            
+                            <!-- Segunda linha: Serviço, Cliente/Empresa, Valor Pagamento -->
                             <div class="form-group route-servico-field">
                                 <label for="tecnicoServico1">Tipo de Serviço <span class="required">*</span></label>
                                 <select id="tecnicoServico1" name="tecnico_servico_1" required>
@@ -442,20 +445,18 @@
                                 </select>
                                 <small class="form-help">Cliente/Empresa relacionado (opcional)</small>
                             </div>
-                            
-                            <!-- Segunda linha: Valores -->
                             <div class="form-group tecnico-valor-field">
                                 <label for="tecnicoValorPagamento1">Valor que vai pagar para o técnico <span class="required">*</span></label>
                                 <input type="text" id="tecnicoValorPagamento1" name="tecnico_valor_pagamento_1" class="valor-tecnico" placeholder="R$ 0,00" required>
                                 <small class="form-help">Valor a ser pago para o técnico</small>
                             </div>
+                            
+                            <!-- Terceira linha: Valor Extra, Data Realização, Data Pagamento -->
                             <div class="form-group tecnico-valor-extra-field">
                                 <label for="tecnicoValorExtra1">Valor Extra</label>
                                 <input type="text" id="tecnicoValorExtra1" name="tecnico_valor_extra_1" class="valor-tecnico-extra" placeholder="R$ 0,00">
                                 <small class="form-help">Valor extra (opcional)</small>
                             </div>
-                            
-                            <!-- Terceira linha: Data Realização, Data Pagamento e Tipo de Atividade -->
                             <div class="form-group tecnico-data-field">
                                 <label for="tecnicoDataRealizacao1">Data da Realização da Atividade <span class="required">*</span></label>
                                 <input type="date" id="tecnicoDataRealizacao1" name="tecnico_data_realizacao_1" required>
@@ -466,9 +467,11 @@
                                 <input type="date" id="tecnicoDataPagamento1" name="tecnico_data_pagamento_1">
                                 <small class="form-help">Data prevista para pagamento</small>
                             </div>
+                            
+                            <!-- Quarta linha: Tipo de Atividade (ocupa 3 colunas) -->
                             <div class="form-group tecnico-atividade-field">
                                 <label for="atividadeType1">Tipo de Atividade <span class="required">*</span></label>
-                                <div class="atividade-options">
+                                <div class="atividade-options" style="justify-content: flex-start;">
                                     <label class="atividade-option">
                                         <input type="radio" id="atividadeProdutiva1" name="tecnico_atividade_produtiva_1" value="true" checked>
                                         <span class="atividade-label atividade-produtiva">
@@ -487,8 +490,8 @@
                                 <small class="form-help">Selecione se a atividade é produtiva ou improdutiva</small>
                             </div>
                             
-                            <!-- Quarta linha: Descrição (largura total) -->
-                            <div class="form-group tecnico-descricao-field" style="grid-column: 1 / -1;">
+                            <!-- Quinta linha: Descrição (largura total) -->
+                            <div class="form-group tecnico-descricao-field">
                                 <label for="tecnicoDescricao1">Descrição</label>
                                 <textarea id="tecnicoDescricao1" name="tecnico_descricao_1" rows="3" placeholder="Descreva detalhes da solicitação de técnico..."></textarea>
                                 <small class="form-help">Campo opcional</small>

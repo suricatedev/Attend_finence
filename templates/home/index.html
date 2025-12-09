@@ -972,6 +972,18 @@
                 const allBtn = document.querySelector(`.date-filter-all-btn[data-column="${column}"]`);
                 if (todayBtn) todayBtn.classList.remove('active');
                 if (allBtn) allBtn.classList.add('active');
+                
+                // IMPORTANTE: Reaplicar filtro de tipo após limpar filtro de data
+                // Isso garante que quando "Todos" for clicado, apenas os cards do tipo selecionado sejam mostrados
+                const requestTypeSelect = document.getElementById('requestTypeSelect');
+                const savedFilter = localStorage.getItem('filterType');
+                const filterType = (requestTypeSelect && requestTypeSelect.value) ? requestTypeSelect.value : (savedFilter || 'deslocamento');
+                
+                if (typeof filterCardsByType === 'function') {
+                    filterCardsByType(filterType);
+                } else if (typeof window.applyFilterFast === 'function') {
+                    window.applyFilterFast();
+                }
             }
             
             // Event listeners para botões HOJE e TODOS
@@ -1065,10 +1077,26 @@
                 const cards = columnContent.querySelectorAll('.card[data-de-criacao]');
                 let visibleCount = 0;
                 
+                // Obter o filtro de tipo atual
+                const requestTypeSelect = document.getElementById('requestTypeSelect');
+                const savedFilter = localStorage.getItem('filterType');
+                const filterType = (requestTypeSelect && requestTypeSelect.value) ? requestTypeSelect.value : (savedFilter || 'deslocamento');
+                
                 cards.forEach(card => {
                     const cardDate = card.getAttribute('data-de-criacao');
+                    const isTecnico = card.getAttribute('data-is-tecnico') === 'true';
                     
-                    if (cardDate === date) {
+                    // Verificar se o card corresponde à data E ao tipo selecionado
+                    const matchesDate = cardDate === date;
+                    let matchesType = true;
+                    
+                    if (filterType === 'tecnico') {
+                        matchesType = isTecnico;
+                    } else if (filterType === 'deslocamento') {
+                        matchesType = !isTecnico;
+                    }
+                    
+                    if (matchesDate && matchesType) {
                         card.style.display = '';
                         visibleCount++;
                     } else {
@@ -1092,15 +1120,18 @@
                 
             }
             
-            // Função para limpar filtro de data (mostrar todos os cards)
+            // Função para limpar filtro de data (mas manter filtro de tipo)
             function clearDateFilterForColumn(column) {
                 const columnContent = document.querySelector(`.column-content[data-column="${column}"]`);
                 if (!columnContent) return;
                 
                 const cards = columnContent.querySelectorAll('.card[data-de-criacao]');
                 
+                // IMPORTANTE: Não definir display aqui - apenas remover classes de filtro de data
+                // O filtro de tipo será reaplicado pela função showAllCards após limpar o filtro de data
                 cards.forEach(card => {
-                    card.style.display = '';
+                    card.classList.remove('filtered-out');
+                    // NÃO definir card.style.display aqui - deixar o filtro de tipo controlar
                 });
                 
                 // Mostrar mensagem de coluna vazia se não houver cards

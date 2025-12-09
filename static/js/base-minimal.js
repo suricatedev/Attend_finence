@@ -146,32 +146,6 @@ window.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Função para atualizar contador de solicitações por tipo
-    function atualizarContadorTipoSolicitacao(tipo) {
-        const countElement = document.getElementById('requestTypeCount');
-        if (!countElement) return;
-        
-        // Buscar contagens do backend
-        fetch('/solicitacoes/obter-contagens-solicitacoes/')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    if (tipo === 'tecnico') {
-                        // Mostrar total de solicitações de técnico (solicitações principais)
-                        countElement.textContent = `Total: ${data.tecnico.total} solicitações (${data.tecnico.total_itens} itens)`;
-                        countElement.title = `Total de ${data.tecnico.total} solicitações de técnico com ${data.tecnico.total_itens} itens`;
-                    } else {
-                        // Mostrar total de solicitações de deslocamento
-                        countElement.textContent = `Total: ${data.deslocamento.total} solicitações`;
-                        countElement.title = `Total de ${data.deslocamento.total} solicitações de deslocamento`;
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Erro ao buscar contagens:', error);
-            });
-    }
-    
     // Quando selecionar uma opção no select (apenas filtrar, não abrir modal)
     if (requestTypeSelect) {
         requestTypeSelect.addEventListener('change', function(e) {
@@ -186,8 +160,6 @@ window.addEventListener('DOMContentLoaded', function() {
                     }
                     // Salvar filtro no localStorage
                     localStorage.setItem('filterType', 'tecnico');
-                    // Atualizar contador
-                    atualizarContadorTipoSolicitacao('tecnico');
                     // Filtrar cards para mostrar apenas solicitações de técnico
                     setTimeout(() => {
                         filterCardsByType('tecnico');
@@ -199,8 +171,6 @@ window.addEventListener('DOMContentLoaded', function() {
                     }
                     // Salvar filtro no localStorage
                     localStorage.setItem('filterType', 'deslocamento');
-                    // Atualizar contador
-                    atualizarContadorTipoSolicitacao('deslocamento');
                     // Filtrar cards para mostrar apenas solicitações de deslocamento (não técnico)
                     setTimeout(() => {
                         filterCardsByType('deslocamento');

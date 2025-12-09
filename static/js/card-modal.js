@@ -78,7 +78,7 @@ function initializeCardExpansion() {
                 e.target.closest('.btn-delete-card')) {
                 return;
             }
-
+            
             if (card.classList.contains('dragging')) {
                 return;
             }
@@ -1570,7 +1570,7 @@ function setupModalEventListeners() {
         });
         modalCloseDelegationSetup = true;
     }
-    
+
     // Event listener para botão de detalhamento
     const exportCardBtn = document.getElementById('exportCardBtn');
     console.log('🔍 Procurando botão exportCardBtn:', !!exportCardBtn);
@@ -1738,7 +1738,7 @@ function moveCardToFila(cardId, targetFila) {
                 window.updateCardCountersAfterFilter();
             } else if (typeof updateColumnCounters === 'function') {
                 // Fallback: usar função local
-                updateColumnCounters();
+            updateColumnCounters();
             } else {
                 // Fallback: contar cards visíveis manualmente
                 document.querySelectorAll('.kanban-column').forEach(column => {

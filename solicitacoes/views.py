@@ -1880,7 +1880,15 @@ def exportar_relatorio_card(request, solicitacao_id):
     View para exportar relatório detalhado de uma solicitação em nova guia
     """
     try:
-        solicitacao = Solicitacoes.objects.prefetch_related('itens_rota__servico').get(id=solicitacao_id)
+        solicitacao = Solicitacoes.objects.prefetch_related(
+            'itens_rota__servico',
+            'solicitacoes_tecnico__recebedor',
+            'solicitacoes_tecnico__servico',
+            'solicitacoes_tecnico__cliente_empresa'
+        ).get(id=solicitacao_id)
+        
+        # Verificar se é solicitação de técnico
+        is_tecnico = solicitacao.is_tecnico()
         
         # Calcular valores
         valor_total_detalhados = solicitacao.get_valor_detalhados()
@@ -1888,7 +1896,47 @@ def exportar_relatorio_card(request, solicitacao_id):
         
         # Se for Em Rota, calcular receita e preparar itens
         itens_rota_data = []
-        if solicitacao.tipo == 'em_rota':
+        
+        if is_tecnico:
+            # Para solicitações de técnico, buscar todos os itens
+            itens_tecnico = solicitacao.solicitacoes_tecnico.all().order_by('id')
+            ordem = 1
+            
+            for item in itens_tecnico:
+                valor_total_item = (item.valor_pagamento_tecnico or 0.0) + (item.valor_extra or 0.0)
+                valor_receita_calculado += valor_total_item  # Para técnico, o valor total é a receita
+                
+                # Usar ticket_item se existir, senão usar o ticket da solicitação principal
+                ticket_item = item.ticket_item if hasattr(item, 'ticket_item') and item.ticket_item else solicitacao.ticket
+                
+                # Buscar CNPJ do cliente/empresa se houver
+                cnpj = ''
+                if item.cliente_empresa and hasattr(item.cliente_empresa, 'cnpj'):
+                    cnpj = item.cliente_empresa.cnpj or ''
+                
+                itens_rota_data.append({
+                    'ordem': ordem,
+                    'ticket_item': ticket_item,
+                    'servico': item.servico.nome if item.servico else 'N/A',
+                    'recebedor': item.recebedor.nome if item.recebedor else '',
+                    'chave_pix': item.recebedor.chave_pix if item.recebedor else '',
+                    'cliente_empresa': item.cliente_empresa.nome if item.cliente_empresa else '',
+                    'cnpj': cnpj,
+                    'valor_total': valor_total_item,
+                    'valor_km': 0.0,  # Técnico não tem valores detalhados como deslocamento
+                    'valor_pedagio': 0.0,
+                    'valor_hospedagem': 0.0,
+                    'valor_fluvial': 0.0,
+                    'valor_outros': item.valor_extra or 0.0,  # valor_extra como "outros"
+                    'soma_detalhados': item.valor_extra or 0.0,
+                    'valor_atividade': item.valor_pagamento_tecnico or 0.0,  # valor principal
+                    'data_realizacao': item.data_realizacao_atividade.strftime('%d/%m/%Y') if item.data_realizacao_atividade else '',
+                    'data_pagamento': item.data_pagamento.strftime('%d/%m/%Y') if item.data_pagamento else '',
+                    'atividade_produtiva': item.atividade_produtiva if hasattr(item, 'atividade_produtiva') else True,
+                    'descricao': item.descricao or '',
+                })
+                ordem += 1
+        elif solicitacao.tipo == 'em_rota':
             itens = solicitacao.itens_rota.all().order_by('ordem')
             for item in itens:
                 # IMPORTANTE: item.valor já é o valor da atividade (não o valor total)

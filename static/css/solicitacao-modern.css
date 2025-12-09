@@ -1674,10 +1674,10 @@ body:has(.route-recebedor-field.has-active-dropdown) .modal-body,
     border: 1px solid #e2e8f0;
 }
 
-/* Grid layout otimizado para campos de técnico */
+/* Grid layout otimizado para campos de técnico - 3 colunas simétricas */
 .tecnico-inputs-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.25rem;
     align-items: start;
     margin-bottom: 0;
@@ -1688,15 +1688,22 @@ body:has(.route-recebedor-field.has-active-dropdown) .modal-body,
 .tecnico-inputs-grid .route-recebedor-field,
 .tecnico-inputs-grid .route-pix-field,
 .tecnico-inputs-grid .route-servico-field,
+.tecnico-inputs-grid .route-cliente-empresa-field,
 .tecnico-inputs-grid .tecnico-valor-field,
 .tecnico-inputs-grid .tecnico-valor-extra-field,
 .tecnico-inputs-grid .tecnico-data-field,
+.tecnico-inputs-grid .tecnico-data-pagamento-field,
 .tecnico-inputs-grid .tecnico-atividade-field {
     grid-column: span 1;
     margin-bottom: 0;
     display: flex;
     flex-direction: column;
     min-width: 0;
+}
+
+/* Campo de descrição ocupa toda a largura */
+.tecnico-inputs-grid .tecnico-descricao-field {
+    grid-column: 1 / -1;
 }
 
 /* Estilos para select de recebedor no formulário de técnico */
@@ -1754,6 +1761,7 @@ body:has(.route-recebedor-field.has-active-dropdown) .modal-body,
 .tecnico-valor-field label,
 .tecnico-valor-extra-field label,
 .tecnico-data-field label,
+.tecnico-data-pagamento-field label,
 .tecnico-atividade-field label,
 .tecnico-descricao-field label {
     font-size: 0.875rem;
@@ -1798,7 +1806,8 @@ body:has(.route-recebedor-field.has-active-dropdown) .modal-body,
     min-width: 0;
 }
 
-.tecnico-data-field input[type="date"] {
+.tecnico-data-field input[type="date"],
+.tecnico-data-pagamento-field input[type="date"] {
     padding: 11px 13px;
     border: 2px solid #e2e8f0;
     border-radius: 8px;
@@ -1811,15 +1820,25 @@ body:has(.route-recebedor-field.has-active-dropdown) .modal-body,
     box-sizing: border-box;
 }
 
-.tecnico-data-field input[type="date"]:focus {
+.tecnico-data-field input[type="date"]:focus,
+.tecnico-data-pagamento-field input[type="date"]:focus {
     outline: none;
     border-color: #FFCB57;
     box-shadow: 0 0 0 3px rgba(255, 203, 87, 0.2);
     background: #fffef5;
 }
 
-.tecnico-data-field input[type="date"]:hover {
+.tecnico-data-field input[type="date"]:hover,
+.tecnico-data-pagamento-field input[type="date"]:hover {
     border-color: #cbd5e0;
+}
+
+/* Estilos específicos para campo de data de pagamento */
+.tecnico-data-pagamento-field {
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 
 .tecnico-atividade-field {
@@ -1871,6 +1890,11 @@ body:has(.route-recebedor-field.has-active-dropdown) .modal-body,
     border-color: #cbd5e0;
 }
 
+/* Estilo para campo de atividade que ocupa 3 colunas */
+.tecnico-atividade-field {
+    grid-column: 1 / -1;
+}
+
 /* Responsividade para formulário de técnico */
 @media (max-width: 1200px) {
     .tecnico-inputs-grid {
@@ -1878,6 +1902,7 @@ body:has(.route-recebedor-field.has-active-dropdown) .modal-body,
         gap: 1rem;
     }
     
+    .tecnico-atividade-field,
     .tecnico-descricao-field {
         grid-column: 1 / -1 !important;
     }
@@ -1889,6 +1914,7 @@ body:has(.route-recebedor-field.has-active-dropdown) .modal-body,
         gap: 1rem;
     }
     
+    .tecnico-atividade-field,
     .tecnico-descricao-field {
         grid-column: 1 !important;
     }
