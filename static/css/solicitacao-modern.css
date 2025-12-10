@@ -1228,6 +1228,21 @@ body:has(.route-recebedor-field.has-active-dropdown) .modal-body {
     border-color: #cbd5e0;
 }
 
+/* Remover borda vermelha de campos válidos */
+.route-id-field input:valid,
+.route-id-field input:not(:placeholder-shown):not(:invalid) {
+    border-color: #e2e8f0;
+}
+
+.route-valor-field input {
+    border-color: #e2e8f0;
+}
+
+.route-valor-field input:valid,
+.route-valor-field input:not(:placeholder-shown):not(:invalid) {
+    border-color: #e2e8f0;
+}
+
 .route-id-field .form-help {
     margin-top: 0.5rem;
     font-size: 0.8rem;

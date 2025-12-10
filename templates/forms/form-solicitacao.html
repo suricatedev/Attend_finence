@@ -1524,10 +1524,36 @@
 
             setupRouteValidation();
 
+            // Função para limpar estilos de erro quando campo é preenchido
+            function limparEstilosErroCampo(campo) {
+                if (!campo) return;
+                
+                // Remover estilos inline de erro
+                campo.style.borderColor = '';
+                campo.style.backgroundColor = '';
+                campo.classList.remove('id-duplicado');
+                
+                // Remover classes de erro do form-group
+                const formGroup = campo.closest('.form-group');
+                if (formGroup) {
+                    // Verificar se há mensagem de erro de duplicação
+                    const errorMessage = formGroup.querySelector('.error-message.id-duplicado-message');
+                    if (!errorMessage) {
+                        // Se não há erro de duplicação, remover classes de erro
+                        formGroup.classList.remove('error');
+                        formGroup.classList.remove('has-error');
+                    }
+                }
+            }
+
             // Formatação de valores monetários nos campos de rota
             const valorInputs = document.querySelectorAll('[name^="route_valor"]');
             valorInputs.forEach(input => {
+                // Limpar estilos de erro quando o campo for preenchido
                 input.addEventListener('input', function(e) {
+                    // Limpar estilos de erro imediatamente
+                    limparEstilosErroCampo(e.target);
+                    
                     // Remove tudo que não é número
                     let value = e.target.value.replace(/\D/g, '');
                     if (value) {
@@ -1547,6 +1573,11 @@
 
                 // Formatação ao perder foco
                 input.addEventListener('blur', function(e) {
+                    // Limpar estilos de erro ao perder foco se campo estiver preenchido
+                    if (e.target.value.trim()) {
+                        limparEstilosErroCampo(e.target);
+                    }
+                    
                     let value = e.target.value.replace(/\D/g, '');
                     if (value && value !== '0') {
                         const numericValue = parseFloat(value) / 100;
@@ -4242,6 +4273,10 @@
                 if (inputElement) {
                     inputElement.classList.remove('id-duplicado');
                     
+                    // Remover estilos inline aplicados quando havia erro
+                    inputElement.style.borderColor = '';
+                    inputElement.style.backgroundColor = '';
+                    
                     const formGroup = inputElement.closest('.form-group');
                     if (formGroup) {
                         // Remover classe de erro
@@ -4254,6 +4289,7 @@
                         const outrosErros = formGroup.querySelectorAll('.error-message:not(.id-duplicado-message)');
                         if (outrosErros.length === 0) {
                             formGroup.classList.remove('error');
+                            formGroup.classList.remove('has-error');
                         }
                     }
                 }
@@ -4270,8 +4306,25 @@
                 inputElement.addEventListener('input', function(e) {
                     const ticket = e.target.value.trim();
                     
-                    // Limpar aviso quando o campo estiver vazio
-                    if (!ticket) {
+                    // Limpar aviso e estilos de erro quando o campo estiver preenchido corretamente
+                    if (ticket) {
+                        // Remover estilos inline de erro imediatamente quando começar a digitar
+                        e.target.style.borderColor = '';
+                        e.target.style.backgroundColor = '';
+                        e.target.classList.remove('id-duplicado');
+                        
+                        const formGroup = e.target.closest('.form-group');
+                        if (formGroup) {
+                            // Verificar se há erro de duplicação
+                            const errorMessage = formGroup.querySelector('.error-message.id-duplicado-message');
+                            if (!errorMessage) {
+                                // Se não há erro de duplicação, remover classes de erro
+                                formGroup.classList.remove('error');
+                                formGroup.classList.remove('has-error');
+                            }
+                        }
+                    } else {
+                        // Limpar aviso quando o campo estiver vazio
                         limparAvisoIdDuplicado(e.target);
                         return;
                     }
@@ -4295,6 +4348,9 @@
                         const solicitacaoIdField = document.getElementById('solicitacaoId');
                         const solicitacaoId = solicitacaoIdField && solicitacaoIdField.value ? solicitacaoIdField.value : null;
                         verificarIdExistente(ticket, e.target, solicitacaoId);
+                    } else {
+                        // Limpar estilos quando o campo estiver vazio
+                        limparAvisoIdDuplicado(e.target);
                     }
                 });
             }
@@ -4325,6 +4381,55 @@
                         if (typeof window.configurarValidacaoId === 'function') {
                             window.configurarValidacaoId(input);
                         }
+                        
+                        // Adicionar listener adicional para limpar estilos de erro quando campo for preenchido
+                        input.addEventListener('input', function(e) {
+                            if (e.target.value.trim()) {
+                                // Limpar estilos de erro imediatamente
+                                e.target.style.borderColor = '';
+                                e.target.style.backgroundColor = '';
+                                e.target.classList.remove('id-duplicado');
+                                
+                                const formGroup = e.target.closest('.form-group');
+                                if (formGroup) {
+                                    // Verificar se há erro de duplicação
+                                    const errorMessage = formGroup.querySelector('.error-message.id-duplicado-message');
+                                    if (!errorMessage) {
+                                        // Se não há erro de duplicação, remover classes de erro
+                                        formGroup.classList.remove('error');
+                                        formGroup.classList.remove('has-error');
+                                    }
+                                }
+                            }
+                        });
+                        
+                        // Limpar estilos ao perder foco se campo estiver preenchido
+                        input.addEventListener('blur', function(e) {
+                            if (e.target.value.trim()) {
+                                const errorMessage = e.target.closest('.form-group')?.querySelector('.error-message.id-duplicado-message');
+                                if (!errorMessage) {
+                                    limparEstilosErroCampo(e.target);
+                                }
+                            }
+                        });
+                    });
+                    
+                    // Configurar para campos de Valor Atividade
+                    const routeValorInputs = document.querySelectorAll('[id^="routeValor"]:not([id*="Km"]):not([id*="Pedagio"]):not([id*="Hospedagem"]):not([id*="Fluvial"]):not([id*="Outros"]):not([id*="Total"]):not([id*="Receita"])');
+                    
+                    routeValorInputs.forEach(input => {
+                        // Limpar estilos de erro quando campo for preenchido
+                        input.addEventListener('input', function(e) {
+                            if (e.target.value.trim()) {
+                                limparEstilosErroCampo(e.target);
+                            }
+                        });
+                        
+                        input.addEventListener('blur', function(e) {
+                            if (e.target.value.trim()) {
+                                limparEstilosErroCampo(e.target);
+                            }
+                        });
                     });
                 }, 500);
             }
