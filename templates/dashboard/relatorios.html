@@ -340,7 +340,7 @@
                 </thead>
                 <tbody id="reportsTableBody">
                     {% for solicitacao in solicitacoes %}
-                    <tr data-id="{% if solicitacao.is_item %}{{ solicitacao.solicitacao_original_id }}{% else %}{{ solicitacao.id }}{% endif %}" data-status="{{ solicitacao.status }}" data-priority="{{ solicitacao.prioridade }}" data-service="{% if solicitacao.servico %}{{ solicitacao.servico.id }}{% endif %}" data-tipo="{{ solicitacao.tipo }}" {% if solicitacao.is_item %}class="item-expandido" data-item-id="{{ solicitacao.ticket }}"{% endif %}>
+                    <tr data-id="{{ solicitacao.id }}" data-status="{{ solicitacao.status }}" data-priority="{{ solicitacao.prioridade }}" data-service="{% if solicitacao.servico %}{{ solicitacao.servico.id }}{% endif %}" data-tipo="{{ solicitacao.tipo }}">
                         <td>{{ solicitacao.ticket }}</td>
                         <td title="{{ solicitacao.titulo }}">{{ solicitacao.titulo }}</td>
                         <td>{{ solicitacao.nome_solicitante }}</td>
@@ -392,7 +392,7 @@
                         <td>{{ solicitacao.data_de_criacao|date:"d/m/Y" }}</td>
                         <td>{{ solicitacao.data_de_pagamento|date:"d/m/Y" }}</td>
                         <td class="actions-cell">
-                            <button class="btn-action btn-view" title="Ver detalhes" data-id="{% if solicitacao.is_item %}{{ solicitacao.solicitacao_original_id }}{% else %}{{ solicitacao.id }}{% endif %}">
+                            <button class="btn-action btn-view" title="Ver detalhes" data-id="{{ solicitacao.id }}">
                                 <i class="fas fa-eye"></i>
                             </button>
                         </td>

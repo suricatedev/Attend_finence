@@ -9,11 +9,15 @@ class RelatoriosOptimized {
         this.sortDirection = 'asc';
         this.currentFilters = {
             status: 'all',
-            tipo: 'all',            dateFrom: '',
+            tipo: 'all',
+            dateFrom: '',
             dateTo: '',
             service: '',
             priority: '',
-            search: ''
+            search: '',
+            clienteEmpresa: '',
+            cnpj: '',
+            chavePix: ''
         };
         
         // Cache para melhor performance
@@ -218,15 +222,11 @@ class RelatoriosOptimized {
                 
                 // Extrair ID numérico da linha (data-id) ao invés do ticket
                 const rowId = row.getAttribute('data-id') || row.dataset.id || '';
-                const ticket = cells[0]?.textContent.trim() || '';
-                
-                // Verificar se é um item expandido
-                const isItem = row.classList.contains('item-expandido');
-                const itemId = row.dataset.itemId || '';
+                let ticket = cells[0]?.textContent.trim() || '';
                 
                 data.push({
                     id: rowId || ticket, // Usar ID numérico se disponível, senão usar ticket
-                    ticket: ticket, // Manter ticket separado para exibição
+                    ticket: ticket, // Ticket da solicitação
                     title: cells[1]?.textContent.trim() || '',
                     solicitante: cells[2]?.textContent.trim() || '',
                     supervisor: supervisor,
@@ -300,8 +300,6 @@ class RelatoriosOptimized {
                         
                         return lastDate;
                     })(),
-                    isItem: isItem, // Flag para identificar itens expandidos
-                    itemId: itemId, // ID do item (ticket do item)
                 });
             }
         });
@@ -678,8 +676,9 @@ class RelatoriosOptimized {
                 if (filterDateFrom) {
                     if (!itemDateStr) {
                         // Se o item não tem data válida e há filtro, excluir
-                        if (filteredCount < 3) {
-                            console.log(`❌ Item ${item.id} excluído: sem data válida. Data original: "${item.dataCriacao}"`);
+                        if (debugCount < 3) {
+                            console.log(`❌ Item ${item.id || item.ticket} excluído: sem data válida. Data original: "${item.dataCriacao}"`);
+                            debugCount++;
                         }
                     return false;
                 }
@@ -893,10 +892,7 @@ class RelatoriosOptimized {
             row.setAttribute('data-service', item.service || '');
             row.setAttribute('data-tipo', item.tipo || '');
             row.setAttribute('data-id', item.id || '');
-            if (item.isItem) {
-                row.classList.add('item-expandido');
-                row.setAttribute('data-item-id', item.itemId || '');
-            }
+            // Não estamos mais expandindo itens - todas as solicitações aparecem em uma única linha
             row.innerHTML = this.getRowHTML(item);
             fragment.appendChild(row);
         });
@@ -1029,7 +1025,20 @@ class RelatoriosOptimized {
         const filtered = this.filteredData.length;
         
         if (totalRecords) totalRecords.textContent = `Total: ${this.data.length}`;
-        if (filteredRecords) filteredRecords.textContent = `Filtrados: ${this.filteredData.length}`;
+        if (filteredRecords) filteredRecords.textContent = `Exibindo: ${this.filteredData.length}`;
+        
+        // Atualizar paginação
+        const totalPages = Math.ceil(this.filteredData.length / this.itemsPerPage);
+        const paginationInfo = document.getElementById('paginationInfo');
+        if (paginationInfo) {
+            paginationInfo.textContent = `Página ${this.currentPage} de ${totalPages || 1}`;
+        }
+        
+        // Atualizar botões de paginação
+        const prevPage = document.getElementById('prevPage');
+        const nextPage = document.getElementById('nextPage');
+        if (prevPage) prevPage.disabled = this.currentPage === 1;
+        if (nextPage) nextPage.disabled = this.currentPage >= totalPages;
     }
 
     updateStats() {
@@ -1620,9 +1629,14 @@ class RelatoriosOptimized {
                     const headerLower = header.toLowerCase().trim();
                     
                     if (headerLower.includes('id')) {
-                        row.push(item.ticket || item.id || '');
+                        // Usar o ticket da solicitação
+                        const ticketToUse = item.ticket || item.id || '';
+                        row.push(ticketToUse);
                     } else if (headerLower.includes('título') || headerLower.includes('titulo')) {
-                        row.push(item.title || '');
+                        // Usar o título completo da solicitação (já contém todos os tickets se for agrupada)
+                        // Não modificar - o backend já preparou o título com todos os tickets
+                        let titleToUse = item.title || '';
+                        row.push(titleToUse);
                     } else if (headerLower.includes('solicitante')) {
                         row.push(item.solicitante || '');
                     } else if (headerLower.includes('supervisor')) {
@@ -1726,8 +1740,78 @@ class RelatoriosOptimized {
                 }
             });
 
-            // Preparar dados para o worksheet, convertendo objetos monetários
-            const wsData = [headers];
+            // Função auxiliar para formatar data (definir antes de usar)
+            const formatDateForHeader = (dateStr) => {
+                if (!dateStr) return '';
+                // Se já estiver em formato dd/mm/yyyy, retornar como está
+                if (dateStr.includes('/')) return dateStr;
+                // Se estiver em formato yyyy-mm-dd, converter para dd/mm/yyyy
+                if (dateStr.includes('-') && dateStr.length >= 10) {
+                    const parts = dateStr.split(' ')[0].split('-');
+                    if (parts.length === 3) {
+                        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    }
+                }
+                return dateStr;
+            };
+            
+            // Preparar dados para o worksheet com formatação de relatório profissional
+            const wsData = [];
+            
+            // ========== CABEÇALHO DO RELATÓRIO ==========
+            // Linha 1: Título do Relatório (vazio nas outras colunas)
+            const titleRow = ['RELATÓRIO FINANCEIRO'];
+            for (let i = 1; i < headers.length; i++) titleRow.push('');
+            wsData.push(titleRow);
+            
+            // Linha 2: Data de geração
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('pt-BR', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const dateRow = [`Gerado em: ${dateStr}`];
+            for (let i = 1; i < headers.length; i++) dateRow.push('');
+            wsData.push(dateRow);
+            
+            // Linha 3: Informações do filtro aplicado
+            const filterInfo = [];
+            const activeFilters = [];
+            if (this.currentFilters.status !== 'all') activeFilters.push(`Status: ${this.currentFilters.status}`);
+            if (this.currentFilters.tipo !== 'all') activeFilters.push(`Tipo: ${this.currentFilters.tipo}`);
+            if (this.currentFilters.dateFrom) {
+                const dateFromFormatted = formatDateForHeader(this.currentFilters.dateFrom);
+                activeFilters.push(`De: ${dateFromFormatted}`);
+            }
+            if (this.currentFilters.dateTo) {
+                const dateToFormatted = formatDateForHeader(this.currentFilters.dateTo);
+                activeFilters.push(`Até: ${dateToFormatted}`);
+            }
+            if (this.currentFilters.service) {
+                const serviceSelect = document.getElementById('serviceFilter');
+                if (serviceSelect) {
+                    const serviceOption = Array.from(serviceSelect.options).find(opt => opt.value == this.currentFilters.service);
+                    if (serviceOption) activeFilters.push(`Serviço: ${serviceOption.text}`);
+                }
+            }
+            if (this.currentFilters.priority) activeFilters.push(`Prioridade: ${this.currentFilters.priority}`);
+            if (this.currentFilters.search) activeFilters.push(`Busca: ${this.currentFilters.search}`);
+            
+            const filterRow = [activeFilters.length > 0 ? `Filtros aplicados: ${activeFilters.join(' | ')}` : 'Todos os registros'];
+            for (let i = 1; i < headers.length; i++) filterRow.push('');
+            wsData.push(filterRow);
+            
+            // Linha 4: Vazia (espaçamento)
+            wsData.push([]);
+            
+            // Linha 5: Cabeçalhos das colunas
+            wsData.push(headers);
+            
+            // ========== DADOS ==========
+            // Adicionar linhas de dados
             rows.forEach(row => {
                 const processedRow = row.map(cell => {
                     if (typeof cell === 'object' && cell.type === 'monetary') {
@@ -1737,6 +1821,66 @@ class RelatoriosOptimized {
                 });
                 wsData.push(processedRow);
             });
+            
+            // ========== RODAPÉ COM ESTATÍSTICAS ==========
+            // Linha vazia
+            wsData.push([]);
+            
+            // Linha de totais
+            const totalRow = [];
+            // Encontrar índice da coluna "Valor Total"
+            const valorTotalColIdx = headers.findIndex(h => h.toLowerCase().includes('valor total'));
+            
+            for (let i = 0; i < headers.length; i++) {
+                if (i === valorTotalColIdx && valorTotalColIdx >= 0) {
+                    // Calcular total dos valores monetários
+                    const total = rows.reduce((sum, row) => {
+                        if (i < row.length) {
+                            const cell = row[i];
+                            if (typeof cell === 'object' && cell.type === 'monetary') {
+                                return sum + (cell.value || 0);
+                            }
+                        }
+                        return sum;
+                    }, 0);
+                    totalRow.push(i === 0 ? 'TOTAIS' : (i === valorTotalColIdx ? total : ''));
+                } else {
+                    totalRow.push(i === 0 ? 'TOTAIS' : '');
+                }
+            }
+            wsData.push(totalRow);
+            
+            // Linha de estatísticas
+            const statsRow = ['ESTATÍSTICAS'];
+            for (let i = 1; i < headers.length; i++) statsRow.push('');
+            wsData.push(statsRow);
+            
+            // Contadores por status
+            const aprovadas = rows.filter(row => {
+                const statusIdx = headers.findIndex(h => h.toLowerCase().includes('status'));
+                return statusIdx >= 0 && row[statusIdx]?.toLowerCase() === 'aprovado';
+            }).length;
+            
+            const recusadas = rows.filter(row => {
+                const statusIdx = headers.findIndex(h => h.toLowerCase().includes('status'));
+                return statusIdx >= 0 && row[statusIdx]?.toLowerCase() === 'recusado';
+            }).length;
+            
+            const pendentes = rows.filter(row => {
+                const statusIdx = headers.findIndex(h => h.toLowerCase().includes('status'));
+                return statusIdx >= 0 && row[statusIdx]?.toLowerCase() === 'pendente';
+            }).length;
+            
+            const concluidas = rows.filter(row => {
+                const statusIdx = headers.findIndex(h => h.toLowerCase().includes('status'));
+                return statusIdx >= 0 && row[statusIdx]?.toLowerCase() === 'concluído';
+            }).length;
+            
+            wsData.push(['Total de Registros:', rows.length, '', '', '', '', '', '', '', '', '', '', '', '']);
+            wsData.push(['Aprovadas:', aprovadas, '', '', '', '', '', '', '', '', '', '', '', '']);
+            wsData.push(['Recusadas:', recusadas, '', '', '', '', '', '', '', '', '', '', '', '']);
+            wsData.push(['Pendentes:', pendentes, '', '', '', '', '', '', '', '', '', '', '', '']);
+            wsData.push(['Concluídas:', concluidas, '', '', '', '', '', '', '', '', '', '', '', '']);
             
             // Criar workbook
             const wb = XLSX.utils.book_new();
@@ -1766,10 +1910,12 @@ class RelatoriosOptimized {
             ws['!cols'] = colWidths;
             
             // Aplicar formatação aos valores monetários
+            // Cabeçalho está na linha 4 (índice 4), dados começam na linha 5 (índice 5)
             rows.forEach((row, rowIdx) => {
                 row.forEach((cell, colIdx) => {
                     if (typeof cell === 'object' && cell.type === 'monetary') {
-                        const cellAddress = XLSX.utils.encode_cell({ r: rowIdx + 1, c: colIdx });
+                        // Linha de dados = linha 5 (índice 4) + rowIdx + 1
+                        const cellAddress = XLSX.utils.encode_cell({ r: 4 + rowIdx + 1, c: colIdx });
                         const cellObj = ws[cellAddress];
                         if (cellObj && typeof cellObj.v === 'number') {
                             // Formato monetário brasileiro: R$ 1.234,56
@@ -1777,27 +1923,41 @@ class RelatoriosOptimized {
                             cellObj.t = 'n';
                         }
                     }
-                    // Datas serão mantidas como texto formatado (dd/mm/yyyy já está correto)
                 });
             });
             
-            // Congelar primeira linha (cabeçalho)
-            ws['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' };
+            // Formatar linha de totais (última linha antes das estatísticas)
+            const totalRowIdx = wsData.length - 6; // Índice da linha de totais
+            headers.forEach((header, colIdx) => {
+                const headerLower = header.toLowerCase();
+                if (headerLower.includes('valor total')) {
+                    const cellAddress = XLSX.utils.encode_cell({ r: totalRowIdx, c: colIdx });
+                        const cellObj = ws[cellAddress];
+                        if (cellObj && typeof cellObj.v === 'number') {
+                            cellObj.z = '"R$"#,##0.00';
+                            cellObj.t = 'n';
+                        }
+                    }
+            });
             
-            // Auto-filtrar (opcional - pode ser ativado pelo usuário no Excel)
-            ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length, c: headers.length - 1 } }) };
+            // Congelar linha de cabeçalho (linha 5, índice 4)
+            ws['!freeze'] = { xSplit: 0, ySplit: 4, topLeftCell: 'A5', activePane: 'bottomLeft', state: 'frozen' };
+            
+            // Auto-filtrar na linha de cabeçalho (linha 5)
+            const dataEndRow = 4 + rows.length; // Linha final dos dados
+            ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 4, c: 0 }, e: { r: dataEndRow, c: headers.length - 1 } }) };
             
             // Adicionar worksheet ao workbook
             XLSX.utils.book_append_sheet(wb, ws, "Relatórios Financeiros");
             
             // Gerar arquivo e fazer download
-            const dateStr = new Date().toISOString().split('T')[0];
-            const fileName = `relatorios_financeiros_${dateStr}.xlsx`;
+            const dateStrFile = now.toISOString().split('T')[0];
+            const fileName = `Relatorio_Financeiro_${dateStrFile}.xlsx`;
             
             XLSX.writeFile(wb, fileName);
             
             // Mostrar mensagem de sucesso
-            this.showNotification('Arquivo Excel exportado com sucesso!', 'success');
+            this.showNotification(`Relatório Excel exportado com sucesso! ${rows.length} registros exportados.`, 'success');
             
         } catch (error) {
             console.error('Erro ao exportar para Excel:', error);
@@ -2103,818 +2263,9 @@ class RelatoriosOptimized {
 document.addEventListener('DOMContentLoaded', function() {
     // Verificar se estamos na página de relatórios
     if (document.querySelector('.reports-fullscreen')) {
+        // Evitar múltiplas inicializações
+        if (!window.relatoriosOptimized) {
         window.relatoriosOptimized = new RelatoriosOptimized();
-    }
-});
-
-                        if (valorOutrosNum !== null) {
-                            row.push({ value: valorOutrosNum, type: 'monetary' });
-                        } else {
-                            row.push(item.valorOutros || '');
-                        }
-                    } else if (headerLower.includes('status')) {
-                        row.push(getStatusDisplay(item.status));
-                    } else if (headerLower.includes('prioridade')) {
-                        row.push(getPriorityDisplay(item.priority));
-                    } else if (headerLower.includes('criação') || headerLower.includes('criacao')) {
-                        row.push(formatDate(item.dataCriacao || ''));
-                    } else if (headerLower.includes('pagamento')) {
-                        row.push(formatDate(item.dataPagamento || ''));
-                    } else {
-                        // Para qualquer outro header não mapeado, adicionar string vazia
-                        row.push('');
-                    }
-                });
-                
-                // Garantir que a linha tenha exatamente o mesmo número de colunas dos headers
-                if (row.length === headers.length && row.length > 0) {
-                    rows.push(row);
-                }
-            });
-
-            // Preparar dados para o worksheet, convertendo objetos monetários
-            const wsData = [headers];
-            rows.forEach(row => {
-                const processedRow = row.map(cell => {
-                    if (typeof cell === 'object' && cell.type === 'monetary') {
-                        return cell.value;
-                    }
-                    return cell;
-                });
-                wsData.push(processedRow);
-            });
-            
-            // Criar workbook
-            const wb = XLSX.utils.book_new();
-            
-            // Converter dados para worksheet
-            const ws = XLSX.utils.aoa_to_sheet(wsData);
-            
-            // Configurar larguras de colunas
-            const colWidths = headers.map((header) => {
-                const headerLower = header.toLowerCase();
-                // Larguras baseadas no tipo de conteúdo
-                if (headerLower.includes('valor') || headerLower.includes('receita') || headerLower.includes('km') || 
-                    headerLower.includes('pedágio') || headerLower.includes('pedagio') || headerLower.includes('hospedagem') || 
-                    headerLower.includes('fluvial') || headerLower.includes('outros') || headerLower.includes('em rota')) {
-                    return { wch: 18 };
-                } else if (headerLower.includes('data') || headerLower.includes('criação') || headerLower.includes('criacao') || 
-                          headerLower.includes('pagamento')) {
-                    return { wch: 12 };
-                } else if (headerLower.includes('status') || headerLower.includes('prioridade')) {
-                    return { wch: 12 };
-                } else if (headerLower.includes('id') || headerLower.includes('título') || headerLower.includes('titulo')) {
-                    return { wch: 15 };
-                } else {
-                    return { wch: 20 };
-                }
-            });
-            ws['!cols'] = colWidths;
-            
-            // Aplicar formatação aos valores monetários
-            rows.forEach((row, rowIdx) => {
-                row.forEach((cell, colIdx) => {
-                    if (typeof cell === 'object' && cell.type === 'monetary') {
-                        const cellAddress = XLSX.utils.encode_cell({ r: rowIdx + 1, c: colIdx });
-                        const cellObj = ws[cellAddress];
-                        if (cellObj && typeof cellObj.v === 'number') {
-                            // Formato monetário brasileiro: R$ 1.234,56
-                            cellObj.z = '"R$"#,##0.00';
-                            cellObj.t = 'n';
-                        }
-                    }
-                    // Datas serão mantidas como texto formatado (dd/mm/yyyy já está correto)
-                });
-            });
-            
-            // Congelar primeira linha (cabeçalho)
-            ws['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' };
-            
-            // Auto-filtrar (opcional - pode ser ativado pelo usuário no Excel)
-            ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length, c: headers.length - 1 } }) };
-            
-            // Adicionar worksheet ao workbook
-            XLSX.utils.book_append_sheet(wb, ws, "Relatórios Financeiros");
-            
-            // Gerar arquivo e fazer download
-            const dateStr = new Date().toISOString().split('T')[0];
-            const fileName = `relatorios_financeiros_${dateStr}.xlsx`;
-            
-            XLSX.writeFile(wb, fileName);
-            
-            // Mostrar mensagem de sucesso
-            this.showNotification('Arquivo Excel exportado com sucesso!', 'success');
-            
-        } catch (error) {
-            console.error('Erro ao exportar para Excel:', error);
-            alert('Erro ao exportar para Excel: ' + error.message);
         }
-    }
-
-    exportToPDF() {
-        try {
-            // Verificar se jsPDF está disponível
-            if (typeof window.jspdf === 'undefined') {
-                alert('Biblioteca jsPDF não carregada. Por favor, recarregue a página.');
-                console.error('jsPDF não encontrado');
-                return;
-            }
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('landscape', 'mm', 'a4');
-
-            // Cores e estilos
-            const primaryColor = [255, 203, 87]; // #FFCB57
-            const darkColor = [84, 67, 80]; // #544350
-            const lightGray = [245, 245, 245];
-            
-            // Título do relatório
-            doc.setFillColor(...primaryColor);
-            doc.rect(10, 10, 277, 15, 'F');
-            doc.setTextColor(28, 28, 28);
-            doc.setFontSize(20);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Relatórios Financeiros', 148.5, 20, { align: 'center' });
-            
-            // Data de geração
-            doc.setFontSize(10);
-            doc.setTextColor(84, 67, 80);
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('pt-BR', { 
-                day: '2-digit', 
-                month: '2-digit', 
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            doc.text(`Gerado em: ${dateStr}`, 148.5, 32, { align: 'center' });
-
-            // Headers da tabela
-            const headers = ['ID', 'Título', 'Solicitante', 'Supervisor', 'Recebedor', 'Serviço', 'Valor', 'Status', 'Prioridade', 'Criação', 'Pagamento'];
-            const colWidths = [20, 40, 30, 30, 30, 30, 25, 20, 20, 25, 25];
-            
-            let startY = 40;
-            let currentY = startY;
-            
-            // Definir altura da linha
-            const lineHeight = 8;
-            
-            // Adicionar cabeçalhos
-            doc.setFillColor(...primaryColor);
-            doc.rect(10, currentY, 277, lineHeight, 'F');
-            doc.setTextColor(28, 28, 28);
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'bold');
-            
-            let currentX = 10;
-            headers.forEach((header, index) => {
-                doc.text(header, currentX + 2, currentY + 5);
-                currentX += colWidths[index];
-            });
-            
-            currentY += lineHeight;
-            
-            // Adicionar linhas de dados
-            doc.setFontSize(7);
-            doc.setFont('helvetica', 'normal');
-            
-            // ✅ IMPORTANTE: Usar TODOS os dados filtrados, não apenas a página atual
-            const allFilteredData = this.filteredData || [];
-            console.log(`📊 Exportando ${allFilteredData.length} solicitações para PDF (todas as páginas)`);
-            
-            // Funções auxiliares
-            const getStatusDisplay = (status) => {
-                const statusMap = {
-                    'pendente': 'Pendente',
-                    'aprovado': 'Aprovado',
-                    'recusado': 'Recusado',
-                    'concluido': 'Concluído'
-                };
-                return statusMap[status?.toLowerCase()] || status || '';
-            };
-            
-            const getPriorityDisplay = (priority) => {
-                const priorityMap = {
-                    'baixa': 'Baixa',
-                    'media': 'Média',
-                    'alta': 'Alta'
-                };
-                return priorityMap[priority?.toLowerCase()] || priority || '';
-            };
-            
-            const formatDate = (dateStr) => {
-                if (!dateStr) return '';
-                if (dateStr.includes('/')) return dateStr;
-                if (dateStr.includes('-') && dateStr.length >= 10) {
-                    const parts = dateStr.split(' ')[0].split('-');
-                    if (parts.length === 3) {
-                        return `${parts[2]}/${parts[1]}/${parts[0]}`;
-                    }
-                }
-                return dateStr;
-            };
-            
-            allFilteredData.forEach((item, rowIndex) => {
-                // Verificar se precisa de nova página
-                if (currentY > 180) {
-                    doc.addPage('landscape', 'a4');
-                    currentY = 10;
-                    
-                    // Re-impressão do cabeçalho
-                    doc.setFillColor(...primaryColor);
-                    doc.rect(10, currentY, 277, lineHeight, 'F');
-                    doc.setTextColor(28, 28, 28);
-                    doc.setFontSize(9);
-                    doc.setFont('helvetica', 'bold');
-                    
-                    let headerX = 10;
-                    headers.forEach((header, index) => {
-                        doc.text(header, headerX + 2, currentY + 5);
-                        headerX += colWidths[index];
-                    });
-                    
-                    currentY += lineHeight;
-                    doc.setFontSize(7);
-                    doc.setFont('helvetica', 'normal');
-                }
-                
-                // Cor de fundo alternada
-                if (rowIndex % 2 === 0) {
-                    doc.setFillColor(...lightGray);
-                    doc.rect(10, currentY, 277, lineHeight, 'F');
-                }
-                
-                // Dados da linha - construir a partir de item
-                let cellX = 10;
-                let colIndex = 0;
-                
-                // Construir linha na ordem: ID, Título, Solicitante, Supervisor, Recebedor, Serviço, Valor, Status, Prioridade, Criação, Pagamento
-                const rowData = [
-                    item.ticket || item.id || '',
-                    (item.title || '').substring(0, 30),
-                    (item.solicitante || '').substring(0, 20),
-                    (item.supervisor || '-').substring(0, 20),
-                    (item.recebedor || '-').substring(0, 20),
-                    (item.service || 'N/A').substring(0, 20),
-                    item.valor || '',
-                    getStatusDisplay(item.status),
-                    getPriorityDisplay(item.priority),
-                    formatDate(item.dataCriacao || ''),
-                    formatDate(item.dataPagamento || '')
-                ];
-                
-                rowData.forEach((cellValue, idx) => {
-                    if (colIndex < colWidths.length) {
-                    // Truncar texto muito longo
-                        const maxLength = colWidths[colIndex] / 2;
-                        if (cellValue && cellValue.length > maxLength) {
-                        cellValue = cellValue.substring(0, maxLength - 3) + '...';
-                    }
-                    
-                    doc.setTextColor(84, 67, 80);
-                        doc.text(cellValue || '', cellX + 2, currentY + 5);
-                        cellX += colWidths[colIndex];
-                        colIndex++;
-                    }
-                });
-                
-                currentY += lineHeight;
-            });
-            
-            // Rodapé
-            const finalY = currentY + 5;
-            doc.setDrawColor(...darkColor);
-            doc.setLineWidth(0.5);
-            doc.line(10, finalY, 287, finalY);
-            
-            doc.setTextColor(84, 67, 80);
-            doc.setFontSize(8);
-            doc.text(`Total de solicitações: ${allFilteredData.length}`, 10, finalY + 8);
-            doc.text('Sistema de Gestão Financeira - Attend Finance', 148.5, finalY + 8, { align: 'center' });
-            doc.text('Página ' + doc.internal.getCurrentPageInfo().pageNumber, 280, finalY + 8, { align: 'right' });
-            
-            // Salvar PDF
-            const dateStrFile = now.toISOString().split('T')[0];
-            const fileName = `relatorios_financeiros_${dateStrFile}.pdf`;
-            doc.save(fileName);
-            
-            // Mostrar mensagem de sucesso
-            this.showNotification('Arquivo PDF exportado com sucesso!', 'success');
-            
-        } catch (error) {
-            console.error('Erro ao exportar para PDF:', error);
-            alert('Erro ao exportar para PDF: ' + error.message);
-        }    }
-
-    // Funções CSV removidas - usando apenas XLSX formatado
-
-    // Métodos auxiliares otimizados
-    getServiceName(service) {
-        const services = {
-            'consultoria_TI': 'Consultoria em TI',
-            'desenvolvimento': 'Desenvolvimento de Software',
-            'manutencao_equipamentos': 'Manutenção de Equipamentos',
-            'treinamento_corporativo': 'Treinamento Corporativo'
-        };
-        return services[service] || service;
-    }
-
-    getStatusName(status) {
-        const statuses = {
-            'pendente': 'Pendente',
-            'aprovado': 'Aprovado',
-            'recusado': 'Recusado',
-            'concluido': 'Concluído'
-        };
-        return statuses[status] || status;
-    }
-
-    getPriorityName(priority) {
-        const priorities = {
-            'baixa': 'Baixa',
-            'media': 'Média',
-            'alta': 'Alta'
-        };
-        return priorities[priority] || priority;
-    }
-
-    formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('pt-BR');
-    }
-
-    showNotification(message, type = 'info') {
-        // Criar elemento de notificação
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
-            color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            z-index: 10000;
-            font-weight: 500;
-            animation: slideInRight 0.3s ease;
-        `;
-        notification.textContent = message;
-        
-        // Adicionar ao body
-        document.body.appendChild(notification);
-        
-        // Remover após 3 segundos
-        setTimeout(() => {
-            notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 3000);
-        
-        // Adicionar animações CSS se não existirem
-        if (!document.getElementById('notificationStyles')) {
-            const style = document.createElement('style');
-            style.id = 'notificationStyles';
-            style.textContent = `
-                @keyframes slideInRight {
-                    from {
-                        transform: translateX(100%);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
-                }
-                @keyframes slideOutRight {
-                    from {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
-                    to {
-                        transform: translateX(100%);
-                        opacity: 0;
-                    }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-    }
-}
-
-// Inicializar quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', function() {
-    // Verificar se estamos na página de relatórios
-    if (document.querySelector('.reports-fullscreen')) {
-        window.relatoriosOptimized = new RelatoriosOptimized();
-    }
-});
-
-                        if (valorOutrosNum !== null) {
-                            row.push({ value: valorOutrosNum, type: 'monetary' });
-                        } else {
-                            row.push(item.valorOutros || '');
-                        }
-                    } else if (headerLower.includes('status')) {
-                        row.push(getStatusDisplay(item.status));
-                    } else if (headerLower.includes('prioridade')) {
-                        row.push(getPriorityDisplay(item.priority));
-                    } else if (headerLower.includes('criação') || headerLower.includes('criacao')) {
-                        row.push(formatDate(item.dataCriacao || ''));
-                    } else if (headerLower.includes('pagamento')) {
-                        row.push(formatDate(item.dataPagamento || ''));
-                    } else {
-                        // Para qualquer outro header não mapeado, adicionar string vazia
-                        row.push('');
-                    }
-                });
-                
-                // Garantir que a linha tenha exatamente o mesmo número de colunas dos headers
-                if (row.length === headers.length && row.length > 0) {
-                    rows.push(row);
-                }
-            });
-
-            // Preparar dados para o worksheet, convertendo objetos monetários
-            const wsData = [headers];
-            rows.forEach(row => {
-                const processedRow = row.map(cell => {
-                    if (typeof cell === 'object' && cell.type === 'monetary') {
-                        return cell.value;
-                    }
-                    return cell;
-                });
-                wsData.push(processedRow);
-            });
-            
-            // Criar workbook
-            const wb = XLSX.utils.book_new();
-            
-            // Converter dados para worksheet
-            const ws = XLSX.utils.aoa_to_sheet(wsData);
-            
-            // Configurar larguras de colunas
-            const colWidths = headers.map((header) => {
-                const headerLower = header.toLowerCase();
-                // Larguras baseadas no tipo de conteúdo
-                if (headerLower.includes('valor') || headerLower.includes('receita') || headerLower.includes('km') || 
-                    headerLower.includes('pedágio') || headerLower.includes('pedagio') || headerLower.includes('hospedagem') || 
-                    headerLower.includes('fluvial') || headerLower.includes('outros') || headerLower.includes('em rota')) {
-                    return { wch: 18 };
-                } else if (headerLower.includes('data') || headerLower.includes('criação') || headerLower.includes('criacao') || 
-                          headerLower.includes('pagamento')) {
-                    return { wch: 12 };
-                } else if (headerLower.includes('status') || headerLower.includes('prioridade')) {
-                    return { wch: 12 };
-                } else if (headerLower.includes('id') || headerLower.includes('título') || headerLower.includes('titulo')) {
-                    return { wch: 15 };
-                } else {
-                    return { wch: 20 };
-                }
-            });
-            ws['!cols'] = colWidths;
-            
-            // Aplicar formatação aos valores monetários
-            rows.forEach((row, rowIdx) => {
-                row.forEach((cell, colIdx) => {
-                    if (typeof cell === 'object' && cell.type === 'monetary') {
-                        const cellAddress = XLSX.utils.encode_cell({ r: rowIdx + 1, c: colIdx });
-                        const cellObj = ws[cellAddress];
-                        if (cellObj && typeof cellObj.v === 'number') {
-                            // Formato monetário brasileiro: R$ 1.234,56
-                            cellObj.z = '"R$"#,##0.00';
-                            cellObj.t = 'n';
-                        }
-                    }
-                    // Datas serão mantidas como texto formatado (dd/mm/yyyy já está correto)
-                });
-            });
-            
-            // Congelar primeira linha (cabeçalho)
-            ws['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' };
-            
-            // Auto-filtrar (opcional - pode ser ativado pelo usuário no Excel)
-            ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length, c: headers.length - 1 } }) };
-            
-            // Adicionar worksheet ao workbook
-            XLSX.utils.book_append_sheet(wb, ws, "Relatórios Financeiros");
-            
-            // Gerar arquivo e fazer download
-            const dateStr = new Date().toISOString().split('T')[0];
-            const fileName = `relatorios_financeiros_${dateStr}.xlsx`;
-            
-            XLSX.writeFile(wb, fileName);
-            
-            // Mostrar mensagem de sucesso
-            this.showNotification('Arquivo Excel exportado com sucesso!', 'success');
-            
-        } catch (error) {
-            console.error('Erro ao exportar para Excel:', error);
-            alert('Erro ao exportar para Excel: ' + error.message);
-        }
-    }
-
-    exportToPDF() {
-        try {
-            // Verificar se jsPDF está disponível
-            if (typeof window.jspdf === 'undefined') {
-                alert('Biblioteca jsPDF não carregada. Por favor, recarregue a página.');
-                console.error('jsPDF não encontrado');
-                return;
-            }
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('landscape', 'mm', 'a4');
-
-            // Cores e estilos
-            const primaryColor = [255, 203, 87]; // #FFCB57
-            const darkColor = [84, 67, 80]; // #544350
-            const lightGray = [245, 245, 245];
-            
-            // Título do relatório
-            doc.setFillColor(...primaryColor);
-            doc.rect(10, 10, 277, 15, 'F');
-            doc.setTextColor(28, 28, 28);
-            doc.setFontSize(20);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Relatórios Financeiros', 148.5, 20, { align: 'center' });
-            
-            // Data de geração
-            doc.setFontSize(10);
-            doc.setTextColor(84, 67, 80);
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('pt-BR', { 
-                day: '2-digit', 
-                month: '2-digit', 
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            doc.text(`Gerado em: ${dateStr}`, 148.5, 32, { align: 'center' });
-
-            // Headers da tabela
-            const headers = ['ID', 'Título', 'Solicitante', 'Supervisor', 'Recebedor', 'Serviço', 'Valor', 'Status', 'Prioridade', 'Criação', 'Pagamento'];
-            const colWidths = [20, 40, 30, 30, 30, 30, 25, 20, 20, 25, 25];
-            
-            let startY = 40;
-            let currentY = startY;
-            
-            // Definir altura da linha
-            const lineHeight = 8;
-            
-            // Adicionar cabeçalhos
-            doc.setFillColor(...primaryColor);
-            doc.rect(10, currentY, 277, lineHeight, 'F');
-            doc.setTextColor(28, 28, 28);
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'bold');
-            
-            let currentX = 10;
-            headers.forEach((header, index) => {
-                doc.text(header, currentX + 2, currentY + 5);
-                currentX += colWidths[index];
-            });
-            
-            currentY += lineHeight;
-            
-            // Adicionar linhas de dados
-            doc.setFontSize(7);
-            doc.setFont('helvetica', 'normal');
-            
-            // ✅ IMPORTANTE: Usar TODOS os dados filtrados, não apenas a página atual
-            const allFilteredData = this.filteredData || [];
-            console.log(`📊 Exportando ${allFilteredData.length} solicitações para PDF (todas as páginas)`);
-            
-            // Funções auxiliares
-            const getStatusDisplay = (status) => {
-                const statusMap = {
-                    'pendente': 'Pendente',
-                    'aprovado': 'Aprovado',
-                    'recusado': 'Recusado',
-                    'concluido': 'Concluído'
-                };
-                return statusMap[status?.toLowerCase()] || status || '';
-            };
-            
-            const getPriorityDisplay = (priority) => {
-                const priorityMap = {
-                    'baixa': 'Baixa',
-                    'media': 'Média',
-                    'alta': 'Alta'
-                };
-                return priorityMap[priority?.toLowerCase()] || priority || '';
-            };
-            
-            const formatDate = (dateStr) => {
-                if (!dateStr) return '';
-                if (dateStr.includes('/')) return dateStr;
-                if (dateStr.includes('-') && dateStr.length >= 10) {
-                    const parts = dateStr.split(' ')[0].split('-');
-                    if (parts.length === 3) {
-                        return `${parts[2]}/${parts[1]}/${parts[0]}`;
-                    }
-                }
-                return dateStr;
-            };
-            
-            allFilteredData.forEach((item, rowIndex) => {
-                // Verificar se precisa de nova página
-                if (currentY > 180) {
-                    doc.addPage('landscape', 'a4');
-                    currentY = 10;
-                    
-                    // Re-impressão do cabeçalho
-                    doc.setFillColor(...primaryColor);
-                    doc.rect(10, currentY, 277, lineHeight, 'F');
-                    doc.setTextColor(28, 28, 28);
-                    doc.setFontSize(9);
-                    doc.setFont('helvetica', 'bold');
-                    
-                    let headerX = 10;
-                    headers.forEach((header, index) => {
-                        doc.text(header, headerX + 2, currentY + 5);
-                        headerX += colWidths[index];
-                    });
-                    
-                    currentY += lineHeight;
-                    doc.setFontSize(7);
-                    doc.setFont('helvetica', 'normal');
-                }
-                
-                // Cor de fundo alternada
-                if (rowIndex % 2 === 0) {
-                    doc.setFillColor(...lightGray);
-                    doc.rect(10, currentY, 277, lineHeight, 'F');
-                }
-                
-                // Dados da linha - construir a partir de item
-                let cellX = 10;
-                let colIndex = 0;
-                
-                // Construir linha na ordem: ID, Título, Solicitante, Supervisor, Recebedor, Serviço, Valor, Status, Prioridade, Criação, Pagamento
-                const rowData = [
-                    item.ticket || item.id || '',
-                    (item.title || '').substring(0, 30),
-                    (item.solicitante || '').substring(0, 20),
-                    (item.supervisor || '-').substring(0, 20),
-                    (item.recebedor || '-').substring(0, 20),
-                    (item.service || 'N/A').substring(0, 20),
-                    item.valor || '',
-                    getStatusDisplay(item.status),
-                    getPriorityDisplay(item.priority),
-                    formatDate(item.dataCriacao || ''),
-                    formatDate(item.dataPagamento || '')
-                ];
-                
-                rowData.forEach((cellValue, idx) => {
-                    if (colIndex < colWidths.length) {
-                    // Truncar texto muito longo
-                        const maxLength = colWidths[colIndex] / 2;
-                        if (cellValue && cellValue.length > maxLength) {
-                        cellValue = cellValue.substring(0, maxLength - 3) + '...';
-                    }
-                    
-                    doc.setTextColor(84, 67, 80);
-                        doc.text(cellValue || '', cellX + 2, currentY + 5);
-                        cellX += colWidths[colIndex];
-                        colIndex++;
-                    }
-                });
-                
-                currentY += lineHeight;
-            });
-            
-            // Rodapé
-            const finalY = currentY + 5;
-            doc.setDrawColor(...darkColor);
-            doc.setLineWidth(0.5);
-            doc.line(10, finalY, 287, finalY);
-            
-            doc.setTextColor(84, 67, 80);
-            doc.setFontSize(8);
-            doc.text(`Total de solicitações: ${allFilteredData.length}`, 10, finalY + 8);
-            doc.text('Sistema de Gestão Financeira - Attend Finance', 148.5, finalY + 8, { align: 'center' });
-            doc.text('Página ' + doc.internal.getCurrentPageInfo().pageNumber, 280, finalY + 8, { align: 'right' });
-            
-            // Salvar PDF
-            const dateStrFile = now.toISOString().split('T')[0];
-            const fileName = `relatorios_financeiros_${dateStrFile}.pdf`;
-            doc.save(fileName);
-            
-            // Mostrar mensagem de sucesso
-            this.showNotification('Arquivo PDF exportado com sucesso!', 'success');
-            
-        } catch (error) {
-            console.error('Erro ao exportar para PDF:', error);
-            alert('Erro ao exportar para PDF: ' + error.message);
-        }    }
-
-    // Funções CSV removidas - usando apenas XLSX formatado
-
-    // Métodos auxiliares otimizados
-    getServiceName(service) {
-        const services = {
-            'consultoria_TI': 'Consultoria em TI',
-            'desenvolvimento': 'Desenvolvimento de Software',
-            'manutencao_equipamentos': 'Manutenção de Equipamentos',
-            'treinamento_corporativo': 'Treinamento Corporativo'
-        };
-        return services[service] || service;
-    }
-
-    getStatusName(status) {
-        const statuses = {
-            'pendente': 'Pendente',
-            'aprovado': 'Aprovado',
-            'recusado': 'Recusado',
-            'concluido': 'Concluído'
-        };
-        return statuses[status] || status;
-    }
-
-    getPriorityName(priority) {
-        const priorities = {
-            'baixa': 'Baixa',
-            'media': 'Média',
-            'alta': 'Alta'
-        };
-        return priorities[priority] || priority;
-    }
-
-    formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('pt-BR');
-    }
-
-    showNotification(message, type = 'info') {
-        // Criar elemento de notificação
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
-            color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            z-index: 10000;
-            font-weight: 500;
-            animation: slideInRight 0.3s ease;
-        `;
-        notification.textContent = message;
-        
-        // Adicionar ao body
-        document.body.appendChild(notification);
-        
-        // Remover após 3 segundos
-        setTimeout(() => {
-            notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 3000);
-        
-        // Adicionar animações CSS se não existirem
-        if (!document.getElementById('notificationStyles')) {
-            const style = document.createElement('style');
-            style.id = 'notificationStyles';
-            style.textContent = `
-                @keyframes slideInRight {
-                    from {
-                        transform: translateX(100%);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
-                }
-                @keyframes slideOutRight {
-                    from {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
-                    to {
-                        transform: translateX(100%);
-                        opacity: 0;
-                    }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-    }
-}
-
-// Inicializar quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', function() {
-    // Verificar se estamos na página de relatórios
-    if (document.querySelector('.reports-fullscreen')) {
-        window.relatoriosOptimized = new RelatoriosOptimized();
     }
 });

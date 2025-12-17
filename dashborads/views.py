@@ -269,9 +269,14 @@ def relatorio(request):
             return redirect('home')
         
         # Buscar todas as solicitações do banco de dados
-        solicitacoes_originais = Solicitacoes.objects.prefetch_related('itens_rota__servico').all().order_by('-data_de_criacao')
+        solicitacoes_originais = Solicitacoes.objects.prefetch_related(
+            'itens_rota__servico',
+            'solicitacoes_tecnico__servico',
+            'solicitacoes_tecnico__recebedor',
+            'solicitacoes_tecnico__cliente_empresa'
+        ).all().order_by('-data_de_criacao')
         
-        # Adicionar supervisor do recebedor e expandir solicitações "Em Rota"
+        # Adicionar supervisor do recebedor e expandir solicitações "Em Rota" e "Técnico"
         from solicitacoes.models import Recebedor
         solicitacoes_expandidas = []
         
@@ -286,57 +291,28 @@ def relatorio(request):
                     pass
             solicitacao.supervisor_recebedor = supervisor_nome
             
-            # Se for "Em Rota", expandir em múltiplas linhas (uma para cada item)
+            # Se for "Em Rota" com itens, modificar o título para incluir TODOS os tickets
             if solicitacao.tipo == 'em_rota' and solicitacao.itens_rota.exists():
                 itens = solicitacao.itens_rota.all().order_by('ordem')
-                for item in itens:
-                    # Calcular valor total do item (atividade + detalhados)
-                    soma_detalhados_item = (item.valor_km or 0.0) + (item.valor_pedagio or 0.0) + \
-                                           (item.valor_hospedagem or 0.0) + (item.valor_fluvial or 0.0) + \
-                                           (item.valor_outros or 0.0)
-                    valor_atividade_item = item.valor or 0.0
-                    valor_total_item = valor_atividade_item + soma_detalhados_item
-                    
-                    # Criar uma classe simples para representar o item
-                    class SolicitacaoItem:
-                        def __init__(self):
-                            self.id = solicitacao.id
-                            self.ticket = item.ticket_item  # ID do item
-                            self.titulo = f"Solicitação Em Rota - {item.ticket_item}"
-                            self.nome_solicitante = solicitacao.nome_solicitante
-                            self.supervisor_recebedor = supervisor_nome
-                            self.nome_do_recebedor = item.recebedor or solicitacao.nome_do_recebedor
-                            self.chave_pix = item.chave_pix or solicitacao.chave_pix
-                            self.cliente_empresa = item.cliente_empresa or solicitacao.cliente_empresa
-                            self.cnpj = item.cnpj or solicitacao.cnpj
-                            self.servico = item.servico or solicitacao.servico
-                            self.valor = valor_total_item  # Valor total do item (atividade + detalhados)
-                            self.valor_receita = valor_atividade_item  # Valor da atividade do item
-                            self.valor_em_rota = 0.0  # Não aplicável para itens individuais
-                            self.valor_km = item.valor_km or 0.0
-                            self.valor_pedagio = item.valor_pedagio or 0.0
-                            self.valor_hospedagem = item.valor_hospedagem or 0.0
-                            self.valor_fluvial = item.valor_fluvial or 0.0
-                            self.valor_outros = item.valor_outros or 0.0
-                            self.status = solicitacao.status
-                            self.prioridade = solicitacao.prioridade
-                            self.data_de_criacao = solicitacao.data_de_criacao
-                            self.data_de_pagamento = solicitacao.data_de_pagamento
-                            self.tipo = 'em_rota'
-                            self.is_item = True  # Flag para identificar que é um item
-                            self.solicitacao_original_id = solicitacao.id  # ID da solicitação original
-                            self.ticket_original = solicitacao.ticket  # Ticket da solicitação original
-                        
-                        def get_status_display(self):
-                            return solicitacao.get_status_display()
-                        
-                        def get_prioridade_display(self):
-                            return solicitacao.get_prioridade_display()
-                    
-                    solicitacao_item = SolicitacaoItem()
-                    solicitacoes_expandidas.append(solicitacao_item)
+                # Coletar todos os tickets dos itens (filtrar vazios)
+                todos_tickets = [item.ticket_item for item in itens if item.ticket_item and item.ticket_item.strip()]
+                if todos_tickets:
+                    # Criar título com TODOS os tickets separados por vírgula e espaço
+                    # Não limitar o tamanho - mostrar todos os tickets na célula
+                    solicitacao.titulo = f"Solicitação Em Rota - {', '.join(todos_tickets)}"
+                solicitacoes_expandidas.append(solicitacao)
+            # Se for "Técnico" com itens, modificar o título para incluir TODOS os tickets
+            elif solicitacao.is_tecnico() and solicitacao.solicitacoes_tecnico.exists():
+                itens_tecnico = solicitacao.solicitacoes_tecnico.all().order_by('id')
+                # Coletar todos os tickets dos itens (filtrar vazios)
+                todos_tickets = [item.ticket_item for item in itens_tecnico if item.ticket_item and item.ticket_item.strip()]
+                if todos_tickets:
+                    # Criar título com TODOS os tickets separados por vírgula e espaço
+                    # Não limitar o tamanho - mostrar todos os tickets na célula
+                    solicitacao.titulo = f"Solicitação de Técnico - {', '.join(todos_tickets)}"
+                solicitacoes_expandidas.append(solicitacao)
             else:
-                # Para solicitações "Casual" ou "Em Rota" sem itens, adicionar normalmente
+                # Para solicitações "Casual" ou outras, adicionar normalmente
                 solicitacoes_expandidas.append(solicitacao)
         
         # Estatísticas (usar solicitações originais, não expandidas)
