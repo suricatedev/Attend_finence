@@ -1965,6 +1965,7 @@ def exportar_relatorio_card(request, solicitacao_id):
                     'valor_outros': item.valor_outros or 0.0,
                     'soma_detalhados': soma_detalhados_item,
                     'valor_atividade': valor_atividade_item,
+                    'atividade_produtiva': None,  # Em Rota não tem atividade produtiva/improdutiva
                 })
         else:
             # Para Casual, calcular receita como valor da atividade (valor_total - soma_detalhados)
@@ -1993,6 +1994,7 @@ def exportar_relatorio_card(request, solicitacao_id):
                 'valor_outros': solicitacao.valor_outros or 0.0,
                 'soma_detalhados': soma_detalhados_casual,
                 'valor_atividade': valor_receita_calculado,
+                'atividade_produtiva': None,  # Casual não tem atividade produtiva/improdutiva
             })
         
         context = {

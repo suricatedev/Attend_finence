@@ -616,6 +616,7 @@
                         <th>Valor Total</th>
                         <th>Valores Detalhados</th>
                         <th>Atividade</th>
+                        <th>Produtiva/Improdutiva</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -670,6 +671,21 @@
                             </div>
                         </td>
                         <td class="valor-destaque">R$ {{ item.valor_atividade|floatformat:2 }}</td>
+                        <td>
+                            {% if item.atividade_produtiva is not None %}
+                                {% if item.atividade_produtiva %}
+                                    <span class="badge badge-produtiva" style="background-color: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">
+                                        <i class="fas fa-check-circle"></i> Produtiva
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-improdutiva" style="background-color: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">
+                                        <i class="fas fa-times-circle"></i> Improdutiva
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                <span style="color: #999;">N/A</span>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
