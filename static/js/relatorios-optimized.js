@@ -1523,18 +1523,17 @@ class RelatoriosOptimized {
                 return;
             }
 
-            // Coletar cabeçalhos (excluindo coluna de ações e toggle de valores detalhados)
+            // Coletar cabeçalhos (excluindo apenas coluna de ações e toggle de valores detalhados)
+            // IMPORTANTE: Sempre incluir colunas de valores detalhados na exportação, mesmo que estejam ocultas na tela
             const headers = [];
             table.querySelectorAll('thead th').forEach(th => {
-                // Pular coluna de ações e toggle de valores detalhados
+                // Pular apenas coluna de ações e toggle de valores detalhados
                 if (th.classList.contains('actions-header') || th.classList.contains('valores-detalhados-toggle-header')) {
                     return;
                 }
                 
-                // Pular colunas de valores detalhados se estiverem ocultas
-                if (th.classList.contains('valores-detalhados-col') && th.style.display === 'none') {
-                    return;
-                }
+                // NÃO pular colunas de valores detalhados - sempre incluir na exportação
+                // Mesmo que estejam ocultas na tela, devem aparecer no Excel/PDF
                 
                 let text = th.textContent.replace(/\s+/g, ' ').trim();
                 // Remover ícones de ordenação (setas)
@@ -1685,40 +1684,41 @@ class RelatoriosOptimized {
                         } else {
                             row.push(item.valorEmRota || '');
                         }
-                    } else if (headerLower === 'km') {
+                    } else if (headerLower.includes('km') && !headerLower.includes('valor km')) {
+                        // Coluna KM (sem "valor" no nome, para evitar conflito)
                         const valorKmNum = extractMonetaryValue(item.valorKm || '');
                         if (valorKmNum !== null) {
                             row.push({ value: valorKmNum, type: 'monetary' });
                         } else {
-                            row.push(item.valorKm || '');
+                            row.push(item.valorKm || 'R$ 0,00');
                         }
                     } else if (headerLower.includes('pedágio') || headerLower.includes('pedagio')) {
                         const valorPedagioNum = extractMonetaryValue(item.valorPedagio || '');
                         if (valorPedagioNum !== null) {
                             row.push({ value: valorPedagioNum, type: 'monetary' });
                         } else {
-                            row.push(item.valorPedagio || '');
+                            row.push(item.valorPedagio || 'R$ 0,00');
                         }
                     } else if (headerLower.includes('hospedagem')) {
                         const valorHospedagemNum = extractMonetaryValue(item.valorHospedagem || '');
                         if (valorHospedagemNum !== null) {
                             row.push({ value: valorHospedagemNum, type: 'monetary' });
                         } else {
-                            row.push(item.valorHospedagem || '');
+                            row.push(item.valorHospedagem || 'R$ 0,00');
                         }
                     } else if (headerLower.includes('fluvial')) {
                         const valorFluvialNum = extractMonetaryValue(item.valorFluvial || '');
                         if (valorFluvialNum !== null) {
                             row.push({ value: valorFluvialNum, type: 'monetary' });
                         } else {
-                            row.push(item.valorFluvial || '');
+                            row.push(item.valorFluvial || 'R$ 0,00');
                         }
                     } else if (headerLower.includes('outros')) {
                         const valorOutrosNum = extractMonetaryValue(item.valorOutros || '');
                         if (valorOutrosNum !== null) {
                             row.push({ value: valorOutrosNum, type: 'monetary' });
                         } else {
-                            row.push(item.valorOutros || '');
+                            row.push(item.valorOutros || 'R$ 0,00');
                         }
                     } else if (headerLower.includes('status')) {
                         row.push(getStatusDisplay(item.status));
@@ -2003,9 +2003,11 @@ class RelatoriosOptimized {
             });
             doc.text(`Gerado em: ${dateStr}`, 148.5, 32, { align: 'center' });
 
-            // Headers da tabela
-            const headers = ['ID', 'Título', 'Solicitante', 'Supervisor', 'Recebedor', 'Serviço', 'Valor', 'Status', 'Prioridade', 'Criação', 'Pagamento'];
-            const colWidths = [20, 40, 30, 30, 30, 30, 25, 20, 20, 25, 25];
+            // Headers da tabela - Incluir todas as colunas, incluindo valores detalhados
+            // Ajustar larguras para caber na página A4 landscape (297mm - 20mm de margem = 277mm)
+            const headers = ['ID', 'Título', 'Solicitante', 'Supervisor', 'Recebedor', 'Chave PIX', 'Cliente/Empresa', 'CNPJ', 'Serviço', 'Valor Total', 'Receita', 'EM ROTA', 'KM', 'Pedágio', 'Hospedagem', 'Fluvial', 'Outros', 'Status', 'Prioridade', 'Criação', 'Pagamento'];
+            // Larguras ajustadas para caber na página (total ~277mm)
+            const colWidths = [12, 25, 18, 18, 18, 22, 22, 18, 18, 15, 15, 15, 12, 12, 15, 12, 12, 12, 12, 15, 15];
             
             let startY = 40;
             let currentY = startY;
@@ -2102,15 +2104,30 @@ class RelatoriosOptimized {
                 let cellX = 10;
                 let colIndex = 0;
                 
-                // Construir linha na ordem: ID, Título, Solicitante, Supervisor, Recebedor, Serviço, Valor, Status, Prioridade, Criação, Pagamento
+                // Construir linha na ordem completa: ID, Título, Solicitante, Supervisor, Recebedor, Chave PIX, Cliente/Empresa, CNPJ, Serviço, Valor Total, Receita, EM ROTA, KM, Pedágio, Hospedagem, Fluvial, Outros, Status, Prioridade, Criação, Pagamento
+                const extractMonetaryValue = (text) => {
+                    if (!text) return 'R$ 0,00';
+                    return text;
+                };
+                
                 const rowData = [
                     item.ticket || item.id || '',
                     (item.title || '').substring(0, 30),
                     (item.solicitante || '').substring(0, 20),
                     (item.supervisor || '-').substring(0, 20),
                     (item.recebedor || '-').substring(0, 20),
+                    (item.chavePix || '-').substring(0, 25),
+                    (item.clienteEmpresa || '-').substring(0, 25),
+                    (item.cnpj || '-').substring(0, 20),
                     (item.service || 'N/A').substring(0, 20),
-                    item.valor || '',
+                    item.valor || 'R$ 0,00',
+                    item.valorReceita || 'R$ 0,00',
+                    item.valorEmRota || 'R$ 0,00',
+                    item.valorKm || 'R$ 0,00',
+                    item.valorPedagio || 'R$ 0,00',
+                    item.valorHospedagem || 'R$ 0,00',
+                    item.valorFluvial || 'R$ 0,00',
+                    item.valorOutros || 'R$ 0,00',
                     getStatusDisplay(item.status),
                     getPriorityDisplay(item.priority),
                     formatDate(item.dataCriacao || ''),
