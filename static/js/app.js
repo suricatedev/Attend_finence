@@ -1,7 +1,16 @@
-﻿// JavaScript Unificado - Sistema de Gestão Financeira
+// JavaScript Unificado - Sistema de Gestão Financeira
 
 // Utilitários globais
 const Utils = {
+    // Manter a sessão ativa (Heartbeat)
+    keepAlive() {
+        console.log('💓 Heartbeat: Mantendo sessão ativa...');
+        fetch('/ping/', { 
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).catch(err => console.debug('Erro no keep-alive:', err));
+    },
+
     // Debounce para otimizar eventos
     debounce(func, wait) {
         let timeout;
@@ -1370,9 +1379,17 @@ class FormManager {
             console.log('📥 Resposta do servidor:', {
                 status: response.status,
                 contentType: contentType,
-                contentType: contentType,
-                ok: response.ok
+                ok: response.ok,
+                redirected: response.redirected,
+                url: response.url
             });
+            
+            // Detectar se fomos redirecionados para a página de login
+            if (response.redirected && response.url.includes('/usuarios/login')) {
+                showNotification('Sua sessão expirou. Por favor, faça login novamente para salvar.', 'error');
+                setTimeout(() => window.location.href = response.url, 2000);
+                return;
+            }
             
             if (contentType && contentType.includes('application/json')) {
                 // Resposta JSON
@@ -1916,6 +1933,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // KanbanManager agora é inicializado pelo kanban.js
         // Não inicializar aqui para evitar conflito com a declaração em kanban.js
         console.log('APP.JS: KanbanManager será inicializado pelo kanban.js se necessário');
+
+        // Iniciar Heartbeat para manter sessão (a cada 5 minutos)
+        setInterval(() => Utils.keepAlive(), 300000);
+        // Chamar uma vez imediatamente
+        Utils.keepAlive();
     } catch (error) {
         console.error('APP.JS: Erro ao inicializar sistema:', error);    }
 

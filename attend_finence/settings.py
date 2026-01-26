@@ -131,6 +131,14 @@ STATICFILES_FINDERS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Configurações de Sessão e Segurança
+SESSION_COOKIE_AGE = 86400  # 24 horas em segundos
+SESSION_SAVE_EVERY_REQUEST = True  # Renova a sessão a cada requisição
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Mantém a sessão se fechar o navegador
+SESSION_COOKIE_HTTPONLY = True  # Segurança extra contra JS malicioso
+CSRF_COOKIE_AGE = 86400  # Token CSRF dura o mesmo que a sessão
+CSRF_USE_SESSIONS = False  # Mantém o token no cookie (padrão)
+
 # Configurações de Email
 # Se EMAIL_HOST_USER não estiver configurado, usa console backend para desenvolvimento
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')

@@ -7,6 +7,7 @@ from solicitacoes import views as solicitacoes_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('ping/', solicitacoes_views.ping, name='ping'),  # Para manter a sessão viva
     path('', solicitacoes_views.receber_dados, name='home'),  # Rota para a página inicial
     path("usuarios/", include("usuarios.urls")),
     path("solicitacoes/", include("solicitacoes.urls")),

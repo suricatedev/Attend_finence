@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
@@ -25,6 +25,11 @@ def normalizar_status(valor):
     if valor_normalizado not in STATUS_VALIDOS:
         return 'pendente'
     return valor_normalizado
+
+
+def ping(request):
+    """View simples para manter a sessão ativa."""
+    return JsonResponse({'status': 'ok'})
 
 
 def registrar_recebedor(nome, chave_pix=None):
