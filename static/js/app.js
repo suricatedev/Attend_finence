@@ -1934,8 +1934,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Não inicializar aqui para evitar conflito com a declaração em kanban.js
         console.log('APP.JS: KanbanManager será inicializado pelo kanban.js se necessário');
 
-        // Iniciar Heartbeat para manter sessão (a cada 5 minutos)
-        setInterval(() => Utils.keepAlive(), 300000);
+        // Iniciar Heartbeat para manter sessão (a cada 30 segundos para maior estabilidade)
+        setInterval(() => Utils.keepAlive(), 30000);
         // Chamar uma vez imediatamente
         Utils.keepAlive();
     } catch (error) {

@@ -304,6 +304,12 @@ def garantir_migracao_campos():
         print(f"⚠️ Erro ao verificar/aplicar migração: {e}")
 
 def receber_dados(request):
+    # Garantir que o usuário está autenticado antes de qualquer processamento
+    if not request.user.is_authenticated:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': 'Sessão expirada. Por favor, faça login novamente.'}, status=401)
+        return redirect('/usuarios/login/')
+
     # Garantir que a migração está aplicada antes de processar qualquer requisição
     try:
         garantir_migracao_campos()
