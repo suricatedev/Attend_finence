@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import Solicitacoes, SolicitacaoRotaItem, Recebedor, ClienteEmpresa, SolicitacaoTecnico
+from .models import (
+    AuditoriaLog,
+    ClienteEmpresa,
+    Recebedor,
+    SolicitacaoRotaItem,
+    SolicitacaoTecnico,
+    Solicitacoes,
+)
 
 @admin.register(Recebedor)
 class RecebedorAdmin(admin.ModelAdmin):
@@ -49,3 +56,11 @@ class SolicitacaoTecnicoAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+@admin.register(AuditoriaLog)
+class AuditoriaLogAdmin(admin.ModelAdmin):
+    list_display = ('data_hora', 'acao', 'app', 'modelo', 'objeto_id', 'usuario', 'origem', 'ip_address')
+    list_filter = ('acao', 'app', 'modelo', 'data_hora')
+    search_fields = ('objeto_id', 'usuario__username', 'origem', 'ip_address')
+    readonly_fields = ('data_hora',)

@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Auditoria - Sistema de Gestão Financeira{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <style>
+        .auditoria-container {
+            padding: 24px;
+        }
+        .auditoria-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .auditoria-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .auditoria-filters input,
+        .auditoria-filters select {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        .auditoria-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .auditoria-table th,
+        .auditoria-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        .auditoria-table th {
+            background: #f5f5f5;
+            font-weight: 600;
+        }
+        .auditoria-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-create { background: #e6f7ee; color: #1e7e34; }
+        .badge-update { background: #fff3cd; color: #856404; }
+        .badge-delete { background: #f8d7da; color: #721c24; }
+        .pagination {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .pagination a,
+        .pagination span {
+            padding: 6px 10px;
+            border-radius: 6px;
+            background: #f0f0f0;
+            color: #333;
+            text-decoration: none;
+        }
+        .pagination .active {
+            background: #FFCB57;
+            color: #1C1C1C;
+            font-weight: 600;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="auditoria-container">
+    <div class="auditoria-header">
+        <h2>Auditoria de Logs</h2>
+    </div>
+
+    <form method="get" class="auditoria-filters">
+        <input type="text" name="q" placeholder="Buscar por usuário, IP, origem..." value="{{ q }}">
+        <select name="acao">
+            <option value="">Ação (Todas)</option>
+            {% for item in acoes_disponiveis %}
+            <option value="{{ item }}" {% if item == acao %}selected{% endif %}>{{ item|title }}</option>
+            {% endfor %}
+        </select>
+        <select name="app">
+            <option value="">App (Todas)</option>
+            {% for item in apps_disponiveis %}
+            <option value="{{ item }}" {% if item == app %}selected{% endif %}>{{ item }}</option>
+            {% endfor %}
+        </select>
+        <select name="modelo">
+            <option value="">Modelo (Todos)</option>
+            {% for item in modelos_disponiveis %}
+            <option value="{{ item }}" {% if item == modelo %}selected{% endif %}>{{ item }}</option>
+            {% endfor %}
+        </select>
+        <button class="btn-primary" type="submit">Filtrar</button>
+        <a class="btn-secondary" href="{% url 'auditoria' %}">Limpar</a>
+    </form>
+
+    <table class="auditoria-table">
+        <thead>
+            <tr>
+                <th>Data/Hora</th>
+                <th>Ação</th>
+                <th>App</th>
+                <th>Modelo</th>
+                <th>Objeto</th>
+                <th>Usuário</th>
+                <th>IP</th>
+                <th>Origem</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in page_obj %}
+            <tr>
+                <td>{{ log.data_hora|date:"d/m/Y H:i:s" }}</td>
+                <td>
+                    <span class="auditoria-badge badge-{{ log.acao }}">
+                        {{ log.get_acao_display }}
+                    </span>
+                </td>
+                <td>{{ log.app }}</td>
+                <td>{{ log.modelo }}</td>
+                <td>#{{ log.objeto_id }}</td>
+                <td>{{ log.usuario|default:"-" }}</td>
+                <td>{{ log.ip_address|default:"-" }}</td>
+                <td>{{ log.origem|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8">Nenhum log encontrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?q={{ q|urlencode }}&acao={{ acao|urlencode }}&app={{ app|urlencode }}&modelo={{ modelo|urlencode }}&page={{ page_obj.previous_page_number }}">Anterior</a>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+                <span class="active">{{ num }}</span>
+            {% else %}
+                <a href="?q={{ q|urlencode }}&acao={{ acao|urlencode }}&app={{ app|urlencode }}&modelo={{ modelo|urlencode }}&page={{ num }}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <a href="?q={{ q|urlencode }}&acao={{ acao|urlencode }}&app={{ app|urlencode }}&modelo={{ modelo|urlencode }}&page={{ page_obj.next_page_number }}">Próxima</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

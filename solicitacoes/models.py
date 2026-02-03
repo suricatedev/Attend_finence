@@ -190,3 +190,32 @@ class SolicitacaoTecnico(models.Model):
     def nome_tecnico(self):
         """Retorna o nome do técnico (recebedor)"""
         return self.recebedor.nome if self.recebedor else ''
+
+
+class AuditoriaLog(models.Model):
+    ACAO_CHOICES = [
+        ('create', 'Criar'),
+        ('update', 'Atualizar'),
+        ('delete', 'Deletar'),
+    ]
+
+    app = models.CharField(max_length=100, verbose_name="App")
+    modelo = models.CharField(max_length=100, verbose_name="Modelo")
+    objeto_id = models.CharField(max_length=64, verbose_name="ID do Objeto")
+    acao = models.CharField(max_length=10, choices=ACAO_CHOICES, verbose_name="Ação")
+    usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Usuário")
+    dados_anteriores = models.JSONField(null=True, blank=True, verbose_name="Dados Anteriores")
+    dados_novos = models.JSONField(null=True, blank=True, verbose_name="Dados Novos")
+    campos_alterados = models.JSONField(null=True, blank=True, verbose_name="Campos Alterados")
+    ip_address = models.GenericIPAddressField(null=True, blank=True, verbose_name="IP")
+    user_agent = models.TextField(null=True, blank=True, verbose_name="User Agent")
+    origem = models.CharField(max_length=255, null=True, blank=True, verbose_name="Origem")
+    data_hora = models.DateTimeField(auto_now_add=True, verbose_name="Data/Hora")
+
+    class Meta:
+        verbose_name = "Auditoria Log"
+        verbose_name_plural = "Auditoria Logs"
+        ordering = ['-data_hora']
+
+    def __str__(self):
+        return f"{self.app}.{self.modelo} #{self.objeto_id} - {self.acao}"

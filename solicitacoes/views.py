@@ -2,14 +2,16 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
+from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
-from django.db.models import Exists, OuterRef
-from .models import Solicitacoes, SolicitacaoRotaItem, Recebedor, ClienteEmpresa, SolicitacaoTecnico
+from django.db.models import Exists, OuterRef, Q
+from .models import Solicitacoes, SolicitacaoRotaItem, Recebedor, ClienteEmpresa, SolicitacaoTecnico, AuditoriaLog
 from servicos.models import Servico
 from django.utils import timezone
 from datetime import time, datetime
 import json
+from usuarios.decorators import group_required
 
 STATUS_VALIDOS = {choice[0] for choice in Solicitacoes._meta.get_field('status').choices}
 
@@ -2026,6 +2028,51 @@ def exportar_relatorio_card(request, solicitacao_id):
         messages.error(request, f'Erro ao gerar relatório: {str(e)}')
         return redirect('/solicitacoes/home/')
  
+
+@group_required('Administrador', 'Financeiro')
+@require_http_methods(["GET"])
+def auditoria_logs(request):
+    """
+    Página de auditoria para visualizar logs CRUD.
+    """
+    logs = AuditoriaLog.objects.select_related('usuario').all()
+
+    q = (request.GET.get('q') or '').strip()
+    acao = (request.GET.get('acao') or '').strip()
+    app = (request.GET.get('app') or '').strip()
+    modelo = (request.GET.get('modelo') or '').strip()
+
+    if q:
+        logs = logs.filter(
+            Q(objeto_id__icontains=q) |
+            Q(usuario__username__icontains=q) |
+            Q(origem__icontains=q) |
+            Q(ip_address__icontains=q)
+        )
+    if acao:
+        logs = logs.filter(acao=acao)
+    if app:
+        logs = logs.filter(app=app)
+    if modelo:
+        logs = logs.filter(modelo=modelo)
+
+    paginator = Paginator(logs.order_by('-data_hora'), 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'q': q,
+        'acao': acao,
+        'app': app,
+        'modelo': modelo,
+        'acoes_disponiveis': AuditoriaLog.objects.values_list('acao', flat=True).distinct(),
+        'apps_disponiveis': AuditoriaLog.objects.values_list('app', flat=True).distinct(),
+        'modelos_disponiveis': AuditoriaLog.objects.values_list('modelo', flat=True).distinct(),
+    }
+    return render(request, 'auditoria/index.html', context)
+
+
 @require_http_methods(["POST"])
 def atualizar_status(request):
     """
