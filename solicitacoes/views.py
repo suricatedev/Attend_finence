@@ -2060,6 +2060,21 @@ def auditoria_logs(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    for log in page_obj:
+        cambios = []
+        antes = log.dados_anteriores or {}
+        depois = log.dados_novos or {}
+        campos = log.campos_alterados or []
+        if not campos:
+            campos = list(set(list(antes.keys()) + list(depois.keys())))
+        for campo in campos:
+            cambios.append({
+                'campo': campo,
+                'antes': antes.get(campo, '-'),
+                'depois': depois.get(campo, '-'),
+            })
+        log.detalhes_formatados = cambios
+
     context = {
         'page_obj': page_obj,
         'q': q,

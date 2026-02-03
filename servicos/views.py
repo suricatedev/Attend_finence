@@ -241,15 +241,15 @@ def criar_recebedor(request):
         # Aceitar tanto FormData quanto JSON
         if request.content_type == 'application/json':
             data = json.loads(request.body)
-            nome = data.get('nome', '').strip()
-            chave_pix = data.get('chave_pix', '').strip()
-            supervisor = data.get('supervisor', '').strip() or None
+            nome = (data.get('nome') or '').strip()
+            chave_pix = (data.get('chave_pix') or '').strip()
+            supervisor = (data.get('supervisor') or '').strip() or None
             ativo_str = data.get('ativo', 'true')
         else:
             # FormData
-            nome = request.POST.get('nome', '').strip()
-            chave_pix = request.POST.get('chave_pix', '').strip()
-            supervisor = request.POST.get('supervisor', '').strip() or None
+            nome = (request.POST.get('nome') or '').strip()
+            chave_pix = (request.POST.get('chave_pix') or '').strip()
+            supervisor = (request.POST.get('supervisor') or '').strip() or None
             ativo_str = request.POST.get('ativo', 'true')
         
         ativo = ativo_str.lower() == 'true' if isinstance(ativo_str, str) else bool(ativo_str)
@@ -307,15 +307,15 @@ def editar_recebedor(request, recebedor_id):
         # Aceitar tanto FormData quanto JSON
         if request.content_type == 'application/json':
             data = json.loads(request.body)
-            nome = data.get('nome', '').strip()
-            chave_pix = data.get('chave_pix', '').strip()
-            supervisor = data.get('supervisor', '').strip() or None
+            nome = (data.get('nome') or '').strip()
+            chave_pix = (data.get('chave_pix') or '').strip()
+            supervisor = (data.get('supervisor') or '').strip() or None
             ativo_str = data.get('ativo', 'true')
         else:
             # FormData
-            nome = request.POST.get('nome', '').strip()
-            chave_pix = request.POST.get('chave_pix', '').strip()
-            supervisor = request.POST.get('supervisor', '').strip() or None
+            nome = (request.POST.get('nome') or '').strip()
+            chave_pix = (request.POST.get('chave_pix') or '').strip()
+            supervisor = (request.POST.get('supervisor') or '').strip() or None
             ativo_str = request.POST.get('ativo', 'true')
         
         ativo = ativo_str.lower() == 'true' if isinstance(ativo_str, str) else bool(ativo_str)

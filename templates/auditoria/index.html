@@ -119,6 +119,7 @@
                 <th>Usuário</th>
                 <th>IP</th>
                 <th>Origem</th>
+                <th>Detalhes</th>
             </tr>
         </thead>
         <tbody>
@@ -136,10 +137,39 @@
                 <td>{{ log.usuario|default:"-" }}</td>
                 <td>{{ log.ip_address|default:"-" }}</td>
                 <td>{{ log.origem|default:"-" }}</td>
+                <td>
+                    <details>
+                        <summary>Ver</summary>
+                        <div style="margin-top: 8px;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:left; padding: 6px 8px; border-bottom: 1px solid #eee;">Campo</th>
+                                        <th style="text-align:left; padding: 6px 8px; border-bottom: 1px solid #eee;">Antes</th>
+                                        <th style="text-align:left; padding: 6px 8px; border-bottom: 1px solid #eee;">Depois</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in log.detalhes_formatados %}
+                                    <tr>
+                                        <td style="padding: 6px 8px; border-bottom: 1px solid #f3f3f3;">{{ item.campo }}</td>
+                                        <td style="padding: 6px 8px; border-bottom: 1px solid #f3f3f3;">{{ item.antes }}</td>
+                                        <td style="padding: 6px 8px; border-bottom: 1px solid #f3f3f3;">{{ item.depois }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" style="padding: 6px 8px;">Sem detalhes</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </details>
+                </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="8">Nenhum log encontrado.</td>
+                <td colspan="9">Nenhum log encontrado.</td>
             </tr>
             {% endfor %}
         </tbody>
