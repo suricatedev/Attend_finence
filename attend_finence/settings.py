@@ -18,6 +18,20 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
+# CSRF: confiar nos domínios usados em produção
+CSRF_TRUSTED_ORIGINS = [
+    "https://attfman.attendservice.com.br",
+    "http://attfman.attendservice.com.br",
+    "https://www.attfman.attendservice.com.br",
+    "http://www.attfman.attendservice.com.br",
+    "https://*.attendservice.com.br",
+    "http://*.attendservice.com.br",
+]
+
+# Se houver proxy/SSL na frente, garanta que o Django reconheça HTTPS
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+
 
 # Application definition
 
