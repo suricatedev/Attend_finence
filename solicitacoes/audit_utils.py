@@ -3,7 +3,9 @@ import threading
 from decimal import Decimal
 
 from django.db.models import Model
+from django.db.models.query import QuerySet
 from django.forms.models import model_to_dict
+from django.utils.functional import LazyObject, empty
 
 
 _local = threading.local()
@@ -34,6 +36,8 @@ def pop_old_state(key):
 
 
 def serialize_value(value):
+    if isinstance(value, LazyObject):
+        value = None if value._wrapped is empty else value._wrapped
     if isinstance(value, datetime.datetime):
         return value.isoformat()
     if isinstance(value, datetime.date):
@@ -44,6 +48,12 @@ def serialize_value(value):
         return float(value)
     if isinstance(value, Model):
         return value.pk
+    if isinstance(value, QuerySet):
+        return [obj.pk for obj in value]
+    if isinstance(value, (list, tuple, set)):
+        return [serialize_value(item) for item in value]
+    if isinstance(value, dict):
+        return {key: serialize_value(val) for key, val in value.items()}
     if hasattr(value, 'name') and hasattr(value, 'path'):
         return value.name
     return value
