@@ -1701,7 +1701,7 @@ def obter_detalhes_completos(request, solicitacao_id):
             'titulo': solicitacao.titulo,
             'solicitante': str(solicitacao.nome_solicitante),
             'recebedor': solicitacao.nome_do_recebedor,
-            'chave_pix': solicitacao.chave_pix or '',
+            'chave_pix': solicitacao.chave_pix or '' if not is_tecnico and solicitacao.tipo != 'em_rota' else '',
             'cliente_empresa': solicitacao.cliente_empresa or '',
             'cnpj': solicitacao.cnpj or '',
             'servico': solicitacao.servico.nome if solicitacao.servico else 'N/A',

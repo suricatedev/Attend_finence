@@ -1,4 +1,4 @@
-﻿// ========================================
+// ========================================
 // MODAL DE DETALHES DO CARD
 // ========================================
 
@@ -745,7 +745,7 @@ async function extractCardData(card) {
         
         console.log('✅ Itens extraídos (DOM):', data.itensRota);
         }
-    } else if (data.isCasual) {
+    } else if (data.isCasual && !data.isTecnico) {
         // Se for "Casual", buscar valores detalhados via AJAX
         console.log('🔍 É solicitação Casual - buscando valores detalhados...');
         
@@ -850,7 +850,7 @@ function populateCardDetails(data) {
         if (existingCnpj) existingCnpj.remove();
         
         // Adicionar campos adicionais se existirem nos dados (para solicitações Casual)
-        if (data.isCasual && data.valoresDetalhados) {
+        if (data.isCasual && !data.isTecnico && data.valoresDetalhados) {
             if (data.valoresDetalhados.chave_pix) {
                 const chavePixItem = document.createElement('div');
                 chavePixItem.className = 'detail-item';
