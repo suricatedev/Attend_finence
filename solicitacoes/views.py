@@ -2041,6 +2041,7 @@ def auditoria_logs(request):
     acao = (request.GET.get('acao') or '').strip()
     app = (request.GET.get('app') or '').strip()
     modelo = (request.GET.get('modelo') or '').strip()
+    show_auto = (request.GET.get('show_auto') or '').strip() == '1'
 
     if q:
         logs = logs.filter(
@@ -2056,7 +2057,16 @@ def auditoria_logs(request):
     if modelo:
         logs = logs.filter(modelo=modelo)
 
-    paginator = Paginator(logs.order_by('-data_hora'), 25)
+    # Por padrão, oculta deletes automáticos de itens internos durante edição de solicitação.
+    # Se o usuário quiser ver tudo, basta marcar "Exibir ações automáticas".
+    if not show_auto and not modelo:
+        logs = logs.exclude(
+            acao='delete',
+            modelo__in=['solicitacaorotaitem', 'solicitacaotecnico'],
+            origem__startswith='/solicitacoes/home/',
+        )
+
+    paginator = Paginator(logs.order_by('-data_hora'), 500)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -2068,12 +2078,19 @@ def auditoria_logs(request):
         if not campos:
             campos = list(set(list(antes.keys()) + list(depois.keys())))
         for campo in campos:
+            val_antes = antes.get(campo, '-')
+            val_depois = depois.get(campo, '-')
+            # Se for dicionário ou lista, converter para string para exibição
+            if isinstance(val_antes, (dict, list)): val_antes = json.dumps(val_antes, ensure_ascii=False)
+            if isinstance(val_depois, (dict, list)): val_depois = json.dumps(val_depois, ensure_ascii=False)
+            
             cambios.append({
                 'campo': campo,
-                'antes': antes.get(campo, '-'),
-                'depois': depois.get(campo, '-'),
+                'antes': val_antes,
+                'depois': val_depois,
             })
         log.detalhes_formatados = cambios
+        log.detalhes_json = json.dumps(cambios, ensure_ascii=False)
 
     context = {
         'page_obj': page_obj,
@@ -2081,6 +2098,7 @@ def auditoria_logs(request):
         'acao': acao,
         'app': app,
         'modelo': modelo,
+        'show_auto': show_auto,
         'acoes_disponiveis': AuditoriaLog.objects.values_list('acao', flat=True).distinct(),
         'apps_disponiveis': AuditoriaLog.objects.values_list('app', flat=True).distinct(),
         'modelos_disponiveis': AuditoriaLog.objects.values_list('modelo', flat=True).distinct(),

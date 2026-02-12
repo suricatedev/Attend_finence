@@ -8,72 +8,289 @@
     <style>
         .auditoria-container {
             padding: 24px;
+            background: #f9fbfd;
+            min-height: calc(100vh - 80px);
         }
+
         .auditoria-header {
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .auditoria-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin: 0;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
+            gap: 12px;
         }
+
+        .auditoria-header h2 i {
+            color: #FFCB57;
+        }
+
+        /* Card de Filtros */
+        .filters-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+        }
+
         .auditoria-filters {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
-            margin-bottom: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            align-items: end;
         }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+        }
+
         .auditoria-filters input,
         .auditoria-filters select {
-            width: 100%;
-            padding: 8px 10px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #e0e6ed;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
         }
+
+        .auditoria-filters input:focus,
+        .auditoria-filters select:focus {
+            border-color: #FFCB57;
+            outline: none;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .filter-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #4a5568;
+            height: 42px;
+        }
+        .filter-checkbox input {
+            width: auto;
+            transform: scale(1.15);
+        }
+
+        /* Tabela Scrollable */
+        .table-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 700px; /* Limita a altura para scroll */
+        }
+
+        .table-responsive {
+            overflow: auto;
+            flex-grow: 1;
+        }
+
         .auditoria-table {
             width: 100%;
             border-collapse: collapse;
-            background: #fff;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .auditoria-table th,
-        .auditoria-table td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #eee;
             text-align: left;
-            font-size: 0.9rem;
         }
+
+        .auditoria-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #f8f9fa;
+        }
+
         .auditoria-table th {
-            background: #f5f5f5;
-            font-weight: 600;
+            padding: 14px 16px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #4a5568;
+            text-transform: uppercase;
+            border-bottom: 2px solid #edf2f7;
         }
+
+        .auditoria-table td {
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            color: #2d3748;
+            border-bottom: 1px solid #edf2f7;
+            vertical-align: middle;
+        }
+
+        .auditoria-table tr:hover {
+            background-color: #f7fafc;
+        }
+
+        /* Badges Modernas */
         .auditoria-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            gap: 6px;
+        }
+
+        .badge-create { background: #e6fffa; color: #047481; border: 1px solid #b2f5ea; }
+        .badge-update { background: #fffaf0; color: #9c4221; border: 1px solid #feebc8; }
+        .badge-delete { background: #fff5f5; color: #9b2c2c; border: 1px solid #fed7d7; }
+
+        /* Estilo Usuário */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: #ebf4ff;
+            color: #3182ce;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        /* Botão Ver Detalhes */
+        .btn-view {
+            background: none;
+            border: 1px solid #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 6px;
             font-size: 0.75rem;
             font-weight: 600;
-        }
-        .badge-create { background: #e6f7ee; color: #1e7e34; }
-        .badge-update { background: #fff3cd; color: #856404; }
-        .badge-delete { background: #f8d7da; color: #721c24; }
-        .pagination {
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.2s;
             display: flex;
-            gap: 8px;
-            margin-top: 16px;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
         }
-        .pagination a,
-        .pagination span {
-            padding: 6px 10px;
-            border-radius: 6px;
-            background: #f0f0f0;
-            color: #333;
-            text-decoration: none;
+
+        .btn-view:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
         }
-        .pagination .active {
-            background: #FFCB57;
-            color: #1C1C1C;
-            font-weight: 600;
+
+        /* Paginação */
+        .pagination-footer {
+            padding: 16px;
+            background: #fff;
+            border-top: 1px solid #edf2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Modal Customizado */
+        .audit-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .audit-modal.show {
+            display: flex;
+        }
+
+        .audit-modal-content {
+            background: #fff;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+
+        .audit-modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .audit-modal-body {
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .diff-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .diff-table th {
+            text-align: left;
+            padding: 12px;
+            background: #f8fafc;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        .diff-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.9rem;
+        }
+
+        .val-diff {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .val-before { background: #fff5f5; color: #c53030; }
+        .val-after { background: #f0fff4; color: #2f855a; }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #a0aec0;
         }
     </style>
 {% endblock %}
@@ -81,116 +298,210 @@
 {% block content %}
 <div class="auditoria-container">
     <div class="auditoria-header">
-        <h2>Auditoria de Logs</h2>
+        <h2><i class="fas fa-history"></i> Auditoria de Logs</h2>
+        <div class="summary-badges">
+            <span class="auditoria-badge" style="background: #ebf4ff; color: #3182ce; border: 1px solid #bee3f8;">
+                <i class="fas fa-list"></i> Total: {{ page_obj.paginator.count }} logs
+            </span>
+        </div>
     </div>
 
-    <form method="get" class="auditoria-filters">
-        <input type="text" name="q" placeholder="Buscar por usuário, IP, origem..." value="{{ q }}">
-        <select name="acao">
-            <option value="">Ação (Todas)</option>
-            {% for item in acoes_disponiveis %}
-            <option value="{{ item }}" {% if item == acao %}selected{% endif %}>{{ item|title }}</option>
-            {% endfor %}
-        </select>
-        <select name="app">
-            <option value="">App (Todas)</option>
-            {% for item in apps_disponiveis %}
-            <option value="{{ item }}" {% if item == app %}selected{% endif %}>{{ item }}</option>
-            {% endfor %}
-        </select>
-        <select name="modelo">
-            <option value="">Modelo (Todos)</option>
-            {% for item in modelos_disponiveis %}
-            <option value="{{ item }}" {% if item == modelo %}selected{% endif %}>{{ item }}</option>
-            {% endfor %}
-        </select>
-        <button class="btn-primary" type="submit">Filtrar</button>
-        <a class="btn-secondary" href="{% url 'auditoria' %}">Limpar</a>
-    </form>
+    <div class="filters-card">
+        <form method="get" class="auditoria-filters">
+            <div class="filter-group">
+                <label>Busca Geral</label>
+                <input type="text" name="q" placeholder="Usuário, IP, ID..." value="{{ q }}">
+            </div>
+            
+            <div class="filter-group">
+                <label>Ação</label>
+                <select name="acao">
+                    <option value="">Todas</option>
+                    {% for item in acoes_disponiveis %}
+                    <option value="{{ item }}" {% if item == acao %}selected{% endif %}>{{ item|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-    <table class="auditoria-table">
-        <thead>
-            <tr>
-                <th>Data/Hora</th>
-                <th>Ação</th>
-                <th>App</th>
-                <th>Modelo</th>
-                <th>Objeto</th>
-                <th>Usuário</th>
-                <th>IP</th>
-                <th>Origem</th>
-                <th>Detalhes</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for log in page_obj %}
-            <tr>
-                <td>{{ log.data_hora|date:"d/m/Y H:i:s" }}</td>
-                <td>
-                    <span class="auditoria-badge badge-{{ log.acao }}">
-                        {{ log.get_acao_display }}
-                    </span>
-                </td>
-                <td>{{ log.app }}</td>
-                <td>{{ log.modelo }}</td>
-                <td>#{{ log.objeto_id }}</td>
-                <td>{{ log.usuario|default:"-" }}</td>
-                <td>{{ log.ip_address|default:"-" }}</td>
-                <td>{{ log.origem|default:"-" }}</td>
-                <td>
-                    <details>
-                        <summary>Ver</summary>
-                        <div style="margin-top: 8px;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <thead>
-                                    <tr>
-                                        <th style="text-align:left; padding: 6px 8px; border-bottom: 1px solid #eee;">Campo</th>
-                                        <th style="text-align:left; padding: 6px 8px; border-bottom: 1px solid #eee;">Antes</th>
-                                        <th style="text-align:left; padding: 6px 8px; border-bottom: 1px solid #eee;">Depois</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in log.detalhes_formatados %}
-                                    <tr>
-                                        <td style="padding: 6px 8px; border-bottom: 1px solid #f3f3f3;">{{ item.campo }}</td>
-                                        <td style="padding: 6px 8px; border-bottom: 1px solid #f3f3f3;">{{ item.antes }}</td>
-                                        <td style="padding: 6px 8px; border-bottom: 1px solid #f3f3f3;">{{ item.depois }}</td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="3" style="padding: 6px 8px;">Sem detalhes</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </details>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="9">Nenhum log encontrado.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            <div class="filter-group">
+                <label>App</label>
+                <select name="app">
+                    <option value="">Todos</option>
+                    {% for item in apps_disponiveis %}
+                    <option value="{{ item }}" {% if item == app %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-    {% if page_obj.paginator.num_pages > 1 %}
-    <div class="pagination">
-        {% if page_obj.has_previous %}
-        <a href="?q={{ q|urlencode }}&acao={{ acao|urlencode }}&app={{ app|urlencode }}&modelo={{ modelo|urlencode }}&page={{ page_obj.previous_page_number }}">Anterior</a>
-        {% endif %}
-        {% for num in page_obj.paginator.page_range %}
-            {% if num == page_obj.number %}
-                <span class="active">{{ num }}</span>
-            {% else %}
-                <a href="?q={{ q|urlencode }}&acao={{ acao|urlencode }}&app={{ app|urlencode }}&modelo={{ modelo|urlencode }}&page={{ num }}">{{ num }}</a>
+            <div class="filter-group">
+                <label>Modelo</label>
+                <select name="modelo">
+                    <option value="">Todos</option>
+                    {% for item in modelos_disponiveis %}
+                    <option value="{{ item }}" {% if item == modelo %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Auditoria Técnica</label>
+                <label class="filter-checkbox">
+                    <input type="checkbox" name="show_auto" value="1" {% if show_auto %}checked{% endif %}>
+                    Exibir ações automáticas
+                </label>
+            </div>
+
+            <div class="filter-actions">
+                <button class="btn-primary" type="submit">
+                    <i class="fas fa-filter"></i> Filtrar
+                </button>
+                <a class="btn-secondary" href="{% url 'auditoria' %}">
+                    <i class="fas fa-eraser"></i> Limpar
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="auditoria-table">
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Ação</th>
+                        <th>App</th>
+                        <th>Modelo</th>
+                        <th>Objeto</th>
+                        <th>Usuário</th>
+                        <th>IP</th>
+                        <th>Origem</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in page_obj %}
+                    <tr>
+                        <td style="white-space: nowrap;">{{ log.data_hora|date:"d/m/Y H:i:s" }}</td>
+                        <td>
+                            <span class="auditoria-badge badge-{{ log.acao }}">
+                                {% if log.acao == 'create' %}<i class="fas fa-plus-circle"></i>
+                                {% elif log.acao == 'update' %}<i class="fas fa-edit"></i>
+                                {% elif log.acao == 'delete' %}<i class="fas fa-trash-alt"></i>{% endif %}
+                                {{ log.get_acao_display }}
+                            </span>
+                        </td>
+                        <td><span style="color: #718096; font-size: 0.8rem;">{{ log.app }}</span></td>
+                        <td><strong>{{ log.modelo }}</strong></td>
+                        <td><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">#{{ log.objeto_id }}</code></td>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar">{{ log.usuario.username|slice:":1"|upper|default:"?" }}</div>
+                                <span>{{ log.usuario.username|default:"Sistema" }}</span>
+                            </div>
+                        </td>
+                        <td style="font-family: monospace; color: #666;">{{ log.ip_address|default:"-" }}</td>
+                        <td title="{{ log.origem }}"><span style="max-width: 150px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ log.origem|default:"-" }}</span></td>
+                        <td>
+                            <button class="btn-view" onclick='showAuditDetail({{ log.id }}, {{ log.detalhes_json|safe }})'>
+                                <i class="fas fa-eye"></i> Detalhes
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px;">Nenhum registro encontrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination-footer">
+            <div class="info">
+                Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} de {{ page_obj.paginator.count }} registros
+            </div>
+            {% if page_obj.paginator.num_pages > 1 %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                <a href="?q={{ q }}&acao={{ acao }}&app={{ app }}&modelo={{ modelo }}&show_auto={% if show_auto %}1{% endif %}&page=1" title="Primeira"><i class="fas fa-angle-double-left"></i></a>
+                <a href="?q={{ q }}&acao={{ acao }}&app={{ app }}&modelo={{ modelo }}&show_auto={% if show_auto %}1{% endif %}&page={{ page_obj.previous_page_number }}"><i class="fas fa-angle-left"></i> Anterior</a>
+                {% endif %}
+
+                <span class="active">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+                {% if page_obj.has_next %}
+                <a href="?q={{ q }}&acao={{ acao }}&app={{ app }}&modelo={{ modelo }}&show_auto={% if show_auto %}1{% endif %}&page={{ page_obj.next_page_number }}">Próxima <i class="fas fa-angle-right"></i></a>
+                <a href="?q={{ q }}&acao={{ acao }}&app={{ app }}&modelo={{ modelo }}&show_auto={% if show_auto %}1{% endif %}&page={{ page_obj.paginator.num_pages }}" title="Última"><i class="fas fa-angle-double-right"></i></a>
+                {% endif %}
+            </div>
             {% endif %}
-        {% endfor %}
-        {% if page_obj.has_next %}
-        <a href="?q={{ q|urlencode }}&acao={{ acao|urlencode }}&app={{ app|urlencode }}&modelo={{ modelo|urlencode }}&page={{ page_obj.next_page_number }}">Próxima</a>
-        {% endif %}
+        </div>
     </div>
-    {% endif %}
 </div>
+
+<!-- Modal de Detalhes -->
+<div id="auditDetailModal" class="audit-modal">
+    <div class="audit-modal-content">
+        <div class="audit-modal-header">
+            <h3><i class="fas fa-info-circle"></i> Detalhes da Modificação</h3>
+            <button class="close-modal" onclick="closeAuditModal()">&times;</button>
+        </div>
+        <div class="audit-modal-body">
+            <table class="diff-table">
+                <thead>
+                    <tr>
+                        <th>Campo</th>
+                        <th>Antes</th>
+                        <th>Depois</th>
+                    </tr>
+                </thead>
+                <tbody id="auditModalTableBody">
+                    <!-- Preenchido via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function showAuditDetail(id, detalhes) {
+        const modal = document.getElementById('auditDetailModal');
+        const tbody = document.getElementById('auditModalTableBody');
+        tbody.innerHTML = '';
+
+        if (!detalhes || detalhes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Nenhuma alteração detalhada encontrada.</td></tr>';
+        } else {
+            detalhes.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="font-weight: 600;">${item.campo}</td>
+                    <td><span class="val-diff val-before">${item.antes}</span></td>
+                    <td><span class="val-diff val-after">${item.depois}</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeAuditModal() {
+        const modal = document.getElementById('auditDetailModal');
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    // Fechar modal ao clicar fora
+    window.onclick = function(event) {
+        const modal = document.getElementById('auditDetailModal');
+        if (event.target == modal) {
+            closeAuditModal();
+        }
+    }
+</script>
 {% endblock %}

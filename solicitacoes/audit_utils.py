@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from django.db.models import Model
 from django.db.models.query import QuerySet
+from django.db.models.fields.files import FieldFile
 from django.forms.models import model_to_dict
 from django.utils.functional import LazyObject, empty
 
@@ -54,7 +55,10 @@ def serialize_value(value):
         return [serialize_value(item) for item in value]
     if isinstance(value, dict):
         return {key: serialize_value(val) for key, val in value.items()}
-    if hasattr(value, 'name') and hasattr(value, 'path'):
+    if isinstance(value, FieldFile):
+        # FieldFile sem arquivo associado pode lançar erro em acesso a .path
+        return value.name or ''
+    if hasattr(value, 'name'):
         return value.name
     return value
 

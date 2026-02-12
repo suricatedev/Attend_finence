@@ -40,62 +40,61 @@ def auditoria_pre_save(sender, instance, **kwargs):
     if not instance.pk:
         return
     try:
+        # Buscar a versão atual do banco para comparar depois
         original = sender.objects.filter(pk=instance.pk).first()
         if not original:
             return
         old_data = serialize_instance(original, sensitive_fields=SENSITIVE_FIELDS)
         set_old_state(_get_state_key(instance), old_data)
     except Exception:
-        return
+        pass
 
 
 def auditoria_post_save(sender, instance, created, **kwargs):
     if not _should_log(sender):
         return
+    
     try:
         user, ip_address, user_agent, origem = _get_request_context()
         new_data = serialize_instance(instance, sensitive_fields=SENSITIVE_FIELDS)
+        
+        acao = 'create' if created else 'update'
+        old_data = None
+        campos_alterados = None
 
-        if created:
-            AuditoriaLog.objects.create(
-                app=instance._meta.app_label,
-                modelo=instance._meta.model_name,
-                objeto_id=str(instance.pk),
-                acao='create',
-                usuario=user,
-                dados_anteriores=None,
-                dados_novos=new_data,
-                campos_alterados=list(new_data.keys()),
-                ip_address=ip_address,
-                user_agent=user_agent,
-                origem=origem,
-            )
-            return
+        if not created:
+            state_key = _get_state_key(instance)
+            old_data = pop_old_state(state_key) or {}
+            campos_alterados = []
+            
+            # Comparar campos para ver o que mudou
+            for key, new_value in new_data.items():
+                if old_data.get(key) != new_value:
+                    campos_alterados.append(key)
+            
+            # Se nada mudou, não registra log de update
+            if not campos_alterados:
+                return
+        else:
+            # Para criação, todos os campos são "alterados"
+            campos_alterados = list(new_data.keys())
 
-        old_data = pop_old_state(_get_state_key(instance)) or {}
-        campos_alterados = []
-        for key, new_value in new_data.items():
-            if old_data.get(key) != new_value:
-                campos_alterados.append(key)
-
-        if not campos_alterados:
-            return
-
+        # Criar o log de auditoria
         AuditoriaLog.objects.create(
             app=instance._meta.app_label,
             modelo=instance._meta.model_name,
             objeto_id=str(instance.pk),
-            acao='update',
+            acao=acao,
             usuario=user,
             dados_anteriores=old_data,
-            dados_novos=new_data,
+            dados_novos=new_data if acao != 'delete' else None,
             campos_alterados=campos_alterados,
             ip_address=ip_address,
             user_agent=user_agent,
             origem=origem,
         )
-    except Exception:
-        return
+    except Exception as e:
+        print(f"❌ Erro na auditoria (post_save): {str(e)}")
 
 
 def auditoria_pre_delete(sender, instance, **kwargs):
@@ -117,13 +116,14 @@ def auditoria_pre_delete(sender, instance, **kwargs):
             user_agent=user_agent,
             origem=origem,
         )
-    except Exception:
-        return
+    except Exception as e:
+        print(f"❌ Erro na auditoria (pre_delete): {str(e)}")
 
 
 def connect_auditoria_signals():
     for model in apps.get_models():
         if _should_log(model):
+            # Usar dispatch_uid para evitar conexões duplicadas
             pre_save.connect(
                 auditoria_pre_save,
                 sender=model,
@@ -144,4 +144,5 @@ def connect_auditoria_signals():
             )
 
 
+# Conectar os signals
 connect_auditoria_signals()
