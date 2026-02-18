@@ -18,7 +18,7 @@ from .models import (
 )
 from servicos.models import Servico
 from django.utils import timezone
-from datetime import time, datetime
+from datetime import time, datetime, timedelta
 import json
 from usuarios.decorators import group_required
 from .audit_utils import serialize_instance
@@ -50,6 +50,56 @@ def registrar_exclusao_solicitacao(solicitacao, usuario=None, origem=None, motiv
         origem=origem,
         motivo=motivo,
         dados_snapshot=serialize_instance(solicitacao),
+    )
+
+
+def garantir_log_movimentacao_card(request, solicitacao, status_anterior, status_novo, justificativa_estorno=''):
+    """
+    Garante que a movimentação de card seja registrada no AuditoriaLog.
+    Se o signal já tiver registrado corretamente, não duplica.
+    """
+    if status_anterior == status_novo:
+        return
+
+    janela_inicio = timezone.now() - timedelta(seconds=10)
+    log_recente = AuditoriaLog.objects.filter(
+        app='solicitacoes',
+        modelo='solicitacoes',
+        objeto_id=str(solicitacao.pk),
+        acao='update',
+        origem=request.path,
+        data_hora__gte=janela_inicio,
+    ).order_by('-data_hora').first()
+
+    if log_recente:
+        antes = log_recente.dados_anteriores or {}
+        depois = log_recente.dados_novos or {}
+        if antes.get('status') == status_anterior and depois.get('status') == status_novo:
+            return
+
+    ip_address = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip() or request.META.get('REMOTE_ADDR')
+    user_agent = request.META.get('HTTP_USER_AGENT', '')
+
+    dados_anteriores = {'status': status_anterior}
+    dados_novos = {'status': status_novo}
+    campos_alterados = ['status']
+
+    if justificativa_estorno and status_novo == 'estorno':
+        dados_novos['justificativa_estorno'] = justificativa_estorno
+        campos_alterados.append('justificativa_estorno')
+
+    AuditoriaLog.objects.create(
+        app='solicitacoes',
+        modelo='solicitacoes',
+        objeto_id=str(solicitacao.pk),
+        acao='update',
+        usuario=request.user if request.user.is_authenticated else None,
+        dados_anteriores=dados_anteriores,
+        dados_novos=dados_novos,
+        campos_alterados=campos_alterados,
+        ip_address=ip_address,
+        user_agent=user_agent,
+        origem=request.path,
     )
 
 
@@ -2246,6 +2296,15 @@ def atualizar_status(request):
                 justificativa=justificativa_estorno,
                 origem=request.path,
             )
+
+        # Garantir registro de auditoria para toda movimentação de card
+        garantir_log_movimentacao_card(
+            request=request,
+            solicitacao=solicitacao,
+            status_anterior=status_anterior,
+            status_novo=status_db,
+            justificativa_estorno=justificativa_estorno,
+        )
         
         # Buscar contadores atualizados do banco de dados
         contadores = {
