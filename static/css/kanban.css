@@ -1,4 +1,4 @@
-﻿/* Kanban Board */
+/* Kanban Board */
 .kanban-board {
     flex: 1;
     padding: 30px;
@@ -1319,6 +1319,38 @@
     color: #1e7e34;
 }
 
+/* Coluna: Estorno - Laranja */
+.kanban-column[data-column="refund"] {
+    border-left: 4px solid #ff8c00;
+    background: linear-gradient(135deg, #fff3e0 0%, #ffffff 100%);
+}
+
+.kanban-column[data-column="refund"]::before {
+    background: linear-gradient(90deg, #ff8c00 0%, #ffb347 50%, #ff8c00 100%);
+    opacity: 0.9;
+}
+
+.kanban-column[data-column="refund"] .column-header {
+    background: linear-gradient(135deg, rgba(255, 140, 0, 0.12) 0%, rgba(255, 140, 0, 0.05) 100%);
+    border-bottom: 1px solid rgba(255, 140, 0, 0.3);
+}
+
+.kanban-column[data-column="refund"] .column-title i {
+    color: #e67e00;
+}
+
+.kanban-column[data-column="refund"] .card-count {
+    background: #ff8c00;
+    color: white;
+    box-shadow: 0 2px 8px rgba(255, 140, 0, 0.35);
+}
+
+.kanban-column[data-column="refund"] .add-card-btn:hover,
+.kanban-column[data-column="refund"] .column-menu-btn:hover {
+    background: rgba(255, 140, 0, 0.2);
+    color: #e67e00;
+}
+
 /* Cores das Linhas dos Cards baseadas no Status */
 
 /* Linha colorida no topo dos cards */
@@ -1361,6 +1393,13 @@
     border-bottom: 1px solid #1e7e34;
 }
 
+/* Status: Estorno - Laranja */
+.card-status-refund::before {
+    background: linear-gradient(90deg, #ff8c00 0%, #ff8c00 100%);
+    border-top: 1px solid #e67e00;
+    border-bottom: 1px solid #e67e00;
+}
+
 /* Ajustes para garantir que a linha colorida seja visível */
 .card {
     position: relative;
@@ -1398,6 +1437,10 @@
 
 .card-status-completed::before {
     background: linear-gradient(90deg, #28a745 0%, #4caf50 50%, #28a745 100%);
+}
+
+.card-status-refund::before {
+    background: linear-gradient(90deg, #ff8c00 0%, #ffb347 50%, #ff8c00 100%);
 }
 
 /* Efeito de pulso para cards ativos */
@@ -1439,6 +1482,11 @@
 .card-status-completed::before {
     border-top: 1px solid #1e7e34;
     border-bottom: 1px solid #1e7e34;
+}
+
+.card-status-refund::before {
+    border-top: 1px solid #e67e00;
+    border-bottom: 1px solid #e67e00;
 }
 
 /* Responsividade - Telas muito grandes */

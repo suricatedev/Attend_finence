@@ -6,6 +6,7 @@ STATUS_CHOICES = [
     ('aprovado', 'Aprovado'),
     ('recusado', 'Recusado'),
     ('concluido', 'Concluído'),
+    ('estorno', 'Estorno'),
 ]
 
 PRIORIDADE_CHOICES = [
@@ -219,3 +220,33 @@ class AuditoriaLog(models.Model):
 
     def __str__(self):
         return f"{self.app}.{self.modelo} #{self.objeto_id} - {self.acao}"
+
+
+class EstornoHistorico(models.Model):
+    """Histórico de movimentações para o card Estorno."""
+
+    solicitacao = models.ForeignKey(
+        Solicitacoes,
+        on_delete=models.CASCADE,
+        related_name='historico_estorno',
+        verbose_name="Solicitação",
+    )
+    usuario = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Usuário",
+    )
+    status_anterior = models.CharField(max_length=30, choices=STATUS_CHOICES, verbose_name="Status Anterior")
+    status_novo = models.CharField(max_length=30, choices=STATUS_CHOICES, default='estorno', verbose_name="Status Novo")
+    origem = models.CharField(max_length=255, blank=True, null=True, verbose_name="Origem")
+    data_hora = models.DateTimeField(auto_now_add=True, verbose_name="Data/Hora")
+
+    class Meta:
+        verbose_name = "Histórico de Estorno"
+        verbose_name_plural = "Histórico de Estornos"
+        ordering = ['-data_hora']
+
+    def __str__(self):
+        return f"Estorno {self.solicitacao.ticket} ({self.status_anterior} -> {self.status_novo})"

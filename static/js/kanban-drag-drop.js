@@ -61,12 +61,13 @@
                 targetColumnContent.appendChild(cardElement);
                 
                 // Atualizar classes do card
-                cardElement.classList.remove('dragging', 'card-status-pending', 'card-status-rejected', 'card-status-approved', 'card-status-completed');
+                cardElement.classList.remove('dragging', 'card-status-pending', 'card-status-rejected', 'card-status-approved', 'card-status-completed', 'card-status-refund');
                 const statusClasses = {
                     'planning': 'card-status-pending',
                     'test': 'card-status-rejected',
                     'launch': 'card-status-approved',
-                    'success': 'card-status-completed'
+                    'success': 'card-status-completed',
+                    'refund': 'card-status-refund'
                 };
                 if (statusClasses[newColumn]) {
                     cardElement.classList.add(statusClasses[newColumn]);
@@ -79,7 +80,8 @@
                         'planning': 'Solicitação pendente de análise',
                         'test': 'Solicitação recusada',
                         'launch': 'Solicitação aprovada',
-                        'success': 'Solicitação concluída'
+                        'success': 'Solicitação concluída',
+                        'refund': 'Solicitação movida para estorno'
                     };
                     const stageElement = cardFooter.querySelector('.card-stage');
                     if (stageElement) {
@@ -122,7 +124,8 @@
                                 'planning': 'Nenhuma solicitação pendente',
                                 'test': 'Nenhuma solicitação recusada',
                                 'launch': 'Nenhuma solicitação aprovada',
-                                'success': 'Nenhuma solicitação concluída'
+                                'success': 'Nenhuma solicitação concluída',
+                                'refund': 'Nenhuma solicitação em estorno'
                             };
                             emptyMsg.innerHTML = `
                                 <i class="fas fa-inbox"></i>
@@ -165,7 +168,8 @@
                     'planning': 'Pendente',
                     'test': 'Recusado',
                     'launch': 'Aprovado',
-                    'success': 'Concluído'
+                    'success': 'Concluído',
+                    'refund': 'Estorno'
                 };
                 
                 if (typeof Utils !== 'undefined' && typeof Utils.showNotification === 'function') {
@@ -382,13 +386,27 @@
         }
         
         console.log('📋 Movendo card:', { cardId: draggedCardId, sourceColumnName, targetColumnName });
+
+        // Regra de permissão: apenas Financeiro pode mover para Estorno
+        if (targetColumnName === 'refund' && !window.USER_IS_FINANCEIRO) {
+            if (typeof Utils !== 'undefined' && typeof Utils.showNotification === 'function') {
+                Utils.showNotification('❌ Apenas usuários do Financeiro podem mover para Estorno.', 'error');
+            } else {
+                alert('Apenas usuários do Financeiro podem mover para Estorno.');
+            }
+            draggedCardElement.classList.remove('dragging');
+            draggedCardId = null;
+            draggedCardElement = null;
+            return;
+        }
         
         // Mapeamento de nomes
         const columnNames = {
             'planning': 'Pendente',
             'test': 'Recusado',
             'launch': 'Aprovado',
-            'success': 'Concluído'
+            'success': 'Concluído',
+            'refund': 'Estorno'
         };
         
         // Obter título do card

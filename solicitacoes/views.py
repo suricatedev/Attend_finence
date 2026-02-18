@@ -6,7 +6,15 @@ from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Q
-from .models import Solicitacoes, SolicitacaoRotaItem, Recebedor, ClienteEmpresa, SolicitacaoTecnico, AuditoriaLog
+from .models import (
+    Solicitacoes,
+    SolicitacaoRotaItem,
+    Recebedor,
+    ClienteEmpresa,
+    SolicitacaoTecnico,
+    AuditoriaLog,
+    EstornoHistorico,
+)
 from servicos.models import Servico
 from django.utils import timezone
 from datetime import time, datetime
@@ -1413,6 +1421,7 @@ def receber_dados(request):
                     'recusado': [],
                     'aprovado': [],
                     'concluido': [],
+                    'estorno': [],
                 }
                 
                 objetos_para_corrigir = []
@@ -1434,6 +1443,7 @@ def receber_dados(request):
                 solicitacoes_recusados = solicitacoes_por_status['recusado']
                 solicitacoes_aprovado = solicitacoes_por_status['aprovado']
                 solicitacoes_concluido = solicitacoes_por_status['concluido']
+                solicitacoes_estorno = solicitacoes_por_status['estorno']
                 
                 return render(request, 'home/index.html', {
                     'solicitacoes_pendentes': solicitacoes_pendentes,
@@ -1447,6 +1457,8 @@ def receber_dados(request):
 
                     'solicitacoes_concluido': solicitacoes_concluido,
                     'num_solicitacoes_concluido': len(solicitacoes_concluido),
+                    'solicitacoes_estorno': solicitacoes_estorno,
+                    'num_solicitacoes_estorno': len(solicitacoes_estorno),
                 })
             except Exception as e:
                 import traceback
@@ -1463,6 +1475,8 @@ def receber_dados(request):
                     'num_solicitacoes_aprovado': 0,
                     'solicitacoes_concluido': [],
                     'num_solicitacoes_concluido': 0,
+                    'solicitacoes_estorno': [],
+                    'num_solicitacoes_estorno': 0,
                 })
         else:
             return redirect('login')
@@ -1853,6 +1867,7 @@ def obter_contagens_solicitacoes(request):
             'recusado': solicitacoes_deslocamento.filter(status='recusado').count(),
             'aprovado': solicitacoes_deslocamento.filter(status='aprovado').count(),
             'concluido': solicitacoes_deslocamento.filter(status='concluido').count(),
+            'estorno': solicitacoes_deslocamento.filter(status='estorno').count(),
         }
         
         # Contar por status para técnico
@@ -1861,6 +1876,7 @@ def obter_contagens_solicitacoes(request):
             'recusado': solicitacoes_tecnico.filter(status='recusado').count(),
             'aprovado': solicitacoes_tecnico.filter(status='aprovado').count(),
             'concluido': solicitacoes_tecnico.filter(status='concluido').count(),
+            'estorno': solicitacoes_tecnico.filter(status='estorno').count(),
         }
         
         # Contar total de itens de técnico (SolicitacaoTecnico)
@@ -2119,7 +2135,7 @@ def atualizar_status(request):
         }, status=401)
     
     # Verificar permissão: apenas Financeiro e Admin podem mudar status
-    from usuarios.decorators import user_can_change_status
+    from usuarios.decorators import user_can_change_status, user_is_financeiro
     if not user_can_change_status(request.user):
         return JsonResponse({
             'success': False,
@@ -2137,7 +2153,8 @@ def atualizar_status(request):
             'planning': 'pendente',
             'test': 'recusado',
             'launch': 'aprovado',
-            'success': 'concluido'
+            'success': 'concluido',
+            'refund': 'estorno',
         }
         
         # Validar dados
@@ -2149,6 +2166,13 @@ def atualizar_status(request):
         
         # Converter fila para status
         status_db = normalizar_status(status_mapping.get(new_status, new_status))
+
+        # Apenas Financeiro pode enviar para ESTORNO
+        if status_db == 'estorno' and not user_is_financeiro(request.user):
+            return JsonResponse({
+                'success': False,
+                'message': 'Apenas usuários do grupo Financeiro podem mover solicitações para Estorno.'
+            }, status=403)
         
         # Buscar e atualizar solicitação
         from django.utils import timezone
@@ -2169,6 +2193,16 @@ def atualizar_status(request):
         
         solicitacao.status = status_db
         solicitacao.save()
+
+        # Registrar histórico específico de estorno em tabela dedicada
+        if status_db == 'estorno' and status_anterior != 'estorno':
+            EstornoHistorico.objects.create(
+                solicitacao=solicitacao,
+                usuario=request.user,
+                status_anterior=status_anterior,
+                status_novo='estorno',
+                origem=request.path,
+            )
         
         # Buscar contadores atualizados do banco de dados
         contadores = {
@@ -2176,6 +2210,7 @@ def atualizar_status(request):
             'recusado': Solicitacoes.objects.filter(status='recusado').count(),
             'aprovado': Solicitacoes.objects.filter(status='aprovado').count(),
             'concluido': Solicitacoes.objects.filter(status='concluido').count(),
+            'estorno': Solicitacoes.objects.filter(status='estorno').count(),
         }
         
         return JsonResponse({

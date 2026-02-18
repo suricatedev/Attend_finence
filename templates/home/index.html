@@ -17,19 +17,21 @@
     <script>
         window.MODAL_CONTROLLED_BY_BASE = true;
         window.USER_CAN_CHANGE_STATUS = {% if user|can_change_status %}true{% else %}false{% endif %};
+        window.USER_IS_FINANCEIRO = {% if user|is_financeiro %}true{% else %}false{% endif %};
         
         // Salvar valores originais dos contadores do backend
         window.originalCounters = {
             planning: {{ num_solicitacoes_pendentes|default:0 }},
             test: {{ num_solicitacoes_recusados|default:0 }},
             launch: {{ num_solicitacoes_aprovado|default:0 }},
-            success: {{ num_solicitacoes_concluido|default:0 }}
+            success: {{ num_solicitacoes_concluido|default:0 }},
+            refund: {{ num_solicitacoes_estorno|default:0 }}
         };
         
         // Função para atualizar contadores após filtrar (disponível globalmente)
         window.updateCardCountersAfterFilter = function() {
             const filterType = localStorage.getItem('filterType') || 'deslocamento';
-            const columns = ['planning', 'test', 'launch', 'success'];
+            const columns = ['planning', 'test', 'launch', 'success', 'refund'];
             
             columns.forEach(column => {
                 const columnElement = document.querySelector(`[data-column="${column}"]`);
@@ -644,6 +646,95 @@
                         {% endfor %}
                     </div>
                 </div>
+
+    <!-- Coluna Estorno -->
+                <div class="kanban-column" data-column="refund">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <i class="fas fa-undo-alt"></i>
+                            <span>Estorno</span>
+                <span class="card-count">{{ num_solicitacoes_estorno }}</span>
+                        </div>
+                        <div class="column-date-filter">
+                            <span class="selected-date-display" data-column="refund">Hoje</span>
+                            <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="refund">
+                                Hoje
+                            </button>
+                            <button class="date-filter-all-btn" title="Mostrar todos" data-column="refund">
+                                Todos
+                            </button>
+                            <button class="date-filter-btn" title="Filtrar por data" data-column="refund">
+                                <i class="fas fa-calendar-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="column-filter">
+                        <div class="filter-container">
+                            <i class="fas fa-search filter-icon"></i>
+                <input type="text" class="filter-input" placeholder="Filtrar cards..." data-column="refund">
+                            <button class="filter-clear-btn" title="Limpar filtro">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="column-content" data-column="refund">
+                        {% for solicitacao in solicitacoes_estorno %}
+            <div class="card card-status-refund" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
+                            <div class="card-header">
+                    <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
+                            </div>
+                            <div class="card-body">
+                    <h3 class="card-title">{{ solicitacao.titulo }}</h3>
+                                <div class="card-info">
+                                    <div class="info-item">
+                            <span class="info-value">#{{ solicitacao.ticket }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-user"></i>
+                                        <span class="info-label">SOLICITANTE</span>
+                            <span class="info-value">{{ solicitacao.nome_solicitante }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-user-check"></i>
+                                        <span class="info-label">RECEBEDOR</span>
+                            <span class="info-value">{{ solicitacao.nome_do_recebedor }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-dollar-sign"></i>
+                                        <span class="info-label">VALOR</span>
+                            <span class="info-value">R$ {{ solicitacao.get_valor_detalhados|floatformat:2 }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-calendar-plus"></i>
+                                        <span class="info-label">CRIAÇÃO</span>
+                            <span class="info-value">{{ solicitacao.data_de_criacao|date:"d/m/Y" }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-calendar-check"></i>
+                                        <span class="info-label">PAGAMENTO</span>
+                            <span class="info-value">{{ solicitacao.data_de_pagamento|date:"d/m/Y" }}</span>
+                                    </div>
+                                </div>
+                                <div class="card-time">
+                                    <i class="fas fa-undo-alt"></i>
+                                    <span>Em estorno</span>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <span class="card-stage">Solicitação movida para estorno</span>
+                            </div>
+                            <div class="expand-indicator" title="Clique para ver detalhes">
+                                <i class="fas fa-external-link-alt"></i>
+                            </div>
+                        </div>
+            {% empty %}
+            <div class="empty-column">
+                <i class="fas fa-inbox"></i>
+                <p>Nenhuma solicitação em estorno</p>
+            </div>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
        
 <!-- Formulário de usuário -->
@@ -765,7 +856,7 @@
                 </div>
                 <div class="date-filter-info">
                     <i class="fas fa-info-circle"></i>
-                    <span>O filtro será aplicado em todas as colunas (Pendente, Recusado, Aprovado e Concluído)</span>
+                    <span>O filtro será aplicado em todas as colunas (Pendente, Recusado, Aprovado, Concluído e Estorno)</span>
                 </div>
             </div>
             <div class="date-filter-modal-footer">
@@ -869,7 +960,7 @@
                 const selectedDate = dateFilterInput.value;
                 if (selectedDate) {
                     // Aplicar filtro em todas as colunas
-                    const columns = ['planning', 'test', 'launch', 'success'];
+                    const columns = ['planning', 'test', 'launch', 'success', 'refund'];
                     columns.forEach(column => {
                         filterCardsByDate(column, selectedDate);
                         showSelectedDate(column, selectedDate);
@@ -882,7 +973,7 @@
 
             // Limpar filtro de TODAS as colunas - volta para HOJE (padrão)
             clearDateFilter.addEventListener('click', function() {
-                const columns = ['planning', 'test', 'launch', 'success'];
+                const columns = ['planning', 'test', 'launch', 'success', 'refund'];
                 columns.forEach(column => {
                     filterByToday(column);
                 });
@@ -1012,7 +1103,7 @@
                 
                 if (filterType === 'tecnico') {
                     // Se for técnico, mostrar todos os cards (não filtrar por data)
-                    const columns = ['planning', 'test', 'launch', 'success'];
+                    const columns = ['planning', 'test', 'launch', 'success', 'refund'];
                     columns.forEach(column => {
                         showAllCards(column);
                     });
@@ -1020,7 +1111,7 @@
                 }
                 
                 // Para deslocamento, aplicar filtro de hoje normalmente
-                const columns = ['planning', 'test', 'launch', 'success'];
+                const columns = ['planning', 'test', 'launch', 'success', 'refund'];
                 columns.forEach(column => {
                     filterByToday(column);
                 });

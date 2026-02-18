@@ -1,4 +1,4 @@
-﻿// JavaScript específico para Kanban Board
+// JavaScript específico para Kanban Board
 
 class KanbanManager {
     constructor() {
@@ -174,7 +174,8 @@ class KanbanManager {
             'pendente': 'planning',
             'recusado': 'test',
             'aprovado': 'launch',
-            'concluido': 'success'
+            'concluido': 'success',
+            'estorno': 'refund'
         };
 
         const columnType = statusMap[status] || 'planning';
@@ -251,7 +252,8 @@ class KanbanManager {
             'pendente': 'Solicitação pendente de análise',
             'aprovado': 'Aprovado e em processamento',
             'recusado': 'Solicitação recusada - orçamento insuficiente',
-            'concluido': 'Solicitação concluída com sucesso'
+            'concluido': 'Solicitação concluída com sucesso',
+            'estorno': 'Solicitação movida para estorno'
         };
         return statusMap[status] || status;
     }
@@ -332,14 +334,15 @@ class KanbanManager {
                 cardElement.classList.remove('dragging');
                 
                 // Remover classes de status antigas
-                cardElement.classList.remove('card-status-pending', 'card-status-rejected', 'card-status-approved', 'card-status-completed');
+                cardElement.classList.remove('card-status-pending', 'card-status-rejected', 'card-status-approved', 'card-status-completed', 'card-status-refund');
                 
                 // Adicionar classe de status correta
                 const statusClasses = {
                     'planning': 'card-status-pending',
                     'test': 'card-status-rejected',
                     'launch': 'card-status-approved',
-                    'success': 'card-status-completed'
+                    'success': 'card-status-completed',
+                    'refund': 'card-status-refund'
                 };
                 
                 if (statusClasses[newColumn]) {
@@ -353,7 +356,8 @@ class KanbanManager {
                         'planning': 'Solicitação pendente de análise',
                         'test': 'Solicitação recusada',
                         'launch': 'Solicitação aprovada',
-                        'success': 'Solicitação concluída'
+                        'success': 'Solicitação concluída',
+                        'refund': 'Solicitação movida para estorno'
                     };
                     const stageElement = cardFooter.querySelector('.card-stage');
                     if (stageElement) {
@@ -468,7 +472,8 @@ class KanbanManager {
                                 'planning': 'Nenhuma solicitação pendente',
                                 'test': 'Nenhuma solicitação recusada',
                                 'launch': 'Nenhuma solicitação aprovada',
-                                'success': 'Nenhuma solicitação concluída'
+                                'success': 'Nenhuma solicitação concluída',
+                                'refund': 'Nenhuma solicitação em estorno'
                             };
                             emptyMsg.innerHTML = `
                                 <i class="fas fa-inbox"></i>
@@ -519,7 +524,8 @@ class KanbanManager {
                     'planning': 'Pendente',
                     'test': 'Recusado',
                     'launch': 'Aprovado',
-                    'success': 'Concluído'
+                    'success': 'Concluído',
+                    'refund': 'Estorno'
                 };
                 
                 if (typeof Utils !== 'undefined' && Utils.showNotification) {
@@ -596,7 +602,8 @@ class KanbanManager {
             'planning': 'pendente',
             'test': 'recusado',
             'launch': 'aprovado',
-            'success': 'concluido'
+            'success': 'concluido',
+            'refund': 'estorno'
         };
         return columnMap[column] || 'pendente';
     }
@@ -626,7 +633,8 @@ class KanbanManager {
             planning: 0,
             test: 0,
             launch: 0,
-            success: 0
+            success: 0,
+            refund: 0
         };
 
         this.cards.forEach(card => {

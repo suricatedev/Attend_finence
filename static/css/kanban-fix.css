@@ -162,6 +162,38 @@
     color: #1e7e34 !important;
 }
 
+/* Coluna: Estorno - Laranja */
+.kanban-column[data-column="refund"] {
+    border-left: 4px solid #ff8c00 !important;
+    background: linear-gradient(135deg, #fff3e0 0%, #ffffff 100%) !important;
+}
+
+.kanban-column[data-column="refund"]::before {
+    background: linear-gradient(90deg, #ff8c00 0%, #ffb347 50%, #ff8c00 100%) !important;
+    opacity: 0.9 !important;
+}
+
+.kanban-column[data-column="refund"] .column-header {
+    background: linear-gradient(135deg, rgba(255, 140, 0, 0.12) 0%, rgba(255, 140, 0, 0.05) 100%) !important;
+    border-bottom: 1px solid rgba(255, 140, 0, 0.3) !important;
+}
+
+.kanban-column[data-column="refund"] .column-title i {
+    color: #e67e00 !important;
+}
+
+.kanban-column[data-column="refund"] .card-count {
+    background: #ff8c00 !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(255, 140, 0, 0.35) !important;
+}
+
+.kanban-column[data-column="refund"] .add-card-btn:hover,
+.kanban-column[data-column="refund"] .column-menu-btn:hover {
+    background: rgba(255, 140, 0, 0.2) !important;
+    color: #e67e00 !important;
+}
+
 /* Responsividade para telas grandes */
 @media (min-width: 1920px) {
     .kanban-board {
