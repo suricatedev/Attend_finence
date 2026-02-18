@@ -24,7 +24,7 @@
     }
     
     // Função para mover card diretamente
-    function moveCardDirectly(cardId, newColumn, cardElement, oldColumn) {
+    function moveCardDirectly(cardId, newColumn, cardElement, oldColumn, justificativaEstorno = '') {
         console.log('📦 Movendo card diretamente:', { cardId, newColumn, oldColumn });
         
         // Buscar coluna de destino
@@ -45,7 +45,8 @@
             },
             body: JSON.stringify({
                 card_id: cardId,
-                status: newColumn
+                status: newColumn,
+                justificativa_estorno: justificativaEstorno
             })
         })
         .then(response => response.json())
@@ -372,20 +373,30 @@
             return;
         }
         
+        // Congelar referências locais para evitar perder dados após eventos de dragend
+        const movingCardId = draggedCardId;
+        const movingCardElement = draggedCardElement;
+
         // Verificar coluna de origem
-        const sourceColumn = draggedCardElement.closest('.kanban-column');
+        const sourceColumn = movingCardElement.closest('.kanban-column');
         const sourceColumnName = sourceColumn?.dataset.column;
+
+        const limparEstadoDrag = () => {
+            if (movingCardElement) {
+                movingCardElement.classList.remove('dragging');
+            }
+            draggedCardId = null;
+            draggedCardElement = null;
+        };
         
         // Se for a mesma coluna, não fazer nada
         if (sourceColumnName === targetColumnName) {
             console.log('ℹ️ Card já está nesta coluna');
-            draggedCardElement.classList.remove('dragging');
-            draggedCardId = null;
-            draggedCardElement = null;
+            limparEstadoDrag();
             return;
         }
         
-        console.log('📋 Movendo card:', { cardId: draggedCardId, sourceColumnName, targetColumnName });
+        console.log('📋 Movendo card:', { cardId: movingCardId, sourceColumnName, targetColumnName });
 
         // Regra de permissão: apenas Financeiro pode mover para Estorno
         if (targetColumnName === 'refund' && !window.USER_IS_FINANCEIRO) {
@@ -394,9 +405,7 @@
             } else {
                 alert('Apenas usuários do Financeiro podem mover para Estorno.');
             }
-            draggedCardElement.classList.remove('dragging');
-            draggedCardId = null;
-            draggedCardElement = null;
+            limparEstadoDrag();
             return;
         }
         
@@ -410,28 +419,50 @@
         };
         
         // Obter título do card
-        const cardTitle = draggedCardElement.querySelector('.card-title')?.textContent?.trim() || `Solicitação #${draggedCardId}`;
+        const cardTitle = movingCardElement.querySelector('.card-title')?.textContent?.trim() || `Solicitação #${movingCardId}`;
         const sourceName = columnNames[sourceColumnName] || 'Coluna original';
         const targetName = columnNames[targetColumnName] || 'Coluna destino';
         
-        // Mostrar confirmação
-        const confirmMessage = `Deseja realmente mover a solicitação "${cardTitle}" de "${sourceName}" para "${targetName}"?`;
-        
-        if (confirm(confirmMessage)) {
-            // Tentar usar o KanbanManager se disponível, senão mover diretamente
+        const processarMovimentacao = (justificativaEstorno) => {
             const manager = window.kanbanManager;
             if (manager && typeof manager.moveCard === 'function') {
                 console.log('✅ Movendo card via KanbanManager');
-                manager.moveCard(draggedCardId, targetColumnName);
+                manager.moveCard(movingCardId, targetColumnName, justificativaEstorno);
             } else {
                 console.log('ℹ️ Movendo card diretamente (sem KanbanManager)');
-                moveCardDirectly(draggedCardId, targetColumnName, draggedCardElement, sourceColumnName);
+                moveCardDirectly(movingCardId, targetColumnName, movingCardElement, sourceColumnName, justificativaEstorno);
             }
+        };
+
+        if (targetColumnName === 'refund') {
+            if (typeof window.solicitarJustificativaEstorno !== 'function') {
+                if (typeof Utils !== 'undefined' && typeof Utils.showNotification === 'function') {
+                    Utils.showNotification('❌ Não foi possível abrir o card de justificativa.', 'error');
+                }
+                limparEstadoDrag();
+                return;
+            }
+
+            window.solicitarJustificativaEstorno({
+                cardTitle,
+                sourceName,
+                targetName
+            }).then((justificativaEstorno) => {
+                if (!justificativaEstorno) {
+                    limparEstadoDrag();
+                    return;
+                }
+                processarMovimentacao(justificativaEstorno);
+            });
+            return;
+        }
+
+        // Confirmação para demais mudanças de status
+        const confirmMessage = `Deseja realmente mover a solicitação "${cardTitle}" de "${sourceName}" para "${targetName}"?`;
+        if (confirm(confirmMessage)) {
+            processarMovimentacao('');
         } else {
-            // Cancelar
-            draggedCardElement.classList.remove('dragging');
-            draggedCardId = null;
-            draggedCardElement = null;
+            limparEstadoDrag();
         }
     }
     

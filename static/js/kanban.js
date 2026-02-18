@@ -258,8 +258,31 @@ class KanbanManager {
         return statusMap[status] || status;
     }
 
-    moveCard(cardId, newColumn) {
+    moveCard(cardId, newColumn, justificativaEstorno = '') {
         console.log('🔄 moveCard chamado:', { cardId, newColumn });
+
+        if (newColumn === 'refund' && !justificativaEstorno) {
+            if (typeof window.solicitarJustificativaEstorno !== 'function') {
+                if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                    Utils.showNotification('❌ Não foi possível abrir o card de justificativa.', 'error');
+                }
+                return;
+            }
+
+            const cardPreview = document.querySelector(`[data-card-id="${cardId}"]`);
+            const cardTitle = cardPreview?.querySelector('.card-title')?.textContent?.trim() || `Solicitação #${cardId}`;
+            window.solicitarJustificativaEstorno({
+                cardTitle,
+                sourceName: 'Status atual',
+                targetName: 'Estorno'
+            }).then((textoJustificativa) => {
+                if (!textoJustificativa) {
+                    return;
+                }
+                this.moveCard(cardId, newColumn, textoJustificativa);
+            });
+            return;
+        }
         
         // Buscar o card no DOM - pode haver múltiplos com mesmo ID, pegar o primeiro
         const cardElements = document.querySelectorAll(`[data-card-id="${cardId}"]`);
@@ -319,7 +342,8 @@ class KanbanManager {
             },
             body: JSON.stringify({
                 card_id: cardId,
-                status: newColumn
+                status: newColumn,
+                justificativa_estorno: justificativaEstorno
             })
         })
         .then(response => {

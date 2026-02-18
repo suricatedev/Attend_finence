@@ -818,6 +818,25 @@ async function extractCardData(card) {
     // Extrair status
     const status = card.querySelector('.card-stage');
     data.status = status ? status.textContent : 'Pendente';
+
+    // Buscar justificativa de estorno mais recente no backend
+    data.justificativaEstorno = '';
+    data.dataJustificativaEstorno = '';
+    const solicitacaoIdParaDetalhes = card.getAttribute('data-card-id');
+    if (solicitacaoIdParaDetalhes) {
+        try {
+            const detalhesResp = await fetch(`/solicitacoes/obter-detalhes-completos/${solicitacaoIdParaDetalhes}/`);
+            if (detalhesResp.ok) {
+                const detalhesJson = await detalhesResp.json();
+                if (detalhesJson.success && detalhesJson.dados) {
+                    data.justificativaEstorno = detalhesJson.dados.justificativa_estorno || '';
+                    data.dataJustificativaEstorno = detalhesJson.dados.data_justificativa_estorno || '';
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ Não foi possível carregar justificativa de estorno:', error);
+        }
+    }
     
     return data;
 }
@@ -1443,6 +1462,21 @@ function populateCardDetails(data) {
         statusElement.textContent = data.status || 'Pendente';
         statusElement.className = `detail-value status-${(data.status?.toLowerCase().replace(/\s+/g, '') || 'pendente')}`;
     }
+
+    // Exibir justificativa de estorno (quando houver)
+    const justificativaContainer = document.getElementById('modal-estorno-justificativa-container');
+    const justificativaElement = document.getElementById('modal-justificativa-estorno');
+    if (justificativaContainer && justificativaElement) {
+        const justificativa = (data.justificativaEstorno || '').trim();
+        if (justificativa) {
+            justificativaContainer.style.display = '';
+            const dataTexto = data.dataJustificativaEstorno ? ` (${data.dataJustificativaEstorno})` : '';
+            justificativaElement.textContent = `${justificativa}${dataTexto}`;
+        } else {
+            justificativaContainer.style.display = 'none';
+            justificativaElement.textContent = 'N/A';
+        }
+    }
     
     // Preencher datas
     const dataCriacaoElement = document.getElementById('modal-data-criacao');
@@ -1674,6 +1708,7 @@ function moveCardToFila(cardId, targetFila) {
     const targetColumn = document.querySelector(`[data-column="${targetFila}"] .column-content`);
     if (!targetColumn) return;
     
+    const executarMovimentacao = (justificativaEstorno) => {
     // Mostrar loading
     showNotification('Salvando...', 'info');
     
@@ -1686,21 +1721,23 @@ function moveCardToFila(cardId, targetFila) {
         },
         body: JSON.stringify({
             card_id: cardId,
-            status: targetFila
+            status: targetFila,
+            justificativa_estorno: justificativaEstorno
         })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             // Remover classes de status antigas
-            card.classList.remove('card-status-pending', 'card-status-rejected', 'card-status-approved', 'card-status-completed');
+            card.classList.remove('card-status-pending', 'card-status-rejected', 'card-status-approved', 'card-status-completed', 'card-status-refund');
             
             // Adicionar nova classe de status baseada na fila de destino
             const statusClasses = {
                 'planning': 'card-status-pending',
                 'test': 'card-status-rejected', 
                 'launch': 'card-status-approved',
-                'success': 'card-status-completed'
+                'success': 'card-status-completed',
+                'refund': 'card-status-refund'
             };
             
             if (statusClasses[targetFila]) {
@@ -1800,6 +1837,29 @@ function moveCardToFila(cardId, targetFila) {
         
         showNotification(errorMessage, 'error');
     });
+    };
+
+    if (targetFila === 'refund') {
+        if (typeof window.solicitarJustificativaEstorno !== 'function') {
+            showNotification('Não foi possível abrir o card de justificativa.', 'error');
+            return;
+        }
+
+        const cardTitle = card.querySelector('.card-title')?.textContent?.trim() || `Solicitação #${cardId}`;
+        window.solicitarJustificativaEstorno({
+            cardTitle,
+            sourceName: 'Status atual',
+            targetName: 'Estorno'
+        }).then((justificativaEstorno) => {
+            if (!justificativaEstorno) {
+                return;
+            }
+            executarMovimentacao(justificativaEstorno);
+        });
+        return;
+    }
+
+    executarMovimentacao('');
 }
 
 // Função para pegar o CSRF token
@@ -1824,7 +1884,8 @@ function getFilaName(filaValue) {
         'planning': 'Pendente',
         'test': 'Recusado',
         'launch': 'Aprovado',
-        'success': 'Concluído'
+        'success': 'Concluído',
+        'refund': 'Estorno'
     };
     return filas[filaValue] || filaValue;
 }

@@ -798,6 +798,10 @@
                             <div class="detail-label">Status</div>
                             <div class="detail-value" id="modal-status">Pendente</div>
                     </div>
+                        <div class="detail-item" id="modal-estorno-justificativa-container" style="display:none;">
+                            <div class="detail-label">Justificativa do Estorno</div>
+                            <div class="detail-value" id="modal-justificativa-estorno">N/A</div>
+                        </div>
                     </div>
                 </div>
 
@@ -871,11 +875,41 @@
             </div>
         </div>
     </div>
+
+    <div class="estorno-justificativa-modal" id="estornoJustificativaModal">
+        <div class="estorno-justificativa-overlay"></div>
+        <div class="estorno-justificativa-card">
+            <div class="estorno-justificativa-header">
+                <div>
+                    <h3 id="estornoJustificativaTitle">Justificativa para mover para Estorno</h3>
+                    <p id="estornoJustificativaSubtitle">Informe o motivo desta movimentação</p>
+                </div>
+                <button type="button" class="estorno-justificativa-close" id="closeEstornoJustificativa" aria-label="Fechar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="estorno-justificativa-body">
+                <label for="estornoJustificativaInput">Justificativa</label>
+                <textarea
+                    id="estornoJustificativaInput"
+                    rows="5"
+                    maxlength="1000"
+                    placeholder="Descreva por que esta solicitação está indo para ESTORNO."
+                ></textarea>
+                <div class="estorno-justificativa-error" id="estornoJustificativaError"></div>
+            </div>
+            <div class="estorno-justificativa-footer">
+                <button type="button" class="btn-cancelar-estorno" id="cancelEstornoJustificativa">Cancelar</button>
+                <button type="button" class="btn-salvar-estorno" id="saveEstornoJustificativa">Confirmar Estorno</button>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block extra_js %}
     <script src="{% static 'js/csrf-helper.js' %}"></script>
     <script src="{% static 'js/app.js' %}"></script>
+    <script src="{% static 'js/estorno-justificativa.js' %}"></script>
     <script src="{% static 'js/card-modal.js' %}"></script>
     <script src="{% static 'js/kanban.js' %}"></script>
     <script src="{% static 'js/kanban-drag-drop.js' %}"></script>

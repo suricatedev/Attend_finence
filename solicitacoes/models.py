@@ -250,6 +250,7 @@ class EstornoHistorico(models.Model):
     )
     status_anterior = models.CharField(max_length=30, choices=STATUS_CHOICES, verbose_name="Status Anterior")
     status_novo = models.CharField(max_length=30, choices=STATUS_CHOICES, default='estorno', verbose_name="Status Novo")
+    justificativa = models.TextField(verbose_name="Justificativa")
     origem = models.CharField(max_length=255, blank=True, null=True, verbose_name="Origem")
     data_hora = models.DateTimeField(auto_now_add=True, verbose_name="Data/Hora")
 

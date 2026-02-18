@@ -1923,6 +1923,135 @@
     .route-total-value {
         font-size: 1rem;
     }}
+
+/* Card de justificativa para Estorno */
+.estorno-justificativa-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 12000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.estorno-justificativa-modal.show {
+    display: flex;
+}
+
+.estorno-justificativa-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.estorno-justificativa-card {
+    position: relative;
+    width: min(640px, calc(100vw - 32px));
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(255, 140, 0, 0.35);
+    overflow: hidden;
+}
+
+.estorno-justificativa-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 16px 18px;
+    background: linear-gradient(135deg, #fff5e8 0%, #ffe4c2 100%);
+    border-bottom: 1px solid rgba(255, 140, 0, 0.25);
+}
+
+.estorno-justificativa-header h3 {
+    margin: 0 0 6px 0;
+    font-size: 1.1rem;
+    color: #8f4c00;
+}
+
+.estorno-justificativa-header p {
+    margin: 0;
+    color: #5f5f5f;
+    font-size: 0.9rem;
+}
+
+.estorno-justificativa-close {
+    border: none;
+    background: transparent;
+    color: #8f4c00;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+}
+
+.estorno-justificativa-close:hover {
+    background: rgba(255, 140, 0, 0.12);
+}
+
+.estorno-justificativa-body {
+    padding: 16px 18px 12px;
+}
+
+.estorno-justificativa-body label {
+    display: block;
+    margin-bottom: 8px;
+    color: #444;
+    font-weight: 600;
+}
+
+.estorno-justificativa-body textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 120px;
+    border: 1px solid rgba(84, 67, 80, 0.28);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    color: #222;
+}
+
+.estorno-justificativa-body textarea:focus {
+    outline: none;
+    border-color: #ff8c00;
+    box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.18);
+}
+
+.estorno-justificativa-error {
+    display: none;
+    margin-top: 8px;
+    color: #c62828;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.estorno-justificativa-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 10px 18px 18px;
+}
+
+.btn-cancelar-estorno,
+.btn-salvar-estorno {
+    border: none;
+    border-radius: 9px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-cancelar-estorno {
+    background: #ececec;
+    color: #444;
+}
+
+.btn-salvar-estorno {
+    background: linear-gradient(135deg, #ff8c00 0%, #ffa42b 100%);
+    color: #fff;
+}
     background: linear-gradient(90deg, #17a2b8 0%, #17a2b8 100%);
     border-top: 1px solid #117a8b;
     border-bottom: 1px solid #117a8b;

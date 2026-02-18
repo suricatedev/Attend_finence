@@ -729,6 +729,12 @@
                     <div class="info-item-value" style="white-space: pre-wrap;">{{ solicitacao.descricao_em_rota }}</div>
                 </div>
                 {% endif %}
+                {% if justificativa_estorno %}
+                <div class="info-item" style="grid-column: 1 / -1;">
+                    <div class="info-item-label">Justificativa do Estorno{% if data_justificativa_estorno %} ({{ data_justificativa_estorno|date:"d/m/Y H:i" }}){% endif %}</div>
+                    <div class="info-item-value" style="white-space: pre-wrap;">{{ justificativa_estorno }}</div>
+                </div>
+                {% endif %}
             </div>
         </div>
         

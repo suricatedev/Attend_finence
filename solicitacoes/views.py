@@ -1724,6 +1724,11 @@ def obter_detalhes_completos(request, solicitacao_id):
         # Verificar se é solicitação de técnico
         is_tecnico = solicitacao.is_tecnico()
         
+        ultimo_estorno = EstornoHistorico.objects.filter(
+            solicitacao=solicitacao,
+            status_novo='estorno'
+        ).order_by('-data_hora').first()
+
         # Informações básicas
         dados = {
             'id': solicitacao.id,
@@ -1740,6 +1745,8 @@ def obter_detalhes_completos(request, solicitacao_id):
             'status': solicitacao.status,
             'prioridade': solicitacao.prioridade,
             'is_tecnico': is_tecnico,
+            'justificativa_estorno': ultimo_estorno.justificativa if ultimo_estorno else '',
+            'data_justificativa_estorno': ultimo_estorno.data_hora.strftime('%d/%m/%Y %H:%M') if ultimo_estorno else '',
             'descricao': solicitacao.descricao or 'N/A',
             'data_criacao': solicitacao.data_de_criacao.strftime('%d/%m/%Y') if solicitacao.data_de_criacao else 'N/A',
             'data_pagamento': solicitacao.data_de_pagamento.strftime('%d/%m/%Y') if solicitacao.data_de_pagamento else 'N/A',
@@ -1936,6 +1943,11 @@ def exportar_relatorio_card(request, solicitacao_id):
             'solicitacoes_tecnico__cliente_empresa'
         ).get(id=solicitacao_id)
         
+        ultimo_estorno = EstornoHistorico.objects.filter(
+            solicitacao=solicitacao,
+            status_novo='estorno'
+        ).order_by('-data_hora').first()
+
         # Verificar se é solicitação de técnico
         is_tecnico = solicitacao.is_tecnico()
         
@@ -2051,6 +2063,8 @@ def exportar_relatorio_card(request, solicitacao_id):
             'valor_total_detalhados': valor_total_detalhados,
             'valor_receita': valor_receita_calculado,  # Usar valor calculado, não o salvo
             'itens_rota': itens_rota_data,
+            'justificativa_estorno': ultimo_estorno.justificativa if ultimo_estorno else '',
+            'data_justificativa_estorno': ultimo_estorno.data_hora if ultimo_estorno else None,
             'data_exportacao': timezone.now(),
         }
         
@@ -2167,6 +2181,7 @@ def atualizar_status(request):
         data = json.loads(request.body)
         card_id = data.get('card_id')
         new_status = data.get('status')
+        justificativa_estorno = (data.get('justificativa_estorno') or '').strip()
         
         # Mapear filas do Kanban para status do banco
         status_mapping = {
@@ -2203,6 +2218,13 @@ def atualizar_status(request):
         # Se o status mudou, atualizar data_entrada_status
         if status_anterior != status_db:
             solicitacao.data_entrada_status = agora
+
+        # Justificativa obrigatória ao mover para Estorno
+        if status_db == 'estorno' and status_anterior != 'estorno' and not justificativa_estorno:
+            return JsonResponse({
+                'success': False,
+                'message': 'Informe a justificativa para mover a solicitação para Estorno.'
+            }, status=400)
         
         # Registrar momento exato da aprovação para manter a métrica mesmo após outras mudanças
         if status_db == 'aprovado' and not solicitacao.data_aprovacao:
@@ -2221,6 +2243,7 @@ def atualizar_status(request):
                 usuario=request.user,
                 status_anterior=status_anterior,
                 status_novo='estorno',
+                justificativa=justificativa_estorno,
                 origem=request.path,
             )
         
