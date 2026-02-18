@@ -95,6 +95,16 @@ class Solicitacoes(models.Model):
     valor_receita = models.FloatField(default=0.0, verbose_name="Valor de Receita")
     valor_em_rota = models.FloatField(default=0.0, verbose_name="Valor EM ROTA")
     descricao_em_rota = models.TextField(blank=True, null=True, verbose_name="Descrição do Pagamento EM ROTA")
+    excluida = models.BooleanField(default=False, verbose_name="Excluída")
+    data_exclusao = models.DateTimeField(null=True, blank=True, verbose_name="Data de Exclusão")
+    excluida_por = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='solicitacoes_excluidas',
+        verbose_name="Excluída por",
+    )
 
     def __str__(self):
         return f"{self.titulo} - {self.status}"
@@ -250,3 +260,36 @@ class EstornoHistorico(models.Model):
 
     def __str__(self):
         return f"Estorno {self.solicitacao.ticket} ({self.status_anterior} -> {self.status_novo})"
+
+
+class SolicitacaoExcluida(models.Model):
+    """Arquivo de solicitações excluídas logicamente."""
+
+    solicitacao = models.ForeignKey(
+        Solicitacoes,
+        on_delete=models.PROTECT,
+        related_name='arquivo_exclusao',
+        verbose_name="Solicitação",
+    )
+    ticket = models.CharField(max_length=25, verbose_name="Ticket")
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, verbose_name="Status")
+    tipo = models.CharField(max_length=20, choices=Solicitacoes.TIPO_CHOICES, verbose_name="Tipo")
+    usuario = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Usuário que excluiu",
+    )
+    origem = models.CharField(max_length=255, null=True, blank=True, verbose_name="Origem")
+    motivo = models.TextField(null=True, blank=True, verbose_name="Motivo")
+    dados_snapshot = models.JSONField(null=True, blank=True, verbose_name="Snapshot")
+    data_hora = models.DateTimeField(auto_now_add=True, verbose_name="Data/Hora")
+
+    class Meta:
+        verbose_name = "Solicitação Excluída"
+        verbose_name_plural = "Solicitações Excluídas"
+        ordering = ['-data_hora']
+
+    def __str__(self):
+        return f"{self.ticket} - excluída em {self.data_hora:%d/%m/%Y %H:%M:%S}"

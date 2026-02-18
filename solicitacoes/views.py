@@ -14,12 +14,14 @@ from .models import (
     SolicitacaoTecnico,
     AuditoriaLog,
     EstornoHistorico,
+    SolicitacaoExcluida,
 )
 from servicos.models import Servico
 from django.utils import timezone
 from datetime import time, datetime
 import json
 from usuarios.decorators import group_required
+from .audit_utils import serialize_instance
 
 STATUS_VALIDOS = {choice[0] for choice in Solicitacoes._meta.get_field('status').choices}
 
@@ -35,6 +37,20 @@ def normalizar_status(valor):
     if valor_normalizado not in STATUS_VALIDOS:
         return 'pendente'
     return valor_normalizado
+
+
+def registrar_exclusao_solicitacao(solicitacao, usuario=None, origem=None, motivo=None):
+    """Cria registro na tabela de exclusões sem deletar o objeto principal."""
+    SolicitacaoExcluida.objects.create(
+        solicitacao=solicitacao,
+        ticket=solicitacao.ticket,
+        status=solicitacao.status,
+        tipo=solicitacao.tipo,
+        usuario=usuario if usuario and usuario.is_authenticated else None,
+        origem=origem,
+        motivo=motivo,
+        dados_snapshot=serialize_instance(solicitacao),
+    )
 
 
 def ping(request):
@@ -1414,7 +1430,7 @@ def receber_dados(request):
                 # Otimização: Buscar todas as solicitações de uma vez
                 # e usar select_related e prefetch_related para otimizar queries
                 # Retornar todas as solicitações (o filtro será aplicado no frontend)
-                todas_solicitacoes = Solicitacoes.objects.select_related('nome_solicitante', 'servico').prefetch_related('itens_rota__servico', 'solicitacoes_tecnico').all()
+                todas_solicitacoes = Solicitacoes.objects.select_related('nome_solicitante', 'servico').prefetch_related('itens_rota__servico', 'solicitacoes_tecnico').filter(excluida=False)
                 
                 solicitacoes_por_status = {
                     'pendente': [],
@@ -1853,11 +1869,15 @@ def obter_contagens_solicitacoes(request):
         # Contar solicitações de deslocamento (que não são de técnico)
         # Uma solicitação é de deslocamento se não tem nenhum item de técnico associado
         solicitacoes_deslocamento = Solicitacoes.objects.filter(
+            excluida=False
+        ).filter(
             ~Exists(SolicitacaoTecnico.objects.filter(solicitacao_id=OuterRef('pk')))
         )
         
         # Contar solicitações de técnico (que têm itens de técnico)
         solicitacoes_tecnico = Solicitacoes.objects.filter(
+            excluida=False
+        ).filter(
             Exists(SolicitacaoTecnico.objects.filter(solicitacao_id=OuterRef('pk')))
         )
         
@@ -2176,7 +2196,7 @@ def atualizar_status(request):
         
         # Buscar e atualizar solicitação
         from django.utils import timezone
-        solicitacao = Solicitacoes.objects.get(id=card_id)
+        solicitacao = Solicitacoes.objects.get(id=card_id, excluida=False)
         status_anterior = solicitacao.status
         agora = timezone.now()
         
@@ -2206,11 +2226,11 @@ def atualizar_status(request):
         
         # Buscar contadores atualizados do banco de dados
         contadores = {
-            'pendente': Solicitacoes.objects.filter(status='pendente').count(),
-            'recusado': Solicitacoes.objects.filter(status='recusado').count(),
-            'aprovado': Solicitacoes.objects.filter(status='aprovado').count(),
-            'concluido': Solicitacoes.objects.filter(status='concluido').count(),
-            'estorno': Solicitacoes.objects.filter(status='estorno').count(),
+            'pendente': Solicitacoes.objects.filter(status='pendente', excluida=False).count(),
+            'recusado': Solicitacoes.objects.filter(status='recusado', excluida=False).count(),
+            'aprovado': Solicitacoes.objects.filter(status='aprovado', excluida=False).count(),
+            'concluido': Solicitacoes.objects.filter(status='concluido', excluida=False).count(),
+            'estorno': Solicitacoes.objects.filter(status='estorno', excluida=False).count(),
         }
         
         return JsonResponse({
@@ -2377,8 +2397,8 @@ def excluir_solicitacao(request, solicitacao_id):
         }, status=403)
     
     try:
-        # Buscar a solicitação
-        solicitacao = Solicitacoes.objects.get(id=solicitacao_id)
+        # Buscar a solicitação não excluída
+        solicitacao = Solicitacoes.objects.get(id=solicitacao_id, excluida=False)
         
         # Verificar se é recusada
         if solicitacao.status != 'recusado':
@@ -2388,7 +2408,16 @@ def excluir_solicitacao(request, solicitacao_id):
             }, status=400)
         
         ticket = solicitacao.ticket
-        solicitacao.delete()
+        registrar_exclusao_solicitacao(
+            solicitacao=solicitacao,
+            usuario=request.user,
+            origem=request.path,
+            motivo="Exclusão individual de solicitação recusada",
+        )
+        solicitacao.excluida = True
+        solicitacao.data_exclusao = timezone.now()
+        solicitacao.excluida_por = request.user
+        solicitacao.save(update_fields=['excluida', 'data_exclusao', 'excluida_por'])
         
         return JsonResponse({
             'success': True,
@@ -2429,8 +2458,8 @@ def excluir_solicitacoes_recusadas(request):
         }, status=403)
     
     try:
-        # Buscar todas as solicitações recusadas
-        solicitacoes_recusadas = Solicitacoes.objects.filter(status='recusado')
+        # Buscar todas as solicitações recusadas não excluídas
+        solicitacoes_recusadas = Solicitacoes.objects.filter(status='recusado', excluida=False)
         quantidade = solicitacoes_recusadas.count()
         
         if quantidade == 0:
@@ -2440,8 +2469,19 @@ def excluir_solicitacoes_recusadas(request):
                 'quantidade': 0
             })
         
-        # Excluir todas as solicitações recusadas
-        solicitacoes_recusadas.delete()
+        # Exclusão lógica em lote
+        agora = timezone.now()
+        for solicitacao in solicitacoes_recusadas:
+            registrar_exclusao_solicitacao(
+                solicitacao=solicitacao,
+                usuario=request.user,
+                origem=request.path,
+                motivo="Exclusão em lote de solicitações recusadas",
+            )
+            solicitacao.excluida = True
+            solicitacao.data_exclusao = agora
+            solicitacao.excluida_por = request.user
+            solicitacao.save(update_fields=['excluida', 'data_exclusao', 'excluida_por'])
         
         return JsonResponse({
             'success': True,
@@ -2545,8 +2585,8 @@ def verificar_id_existente(request):
 
     
     try:
-        # Buscar todas as solicitações recusadas
-        solicitacoes_recusadas = Solicitacoes.objects.filter(status='recusado')
+        # Buscar todas as solicitações recusadas não excluídas
+        solicitacoes_recusadas = Solicitacoes.objects.filter(status='recusado', excluida=False)
         quantidade = solicitacoes_recusadas.count()
         
         if quantidade == 0:
@@ -2556,8 +2596,19 @@ def verificar_id_existente(request):
                 'quantidade': 0
             })
         
-        # Excluir todas as solicitações recusadas
-        solicitacoes_recusadas.delete()
+        # Exclusão lógica em lote
+        agora = timezone.now()
+        for solicitacao in solicitacoes_recusadas:
+            registrar_exclusao_solicitacao(
+                solicitacao=solicitacao,
+                usuario=request.user,
+                origem=request.path,
+                motivo="Exclusão em lote de solicitações recusadas",
+            )
+            solicitacao.excluida = True
+            solicitacao.data_exclusao = agora
+            solicitacao.excluida_por = request.user
+            solicitacao.save(update_fields=['excluida', 'data_exclusao', 'excluida_por'])
         
         return JsonResponse({
             'success': True,
@@ -2661,8 +2712,8 @@ def verificar_id_existente(request):
 
     
     try:
-        # Buscar todas as solicitações recusadas
-        solicitacoes_recusadas = Solicitacoes.objects.filter(status='recusado')
+        # Buscar todas as solicitações recusadas não excluídas
+        solicitacoes_recusadas = Solicitacoes.objects.filter(status='recusado', excluida=False)
         quantidade = solicitacoes_recusadas.count()
         
         if quantidade == 0:
@@ -2672,8 +2723,19 @@ def verificar_id_existente(request):
                 'quantidade': 0
             })
         
-        # Excluir todas as solicitações recusadas
-        solicitacoes_recusadas.delete()
+        # Exclusão lógica em lote
+        agora = timezone.now()
+        for solicitacao in solicitacoes_recusadas:
+            registrar_exclusao_solicitacao(
+                solicitacao=solicitacao,
+                usuario=request.user,
+                origem=request.path,
+                motivo="Exclusão em lote de solicitações recusadas",
+            )
+            solicitacao.excluida = True
+            solicitacao.data_exclusao = agora
+            solicitacao.excluida_por = request.user
+            solicitacao.save(update_fields=['excluida', 'data_exclusao', 'excluida_por'])
         
         return JsonResponse({
             'success': True,
