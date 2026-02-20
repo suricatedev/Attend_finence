@@ -229,10 +229,20 @@ body {
     height: 100vh;
     margin-left: 160px;
     overflow: hidden;
+    min-height: 0;
+}
+
+/* Área rolável do conteúdo (header fixo, resto com scroll) */
+.main-content-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: scroll; /* barra vertical à direita */
+    overflow-x: scroll;  /* barra horizontal sempre visível embaixo da tela */
 }
 
 /* Header */
 .header {
+    flex-shrink: 0;
     background: #F4F7F5;
     padding: 15px 30px;
     box-shadow: 0 2px 10px rgba(28, 28, 28, 0.1);

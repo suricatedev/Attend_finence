@@ -30,13 +30,50 @@ body {
     -ms-overflow-style: none !important;
 }
 
-/* Garantir que não haja scroll horizontal */
+/* Garantir que não haja scroll horizontal (em desktop) */
 .app-container,
 .main-content,
-.kanban-board,
 .reports-fullscreen {
     overflow-x: hidden !important;
     max-width: 100vw !important;
+}
+
+/* Exceção: tela pequena (até 991px) – scroll horizontal e vertical na .main-content-body, barra visível embaixo da tela */
+@media screen and (max-width: 991px) {
+    .main-content-body {
+        overflow-x: scroll !important;
+        overflow-y: scroll !important;
+    }
+    .main-content-body::-webkit-scrollbar {
+        display: block !important;
+        width: 12px !important;
+        height: 12px !important;
+    }
+    .main-content-body::-webkit-scrollbar-track {
+        background: #e8e8e8 !important;
+    }
+    .main-content-body::-webkit-scrollbar-thumb {
+        background: #544350 !important;
+        border-radius: 6px !important;
+    }
+    .main-content-body {
+        scrollbar-width: thin !important;
+        scrollbar-color: #544350 #e8e8e8 !important;
+        -ms-overflow-style: auto !important;
+    }
+    .main-content .kanban-board,
+    .main-content-body .kanban-board {
+        overflow-x: visible !important;
+        max-width: none !important;
+    }
+}
+
+/* Em desktop o board não faz scroll horizontal */
+@media screen and (min-width: 992px) {
+    .kanban-board {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+    }
 }
 
 /* Remover scroll horizontal de todas as seções principais */
@@ -46,7 +83,7 @@ section,
     overflow-x: hidden !important;
 }
 
-/* Mobile - ocultar todas as scrollbars */
+/* Mobile - ocultar todas as scrollbars (exceto .main-content-body já tratada acima) */
 @media screen and (max-width: 768px) {
     *::-webkit-scrollbar {
         display: none !important;
@@ -60,84 +97,20 @@ section,
         overflow-x: hidden !important;
     }
     
-    /* Permitir scroll vertical onde necessário, mas sem scrollbar visível */
-    .column-content,
-    .table-container,
-    .modal-body {
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
+    .main-content-body {
+        overflow-x: scroll !important;
+        overflow-y: scroll !important;
+    }
+    .main-content-body::-webkit-scrollbar {
+        display: block !important;
+        width: 12px !important;
+        height: 12px !important;
+    }
+    .main-content-body {
+        scrollbar-width: thin !important;
+        -ms-overflow-style: auto !important;
     }
     
-    .column-content::-webkit-scrollbar,
-    .table-container::-webkit-scrollbar,
-    .modal-body::-webkit-scrollbar {
-        display: none !important;
-    }
-}
-
-
-
-   ======================================== */
-
-/* Remover scroll horizontal em todo o site */
-html {
-    overflow-x: hidden !important;
-    width: 100% !important;
-    max-width: 100vw !important;
-}
-
-body {
-    overflow-x: hidden !important;
-    width: 100% !important;
-    max-width: 100vw !important;
-}
-
-/* Ocultar scrollbars visíveis mas manter funcionalidade */
-::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    background: transparent !important;
-}
-
-/* Firefox e IE - ocultar scrollbar */
-html,
-body {
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-}
-
-/* Garantir que não haja scroll horizontal */
-.app-container,
-.main-content,
-.kanban-board,
-.reports-fullscreen {
-    overflow-x: hidden !important;
-    max-width: 100vw !important;
-}
-
-/* Remover scroll horizontal de todas as seções principais */
-section,
-.kanban-column,
-.column-content {
-    overflow-x: hidden !important;
-}
-
-/* Mobile - ocultar todas as scrollbars */
-@media screen and (max-width: 768px) {
-    *::-webkit-scrollbar {
-        display: none !important;
-        width: 0 !important;
-        height: 0 !important;
-    }
-    
-    * {
-        scrollbar-width: none !important;
-        -ms-overflow-style: none !important;
-        overflow-x: hidden !important;
-    }
-    
-    /* Permitir scroll vertical onde necessário, mas sem scrollbar visível */
     .column-content,
     .table-container,
     .modal-body {

@@ -2,6 +2,57 @@
    RESPONSIVIDADE KANBAN - TELAS MENORES
    ======================================== */
 
+/* Até 991px: scroll na .main-content-body; barra horizontal visível embaixo da tela */
+@media screen and (max-width: 991px) {
+    /* Forçar scroll horizontal e vertical na área de conteúdo (sobrepõe hide-scrollbars) */
+    .main-content-body {
+        overflow-x: scroll !important;
+        overflow-y: scroll !important;
+        max-width: 100% !important;
+        -webkit-overflow-scrolling: touch;
+    }
+    /* Barra de rolagem visível embaixo da tela (sobrepõe hide-scrollbars) */
+    .main-content-body::-webkit-scrollbar {
+        display: block !important;
+        width: 12px !important;
+        height: 12px !important;
+    }
+    .main-content-body::-webkit-scrollbar-track {
+        background: #e8e8e8 !important;
+        border-radius: 0 !important;
+    }
+    .main-content-body::-webkit-scrollbar-thumb {
+        background: #544350 !important;
+        border-radius: 6px !important;
+    }
+    .main-content-body::-webkit-scrollbar-thumb:hover {
+        background: #1C1C1C !important;
+    }
+    .main-content-body {
+        scrollbar-width: thin !important;
+        scrollbar-color: #544350 #e8e8e8 !important;
+        -ms-overflow-style: auto !important;
+    }
+    /* Kanban mais largo que a tela para ativar o scroll horizontal */
+    html body .main-content-body .kanban-board,
+    html body .main-content .kanban-board,
+    body .main-content-body .kanban-board {
+        height: auto !important;
+        min-height: min(400px, 60vh) !important;
+        overflow-y: visible !important;
+        overflow-x: visible !important;
+        max-width: none !important;
+        min-width: 920px !important;
+        width: max-content !important;
+    }
+    html body .main-content-body .kanban-board .kanban-column,
+    html body .main-content .kanban-board .kanban-column {
+        height: auto !important;
+        min-height: 280px !important;
+        max-height: none !important;
+    }
+}
+
 /* REGRA CRÍTICA: Forçar layout vertical em telas pequenas (mobile) */
 @media screen and (max-width: 768px) {
     /* Forçar com máxima especificidade possível */
@@ -33,10 +84,12 @@
     html body #kanbanBoard.kanban-board {
         padding: 15px !important;
         gap: 12px !important;
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
-        -webkit-overflow-scrolling: touch;
+        overflow-x: visible !important;
+        overflow-y: visible !important;
         flex-direction: row !important;
+        max-width: none !important;
+        min-width: 920px !important;
+        width: max-content !important;
     }
     
     html body .main-content .kanban-board .kanban-column,
@@ -617,10 +670,12 @@
     html body #kanbanBoard.kanban-board {
         padding: 15px !important;
         gap: 12px !important;
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
-        -webkit-overflow-scrolling: touch;
+        overflow-x: visible !important;
+        overflow-y: visible !important;
         flex-direction: row !important;
+        max-width: none !important;
+        min-width: 920px !important;
+        width: max-content !important;
     }
     
     html body .main-content .kanban-board .kanban-column,
