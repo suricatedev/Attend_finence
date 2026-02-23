@@ -321,6 +321,7 @@
                         </div>
                         <div class="column-total-value" data-column="planning">
                             Total: <span class="column-total-amount">R$ 0,00</span>
+                            <button type="button" class="column-export-txt-btn" data-column="planning" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                         </div>
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="planning">Hoje</span>
@@ -346,7 +347,7 @@
                     </div>
                     <div class="column-content" data-column="planning">
                         {% for solicitacao in solicitacoes_pendentes %}
-            <div class="card card-status-pending" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
+            <div class="card card-status-pending" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-ticket="{{ solicitacao.ticket }}" data-valor-receita="{{ solicitacao.valor_receita|default:0|unlocalize }}" data-servico-nome="{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% endif %}" data-solicitante-nome="{{ solicitacao.nome_solicitante.get_full_name|default:solicitacao.nome_solicitante.username }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -413,6 +414,7 @@
                         </div>
                         <div class="column-total-value" data-column="test">
                             Total: <span class="column-total-amount">R$ 0,00</span>
+                            <button type="button" class="column-export-txt-btn" data-column="test" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                         </div>
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="test">Hoje</span>
@@ -438,7 +440,7 @@
                     </div>
                     <div class="column-content" data-column="test">
             {% for solicitacao in solicitacoes_recusados %}
-            <div class="card card-status-rejected" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
+            <div class="card card-status-rejected" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-ticket="{{ solicitacao.ticket }}" data-valor-receita="{{ solicitacao.valor_receita|default:0|unlocalize }}" data-servico-nome="{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% endif %}" data-solicitante-nome="{{ solicitacao.nome_solicitante.get_full_name|default:solicitacao.nome_solicitante.username }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -510,6 +512,7 @@
                         </div>
                         <div class="column-total-value" data-column="launch">
                             Total: <span class="column-total-amount">R$ 0,00</span>
+                            <button type="button" class="column-export-txt-btn" data-column="launch" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                         </div>
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="launch">Hoje</span>
@@ -535,7 +538,7 @@
                     </div>
                     <div class="column-content" data-column="launch">
                         {% for solicitacao in solicitacoes_aprovado %}
-            <div class="card card-status-approved" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
+            <div class="card card-status-approved" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-ticket="{{ solicitacao.ticket }}" data-valor-receita="{{ solicitacao.valor_receita|default:0|unlocalize }}" data-servico-nome="{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% endif %}" data-solicitante-nome="{{ solicitacao.nome_solicitante.get_full_name|default:solicitacao.nome_solicitante.username }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -602,6 +605,7 @@
                         </div>
                         <div class="column-total-value" data-column="success">
                             Total: <span class="column-total-amount">R$ 0,00</span>
+                            <button type="button" class="column-export-txt-btn" data-column="success" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                         </div>
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="success">Hoje</span>
@@ -627,7 +631,7 @@
                     </div>
                     <div class="column-content" data-column="success">
                         {% for solicitacao in solicitacoes_concluido %}
-            <div class="card card-status-completed" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
+            <div class="card card-status-completed" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-ticket="{{ solicitacao.ticket }}" data-valor-receita="{{ solicitacao.valor_receita|default:0|unlocalize }}" data-servico-nome="{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% endif %}" data-solicitante-nome="{{ solicitacao.nome_solicitante.get_full_name|default:solicitacao.nome_solicitante.username }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -694,6 +698,7 @@
                         </div>
                         <div class="column-total-value" data-column="refund">
                             Total: <span class="column-total-amount">R$ 0,00</span>
+                            <button type="button" class="column-export-txt-btn" data-column="refund" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                         </div>
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="refund">Hoje</span>
@@ -719,7 +724,7 @@
                     </div>
                     <div class="column-content" data-column="refund">
                         {% for solicitacao in solicitacoes_estorno %}
-            <div class="card card-status-refund" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
+            <div class="card card-status-refund" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-ticket="{{ solicitacao.ticket }}" data-valor-receita="{{ solicitacao.valor_receita|default:0|unlocalize }}" data-servico-nome="{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% endif %}" data-solicitante-nome="{{ solicitacao.nome_solicitante.get_full_name|default:solicitacao.nome_solicitante.username }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -1421,6 +1426,59 @@
                     alert('Erro ao excluir solicitação. Por favor, tente novamente.');
                 });
             }
+        });
+
+        // Exportar todas as solicitações filtradas da coluna para TXT (template Deslocamento)
+        function buildCardExportText(card) {
+            const ticket = card.getAttribute('data-ticket') || '';
+            const valor = parseFloat(String(card.getAttribute('data-valor') || '0').replace(',', '.')) || 0;
+            const valorReceita = parseFloat(String(card.getAttribute('data-valor-receita') || '0').replace(',', '.')) || 0;
+            const servicoNome = card.getAttribute('data-servico-nome') || '';
+            const solicitanteNome = card.getAttribute('data-solicitante-nome') || card.getAttribute('data-solicitante') || '';
+            const isTecnico = card.getAttribute('data-is-tecnico') === 'true';
+            function fmt(v) { return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+            const adiantamento = valor - valorReceita;
+            const tipoLabel = isTecnico ? 'Solicitação de técnico' : 'Deslocamento';
+            const linhaDetalhes = `(TICKET: ${ticket}) - Valor do deslocamento: R$ ${fmt(adiantamento)} - tipo de atividade: ${servicoNome || '-'} (valor da atividade: R$ ${fmt(valorReceita)})`;
+            return [
+                `${tipoLabel} (${solicitanteNome})`,
+                '',
+                linhaDetalhes,
+                '',
+                '',
+                `Adiantamento - R$ ${fmt(adiantamento)}`,
+                `Receita - R$ ${fmt(valorReceita)}`,
+                '',
+                '————————'
+            ].join('\r\n');
+        }
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.column-export-txt-btn');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const column = btn.getAttribute('data-column');
+            const columnContent = document.querySelector(`.column-content[data-column="${column}"]`);
+            if (!columnContent) return;
+            const cards = columnContent.querySelectorAll('.card[data-card-id]:not(.empty-column)');
+            const visibleCards = [];
+            cards.forEach(card => {
+                const style = window.getComputedStyle(card);
+                if (style.display !== 'none' && style.visibility !== 'hidden' && !card.classList.contains('filtered-out') && card.offsetParent !== null) {
+                    visibleCards.push(card);
+                }
+            });
+            const blocos = visibleCards.map(card => buildCardExportText(card));
+            const texto = blocos.length ? blocos.join('\r\n\r\n') : '';
+            const nomesColuna = { planning: 'pendente', test: 'recusado', launch: 'aprovado', success: 'concluido', refund: 'estorno' };
+            const nomeArquivo = (nomesColuna[column] || column) + '_export.txt';
+            const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = nomeArquivo;
+            a.click();
+            URL.revokeObjectURL(url);
         });
     </script>
     
