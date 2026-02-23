@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load usuarios_tags %}
+{% load l10n %}
 
 {% block title %}Solicitações - Sistema de Gestão Financeira{% endblock %}
 
@@ -62,8 +63,32 @@
                     }
                 }
             });
+            window.updateColumnTotalsAfterFilter();
         };
-        
+
+        // Soma dos valores totais por coluna (apenas cards visíveis / filtrados)
+        window.updateColumnTotalsAfterFilter = function() {
+            const columns = ['planning', 'test', 'launch', 'success', 'refund'];
+            columns.forEach(column => {
+                const columnEl = document.querySelector(`.kanban-column[data-column="${column}"]`);
+                if (!columnEl) return;
+                const columnContent = columnEl.querySelector('.column-content');
+                const totalEl = columnEl.querySelector('.column-total-amount');
+                if (!columnContent || !totalEl) return;
+                let total = 0;
+                columnContent.querySelectorAll('.card[data-card-id]:not(.empty-column)').forEach(card => {
+                    const style = window.getComputedStyle(card);
+                    if (style.display === 'none' || style.visibility === 'hidden' || card.classList.contains('filtered-out') || card.offsetParent === null) return;
+                    const v = card.getAttribute('data-valor');
+                    if (v !== null && v !== '') {
+                        const num = parseFloat(String(v).replace(',', '.')) || 0;
+                        total += num;
+                    }
+                });
+                totalEl.textContent = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            });
+        };
+
         // Função global para aplicar filtro IMEDIATAMENTE
         window.applyFilterFast = function() {
             const filterType = localStorage.getItem('filterType') || 'deslocamento';
@@ -294,6 +319,9 @@
                             <span>Pendente</span>
                 <span class="card-count">{{ num_solicitacoes_pendentes }}</span>
                         </div>
+                        <div class="column-total-value" data-column="planning">
+                            Total: <span class="column-total-amount">R$ 0,00</span>
+                        </div>
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="planning">Hoje</span>
                             <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="planning">
@@ -318,7 +346,7 @@
                     </div>
                     <div class="column-content" data-column="planning">
                         {% for solicitacao in solicitacoes_pendentes %}
-            <div class="card card-status-pending" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
+            <div class="card card-status-pending" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -383,6 +411,9 @@
                             <span>Recusado</span>
                 <span class="card-count">{{ num_solicitacoes_recusados }}</span>
                         </div>
+                        <div class="column-total-value" data-column="test">
+                            Total: <span class="column-total-amount">R$ 0,00</span>
+                        </div>
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="test">Hoje</span>
                             <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="test">
@@ -407,7 +438,7 @@
                     </div>
                     <div class="column-content" data-column="test">
             {% for solicitacao in solicitacoes_recusados %}
-            <div class="card card-status-rejected" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
+            <div class="card card-status-rejected" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -477,6 +508,9 @@
                             <span>Aprovado</span>
                 <span class="card-count">{{ num_solicitacoes_aprovado }}</span>
                         </div>
+                        <div class="column-total-value" data-column="launch">
+                            Total: <span class="column-total-amount">R$ 0,00</span>
+                        </div>
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="launch">Hoje</span>
                             <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="launch">
@@ -501,7 +535,7 @@
                     </div>
                     <div class="column-content" data-column="launch">
                         {% for solicitacao in solicitacoes_aprovado %}
-            <div class="card card-status-approved" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
+            <div class="card card-status-approved" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -566,6 +600,9 @@
                             <span>Concluído</span>
                 <span class="card-count">{{ num_solicitacoes_concluido }}</span>
                         </div>
+                        <div class="column-total-value" data-column="success">
+                            Total: <span class="column-total-amount">R$ 0,00</span>
+                        </div>
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="success">Hoje</span>
                             <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="success">
@@ -590,7 +627,7 @@
                     </div>
                     <div class="column-content" data-column="success">
                         {% for solicitacao in solicitacoes_concluido %}
-            <div class="card card-status-completed" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
+            <div class="card card-status-completed" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -655,6 +692,9 @@
                             <span>Estorno</span>
                 <span class="card-count">{{ num_solicitacoes_estorno }}</span>
                         </div>
+                        <div class="column-total-value" data-column="refund">
+                            Total: <span class="column-total-amount">R$ 0,00</span>
+                        </div>
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="refund">Hoje</span>
                             <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="refund">
@@ -679,7 +719,7 @@
                     </div>
                     <div class="column-content" data-column="refund">
                         {% for solicitacao in solicitacoes_estorno %}
-            <div class="card card-status-refund" draggable="true" data-card-id="{{ solicitacao.id }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
+            <div class="card card-status-refund" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
@@ -1243,6 +1283,10 @@
                     initializeCardExpansion();
                 }
                 
+                // Atualizar total da coluna (soma apenas dos cards visíveis após filtro de data)
+                if (typeof window.updateColumnTotalsAfterFilter === 'function') {
+                    window.updateColumnTotalsAfterFilter();
+                }
             }
             
             // Função para limpar filtro de data (mas manter filtro de tipo)
