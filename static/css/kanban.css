@@ -109,6 +109,90 @@
     color: #1C1C1C;
 }
 
+.column-selection-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 14px;
+    padding: 10px 12px;
+    margin: 4px 0;
+    background: rgba(255, 203, 87, 0.08);
+    border: 1px solid rgba(255, 203, 87, 0.25);
+    border-radius: 10px;
+    font-size: 0.82rem;
+    color: #544350;
+}
+.column-select-all-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #1C1C1C;
+    padding: 4px 0;
+    transition: color 0.2s ease;
+}
+.column-select-all-label:hover {
+    color: #544350;
+}
+.column-select-all-label input {
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    accent-color: #FFCB57;
+    cursor: pointer;
+}
+.column-move-selected {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.column-move-selected > span {
+    font-weight: 600;
+    color: #544350;
+    font-size: 0.8rem;
+}
+.column-move-select {
+    padding: 6px 10px 6px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(84, 67, 80, 0.25);
+    background: #fff;
+    font-size: 0.82rem;
+    font-weight: 500;
+    min-width: 120px;
+    color: #1C1C1C;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23544350' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+}
+.column-move-select:hover {
+    border-color: rgba(255, 203, 87, 0.6);
+}
+.column-move-select:focus {
+    outline: none;
+    border-color: #FFCB57;
+    box-shadow: 0 0 0 2px rgba(255, 203, 87, 0.25);
+}
+.card-header .card-select-checkbox {
+    margin: 0;
+    margin-right: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+    width: 15px;
+    height: 15px;
+    accent-color: #FFCB57;
+}
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .column-title i,
 .column-title .fas,
 .column-title .fa {

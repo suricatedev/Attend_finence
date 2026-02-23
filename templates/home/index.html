@@ -323,6 +323,19 @@
                             Total: <span class="column-total-amount">R$ 0,00</span>
                             <button type="button" class="column-export-txt-btn" data-column="planning" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                         </div>
+                        <div class="column-selection-actions" data-column="planning">
+                            <label class="column-select-all-label"><input type="checkbox" class="column-select-all-checkbox" data-column="planning"> Selecionar todas</label>
+                            <div class="column-move-selected">
+                                <span>Mover para:</span>
+                                <select class="column-move-select" data-column="planning" title="Mover selecionados para">
+                                    <option value="">-- Coluna --</option>
+                                    <option value="test">Recusado</option>
+                                    <option value="launch">Aprovado</option>
+                                    <option value="success">Concluído</option>
+                                    <option value="refund">Estorno</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="planning">Hoje</span>
                             <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="planning">
@@ -349,6 +362,7 @@
                         {% for solicitacao in solicitacoes_pendentes %}
             <div class="card card-status-pending" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-ticket="{{ solicitacao.ticket }}" data-valor-receita="{{ solicitacao.valor_receita|default:0|unlocalize }}" data-servico-nome="{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% endif %}" data-solicitante-nome="{{ solicitacao.nome_solicitante.get_full_name|default:solicitacao.nome_solicitante.username }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
+                                    <input type="checkbox" class="card-select-checkbox" title="Selecionar solicitação" aria-label="Selecionar">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
                             <div class="card-body">
@@ -416,6 +430,19 @@
                             Total: <span class="column-total-amount">R$ 0,00</span>
                             <button type="button" class="column-export-txt-btn" data-column="test" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                         </div>
+                        <div class="column-selection-actions" data-column="test">
+                            <label class="column-select-all-label"><input type="checkbox" class="column-select-all-checkbox" data-column="test"> Selecionar todas</label>
+                            <div class="column-move-selected">
+                                <span>Mover para:</span>
+                                <select class="column-move-select" data-column="test" title="Mover selecionados para">
+                                    <option value="">-- Coluna --</option>
+                                    <option value="planning">Pendente</option>
+                                    <option value="launch">Aprovado</option>
+                                    <option value="success">Concluído</option>
+                                    <option value="refund">Estorno</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="test">Hoje</span>
                             <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="test">
@@ -442,6 +469,7 @@
             {% for solicitacao in solicitacoes_recusados %}
             <div class="card card-status-rejected" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-ticket="{{ solicitacao.ticket }}" data-valor-receita="{{ solicitacao.valor_receita|default:0|unlocalize }}" data-servico-nome="{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% endif %}" data-solicitante-nome="{{ solicitacao.nome_solicitante.get_full_name|default:solicitacao.nome_solicitante.username }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
+                                    <input type="checkbox" class="card-select-checkbox" title="Selecionar solicitação" aria-label="Selecionar">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
                             <div class="card-body">
@@ -514,6 +542,19 @@
                             Total: <span class="column-total-amount">R$ 0,00</span>
                             <button type="button" class="column-export-txt-btn" data-column="launch" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                         </div>
+                        <div class="column-selection-actions" data-column="launch">
+                            <label class="column-select-all-label"><input type="checkbox" class="column-select-all-checkbox" data-column="launch"> Selecionar todas</label>
+                            <div class="column-move-selected">
+                                <span>Mover para:</span>
+                                <select class="column-move-select" data-column="launch" title="Mover selecionados para">
+                                    <option value="">-- Coluna --</option>
+                                    <option value="planning">Pendente</option>
+                                    <option value="test">Recusado</option>
+                                    <option value="success">Concluído</option>
+                                    <option value="refund">Estorno</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="launch">Hoje</span>
                             <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="launch">
@@ -540,6 +581,7 @@
                         {% for solicitacao in solicitacoes_aprovado %}
             <div class="card card-status-approved" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-ticket="{{ solicitacao.ticket }}" data-valor-receita="{{ solicitacao.valor_receita|default:0|unlocalize }}" data-servico-nome="{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% endif %}" data-solicitante-nome="{{ solicitacao.nome_solicitante.get_full_name|default:solicitacao.nome_solicitante.username }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
+                                    <input type="checkbox" class="card-select-checkbox" title="Selecionar solicitação" aria-label="Selecionar">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
                             <div class="card-body">
@@ -607,6 +649,19 @@
                             Total: <span class="column-total-amount">R$ 0,00</span>
                             <button type="button" class="column-export-txt-btn" data-column="success" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                         </div>
+                        <div class="column-selection-actions" data-column="success">
+                            <label class="column-select-all-label"><input type="checkbox" class="column-select-all-checkbox" data-column="success"> Selecionar todas</label>
+                            <div class="column-move-selected">
+                                <span>Mover para:</span>
+                                <select class="column-move-select" data-column="success" title="Mover selecionados para">
+                                    <option value="">-- Coluna --</option>
+                                    <option value="planning">Pendente</option>
+                                    <option value="test">Recusado</option>
+                                    <option value="launch">Aprovado</option>
+                                    <option value="refund">Estorno</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="success">Hoje</span>
                             <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="success">
@@ -633,6 +688,7 @@
                         {% for solicitacao in solicitacoes_concluido %}
             <div class="card card-status-completed" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-ticket="{{ solicitacao.ticket }}" data-valor-receita="{{ solicitacao.valor_receita|default:0|unlocalize }}" data-servico-nome="{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% endif %}" data-solicitante-nome="{{ solicitacao.nome_solicitante.get_full_name|default:solicitacao.nome_solicitante.username }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
+                                    <input type="checkbox" class="card-select-checkbox" title="Selecionar solicitação" aria-label="Selecionar">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
                             <div class="card-body">
@@ -700,6 +756,19 @@
                             Total: <span class="column-total-amount">R$ 0,00</span>
                             <button type="button" class="column-export-txt-btn" data-column="refund" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                         </div>
+                        <div class="column-selection-actions" data-column="refund">
+                            <label class="column-select-all-label"><input type="checkbox" class="column-select-all-checkbox" data-column="refund"> Selecionar todas</label>
+                            <div class="column-move-selected">
+                                <span>Mover para:</span>
+                                <select class="column-move-select" data-column="refund" title="Mover selecionados para">
+                                    <option value="">-- Coluna --</option>
+                                    <option value="planning">Pendente</option>
+                                    <option value="test">Recusado</option>
+                                    <option value="launch">Aprovado</option>
+                                    <option value="success">Concluído</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="refund">Hoje</span>
                             <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="refund">
@@ -726,6 +795,7 @@
                         {% for solicitacao in solicitacoes_estorno %}
             <div class="card card-status-refund" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-ticket="{{ solicitacao.ticket }}" data-valor-receita="{{ solicitacao.valor_receita|default:0|unlocalize }}" data-servico-nome="{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% endif %}" data-solicitante-nome="{{ solicitacao.nome_solicitante.get_full_name|default:solicitacao.nome_solicitante.username }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
+                                    <input type="checkbox" class="card-select-checkbox" title="Selecionar solicitação" aria-label="Selecionar">
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
                             <div class="card-body">
@@ -1479,6 +1549,93 @@
             a.download = nomeArquivo;
             a.click();
             URL.revokeObjectURL(url);
+        });
+
+        // Selecionar todas / mover selecionados em massa
+        function getVisibleCardsInColumn(column) {
+            const columnContent = document.querySelector(`.column-content[data-column="${column}"]`);
+            if (!columnContent) return [];
+            const cards = columnContent.querySelectorAll('.card[data-card-id]:not(.empty-column)');
+            return Array.from(cards).filter(card => {
+                const style = window.getComputedStyle(card);
+                return style.display !== 'none' && style.visibility !== 'hidden' && !card.classList.contains('filtered-out') && card.offsetParent !== null;
+            });
+        }
+        document.addEventListener('change', function(e) {
+            const selectAll = e.target.closest('.column-select-all-checkbox');
+            if (selectAll) {
+                const column = selectAll.getAttribute('data-column');
+                const visible = getVisibleCardsInColumn(column);
+                visible.forEach(card => {
+                    const cb = card.querySelector('.card-select-checkbox');
+                    if (cb) cb.checked = selectAll.checked;
+                });
+                return;
+            }
+            const moveSelect = e.target.closest('.column-move-select');
+            if (moveSelect && moveSelect.value) {
+                const sourceColumn = moveSelect.getAttribute('data-column');
+                const targetColumn = moveSelect.value;
+                const columnContent = document.querySelector(`.column-content[data-column="${sourceColumn}"]`);
+                if (!columnContent) return;
+                const allCards = columnContent.querySelectorAll('.card[data-card-id]:not(.empty-column)');
+                const cards = Array.from(allCards).filter(card => card.querySelector('.card-select-checkbox')?.checked);
+                if (cards.length === 0) {
+                    alert('Selecione pelo menos uma solicitação (use o checkbox nos cards ou "Selecionar todas").');
+                    moveSelect.value = '';
+                    return;
+                }
+                if (targetColumn === 'refund' && !window.USER_IS_FINANCEIRO) {
+                    if (typeof Utils !== 'undefined' && Utils.showNotification) Utils.showNotification('Apenas usuários do Financeiro podem mover para Estorno.', 'error');
+                    else alert('Apenas usuários do Financeiro podem mover para Estorno.');
+                    moveSelect.value = '';
+                    return;
+                }
+                const columnNames = { planning: 'Pendente', test: 'Recusado', launch: 'Aprovado', success: 'Concluído', refund: 'Estorno' };
+                const targetName = columnNames[targetColumn] || targetColumn;
+                const processar = (justificativaEstorno) => {
+                    let p = Promise.resolve();
+                    cards.forEach(card => {
+                        const cardId = card.getAttribute('data-card-id');
+                        p = p.then(() => {
+                            if (typeof window.moveCardDirectly !== 'function') return Promise.reject(new Error('moveCardDirectly não disponível'));
+                            return window.moveCardDirectly(cardId, targetColumn, card, sourceColumn, justificativaEstorno, { skipReload: true });
+                        });
+                    });
+                    p.then(() => {
+                        if (typeof window.updateCardCountersAfterFilter === 'function') window.updateCardCountersAfterFilter();
+                        document.querySelectorAll('.column-select-all-checkbox').forEach(cb => { cb.checked = false; });
+                        document.querySelectorAll('.card-select-checkbox').forEach(cb => { cb.checked = false; });
+                        moveSelect.value = '';
+                        if (typeof Utils !== 'undefined' && Utils.showNotification) Utils.showNotification(`✅ ${cards.length} solicitação(ões) movida(s) para "${targetName}".`, 'success');
+                        else alert(`${cards.length} solicitação(ões) movida(s) para "${targetName}".`);
+                        setTimeout(() => window.location.reload(), 400);
+                    }).catch(err => {
+                        console.error(err);
+                        if (typeof Utils !== 'undefined' && Utils.showNotification) Utils.showNotification('Erro ao mover uma ou mais solicitações.', 'error');
+                        else alert('Erro ao mover. Tente novamente.');
+                        moveSelect.value = '';
+                    });
+                };
+                if (targetColumn === 'refund') {
+                    if (typeof window.solicitarJustificativaEstorno !== 'function') {
+                        alert('Não foi possível abrir a justificativa de estorno.');
+                        moveSelect.value = '';
+                        return;
+                    }
+                    window.solicitarJustificativaEstorno({
+                        cardTitle: cards.length + ' solicitação(ões)',
+                        sourceName: columnNames[sourceColumn] || sourceColumn,
+                        targetName: 'Estorno'
+                    }).then((justificativaEstorno) => {
+                        if (!justificativaEstorno) { moveSelect.value = ''; return; }
+                        processar(justificativaEstorno);
+                    });
+                } else {
+                    if (!confirm(`Mover ${cards.length} solicitação(ões) para "${targetName}"?`)) { moveSelect.value = ''; return; }
+                    processar('');
+                }
+            }
         });
     </script>
     

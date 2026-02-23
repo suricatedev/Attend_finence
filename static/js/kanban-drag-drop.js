@@ -23,21 +23,22 @@
         return cookieValue;
     }
     
-    // Função para mover card diretamente
-    function moveCardDirectly(cardId, newColumn, cardElement, oldColumn, justificativaEstorno = '') {
-        console.log('📦 Movendo card diretamente:', { cardId, newColumn, oldColumn });
+    // Função para mover card diretamente (retorna Promise; options.skipReload = true para movimento em massa)
+    function moveCardDirectly(cardId, newColumn, cardElement, oldColumn, justificativaEstorno = '', options = {}) {
+        const skipReload = options.skipReload === true;
+        console.log('📦 Movendo card diretamente:', { cardId, newColumn, oldColumn, skipReload });
         
         // Buscar coluna de destino
         const targetColumnContent = document.querySelector(`[data-column="${newColumn}"] .column-content`);
         if (!targetColumnContent) {
             console.error('❌ Coluna destino não encontrada:', newColumn);
-            return;
+            return Promise.reject(new Error('Coluna não encontrada'));
         }
         
         // Enviar requisição para o backend
         const csrftoken = getCookie('csrftoken');
         
-        fetch('/solicitacoes/atualizar-status/', {
+        return fetch('/solicitacoes/atualizar-status/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -192,10 +193,12 @@
                     }
                 }
                 
-                // Recarregar a página para garantir que todos os dados sejam atualizados do banco
-                setTimeout(() => {
-                    window.location.reload();
-                }, 500);
+                // Recarregar a página (a menos que seja movimento em massa)
+                if (!skipReload) {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                }
                 
                 console.log('✅ Card movido com sucesso');
             } else {
@@ -477,7 +480,10 @@
     setTimeout(initDragAndDrop, 500);
     setTimeout(initDragAndDrop, 1000);
     
-    // Expor função globalmente para re-inicialização manual se necessário
+    // Expor função globalmente para re-inicialização manual e movimento em massa
     window.reinitDragAndDrop = initDragAndDrop;
+    window.moveCardDirectly = function(cardId, newColumn, cardElement, oldColumn, justificativaEstorno, options) {
+        return moveCardDirectly(cardId, newColumn, cardElement, oldColumn, justificativaEstorno || '', options);
+    };
     
 })();
