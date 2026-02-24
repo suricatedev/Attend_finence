@@ -321,8 +321,11 @@
                         </div>
                         <div class="column-total-value" data-column="planning">
                             Total: <span class="column-total-amount">R$ 0,00</span>
+                            {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="planning" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
+                            {% endif %}
                         </div>
+                        {% if user|is_financeiro %}
                         <div class="column-selection-actions" data-column="planning">
                             <label class="column-select-all-label"><input type="checkbox" class="column-select-all-checkbox" data-column="planning"> Selecionar todas</label>
                             <div class="column-move-selected">
@@ -336,6 +339,7 @@
                                 </select>
                             </div>
                         </div>
+                        {% endif %}
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="planning">Hoje</span>
                             <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="planning">
@@ -362,7 +366,7 @@
                         {% for solicitacao in solicitacoes_pendentes %}
             <div class="card card-status-pending" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-ticket="{{ solicitacao.ticket }}" data-valor-receita="{{ solicitacao.valor_receita|default:0|unlocalize }}" data-servico-nome="{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% endif %}" data-solicitante-nome="{{ solicitacao.nome_solicitante.get_full_name|default:solicitacao.nome_solicitante.username }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
-                                    <input type="checkbox" class="card-select-checkbox" title="Selecionar solicitação" aria-label="Selecionar">
+                                    {% if user|is_financeiro %}<input type="checkbox" class="card-select-checkbox" title="Selecionar solicitação" aria-label="Selecionar">{% endif %}
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
                             <div class="card-body">
@@ -428,8 +432,11 @@
                         </div>
                         <div class="column-total-value" data-column="test">
                             Total: <span class="column-total-amount">R$ 0,00</span>
+                            {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="test" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
+                            {% endif %}
                         </div>
+                        {% if user|is_financeiro %}
                         <div class="column-selection-actions" data-column="test">
                             <label class="column-select-all-label"><input type="checkbox" class="column-select-all-checkbox" data-column="test"> Selecionar todas</label>
                             <div class="column-move-selected">
@@ -443,6 +450,7 @@
                                 </select>
                             </div>
                         </div>
+                        {% endif %}
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="test">Hoje</span>
                             <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="test">
@@ -469,7 +477,7 @@
             {% for solicitacao in solicitacoes_recusados %}
             <div class="card card-status-rejected" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-ticket="{{ solicitacao.ticket }}" data-valor-receita="{{ solicitacao.valor_receita|default:0|unlocalize }}" data-servico-nome="{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% endif %}" data-solicitante-nome="{{ solicitacao.nome_solicitante.get_full_name|default:solicitacao.nome_solicitante.username }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
-                                    <input type="checkbox" class="card-select-checkbox" title="Selecionar solicitação" aria-label="Selecionar">
+                                    {% if user|is_financeiro %}<input type="checkbox" class="card-select-checkbox" title="Selecionar solicitação" aria-label="Selecionar">{% endif %}
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
                             <div class="card-body">
@@ -540,8 +548,11 @@
                         </div>
                         <div class="column-total-value" data-column="launch">
                             Total: <span class="column-total-amount">R$ 0,00</span>
+                            {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="launch" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
+                            {% endif %}
                         </div>
+                        {% if user|is_financeiro %}
                         <div class="column-selection-actions" data-column="launch">
                             <label class="column-select-all-label"><input type="checkbox" class="column-select-all-checkbox" data-column="launch"> Selecionar todas</label>
                             <div class="column-move-selected">
@@ -555,6 +566,7 @@
                                 </select>
                             </div>
                         </div>
+                        {% endif %}
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="launch">Hoje</span>
                             <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="launch">
@@ -581,7 +593,7 @@
                         {% for solicitacao in solicitacoes_aprovado %}
             <div class="card card-status-approved" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-ticket="{{ solicitacao.ticket }}" data-valor-receita="{{ solicitacao.valor_receita|default:0|unlocalize }}" data-servico-nome="{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% endif %}" data-solicitante-nome="{{ solicitacao.nome_solicitante.get_full_name|default:solicitacao.nome_solicitante.username }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
-                                    <input type="checkbox" class="card-select-checkbox" title="Selecionar solicitação" aria-label="Selecionar">
+                                    {% if user|is_financeiro %}<input type="checkbox" class="card-select-checkbox" title="Selecionar solicitação" aria-label="Selecionar">{% endif %}
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
                             <div class="card-body">
@@ -647,8 +659,11 @@
                         </div>
                         <div class="column-total-value" data-column="success">
                             Total: <span class="column-total-amount">R$ 0,00</span>
+                            {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="success" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
+                            {% endif %}
                         </div>
+                        {% if user|is_financeiro %}
                         <div class="column-selection-actions" data-column="success">
                             <label class="column-select-all-label"><input type="checkbox" class="column-select-all-checkbox" data-column="success"> Selecionar todas</label>
                             <div class="column-move-selected">
@@ -662,6 +677,7 @@
                                 </select>
                             </div>
                         </div>
+                        {% endif %}
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="success">Hoje</span>
                             <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="success">
@@ -688,7 +704,7 @@
                         {% for solicitacao in solicitacoes_concluido %}
             <div class="card card-status-completed" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-ticket="{{ solicitacao.ticket }}" data-valor-receita="{{ solicitacao.valor_receita|default:0|unlocalize }}" data-servico-nome="{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% endif %}" data-solicitante-nome="{{ solicitacao.nome_solicitante.get_full_name|default:solicitacao.nome_solicitante.username }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
-                                    <input type="checkbox" class="card-select-checkbox" title="Selecionar solicitação" aria-label="Selecionar">
+                                    {% if user|is_financeiro %}<input type="checkbox" class="card-select-checkbox" title="Selecionar solicitação" aria-label="Selecionar">{% endif %}
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
                             <div class="card-body">
@@ -754,8 +770,11 @@
                         </div>
                         <div class="column-total-value" data-column="refund">
                             Total: <span class="column-total-amount">R$ 0,00</span>
+                            {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="refund" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
+                            {% endif %}
                         </div>
+                        {% if user|is_financeiro %}
                         <div class="column-selection-actions" data-column="refund">
                             <label class="column-select-all-label"><input type="checkbox" class="column-select-all-checkbox" data-column="refund"> Selecionar todas</label>
                             <div class="column-move-selected">
@@ -769,6 +788,7 @@
                                 </select>
                             </div>
                         </div>
+                        {% endif %}
                         <div class="column-date-filter">
                             <span class="selected-date-display" data-column="refund">Hoje</span>
                             <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="refund">
@@ -795,7 +815,7 @@
                         {% for solicitacao in solicitacoes_estorno %}
             <div class="card card-status-refund" draggable="true" data-card-id="{{ solicitacao.id }}" data-valor="{{ solicitacao.get_valor_detalhados|unlocalize }}" data-ticket="{{ solicitacao.ticket }}" data-valor-receita="{{ solicitacao.valor_receita|default:0|unlocalize }}" data-servico-nome="{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% endif %}" data-solicitante-nome="{{ solicitacao.nome_solicitante.get_full_name|default:solicitacao.nome_solicitante.username }}" data-tipo="{{ solicitacao.tipo }}" data-servico="{% if solicitacao.servico %}{{ solicitacao.servico.nome|lower }}{% endif %}" data-solicitante="{{ solicitacao.nome_solicitante.username }}" data-usuario-atual="{{ user.username }}" data-de-criacao="{{ solicitacao.data_de_criacao|date:'Y-m-d' }}" data-is-tecnico="{% if solicitacao.is_tecnico %}true{% else %}false{% endif %}">
                             <div class="card-header">
-                                    <input type="checkbox" class="card-select-checkbox" title="Selecionar solicitação" aria-label="Selecionar">
+                                    {% if user|is_financeiro %}<input type="checkbox" class="card-select-checkbox" title="Selecionar solicitação" aria-label="Selecionar">{% endif %}
                     <span class="priority priority-{{ solicitacao.prioridade }}">{{ solicitacao.prioridade|title }}</span>
                             </div>
                             <div class="card-body">
