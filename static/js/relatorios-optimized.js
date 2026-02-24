@@ -1,4 +1,4 @@
-﻿// JavaScript Otimizado para Relatórios - Performance Melhorada
+// JavaScript Otimizado para Relatórios - Performance Melhorada
 class RelatoriosOptimized {
     constructor() {
         this.data = [];
@@ -13,6 +13,7 @@ class RelatoriosOptimized {
             dateFrom: '',
             dateTo: '',
             service: '',
+            recebedor: '',
             priority: '',
             search: '',
             clienteEmpresa: '',
@@ -399,17 +400,63 @@ class RelatoriosOptimized {
         // Filtros de data
         document.getElementById('dateFrom')?.addEventListener('change', () => {
             this.currentFilters.dateFrom = document.getElementById('dateFrom').value;
+            this.clearPeriodQuickActive();
             this.debouncedApplyFilters();
         });
 
         document.getElementById('dateTo')?.addEventListener('change', () => {
             this.currentFilters.dateTo = document.getElementById('dateTo').value;
+            this.clearPeriodQuickActive();
             this.debouncedApplyFilters();
+        });
+
+        // Botões de período rápido (Hoje, Semana, Mês)
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const period = btn.getAttribute('data-period');
+                const today = new Date();
+                const y = today.getFullYear();
+                const m = String(today.getMonth() + 1).padStart(2, '0');
+                const d = String(today.getDate()).padStart(2, '0');
+                let dateFrom = '';
+                let dateTo = '';
+                if (period === 'hoje') {
+                    dateFrom = `${y}-${m}-${d}`;
+                    dateTo = dateFrom;
+                } else if (period === 'semana') {
+                    const dayOfWeek = today.getDay();
+                    const toMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+                    const start = new Date(today);
+                    start.setDate(today.getDate() - toMonday);
+                    const end = new Date(start);
+                    end.setDate(start.getDate() + 6);
+                    dateFrom = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`;
+                    dateTo = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
+                } else if (period === 'mes') {
+                    dateFrom = `${y}-${m}-01`;
+                    const lastDay = new Date(y, today.getMonth() + 1, 0).getDate();
+                    dateTo = `${y}-${m}-${String(lastDay).padStart(2, '0')}`;
+                }
+                this.currentFilters.dateFrom = dateFrom;
+                this.currentFilters.dateTo = dateTo;
+                const dateFromEl = document.getElementById('dateFrom');
+                const dateToEl = document.getElementById('dateTo');
+                if (dateFromEl) dateFromEl.value = dateFrom;
+                if (dateToEl) dateToEl.value = dateTo;
+                document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.applyFilters();
+            });
         });
 
         // Filtro de serviço
         document.getElementById('serviceFilter')?.addEventListener('change', () => {
             this.currentFilters.service = document.getElementById('serviceFilter').value;
+            this.debouncedApplyFilters();
+        });
+        document.getElementById('recebedorFilter')?.addEventListener('change', () => {
+            const recebedorFilter = document.getElementById('recebedorFilter');
+            this.currentFilters.recebedor = recebedorFilter ? (recebedorFilter.value || '').trim() : '';
             this.debouncedApplyFilters();
         });
 
@@ -570,6 +617,11 @@ class RelatoriosOptimized {
         const priorityFilter = document.getElementById('priorityFilter');
         if (priorityFilter) {
             this.currentFilters.priority = priorityFilter.value || '';
+        }
+        
+        const recebedorFilter = document.getElementById('recebedorFilter');
+        if (recebedorFilter) {
+            this.currentFilters.recebedor = recebedorFilter.value ? recebedorFilter.value.trim() : '';
         }
         
         const clienteEmpresaFilter = document.getElementById('clienteEmpresaFilter');
@@ -743,6 +795,15 @@ class RelatoriosOptimized {
                 }
             }
 
+            // Filtro de recebedor
+            if (this.currentFilters.recebedor) {
+                const itemRecebedor = (item.recebedor || '').trim();
+                const filterRecebedor = this.currentFilters.recebedor.trim();
+                if (itemRecebedor !== filterRecebedor) {
+                    return false;
+                }
+            }
+
             // Filtro de Cliente/Empresa
             if (this.currentFilters.clienteEmpresa) {
                 const clienteEmpresa = (item.clienteEmpresa || '').toLowerCase();
@@ -799,6 +860,10 @@ class RelatoriosOptimized {
         console.log(`Filtros aplicados em ${(endTime - startTime).toFixed(2)}ms`);
     }
 
+    clearPeriodQuickActive() {
+        document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));
+    }
+
     clearFilters() {
         this.currentFilters = {
             status: 'all',
@@ -806,6 +871,7 @@ class RelatoriosOptimized {
             dateFrom: '',
             dateTo: '',
             service: '',
+            recebedor: '',
             priority: '',
             search: '',
             clienteEmpresa: '',
@@ -831,7 +897,10 @@ class RelatoriosOptimized {
 
         if (dateFrom) dateFrom.value = '';
         if (dateTo) dateTo.value = '';
+        this.clearPeriodQuickActive();
         if (serviceFilter) serviceFilter.value = '';
+        const recebedorFilter = document.getElementById('recebedorFilter');
+        if (recebedorFilter) recebedorFilter.value = '';
         if (priorityFilter) priorityFilter.value = '';
         if (searchInput) searchInput.value = '';
         if (clienteEmpresaFilter) clienteEmpresaFilter.value = '';

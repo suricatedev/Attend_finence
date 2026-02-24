@@ -327,8 +327,9 @@ def relatorio(request):
         recusadas = solicitacoes_originais.filter(status='recusado').count()
         concluidas = solicitacoes_originais.filter(status='concluido').count()
         
-        # Buscar serviços disponíveis para o filtro
+        # Buscar serviços e recebedores disponíveis para os filtros
         servicos_disponiveis = Servico.objects.all().order_by('nome')
+        recebedores_disponiveis = Recebedor.objects.filter(ativo=True).order_by('nome')
         
         context = {
             'solicitacoes': solicitacoes_expandidas,
@@ -339,6 +340,7 @@ def relatorio(request):
             'recusadas': recusadas,
             'concluidas': concluidas,
             'servicos_disponiveis': servicos_disponiveis,
+            'recebedores_disponiveis': recebedores_disponiveis,
         }
         
         return render(request, "dashboard/relatorios.html", context)

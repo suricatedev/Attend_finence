@@ -1,4 +1,4 @@
-﻿/* ========================================
+/* ========================================
    RELATÓRIOS OTIMIZADOS - LAYOUT COMPACTO
    ======================================== */
 
@@ -418,6 +418,41 @@ header.header {
     border-color: #FFCB57;
     font-weight: 600;
 }
+.period-quick-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.period-btn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #544350;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.period-btn:hover {
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+.period-btn.active {
+    background: #FFCB57;
+    color: #1C1C1C;
+    border-color: #FFCB57;
+    font-weight: 600;
+}
+
 .date-range {
     display: flex;
     align-items: center;

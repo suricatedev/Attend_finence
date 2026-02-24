@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}Relatórios - Sistema de Gestão Financeira{% endblock %}
@@ -125,6 +125,17 @@
                     <!-- Grupo 2: Período -->
                     <div class="filter-group filter-group-dates">
                         <label><i class="fas fa-calendar-alt"></i> Período</label>
+                        <div class="period-quick-buttons">
+                            <button type="button" class="period-btn" data-period="hoje" title="Solicitações de hoje">
+                                <i class="fas fa-calendar-day"></i> Hoje
+                            </button>
+                            <button type="button" class="period-btn" data-period="semana" title="Solicitações da semana">
+                                <i class="fas fa-calendar-week"></i> Semana
+                            </button>
+                            <button type="button" class="period-btn" data-period="mes" title="Solicitações do mês">
+                                <i class="fas fa-calendar"></i> Mês
+                            </button>
+                        </div>
                         <div class="date-range">
                             <input type="date" id="dateFrom" class="date-input">
                             <span class="date-separator">até</span>
@@ -132,7 +143,7 @@
                         </div>
                     </div>
 
-                    <!-- Grupo 3: Serviço e Prioridade (Selects) -->
+                    <!-- Grupo 3: Serviço, Recebedor e Prioridade (Selects) -->
                     <div class="filter-group">
                         <label><i class="fas fa-briefcase"></i> Serviço</label>
                         <select id="serviceFilter" class="select-input">
@@ -141,6 +152,18 @@
                             <option value="{{ servico.id }}">{{ servico.nome }}</option>
                             {% empty %}
                             <option value="" disabled>Nenhum serviço disponível</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label><i class="fas fa-user-check"></i> Recebedor</label>
+                        <select id="recebedorFilter" class="select-input">
+                            <option value="">Todos os recebedores</option>
+                            {% for recebedor in recebedores_disponiveis %}
+                            <option value="{{ recebedor.nome }}">{{ recebedor.nome }}</option>
+                            {% empty %}
+                            <option value="" disabled>Nenhum recebedor disponível</option>
                             {% endfor %}
                         </select>
                     </div>
