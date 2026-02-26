@@ -2144,11 +2144,11 @@ def auditoria_logs(request):
     show_auto = (request.GET.get('show_auto') or '').strip() == '1'
 
     if q:
+        # Busca sem expor IP (dado sensível; continua gravado no banco)
         logs = logs.filter(
             Q(objeto_id__icontains=q) |
             Q(usuario__username__icontains=q) |
-            Q(origem__icontains=q) |
-            Q(ip_address__icontains=q)
+            Q(origem__icontains=q)
         )
     if acao:
         logs = logs.filter(acao=acao)

@@ -122,18 +122,33 @@
                         </div>
                     </div>
 
-                    <!-- Grupo 2: Período -->
+                    <!-- Grupo 2: Período (como na referência) -->
                     <div class="filter-group filter-group-dates">
                         <label><i class="fas fa-calendar-alt"></i> Período</label>
-                        <div class="period-quick-buttons">
-                            <button type="button" class="period-btn" data-period="hoje" title="Solicitações de hoje">
+                        <div class="period-quick-buttons period-quick-buttons-report">
+                            <button type="button" class="period-btn active" data-period="hoje" title="Hoje">
                                 <i class="fas fa-calendar-day"></i> Hoje
                             </button>
-                            <button type="button" class="period-btn" data-period="semana" title="Solicitações da semana">
-                                <i class="fas fa-calendar-week"></i> Semana
+                            <button type="button" class="period-btn" data-period="semana" title="Esta Semana">
+                                <i class="fas fa-calendar-week"></i> Esta Semana
                             </button>
-                            <button type="button" class="period-btn" data-period="mes" title="Solicitações do mês">
-                                <i class="fas fa-calendar"></i> Mês
+                            <button type="button" class="period-btn" data-period="ultima_semana" title="Última Semana">
+                                <i class="fas fa-calendar-minus"></i> Última Semana
+                            </button>
+                            <button type="button" class="period-btn" data-period="mes" title="Este Mês">
+                                <i class="fas fa-calendar"></i> Este Mês
+                            </button>
+                            <button type="button" class="period-btn" data-period="3meses" title="Últimos 3 meses">
+                                <i class="fas fa-calendar-alt"></i> Últimos 3 meses
+                            </button>
+                            <button type="button" class="period-btn" data-period="ano" title="Último Ano">
+                                <i class="fas fa-calendar"></i> Último Ano
+                            </button>
+                            <button type="button" class="period-btn" data-period="outros" title="Outros (intervalo)">
+                                <i class="fas fa-ellipsis-h"></i> Outros
+                            </button>
+                            <button type="button" class="period-btn" data-period="individual" title="Data individual">
+                                <i class="fas fa-calendar-day"></i> Individual
                             </button>
                         </div>
                         <div class="date-range">
@@ -256,6 +271,109 @@
                     <h3 id="pendentes">{{ pendentes }}</h3>
                     <p>Pendentes</p>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard de Indicadores - Eficiência Operacional -->
+    <section class="dashboard-indicadores-section" id="dashboardIndicadoresSection">
+        <h3 class="dashboard-indicadores-title"><i class="fas fa-chart-line"></i> Dashboard de Indicadores</h3>
+        <p class="dashboard-indicadores-subtitle">Eficiência Operacional</p>
+        <div class="dashboard-indicadores-grid">
+            <!-- Card Lead Time Médio + gráfico de linha -->
+            <div class="indicador-card indicador-card-lead">
+                <div class="indicador-card-header">
+                    <span class="indicador-card-label">Lead Time Médio</span>
+                </div>
+                <div class="indicador-card-value" id="leadTimeValor">—</div>
+                <div class="indicador-card-trend" id="leadTimeTrend">
+                    <span class="trend-badge trend-up"><i class="fas fa-arrow-up"></i> <span id="leadTimeVs">0%</span> (vs Mês Passado)</span>
+                </div>
+                <div class="indicador-mini-chart">
+                    <canvas id="chartPendenciasLinha" height="80"></canvas>
+                    <span class="mini-chart-label">Pendências p/ Analista</span>
+                </div>
+            </div>
+            <!-- Card % + gráfico de barras -->
+            <div class="indicador-card indicador-card-percent">
+                <div class="indicador-card-header">
+                    <span class="indicador-card-label">Taxa de Pendência</span>
+                </div>
+                <div class="indicador-card-value" id="taxaPendenciaValor">—</div>
+                <div class="indicador-card-trend" id="taxaPendenciaTrend">
+                    <span class="trend-badge trend-down"><i class="fas fa-arrow-down"></i> <span id="taxaPendenciaVs">0%</span> (vs Mês Passado)</span>
+                </div>
+                <div class="indicador-mini-chart">
+                    <canvas id="chartPendenciasBarras" height="80"></canvas>
+                    <span class="mini-chart-label">Pendências p/ Analista</span>
+                </div>
+            </div>
+            <!-- Pareto de Gastos (Serviço) -->
+            <div class="indicador-card indicador-card-pareto">
+                <div class="indicador-card-header">
+                    <span class="indicador-card-label">Pareto de Gastos (Serviço)</span>
+                </div>
+                <div class="indicador-card-legend" id="paretoLegend">Departamento (R$ 0,00)</div>
+                <div class="indicador-chart-wrap">
+                    <canvas id="chartPareto" height="220"></canvas>
+                </div>
+            </div>
+            <!-- Concentração por Favorecido (Donut) -->
+            <div class="indicador-card indicador-card-donut">
+                <div class="indicador-card-header">
+                    <span class="indicador-card-label">Concentração por Favorecido</span>
+                </div>
+                <div class="indicador-chart-wrap">
+                    <canvas id="chartConcentracao" height="220"></canvas>
+                </div>
+            </div>
+            <!-- Previsão Próx. 7 Dias -->
+            <div class="indicador-card indicador-card-previsao">
+                <div class="indicador-card-header">
+                    <span class="indicador-card-label">Previsão Próx. 7 Dias</span>
+                </div>
+                <div class="previsao-content">
+                    <div class="previsao-ring-wrap">
+                        <canvas id="chartPrevisaoRing" width="120" height="120"></canvas>
+                        <div class="previsao-ring-text">
+                            <span class="previsao-pct" id="previsaoPct">0%</span>
+                            <span class="previsao-label">Conciliado</span>
+                        </div>
+                    </div>
+                    <div class="previsao-calendar" id="previsaoCalendar">
+                        <!-- calendário do mês será preenchido via JS -->
+                    </div>
+                </div>
+                <div class="previsao-toggle">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggleDomiciliacao">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">Domiciliação</span>
+                </div>
+            </div>
+        </div>
+        <!-- Mini indicadores resumidos (mantidos para compatibilidade) -->
+        <div class="mini-reports-grid mini-reports-grid-compact" id="miniReportsGrid" style="margin-top: 1rem;">
+            <div class="mini-report-card" id="miniReportValorMedio">
+                <div class="mini-report-header"><span class="mini-report-label">Valor médio</span><i class="fas fa-calculator"></i></div>
+                <div class="mini-report-value" id="miniReportValorMedioVal">—</div>
+            </div>
+            <div class="mini-report-card" id="miniReportStatus">
+                <div class="mini-report-header"><span class="mini-report-label">Por status</span><i class="fas fa-chart-bar"></i></div>
+                <div class="mini-report-bars" id="miniReportStatusBars"></div>
+            </div>
+            <div class="mini-report-card" id="miniReportServicos">
+                <div class="mini-report-header"><span class="mini-report-label">Top serviços</span><i class="fas fa-briefcase"></i></div>
+                <div class="mini-report-list" id="miniReportServicosList"></div>
+            </div>
+            <div class="mini-report-card" id="miniReportRecebedores">
+                <div class="mini-report-header"><span class="mini-report-label">Top recebedores</span><i class="fas fa-user-tie"></i></div>
+                <div class="mini-report-list" id="miniReportRecebedoresList"></div>
+            </div>
+            <div class="mini-report-card" id="miniReportTaxa">
+                <div class="mini-report-header"><span class="mini-report-label">Taxa aprovação</span><i class="fas fa-percentage"></i></div>
+                <div class="mini-report-value" id="miniReportTaxaVal">—</div>
             </div>
         </div>
     </section>
@@ -467,9 +585,14 @@
 {% endblock %}
 
 {% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        window.RELATORIO_INDICADORES_URL = "{% url 'relatorio_indicadores' %}";
+    </script>
     <script src="{% static 'js/relatorios-optimized.js' %}" defer></script>
+    <script src="{% static 'js/relatorios-indicadores.js' %}" defer></script>
     <script>
         // Garantir que o header e background sejam pretos
         document.addEventListener('DOMContentLoaded', function() {

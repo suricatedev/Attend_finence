@@ -3,6 +3,9 @@ from django.contrib import messages
 from django.db.models import Sum, Count, Avg, Q
 from django.utils import timezone
 from django.utils.safestring import mark_safe
+from django.http import JsonResponse
+from datetime import datetime, timedelta
+from calendar import monthrange
 import json
 from solicitacoes.models import Solicitacoes
 from servicos.models import Servico
@@ -257,7 +260,220 @@ def dashboard_metrics(request):
         'valor_total': float(valor_total),
         'period': period
     })
-    
+
+
+def _get_relatorio_date_range(period, date_from_str, date_to_str):
+    """Retorna (data_inicial, data_final) para o período dos relatórios."""
+    hoje = timezone.now().date()
+    data_inicial = None
+    data_final = None
+    if date_from_str or date_to_str:
+        try:
+            if date_from_str:
+                data_inicial = datetime.strptime(date_from_str, '%Y-%m-%d').date()
+            if date_to_str:
+                data_final = datetime.strptime(date_to_str, '%Y-%m-%d').date()
+        except ValueError:
+            pass
+    if data_inicial is None and data_final is None:
+        if period == 'hoje':
+            data_inicial = data_final = hoje
+        elif period == 'semana':
+            # Esta semana (segunda a domingo)
+            dia_semana = hoje.weekday()
+            data_inicial = hoje - timedelta(days=dia_semana)
+            data_final = hoje
+        elif period == 'ultima_semana':
+            data_inicial = hoje - timedelta(days=hoje.weekday() + 7)
+            data_final = data_inicial + timedelta(days=6)
+        elif period == 'mes':
+            data_inicial = hoje.replace(day=1)
+            _, ultimo = monthrange(hoje.year, hoje.month)
+            data_final = hoje.replace(day=ultimo)
+        elif period == '3meses':
+            data_inicial = hoje - timedelta(days=90)
+            data_final = hoje
+        elif period == 'ano':
+            data_inicial = hoje.replace(month=1, day=1)
+            data_final = hoje
+        else:
+            data_inicial = hoje - timedelta(days=30)
+            data_final = hoje
+    return data_inicial, data_final
+
+
+def relatorio_indicadores(request):
+    """API que retorna dados para os gráficos do dashboard de relatórios (filtro por período)."""
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Não autenticado'}, status=401)
+    if not user_can_view_reports(request.user):
+        return JsonResponse({'error': 'Sem permissão'}, status=403)
+
+    hoje = timezone.now().date()
+    period = request.GET.get('period', 'mes')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    data_inicial, data_final = _get_relatorio_date_range(period, date_from, date_to)
+
+    qs = Solicitacoes.objects.all()
+    if data_inicial:
+        qs = qs.filter(data_de_criacao__gte=data_inicial)
+    if data_final:
+        qs = qs.filter(data_de_criacao__lte=data_final)
+
+    # Lead time médio (dias entre criação e pagamento)
+    lead_times = []
+    for s in qs.exclude(data_de_pagamento__isnull=True).filter(data_de_criacao__isnull=False)[:500]:
+        if s.data_de_criacao and s.data_de_pagamento:
+            delta = s.data_de_pagamento - s.data_de_criacao
+            lead_times.append(delta.days)
+    lead_time_medio = round(sum(lead_times) / len(lead_times), 1) if lead_times else 0
+
+    # Comparar com mês passado para tendência
+    primeiro_mes_atual = data_final.replace(day=1) if data_final else hoje
+    if primeiro_mes_atual.month == 1:
+        mes_anterior_inicio = primeiro_mes_atual.replace(year=primeiro_mes_atual.year - 1, month=12, day=1)
+    else:
+        mes_anterior_inicio = primeiro_mes_atual.replace(month=primeiro_mes_atual.month - 1, day=1)
+    _, ultimo_ant = monthrange(mes_anterior_inicio.year, mes_anterior_inicio.month)
+    mes_anterior_fim = mes_anterior_inicio.replace(day=ultimo_ant)
+    qs_mes_ant = Solicitacoes.objects.filter(
+        data_de_criacao__gte=mes_anterior_inicio,
+        data_de_criacao__lte=mes_anterior_fim
+    )
+    lead_ant = []
+    for s in qs_mes_ant:
+        if s.data_de_criacao and s.data_de_pagamento:
+            lead_ant.append((s.data_de_pagamento - s.data_de_criacao).days)
+    lead_ant_medio = sum(lead_ant) / len(lead_ant) if lead_ant else lead_time_medio
+    if lead_ant_medio and lead_time_medio:
+        lead_time_vs = round(((lead_time_medio - lead_ant_medio) / lead_ant_medio) * 100)
+    else:
+        lead_time_vs = 0
+
+    # Pendências por analista (nome_solicitante é FK para User)
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    pendentes_por_analista = list(
+        qs.filter(status='pendente')
+        .values('nome_solicitante_id')
+        .annotate(total=Count('id'))
+        .order_by('-total')[:10]
+    )
+    user_ids = [a['nome_solicitante_id'] for a in pendentes_por_analista if a['nome_solicitante_id']]
+    users = {u.id: (u.get_full_name() or u.username) for u in User.objects.filter(pk__in=user_ids)} if user_ids else {}
+    pendentes_list = []
+    for a in pendentes_por_analista:
+        uid = a['nome_solicitante_id']
+        nome = users.get(uid, f'Analista {uid}' if uid else 'N/A')
+        pendentes_list.append({'nome': nome, 'count': a['total']})
+    if not pendentes_list:
+        for u in User.objects.filter(is_active=True)[:5]:
+            pendentes_list.append({'nome': u.get_full_name() or u.username, 'count': 0})
+
+    # Série temporal para gráfico de linha (pendências por dia no período)
+    dias_pendentes = list(
+        qs.filter(status='pendente')
+        .values('data_de_criacao')
+        .annotate(total=Count('id'))
+        .order_by('data_de_criacao')
+    )
+    serie_pendentes = [
+        {'dia': str(d['data_de_criacao']), 'total': d['total']}
+        for d in dias_pendentes
+        if d.get('data_de_criacao')
+    ]
+
+    # Pareto por serviço (valor por serviço + % acumulado)
+    por_servico = list(
+        qs.values('servico_id')
+        .annotate(valor=Sum('valor'))
+        .order_by('-valor')
+    )
+    total_geral = sum(x['valor'] or 0 for x in por_servico)
+    servico_nomes = {s.id: s.nome for s in Servico.objects.all()}
+    pareto = []
+    ac = 0
+    for item in por_servico:
+        v = item['valor'] or 0
+        ac += v
+        nome = servico_nomes.get(item['servico_id'], 'Outros') if item['servico_id'] else 'Sem serviço'
+        pct = round((v / total_geral * 100), 1) if total_geral else 0
+        acum = round((ac / total_geral * 100), 1) if total_geral else 0
+        pareto.append({'nome': nome, 'valor': float(v), 'percentual': pct, 'acumulado': acum})
+    if not pareto and total_geral:
+        pareto.append({'nome': 'Geral', 'valor': float(total_geral), 'percentual': 100, 'acumulado': 100})
+
+    # Concentração por favorecido (recebedor) - donut
+    por_recebedor = list(
+        qs.values('nome_do_recebedor')
+        .annotate(valor=Sum('valor'))
+        .order_by('-valor')[:8]
+    )
+    total_fav = sum(x['valor'] or 0 for x in por_recebedor)
+    concentracao = []
+    for item in por_recebedor:
+        v = item['valor'] or 0
+        nome = (item['nome_do_recebedor'] or 'N/A').strip() or 'N/A'
+        pct = round((v / total_fav * 100), 1) if total_fav else 0
+        concentracao.append({'nome': nome, 'valor': float(v), 'percentual': pct})
+    if len(concentracao) > 5:
+        # Agrupar os menores em "Outros"
+        top5 = concentracao[:5]
+        outros_val = sum(x['valor'] for x in concentracao[5:])
+        outros_pct = round((outros_val / total_fav * 100), 1) if total_fav else 0
+        concentracao = top5 + [{'nome': 'Outros', 'valor': outros_val, 'percentual': outros_pct}]
+
+    # Previsão próximos 7 dias: % conciliado (aprovado+concluído) no período
+    total_per = qs.count()
+    conciliados = qs.filter(status__in=['aprovado', 'concluido']).count()
+    conciliado_pct = round((conciliados / total_per * 100), 0) if total_per else 0
+
+    # Dias do mês para o calendário (marcar conciliados)
+    hoje = timezone.now().date()
+    primeiro = hoje.replace(day=1)
+    _, ultimo_dia = monthrange(hoje.year, hoje.month)
+    dias_mes = []
+    for d in range(1, ultimo_dia + 1):
+        data_d = primeiro.replace(day=d)
+        count = qs.filter(data_de_criacao=data_d).filter(status__in=['aprovado', 'concluido']).count()
+        total_d = qs.filter(data_de_criacao=data_d).count()
+        dias_mes.append({
+            'dia': d,
+            'conciliado': total_d and count == total_d,
+            'total': total_d,
+            'conciliados': count
+        })
+
+    # Porcentagem do segundo card (ex.: taxa de pendência ou similar)
+    pendentes_count = qs.filter(status='pendente').count()
+    taxa_pendencia = round((pendentes_count / total_per * 100), 0) if total_per else 0
+    qs_mes_ant_count = Solicitacoes.objects.filter(
+        data_de_criacao__gte=mes_anterior_inicio,
+        data_de_criacao__lte=mes_anterior_fim
+    )
+    pend_mes_ant = qs_mes_ant_count.filter(status='pendente').count()
+    total_mes_ant = qs_mes_ant_count.count()
+    taxa_ant = round((pend_mes_ant / total_mes_ant * 100), 0) if total_mes_ant else 0
+    taxa_vs = taxa_pendencia - taxa_ant
+
+    return JsonResponse({
+        'lead_time_medio': lead_time_medio,
+        'lead_time_vs_mes': lead_time_vs,
+        'pendentes_por_analista': pendentes_list,
+        'serie_pendentes': serie_pendentes,
+        'pareto_servico': pareto,
+        'total_departamento': float(total_geral or 0),
+        'concentracao_favorecido': concentracao,
+        'previsao_conciliado_pct': conciliado_pct,
+        'previsao_total': total_per,
+        'previsao_conciliados': conciliados,
+        'dias_mes': dias_mes,
+        'taxa_pendencia': taxa_pendencia,
+        'taxa_vs_mes': taxa_vs,
+    })
+
+
 def relatorio(request):
     if request.method == "GET":
         if not request.user.is_authenticated:
@@ -341,46 +557,6 @@ def relatorio(request):
             'concluidas': concluidas,
             'servicos_disponiveis': servicos_disponiveis,
             'recebedores_disponiveis': recebedores_disponiveis,
-        }
-        
-        return render(request, "dashboard/relatorios.html", context)
-        
-    elif request.method == "POST":
-        pass
-
-        
-        # Buscar serviços disponíveis para o filtro
-        servicos_disponiveis = Servico.objects.all().order_by('nome')
-        
-        context = {
-            'solicitacoes': solicitacoes_expandidas,
-            'total_solicitacoes': total_solicitacoes,
-            'valor_total': valor_total,
-            'aprovadas': aprovadas,
-            'pendentes': pendentes,
-            'recusadas': recusadas,
-            'concluidas': concluidas,
-            'servicos_disponiveis': servicos_disponiveis,
-        }
-        
-        return render(request, "dashboard/relatorios.html", context)
-        
-    elif request.method == "POST":
-        pass
-
-        
-        # Buscar serviços disponíveis para o filtro
-        servicos_disponiveis = Servico.objects.all().order_by('nome')
-        
-        context = {
-            'solicitacoes': solicitacoes_expandidas,
-            'total_solicitacoes': total_solicitacoes,
-            'valor_total': valor_total,
-            'aprovadas': aprovadas,
-            'pendentes': pendentes,
-            'recusadas': recusadas,
-            'concluidas': concluidas,
-            'servicos_disponiveis': servicos_disponiveis,
         }
         
         return render(request, "dashboard/relatorios.html", context)

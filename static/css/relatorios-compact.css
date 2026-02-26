@@ -421,7 +421,11 @@ header.header {
 .period-quick-buttons {
     display: flex;
     gap: 8px;
+}
+
+.period-quick-buttons-report {
     flex-wrap: wrap;
+    gap: 10px;
     margin-bottom: 10px;
 }
 
@@ -688,6 +692,440 @@ header.header {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* ========================================
+   DASHBOARD DE INDICADORES (MINI RELATÓRIOS)
+   ======================================== */
+
+.mini-reports-section {
+    background: #f1f5f9;
+    padding: 18px 25px;
+    border-bottom: 1px solid #e2e8f0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.mini-reports-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1C1C1C;
+    margin: 0 0 14px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mini-reports-title i {
+    color: #FFCB57;
+}
+
+.mini-reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    width: 100%;
+}
+
+.mini-report-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mini-report-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.mini-report-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.mini-report-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #544350;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mini-report-header i {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.mini-report-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1C1C1C;
+    margin: 0;
+}
+
+.mini-report-sub {
+    font-size: 0.65rem;
+    color: #94a3b8;
+    margin: 4px 0 0 0;
+}
+
+.mini-report-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mini-report-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.7rem;
+}
+
+.mini-report-bar-label {
+    width: 72px;
+    flex-shrink: 0;
+    color: #475569;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mini-report-bar-track {
+    flex: 1;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+    min-width: 40px;
+}
+
+.mini-report-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.mini-report-bar-fill.status-pendente { background: #f59e0b; }
+.mini-report-bar-fill.status-aprovado { background: #22c55e; }
+.mini-report-bar-fill.status-concluido { background: #3b82f6; }
+.mini-report-bar-fill.status-recusado { background: #ef4444; }
+
+.mini-report-bar-pct {
+    width: 28px;
+    text-align: right;
+    flex-shrink: 0;
+    font-weight: 600;
+    color: #1C1C1C;
+    font-size: 0.68rem;
+}
+
+.mini-report-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+.mini-report-list-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+}
+
+.mini-report-list-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #475569;
+}
+
+.mini-report-list-value {
+    flex-shrink: 0;
+    font-weight: 600;
+    color: #1C1C1C;
+}
+
+/* ========================================
+   DASHBOARD DE INDICADORES (RELATÓRIOS)
+   ======================================== */
+
+.dashboard-indicadores-section {
+    background: #f1f5f9;
+    padding: 20px 25px;
+    border-bottom: 1px solid #e2e8f0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.dashboard-indicadores-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1C1C1C;
+    margin: 0 0 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dashboard-indicadores-title i {
+    color: #FFCB57;
+}
+
+.dashboard-indicadores-subtitle {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 0 0 16px 0;
+}
+
+.dashboard-indicadores-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+    width: 100%;
+}
+
+@media (min-width: 1200px) {
+    .dashboard-indicadores-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.indicador-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.2s ease;
+}
+
+.indicador-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.indicador-card-header {
+    margin-bottom: 8px;
+}
+
+.indicador-card-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.indicador-card-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1C1C1C;
+    margin: 4px 0;
+}
+
+.indicador-card-trend {
+    font-size: 0.75rem;
+    margin-bottom: 8px;
+}
+
+.trend-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.trend-badge.trend-up {
+    color: #16a34a;
+    background: rgba(22, 163, 74, 0.12);
+}
+
+.trend-badge.trend-down {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.1);
+}
+
+.indicador-mini-chart {
+    margin-top: 8px;
+    position: relative;
+}
+
+.indicador-mini-chart .mini-chart-label {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    display: block;
+    margin-top: 4px;
+}
+
+.indicador-card-legend {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-bottom: 8px;
+}
+
+.indicador-chart-wrap {
+    min-height: 200px;
+    position: relative;
+}
+
+.indicador-card-pareto,
+.indicador-card-donut {
+    grid-column: span 1;
+}
+
+@media (min-width: 900px) {
+    .indicador-card-pareto { grid-column: span 1; }
+    .indicador-card-donut { grid-column: span 1; }
+}
+
+.indicador-card-previsao {
+    grid-column: span 2;
+}
+
+@media (min-width: 1200px) {
+    .indicador-card-previsao {
+        grid-column: span 1;
+    }
+}
+
+.previsao-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.previsao-ring-wrap {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    flex-shrink: 0;
+}
+
+.previsao-ring-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.previsao-pct {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1C1C1C;
+}
+
+.previsao-label {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+.previsao-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    font-size: 0.7rem;
+    max-width: 220px;
+}
+
+.previsao-calendar .cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.previsao-calendar .cal-day.weekday {
+    font-weight: 600;
+    color: #64748b;
+    background: transparent;
+}
+
+.previsao-calendar .cal-day.conciliado {
+    background: #22c55e;
+    color: white;
+}
+
+.previsao-calendar .cal-day.empty {
+    visibility: hidden;
+}
+
+.previsao-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #cbd5e1;
+    border-radius: 24px;
+    transition: 0.3s;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: #FFCB57;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+.toggle-label {
+    font-size: 0.8rem;
+    color: #475569;
+}
+
+.mini-reports-grid-compact {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
 /* ========================================

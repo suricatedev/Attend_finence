@@ -61,7 +61,8 @@ class RelatoriosOptimized {
             console.warn('⚠️ Nenhum dado carregado da tabela!');
         }
         this.updateTableInfo();
-        // this.updateStats(); // Deixar as estatísticas do Django
+        this.updateStats();
+        this.updateMiniReports();
     }
 
     async loadDataAsync() {
@@ -236,6 +237,7 @@ class RelatoriosOptimized {
                     clienteEmpresa: clienteEmpresa,
                     cnpj: cnpj,
                     service: service, // ID do serviço (string vazia se não houver)
+                    serviceName: serviceText || 'N/A', // Nome do serviço para mini relatórios
                     valor: cells[9]?.textContent.trim() || '',
                     valorReceita: valorReceita,
                     valorEmRota: valorEmRota,
@@ -410,14 +412,15 @@ class RelatoriosOptimized {
             this.debouncedApplyFilters();
         });
 
-        // Botões de período rápido (Hoje, Semana, Mês)
+        // Botões de período rápido (Hoje, Esta Semana, Última Semana, Mês, 3 meses, Ano, Outros, Individual)
         document.querySelectorAll('.period-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const period = btn.getAttribute('data-period');
                 const today = new Date();
                 const y = today.getFullYear();
                 const m = String(today.getMonth() + 1).padStart(2, '0');
-                const d = String(today.getDate()).padStart(2, '0');
+                const day = today.getDate();
+                const d = String(day).padStart(2, '0');
                 let dateFrom = '';
                 let dateTo = '';
                 if (period === 'hoje') {
@@ -432,19 +435,41 @@ class RelatoriosOptimized {
                     end.setDate(start.getDate() + 6);
                     dateFrom = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`;
                     dateTo = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
+                } else if (period === 'ultima_semana') {
+                    const dayOfWeek = today.getDay();
+                    const toMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+                    const end = new Date(today);
+                    end.setDate(today.getDate() - toMonday - 1);
+                    const start = new Date(end);
+                    start.setDate(end.getDate() - 6);
+                    dateFrom = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`;
+                    dateTo = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
                 } else if (period === 'mes') {
                     dateFrom = `${y}-${m}-01`;
                     const lastDay = new Date(y, today.getMonth() + 1, 0).getDate();
                     dateTo = `${y}-${m}-${String(lastDay).padStart(2, '0')}`;
+                } else if (period === '3meses') {
+                    const start = new Date(today);
+                    start.setDate(today.getDate() - 90);
+                    dateFrom = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`;
+                    dateTo = `${y}-${m}-${d}`;
+                } else if (period === 'ano') {
+                    dateFrom = `${y}-01-01`;
+                    dateTo = `${y}-${m}-${d}`;
+                } else if (period === 'outros' || period === 'individual') {
+                    dateFrom = document.getElementById('dateFrom')?.value || '';
+                    dateTo = document.getElementById('dateTo')?.value || (period === 'individual' ? dateFrom : '');
                 }
                 this.currentFilters.dateFrom = dateFrom;
                 this.currentFilters.dateTo = dateTo;
                 const dateFromEl = document.getElementById('dateFrom');
                 const dateToEl = document.getElementById('dateTo');
-                if (dateFromEl) dateFromEl.value = dateFrom;
-                if (dateToEl) dateToEl.value = dateTo;
+                if (dateFromEl && dateFrom) dateFromEl.value = dateFrom;
+                if (dateToEl && dateTo) dateToEl.value = dateTo;
                 document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
+                // Atualizar gráficos do dashboard de indicadores
+                document.dispatchEvent(new CustomEvent('relatorio:periodChange', { detail: { period: period, dateFrom: dateFrom || undefined, dateTo: dateTo || undefined } }));
                 this.applyFilters();
             });
         });
@@ -855,7 +880,17 @@ class RelatoriosOptimized {
         
         this.renderTableOptimized();
         this.updateStats();
-        
+        this.updateMiniReports();
+        // Atualizar gráficos do dashboard de indicadores ao aplicar filtros (ex.: datas em Outros/Individual)
+        const activePeriodBtn = document.querySelector('.period-btn.active');
+        const period = activePeriodBtn ? activePeriodBtn.getAttribute('data-period') : 'outros';
+        document.dispatchEvent(new CustomEvent('relatorio:periodChange', {
+            detail: {
+                period: period,
+                dateFrom: this.currentFilters.dateFrom || undefined,
+                dateTo: this.currentFilters.dateTo || undefined
+            }
+        }));
         const endTime = performance.now();
         console.log(`Filtros aplicados em ${(endTime - startTime).toFixed(2)}ms`);
     }
@@ -1134,6 +1169,110 @@ class RelatoriosOptimized {
         if (valorTotalEl) valorTotalEl.textContent = `R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         if (aprovadasEl) aprovadasEl.textContent = aprovadas;
         if (pendentesEl) pendentesEl.textContent = pendentes;
+    }
+
+    parseValorNum(valorStr) {
+        if (!valorStr || typeof valorStr !== 'string') return 0;
+        const cleaned = valorStr.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+        return parseFloat(cleaned) || 0;
+    }
+
+    updateMiniReports() {
+        const data = this.filteredData;
+        const total = data.length;
+
+        // Valor médio por solicitação
+        const valorTotal = data.reduce((s, item) => s + this.parseValorNum(item.valor), 0);
+        const valorMedioEl = document.getElementById('miniReportValorMedioVal');
+        if (valorMedioEl) {
+            if (total === 0) {
+                valorMedioEl.textContent = '—';
+            } else {
+                const medio = valorTotal / total;
+                valorMedioEl.textContent = `R$ ${medio.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            }
+        }
+
+        // Distribuição por status (barras)
+        const statusCounts = { pendente: 0, aprovado: 0, concluido: 0, recusado: 0 };
+        data.forEach(item => {
+            const s = (item.status || '').toLowerCase();
+            if (statusCounts.hasOwnProperty(s)) statusCounts[s]++;
+        });
+        const statusLabels = { pendente: 'Pendente', aprovado: 'Aprovado', concluido: 'Concluído', recusado: 'Recusado' };
+        const statusBarsEl = document.getElementById('miniReportStatusBars');
+        if (statusBarsEl) {
+            if (total === 0) {
+                statusBarsEl.innerHTML = '<span class="mini-report-sub">Nenhum dado</span>';
+            } else {
+                statusBarsEl.innerHTML = Object.entries(statusCounts).map(([key, count]) => {
+                    const pct = Math.round((count / total) * 100);
+                    return `<div class="mini-report-bar-row">
+                        <span class="mini-report-bar-label">${statusLabels[key]}</span>
+                        <div class="mini-report-bar-track"><div class="mini-report-bar-fill status-${key}" style="width:${pct}%"></div></div>
+                        <span class="mini-report-bar-pct">${pct}%</span>
+                    </div>`;
+                }).join('');
+            }
+        }
+
+        // Top 5 serviços por valor
+        const byService = {};
+        data.forEach(item => {
+            const name = item.serviceName || 'N/A';
+            if (!byService[name]) byService[name] = 0;
+            byService[name] += this.parseValorNum(item.valor);
+        });
+        const topServicos = Object.entries(byService)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+        const servicosListEl = document.getElementById('miniReportServicosList');
+        if (servicosListEl) {
+            if (topServicos.length === 0) {
+                servicosListEl.innerHTML = '<span class="mini-report-sub">Nenhum dado</span>';
+            } else {
+                servicosListEl.innerHTML = topServicos.map(([nome, val]) => {
+                    const label = nome.length > 18 ? nome.substring(0, 18) + '…' : nome;
+                    return `<div class="mini-report-list-item"><span class="mini-report-list-label" title="${nome}">${label}</span><span class="mini-report-list-value">R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span></div>`;
+                }).join('');
+            }
+        }
+
+        // Top 5 recebedores por valor
+        const byRecebedor = {};
+        data.forEach(item => {
+            const name = (item.recebedor || '-').trim() || '-';
+            if (!byRecebedor[name]) byRecebedor[name] = 0;
+            byRecebedor[name] += this.parseValorNum(item.valor);
+        });
+        const topRecebedores = Object.entries(byRecebedor)
+            .filter(([n]) => n !== '-')
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+        const recebedoresListEl = document.getElementById('miniReportRecebedoresList');
+        if (recebedoresListEl) {
+            if (topRecebedores.length === 0) {
+                recebedoresListEl.innerHTML = '<span class="mini-report-sub">Nenhum dado</span>';
+            } else {
+                recebedoresListEl.innerHTML = topRecebedores.map(([nome, val]) => {
+                    const label = nome.length > 18 ? nome.substring(0, 18) + '…' : nome;
+                    return `<div class="mini-report-list-item"><span class="mini-report-list-label" title="${nome}">${label}</span><span class="mini-report-list-value">R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span></div>`;
+                }).join('');
+            }
+        }
+
+        // Taxa de aprovação (aprovadas + concluídas) / processadas
+        const processadas = data.filter(item => ['aprovado', 'concluido', 'recusado'].includes((item.status || '').toLowerCase())).length;
+        const aprovadasOuConcluidas = data.filter(item => ['aprovado', 'concluido'].includes((item.status || '').toLowerCase())).length;
+        const taxaValEl = document.getElementById('miniReportTaxaVal');
+        if (taxaValEl) {
+            if (processadas === 0) {
+                taxaValEl.textContent = '—';
+            } else {
+                const taxa = Math.round((aprovadasOuConcluidas / processadas) * 100);
+                taxaValEl.textContent = `${taxa}%`;
+            }
+        }
     }
 
     setDefaultDates() {

@@ -310,7 +310,7 @@
         <form method="get" class="auditoria-filters">
             <div class="filter-group">
                 <label>Busca Geral</label>
-                <input type="text" name="q" placeholder="Usuário, IP, ID..." value="{{ q }}">
+                <input type="text" name="q" placeholder="Usuário, ID..." value="{{ q }}">
             </div>
             
             <div class="filter-group">
@@ -373,7 +373,6 @@
                         <th>Modelo</th>
                         <th>Objeto</th>
                         <th>Usuário</th>
-                        <th>IP</th>
                         <th>Origem</th>
                         <th>Ações</th>
                     </tr>
@@ -399,7 +398,6 @@
                                 <span>{{ log.usuario.username|default:"Sistema" }}</span>
                             </div>
                         </td>
-                        <td style="font-family: monospace; color: #666;">{{ log.ip_address|default:"-" }}</td>
                         <td title="{{ log.origem }}"><span style="max-width: 150px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ log.origem|default:"-" }}</span></td>
                         <td>
                             <button class="btn-view" onclick='showAuditDetail({{ log.id }}, {{ log.detalhes_json|safe }})'>
@@ -409,7 +407,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="9" style="text-align: center; padding: 40px;">Nenhum registro encontrado.</td>
+                        <td colspan="8" style="text-align: center; padding: 40px;">Nenhum registro encontrado.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
