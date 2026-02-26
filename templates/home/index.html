@@ -2,6 +2,7 @@
 {% load static %}
 {% load usuarios_tags %}
 {% load l10n %}
+{% load solicitacoes_filters %}
 
 {% block title %}Solicitações - Sistema de Gestão Financeira{% endblock %}
 
@@ -66,15 +67,21 @@
             window.updateColumnTotalsAfterFilter();
         };
 
-        // Soma dos valores totais por coluna (apenas cards visíveis / filtrados)
+        // Formata número como R$ 1.234,56 (2 decimais, padrão Brasil)
+        window.formatBRL = function(num) {
+            var n = typeof num === 'number' ? num : parseFloat(String(num).replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+            return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+        // Soma dos valores totais por coluna (apenas cards visíveis / filtrados) – total com privacidade ******
         window.updateColumnTotalsAfterFilter = function() {
             const columns = ['planning', 'test', 'launch', 'success', 'refund'];
             columns.forEach(column => {
                 const columnEl = document.querySelector(`.kanban-column[data-column="${column}"]`);
                 if (!columnEl) return;
                 const columnContent = columnEl.querySelector('.column-content');
-                const totalEl = columnEl.querySelector('.column-total-amount');
-                if (!columnContent || !totalEl) return;
+                const totalWrap = columnEl.querySelector('.column-total-amount-wrap');
+                const totalDisplay = columnEl.querySelector('.column-total-amount');
+                if (!columnContent || !totalWrap || !totalDisplay) return;
                 let total = 0;
                 columnContent.querySelectorAll('.card[data-card-id]:not(.empty-column)').forEach(card => {
                     const style = window.getComputedStyle(card);
@@ -85,7 +92,11 @@
                         total += num;
                     }
                 });
-                totalEl.textContent = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                var valorStr = window.formatBRL(total);
+                totalWrap.setAttribute('data-private-real', valorStr);
+                totalDisplay.textContent = '******';
+                var btn = totalWrap.querySelector('.btn-reveal-value i');
+                if (btn) btn.className = 'fas fa-eye';
             });
         };
 
@@ -320,7 +331,10 @@
                 <span class="card-count">{{ num_solicitacoes_pendentes }}</span>
                         </div>
                         <div class="column-total-value" data-column="planning">
-                            Total: <span class="column-total-amount">R$ 0,00</span>
+                            Total: <span class="private-value-wrap column-total-amount-wrap" data-private-real="">
+                                <span class="private-value-display column-total-amount">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar total" aria-label="Mostrar total"><i class="fas fa-eye"></i></button>
+                            </span>
                             {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="planning" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                             {% endif %}
@@ -372,8 +386,9 @@
                             <div class="card-body">
                     <h3 class="card-title">{{ solicitacao.titulo }}</h3>
                                 <div class="card-info">
-                                    <div class="info-item">
-                            <span class="info-value">#{{ solicitacao.ticket }}</span>
+                                    <div class="info-item private-value-wrap" data-private-real="#{{ solicitacao.ticket }}">
+                                        <span class="info-value private-value-display">******</span>
+                                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-user"></i>
@@ -388,7 +403,10 @@
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
-                            <span class="info-value">R$ {{ solicitacao.get_valor_detalhados|floatformat:2 }}</span>
+                                        <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
+                                            <span class="info-value private-value-display">******</span>
+                                            <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
+                                        </div>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
@@ -431,7 +449,10 @@
                 <span class="card-count">{{ num_solicitacoes_recusados }}</span>
                         </div>
                         <div class="column-total-value" data-column="test">
-                            Total: <span class="column-total-amount">R$ 0,00</span>
+                            Total: <span class="private-value-wrap column-total-amount-wrap" data-private-real="">
+                                <span class="private-value-display column-total-amount">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar total" aria-label="Mostrar total"><i class="fas fa-eye"></i></button>
+                            </span>
                             {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="test" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                             {% endif %}
@@ -483,8 +504,9 @@
                             <div class="card-body">
                     <h3 class="card-title">{{ solicitacao.titulo }}</h3>
                                 <div class="card-info">
-                                    <div class="info-item">
-                            <span class="info-value">#{{ solicitacao.ticket }}</span>
+                                    <div class="info-item private-value-wrap" data-private-real="#{{ solicitacao.ticket }}">
+                                        <span class="info-value private-value-display">******</span>
+                                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-user"></i>
@@ -499,7 +521,10 @@
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
-                            <span class="info-value">R$ {{ solicitacao.get_valor_detalhados|floatformat:2 }}</span>
+                                        <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
+                                            <span class="info-value private-value-display">******</span>
+                                            <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
+                                        </div>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
@@ -547,7 +572,10 @@
                 <span class="card-count">{{ num_solicitacoes_aprovado }}</span>
                         </div>
                         <div class="column-total-value" data-column="launch">
-                            Total: <span class="column-total-amount">R$ 0,00</span>
+                            Total: <span class="private-value-wrap column-total-amount-wrap" data-private-real="">
+                                <span class="private-value-display column-total-amount">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar total" aria-label="Mostrar total"><i class="fas fa-eye"></i></button>
+                            </span>
                             {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="launch" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                             {% endif %}
@@ -599,8 +627,9 @@
                             <div class="card-body">
                     <h3 class="card-title">{{ solicitacao.titulo }}</h3>
                                 <div class="card-info">
-                                    <div class="info-item">
-                            <span class="info-value">#{{ solicitacao.ticket }}</span>
+                                    <div class="info-item private-value-wrap" data-private-real="#{{ solicitacao.ticket }}">
+                                        <span class="info-value private-value-display">******</span>
+                                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-user"></i>
@@ -615,7 +644,10 @@
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
-                            <span class="info-value">R$ {{ solicitacao.get_valor_detalhados|floatformat:2 }}</span>
+                                        <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
+                                            <span class="info-value private-value-display">******</span>
+                                            <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
+                                        </div>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
@@ -658,7 +690,10 @@
                 <span class="card-count">{{ num_solicitacoes_concluido }}</span>
                         </div>
                         <div class="column-total-value" data-column="success">
-                            Total: <span class="column-total-amount">R$ 0,00</span>
+                            Total: <span class="private-value-wrap column-total-amount-wrap" data-private-real="">
+                                <span class="private-value-display column-total-amount">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar total" aria-label="Mostrar total"><i class="fas fa-eye"></i></button>
+                            </span>
                             {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="success" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                             {% endif %}
@@ -710,8 +745,9 @@
                             <div class="card-body">
                     <h3 class="card-title">{{ solicitacao.titulo }}</h3>
                                 <div class="card-info">
-                                    <div class="info-item">
-                            <span class="info-value">#{{ solicitacao.ticket }}</span>
+                                    <div class="info-item private-value-wrap" data-private-real="#{{ solicitacao.ticket }}">
+                                        <span class="info-value private-value-display">******</span>
+                                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-user"></i>
@@ -726,7 +762,10 @@
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
-                            <span class="info-value">R$ {{ solicitacao.get_valor_detalhados|floatformat:2 }}</span>
+                                        <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
+                                            <span class="info-value private-value-display">******</span>
+                                            <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
+                                        </div>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
@@ -769,7 +808,10 @@
                 <span class="card-count">{{ num_solicitacoes_estorno }}</span>
                         </div>
                         <div class="column-total-value" data-column="refund">
-                            Total: <span class="column-total-amount">R$ 0,00</span>
+                            Total: <span class="private-value-wrap column-total-amount-wrap" data-private-real="">
+                                <span class="private-value-display column-total-amount">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar total" aria-label="Mostrar total"><i class="fas fa-eye"></i></button>
+                            </span>
                             {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="refund" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                             {% endif %}
@@ -821,8 +863,9 @@
                             <div class="card-body">
                     <h3 class="card-title">{{ solicitacao.titulo }}</h3>
                                 <div class="card-info">
-                                    <div class="info-item">
-                            <span class="info-value">#{{ solicitacao.ticket }}</span>
+                                    <div class="info-item private-value-wrap" data-private-real="#{{ solicitacao.ticket }}">
+                                        <span class="info-value private-value-display">******</span>
+                                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-user"></i>
@@ -837,7 +880,10 @@
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
-                            <span class="info-value">R$ {{ solicitacao.get_valor_detalhados|floatformat:2 }}</span>
+                                        <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
+                                            <span class="info-value private-value-display">******</span>
+                                            <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
+                                        </div>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
@@ -918,11 +964,17 @@
                     <div class="detail-item detail-item-row">
                         <div class="detail-item-half">
                             <div class="detail-label">Valor Total</div>
-                            <div class="detail-value highlight" id="modal-valor">R$ 0,00</div>
+                            <div class="detail-value highlight private-value-wrap" id="modal-valor-wrap" data-private-real="">
+                                <span class="private-value-display" id="modal-valor">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
+                            </div>
                         </div>
                         <div class="detail-item-half">
                             <div class="detail-label">Valor da Receita</div>
-                            <div class="detail-value highlight" id="modal-valor-receita" style="color: #FFCB57;">R$ 0,00</div>
+                            <div class="detail-value highlight private-value-wrap" id="modal-valor-receita-wrap" data-private-real="" style="color: #FFCB57;">
+                                <span class="private-value-display" id="modal-valor-receita">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
+                            </div>
                         </div>
                         </div>
                         <div class="detail-item">
@@ -1048,6 +1100,34 @@
     <script src="{% static 'js/card-modal.js' %}"></script>
     <script src="{% static 'js/kanban.js' %}"></script>
     <script src="{% static 'js/kanban-drag-drop.js' %}"></script>
+    <script>
+        // Toggle privacidade: ****** <-> valor real ao clicar no olho
+        // Usar capture: true para rodar ANTES do clique do card e evitar abrir o modal
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('.btn-reveal-value');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation(); // impede que o card receba o clique e abra a solicitação
+            var wrap = btn.closest('.private-value-wrap');
+            if (!wrap) return;
+            var display = wrap.querySelector('.private-value-display');
+            var real = wrap.getAttribute('data-private-real') || '';
+            if (!display) return;
+            if (display.textContent === '******') {
+                display.textContent = real;
+                var icon = btn.querySelector('i');
+                if (icon) { icon.className = 'fas fa-eye-slash'; }
+                btn.setAttribute('title', 'Ocultar');
+                btn.setAttribute('aria-label', 'Ocultar valor');
+            } else {
+                display.textContent = '******';
+                var icon = btn.querySelector('i');
+                if (icon) { icon.className = 'fas fa-eye'; }
+                btn.setAttribute('title', 'Mostrar valor');
+                btn.setAttribute('aria-label', 'Mostrar valor');
+            }
+        }, true);
+    </script>
     <script>
         // Filtro de data por coluna do Kanban - Modal elegante
         document.addEventListener('DOMContentLoaded', function() {

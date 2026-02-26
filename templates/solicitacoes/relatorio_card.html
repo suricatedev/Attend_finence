@@ -1,3 +1,4 @@
+{% load solicitacoes_filters %}
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -583,16 +584,16 @@
             <div class="valores-resumo">
                 <div class="valor-card">
                     <div class="valor-card-label">Valor Total (Detalhados)</div>
-                    <div class="valor-card-value">R$ {{ valor_total_detalhados|floatformat:2 }}</div>
+                    <div class="valor-card-value">{{ valor_total_detalhados|brl }}</div>
                 </div>
                 <div class="valor-card" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);">
                     <div class="valor-card-label">Valor da Receita</div>
-                    <div class="valor-card-value">R$ {{ valor_receita|floatformat:2 }}</div>
+                    <div class="valor-card-value">{{ valor_receita|brl }}</div>
                 </div>
                 {% if solicitacao.valor_em_rota %}
                 <div class="valor-card" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
                     <div class="valor-card-label">Valor EM ROTA</div>
-                    <div class="valor-card-value">R$ {{ solicitacao.valor_em_rota|floatformat:2 }}</div>
+                    <div class="valor-card-value">{{ solicitacao.valor_em_rota|brl }}</div>
                 </div>
                 {% endif %}
             </div>
@@ -629,7 +630,7 @@
                         <td>{{ item.chave_pix|default:"-" }}</td>
                         <td>{{ item.cliente_empresa|default:"-" }}</td>
                         <td>{{ item.cnpj|default:"-" }}</td>
-                        <td class="valor-destaque">R$ {{ item.valor_total|floatformat:2 }}</td>
+                        <td class="valor-destaque">{{ item.valor_total|brl }}</td>
                         <td class="td-valores-detalhados">
                             <div class="valores-detalhados-item">
                                 {% if item.valor_km > 0 or item.valor_pedagio > 0 or item.valor_hospedagem > 0 or item.valor_fluvial > 0 or item.valor_outros > 0 %}
@@ -637,31 +638,31 @@
                                         {% if item.valor_km and item.valor_km > 0 %}
                                         <span class="valor-item">
                                             <span class="label">KM:</span>
-                                            <span class="value">R$ {{ item.valor_km|floatformat:2 }}</span>
+                                            <span class="value">{{ item.valor_km|brl }}</span>
                                         </span>
                                         {% endif %}
                                         {% if item.valor_pedagio and item.valor_pedagio > 0 %}
                                         <span class="valor-item">
                                             <span class="label">Pedágio:</span>
-                                            <span class="value">R$ {{ item.valor_pedagio|floatformat:2 }}</span>
+                                            <span class="value">{{ item.valor_pedagio|brl }}</span>
                                         </span>
                                         {% endif %}
                                         {% if item.valor_hospedagem and item.valor_hospedagem > 0 %}
                                         <span class="valor-item">
                                             <span class="label">Hospedagem:</span>
-                                            <span class="value">R$ {{ item.valor_hospedagem|floatformat:2 }}</span>
+                                            <span class="value">{{ item.valor_hospedagem|brl }}</span>
                                         </span>
                                         {% endif %}
                                         {% if item.valor_fluvial and item.valor_fluvial > 0 %}
                                         <span class="valor-item">
                                             <span class="label">Fluvial:</span>
-                                            <span class="value">R$ {{ item.valor_fluvial|floatformat:2 }}</span>
+                                            <span class="value">{{ item.valor_fluvial|brl }}</span>
                                         </span>
                                         {% endif %}
                                         {% if item.valor_outros and item.valor_outros > 0 %}
                                         <span class="valor-item">
                                             <span class="label">Outros:</span>
-                                            <span class="value">R$ {{ item.valor_outros|floatformat:2 }}</span>
+                                            <span class="value">{{ item.valor_outros|brl }}</span>
                                         </span>
                                         {% endif %}
                                     </div>
@@ -670,7 +671,7 @@
                                 {% endif %}
                             </div>
                         </td>
-                        <td class="valor-destaque">R$ {{ item.valor_atividade|floatformat:2 }}</td>
+                        <td class="valor-destaque">{{ item.valor_atividade|brl }}</td>
                         <td>
                             {% if item.atividade_produtiva is not None %}
                                 {% if item.atividade_produtiva %}

@@ -491,9 +491,9 @@ async function extractCardData(card) {
                                 return resultado;
                             };
                             
-                            // Função auxiliar para formatar valor monetário
+                            // Função auxiliar para formatar valor monetário (R$ 1.234,56)
                             const formatarValorMonetario = (valor) => {
-                                return `R$ ${valor.toFixed(2).replace('.', ',')}`;
+                                return 'R$ ' + Number(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                             };
                             
                             let somaAtividades = 0;
@@ -710,9 +710,9 @@ async function extractCardData(card) {
                     return resultado;
                 };
                 
-                // Função auxiliar para formatar valor monetário
+                // Função auxiliar para formatar valor monetário (R$ 1.234,56)
                 const formatarValorMonetario = (valor) => {
-                    return `R$ ${valor.toFixed(2).replace('.', ',')}`;
+                    return 'R$ ' + Number(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 };
                 
                 let somaAtividades = 0;
@@ -841,6 +841,22 @@ async function extractCardData(card) {
     return data;
 }
 
+// Atualiza valores do modal mantendo privacidade (****** + olho para revelar)
+function setModalValorPrivado(valorStr, valorReceitaStr) {
+    var wrapValor = document.getElementById('modal-valor-wrap');
+    var displayValor = document.getElementById('modal-valor');
+    if (wrapValor && displayValor) {
+        wrapValor.setAttribute('data-private-real', valorStr || 'R$ 0,00');
+        displayValor.textContent = '******';
+    }
+    var wrapReceita = document.getElementById('modal-valor-receita-wrap');
+    var displayReceita = document.getElementById('modal-valor-receita');
+    if (wrapReceita && displayReceita) {
+        wrapReceita.setAttribute('data-private-real', valorReceitaStr || 'R$ 0,00');
+        displayReceita.textContent = '******';
+    }
+}
+
 // Função para preencher os dados do card no modal
 function populateCardDetails(data) {
     // Preencher informações básicas
@@ -926,7 +942,7 @@ function populateCardDetails(data) {
             }
         }
         
-        // ✅ MOSTRAR o campo "Valor Total" - não ocultar
+        // ✅ MOSTRAR o campo "Valor Total" - não ocultar (valores com privacidade ******)
         if (valorContainer && valorElement) {
             valorContainer.style.display = '';
             const valorLabel = valorContainer.querySelector('.detail-label');
@@ -934,23 +950,11 @@ function populateCardDetails(data) {
                 valorLabel.textContent = 'Valor Total';
                 valorLabel.style.display = '';
             }
-            valorElement.textContent = data.valor || 'R$ 0,00';
             valorElement.style.display = '';
-            console.log('✅ Campo Valor Total configurado:', data.valor);
+            setModalValorPrivado(data.valor || 'R$ 0,00', data.valorReceita || 'R$ 0,00');
+            console.log('✅ Campo Valor Total configurado (mascarado)');
         } else {
             console.warn('⚠️ valorContainer ou valorElement não encontrado');
-        }
-        
-        // Preencher campo de Valor da Receita
-        const valorReceitaElement = document.getElementById('modal-valor-receita');
-        if (valorReceitaElement) {
-            const valorReceitaFinal = data.valorReceita || 'R$ 0,00';
-            valorReceitaElement.textContent = valorReceitaFinal;
-            console.log('✅ Campo Valor da Receita configurado:', valorReceitaFinal);
-            console.log('🔍 Debug - data.valorReceita:', data.valorReceita);
-            console.log('🔍 Debug - data.itensRota length:', data.itensRota?.length);
-        } else {
-            console.error('❌ Campo modal-valor-receita não encontrado no DOM!');
         }
         
         // Remover seção anterior se existir
@@ -1139,9 +1143,9 @@ function populateCardDetails(data) {
                 valorLabel.textContent = 'Valor Total';
                 valorLabel.style.display = '';
             }
-            valorElement.textContent = data.valorTotalTecnico || data.valor || 'R$ 0,00';
             valorElement.style.display = '';
-            console.log('✅ Campo Valor Total configurado:', data.valorTotalTecnico);
+            setModalValorPrivado(data.valorTotalTecnico || data.valor || 'R$ 0,00', data.valorReceita || 'R$ 0,00');
+            console.log('✅ Campo Valor Total configurado (mascarado)');
         }
         
         // Remover seção anterior se existir
@@ -1288,17 +1292,9 @@ function populateCardDetails(data) {
                 valorLabel.textContent = 'Valor Total';
                 valorLabel.style.display = '';
             }
-            valorElement.textContent = data.valoresDetalhados.valor_total || data.valor || 'R$ 0,00';
             valorElement.style.display = '';
-            console.log('✅ Campo Valor Total configurado:', data.valoresDetalhados.valor_total);
-        }
-        
-        // Preencher campo de Valor da Receita
-        const valorReceitaElement = document.getElementById('modal-valor-receita');
-        if (valorReceitaElement) {
-            const receitaValue = data.valoresDetalhados.valor_receita || data.valorReceita || 'R$ 0,00';
-            valorReceitaElement.textContent = receitaValue;
-            console.log('✅ Campo Valor da Receita Casual configurado:', receitaValue);
+            setModalValorPrivado(data.valoresDetalhados.valor_total || data.valor || 'R$ 0,00', data.valoresDetalhados.valor_receita || data.valorReceita || 'R$ 0,00');
+            console.log('✅ Campo Valor Total Casual configurado (mascarado)');
         }
         
         // Remover seção anterior se existir
@@ -1424,21 +1420,13 @@ function populateCardDetails(data) {
             }
         }
         
-        // Mostrar campo "Valor" normalmente
+        // Mostrar campo "Valor" normalmente (valores com privacidade ******)
         if (valorContainer) {
             valorContainer.style.display = '';
             const valorLabel = valorContainer.querySelector('.detail-label');
             if (valorLabel) valorLabel.style.display = '';
-            if (valorElement) {
-                valorElement.textContent = data.valor || 'R$ 0,00';
-                valorElement.style.display = '';
-            }
-        }
-        
-        // Preencher campo de Valor da Receita no caso padrão
-        const valorReceitaElement = document.getElementById('modal-valor-receita');
-        if (valorReceitaElement) {
-            valorReceitaElement.textContent = data.valorReceita || 'R$ 0,00';
+            if (valorElement) valorElement.style.display = '';
+            setModalValorPrivado(data.valor || 'R$ 0,00', data.valorReceita || 'R$ 0,00');
         }
         
         // Remover seções de valores detalhados se existirem

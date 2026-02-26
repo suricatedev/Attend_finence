@@ -236,7 +236,7 @@ header.header {
 
 .filters-section {
     background: white;
-    padding: 15px 25px;
+    padding: 10px 16px;
     border-bottom: 1px solid #e2e8f0;
     box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
     flex-shrink: 0;
@@ -244,7 +244,8 @@ header.header {
     width: 100%;
     overflow-x: hidden;
     overflow-y: visible;
-    min-height: fit-content;}
+    min-height: fit-content;
+}
 
 .filters-container {
     display: flex;
@@ -264,7 +265,7 @@ header.header {
 }
 
 .filters-toggle h3 {
-    font-size: 0.9rem; /* Reduzido de 1rem */
+    font-size: 0.85rem;
     font-weight: 600;
     color: #1C1C1C;
     margin: 0;
@@ -283,10 +284,10 @@ header.header {
 .filters-content {
     transition: all 0.3s ease;
     overflow: hidden;
-    max-height: 500px; /* Altura máxima quando aberto */
-    opacity: 1; /* Visível por padrão */
-    padding: 10px 0; /* Padding quando visível */
-    margin-top: 10px;
+    max-height: 420px;
+    opacity: 1;
+    padding: 6px 0;
+    margin-top: 6px;
 }
 
 .filters-content.collapsed {
@@ -362,13 +363,13 @@ header.header {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     color: #544350;
-    padding: 8px 12px;
-    border-radius: 6px;
+    padding: 5px 10px;
+    border-radius: 5px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.8rem;
+    gap: 4px;
+    font-size: 0.78rem;
     transition: all 0.2s ease;
     white-space: nowrap;
     flex: 1;
@@ -393,13 +394,13 @@ header.header {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     color: #544350;
-    padding: 8px 12px;
-    border-radius: 6px;
+    padding: 5px 10px;
+    border-radius: 5px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.8rem;
+    gap: 4px;
+    font-size: 0.78rem;
     transition: all 0.2s ease;
     white-space: nowrap;
     flex: 1;
@@ -425,21 +426,21 @@ header.header {
 
 .period-quick-buttons-report {
     flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 6px;
+    margin-bottom: 6px;
 }
 
 .period-btn {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     color: #544350;
-    padding: 8px 14px;
-    border-radius: 6px;
+    padding: 5px 10px;
+    border-radius: 5px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.85rem;
+    gap: 4px;
+    font-size: 0.78rem;
     font-weight: 500;
     transition: all 0.2s ease;
 }
@@ -862,20 +863,20 @@ header.header {
 
 .dashboard-indicadores-section {
     background: #f1f5f9;
-    padding: 20px 25px;
+    padding: 12px 16px;
     border-bottom: 1px solid #e2e8f0;
     width: 100%;
     box-sizing: border-box;
 }
 
 .dashboard-indicadores-title {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: #1C1C1C;
-    margin: 0 0 4px 0;
+    margin: 0 0 2px 0;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .dashboard-indicadores-title i {
@@ -883,15 +884,15 @@ header.header {
 }
 
 .dashboard-indicadores-subtitle {
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     color: #64748b;
-    margin: 0 0 16px 0;
+    margin: 0 0 10px 0;
 }
 
 .dashboard-indicadores-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 18px;
+    gap: 12px;
     width: 100%;
 }
 
@@ -904,8 +905,8 @@ header.header {
 .indicador-card {
     background: white;
     border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 14px 16px;
+    border-radius: 8px;
+    padding: 10px 12px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
     transition: box-shadow 0.2s ease;
 }
@@ -915,33 +916,42 @@ header.header {
 }
 
 .indicador-card-header {
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .indicador-card-label {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     font-weight: 600;
     color: #475569;
+    line-height: 1.25;
+}
+
+.indicador-card-desc {
+    font-size: 0.65rem;
+    color: #64748b;
+    margin: 0 0 4px 0;
+    line-height: 1.25;
 }
 
 .indicador-card-value {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: 700;
     color: #1C1C1C;
-    margin: 4px 0;
+    margin: 2px 0;
 }
 
 .indicador-card-trend {
-    font-size: 0.75rem;
-    margin-bottom: 8px;
+    font-size: 0.7rem;
+    margin-bottom: 4px;
 }
 
 .trend-badge {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 2px 6px;
+    gap: 3px;
+    padding: 2px 5px;
     border-radius: 4px;
+    font-size: 0.68rem;
 }
 
 .trend-badge.trend-up {
@@ -955,25 +965,30 @@ header.header {
 }
 
 .indicador-mini-chart {
-    margin-top: 8px;
+    margin-top: 4px;
     position: relative;
+    max-height: 72px;
+}
+
+.indicador-mini-chart canvas {
+    max-height: 56px !important;
 }
 
 .indicador-mini-chart .mini-chart-label {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: #94a3b8;
     display: block;
-    margin-top: 4px;
+    margin-top: 2px;
 }
 
 .indicador-card-legend {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: #64748b;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .indicador-chart-wrap {
-    min-height: 200px;
+    min-height: 160px;
     position: relative;
 }
 

@@ -1,0 +1,208 @@
+/* ========================================
+   Dashboard de Custos - Attend Finance
+   ======================================== */
+
+:root {
+    --attend-gold: #ffcc4d;
+    --attend-dark: #1a1a1a;
+    --attend-sidebar: #262626;
+}
+
+.dashboard-custos-view {
+    background-color: #f4f7f6;
+    min-height: 100%;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.dashboard-custos-header {
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.dashboard-custos-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 0.25rem 0;
+}
+
+.dashboard-custos-periodo {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+.dashboard-custos-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn-custos {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.btn-custos-primary {
+    background-color: var(--attend-gold);
+    color: #000;
+}
+
+.btn-custos-primary:hover {
+    background-color: #e6b83d;
+    transform: translateY(-1px);
+}
+
+.btn-custos-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+}
+
+.btn-custos-secondary:hover {
+    background: #e5e7eb;
+}
+
+.text-attend-gold {
+    color: var(--attend-gold);
+}
+
+.text-attend-dark {
+    color: var(--attend-dark);
+}
+
+.mr-2 {
+    margin-right: 0.5rem;
+}
+
+/* KPI Cards */
+.dashboard-custos-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.kpi-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    border-left: 4px solid transparent;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.kpi-card-blue   { border-left-color: #3b82f6; }
+.kpi-card-gold   { border-left-color: var(--attend-gold); }
+.kpi-card-green  { border-left-color: #10b981; }
+.kpi-card-red    { border-left-color: #ef4444; }
+.kpi-card-indigo { border-left-color: #6366f1; }
+.kpi-card-teal   { border-left-color: #14b8a6; }
+.kpi-card-orange { border-left-color: #f97316; }
+
+.kpi-card-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.kpi-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+    margin: 0 0 0.25rem 0;
+}
+
+.kpi-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.kpi-icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.kpi-icon-blue   { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+.kpi-icon-gold   { background: rgba(255, 204, 77, 0.2); color: #d4a017; }
+.kpi-icon-green  { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.kpi-icon-red    { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+.kpi-icon-indigo { background: rgba(99, 102, 241, 0.15); color: #6366f1; }
+.kpi-icon-teal   { background: rgba(20, 184, 166, 0.15); color: #14b8a6; }
+.kpi-icon-orange { background: rgba(249, 115, 22, 0.15); color: #f97316; }
+
+/* Charts */
+.dashboard-custos-charts {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    padding: 0 1.5rem 1.5rem;
+}
+
+.chart-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.chart-card-full {
+    grid-column: 1 / -1;
+}
+
+.chart-card-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chart-card-canvas {
+    height: 300px;
+    position: relative;
+}
+
+@media (max-width: 1024px) {
+    .dashboard-custos-charts {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-custos-kpis {
+        grid-template-columns: 1fr;
+    }
+    .dashboard-custos-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

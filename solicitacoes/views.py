@@ -26,6 +26,21 @@ from .audit_utils import serialize_instance
 STATUS_VALIDOS = {choice[0] for choice in Solicitacoes._meta.get_field('status').choices}
 
 
+def format_brl(value):
+    """Formata número como moeda BRL: R$ 1.234,56 (2 decimais, ponto milhares, vírgula decimal)."""
+    if value is None:
+        return 'R$ 0,00'
+    try:
+        num = float(value)
+    except (TypeError, ValueError):
+        return 'R$ 0,00'
+    s = f'{num:,.2f}'
+    parts = s.split('.')
+    int_part = parts[0].replace(',', '.')
+    dec_part = parts[1] if len(parts) > 1 else '00'
+    return f'R$ {int_part},{dec_part}'
+
+
 def normalizar_status(valor):
     """
     Normaliza o valor do status para garantir consistência com os choices do modelo.
@@ -1576,19 +1591,19 @@ def obter_itens_rota(request, solicitacao_id):
             itens_data.append({
                 'ordem': item.ordem,
                 'id': item.ticket_item,
-                'valor': f'R$ {item.valor:.2f}',
+                'valor': format_brl(item.valor),
                 'servico': item.servico.nome if item.servico else 'N/A',
                 'recebedor': item.recebedor or '',
                 'chave_pix': item.chave_pix or '',
                 'cliente_empresa': item.cliente_empresa or '',
                 'cnpj': item.cnpj or '',
-                'valor_km': f'R$ {item.valor_km:.2f}',
-                'valor_pedagio': f'R$ {item.valor_pedagio:.2f}',
-                'valor_hospedagem': f'R$ {item.valor_hospedagem:.2f}',
-                'valor_fluvial': f'R$ {item.valor_fluvial:.2f}',
-                'valor_outros': f'R$ {item.valor_outros:.2f}',
-                'valor_total_item': f'R$ {item.valor:.2f}',
-                'valor_atividade': f'R$ {valor_atividade_item:.2f}'  # Adicionar valor da atividade calculado
+                'valor_km': format_brl(item.valor_km),
+                'valor_pedagio': format_brl(item.valor_pedagio),
+                'valor_hospedagem': format_brl(item.valor_hospedagem),
+                'valor_fluvial': format_brl(item.valor_fluvial),
+                'valor_outros': format_brl(item.valor_outros),
+                'valor_total_item': format_brl(item.valor),
+                'valor_atividade': format_brl(valor_atividade_item)  # Adicionar valor da atividade calculado
             })
         
         # Calcular valor total apenas com valores detalhados (sem atividade)
@@ -1606,9 +1621,9 @@ def obter_itens_rota(request, solicitacao_id):
         return JsonResponse({
             'success': True,
             'itens': itens_data,
-            'valor_total': f'R$ {valor_total_detalhados:.2f}',
-            'valor_receita': f'R$ {valor_receita_calculado:.2f}',
-            'valor_em_rota': f'R$ {solicitacao.valor_em_rota:.2f}',
+            'valor_total': format_brl(valor_total_detalhados),
+            'valor_receita': format_brl(valor_receita_calculado),
+            'valor_em_rota': format_brl(solicitacao.valor_em_rota),
             'descricao_em_rota': solicitacao.descricao_em_rota or ''
         })
         
@@ -1662,12 +1677,12 @@ def obter_itens_tecnico(request, solicitacao_id):
                 'servico_id': item.servico.id if item.servico else None,
                 'cliente_empresa': item.cliente_empresa.nome if item.cliente_empresa else '',
                 'cliente_empresa_id': item.cliente_empresa.id if item.cliente_empresa else None,
-                'valor_pagamento': f'R$ {item.valor_pagamento_tecnico:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.'),
+                'valor_pagamento': format_brl(item.valor_pagamento_tecnico),
                 'valor_pagamento_raw': float(item.valor_pagamento_tecnico or 0),
-                'valor_extra': f'R$ {item.valor_extra:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.') if item.valor_extra else 'R$ 0,00',
+                'valor_extra': format_brl(item.valor_extra) if item.valor_extra else 'R$ 0,00',
                 'valor_extra_raw': float(item.valor_extra or 0),
-                'valor': f'R$ {valor_total_item:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.'),
-                'valor_total_item': f'R$ {valor_total_item:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.'),
+                'valor': format_brl(valor_total_item),
+                'valor_total_item': format_brl(valor_total_item),
                 'descricao': item.descricao or '',
                 'data_realizacao': item.data_realizacao_atividade.strftime('%Y-%m-%d') if item.data_realizacao_atividade else '',
                 'data_pagamento': item.data_pagamento.strftime('%Y-%m-%d') if item.data_pagamento else '',
@@ -1685,7 +1700,7 @@ def obter_itens_tecnico(request, solicitacao_id):
         return JsonResponse({
             'success': True,
             'itens': itens_data,
-            'valor_total': f'R$ {valor_total_calculado:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.'),
+            'valor_total': format_brl(valor_total_calculado),
         })
         
     except Solicitacoes.DoesNotExist:
@@ -1732,13 +1747,13 @@ def obter_valores_detalhados_casual(request, solicitacao_id):
         
         # Serializar os valores detalhados
         valores_detalhados = {
-            'valor_km': f'R$ {solicitacao.valor_km:.2f}',
-            'valor_pedagio': f'R$ {solicitacao.valor_pedagio:.2f}',
-            'valor_hospedagem': f'R$ {solicitacao.valor_hospedagem:.2f}',
-            'valor_fluvial': f'R$ {solicitacao.valor_fluvial:.2f}',
-            'valor_outros': f'R$ {solicitacao.valor_outros:.2f}',
-            'valor_receita': f'R$ {valor_receita_calculado:.2f}',  # Usar valor calculado, não o salvo
-            'valor_total': f'R$ {valor_total_detalhados:.2f}',
+            'valor_km': format_brl(solicitacao.valor_km),
+            'valor_pedagio': format_brl(solicitacao.valor_pedagio),
+            'valor_hospedagem': format_brl(solicitacao.valor_hospedagem),
+            'valor_fluvial': format_brl(solicitacao.valor_fluvial),
+            'valor_outros': format_brl(solicitacao.valor_outros),
+            'valor_receita': format_brl(valor_receita_calculado),  # Usar valor calculado, não o salvo
+            'valor_total': format_brl(valor_total_detalhados),
             'servico': solicitacao.servico.nome if solicitacao.servico else 'N/A',
             'chave_pix': solicitacao.chave_pix or '',
             'cliente_empresa': solicitacao.cliente_empresa or '',
@@ -1802,24 +1817,24 @@ def obter_detalhes_completos(request, solicitacao_id):
             'data_pagamento': solicitacao.data_de_pagamento.strftime('%d/%m/%Y') if solicitacao.data_de_pagamento else 'N/A',
             'data_criacao_iso': solicitacao.data_de_criacao.isoformat() if solicitacao.data_de_criacao else '',
             'data_pagamento_iso': solicitacao.data_de_pagamento.isoformat() if solicitacao.data_de_pagamento else '',
-            'valor_total': f'R$ {solicitacao.valor:.2f}',
+            'valor_total': format_brl(solicitacao.valor),
             'valor_total_raw': float(solicitacao.valor or 0),
             # Calcular valor_receita a partir das atividades (não usar o valor salvo)
             'valor_receita': '',  # Será calculado abaixo
             'valor_receita_raw': 0.0,  # Será calculado abaixo
-            'valor_em_rota': f'R$ {solicitacao.valor_em_rota:.2f}',
+            'valor_em_rota': format_brl(solicitacao.valor_em_rota),
             'valor_em_rota_raw': float(solicitacao.valor_em_rota or 0),
             'descricao_em_rota': solicitacao.descricao_em_rota or '',
             # Valores detalhados (sempre presentes)
-            'valor_km': f'R$ {solicitacao.valor_km:.2f}',
+            'valor_km': format_brl(solicitacao.valor_km),
             'valor_km_raw': float(solicitacao.valor_km or 0),
-            'valor_pedagio': f'R$ {solicitacao.valor_pedagio:.2f}',
+            'valor_pedagio': format_brl(solicitacao.valor_pedagio),
             'valor_pedagio_raw': float(solicitacao.valor_pedagio or 0),
-            'valor_hospedagem': f'R$ {solicitacao.valor_hospedagem:.2f}',
+            'valor_hospedagem': format_brl(solicitacao.valor_hospedagem),
             'valor_hospedagem_raw': float(solicitacao.valor_hospedagem or 0),
-            'valor_fluvial': f'R$ {solicitacao.valor_fluvial:.2f}',
+            'valor_fluvial': format_brl(solicitacao.valor_fluvial),
             'valor_fluvial_raw': float(solicitacao.valor_fluvial or 0),
-            'valor_outros': f'R$ {solicitacao.valor_outros:.2f}',
+            'valor_outros': format_brl(solicitacao.valor_outros),
             'valor_outros_raw': float(solicitacao.valor_outros or 0),
         }
         
@@ -1834,7 +1849,7 @@ def obter_detalhes_completos(request, solicitacao_id):
                 # item.valor já é o valor da atividade, não precisa subtrair nada
                 valor_atividade_item = item.valor or 0.0
                 valor_receita_calculado += valor_atividade_item
-            dados['valor_receita'] = f'R$ {valor_receita_calculado:.2f}'
+            dados['valor_receita'] = format_brl(valor_receita_calculado)
             dados['valor_receita_raw'] = float(valor_receita_calculado)
             dados['itens_rota'] = []
             for item in itens_rota:
@@ -1847,17 +1862,17 @@ def obter_detalhes_completos(request, solicitacao_id):
                     'chave_pix': item.chave_pix or '',
                     'cliente_empresa': item.cliente_empresa or '',
                     'cnpj': item.cnpj or '',
-                    'valor': f'R$ {item.valor:.2f}',
+                    'valor': format_brl(item.valor),
                     'valor_raw': float(item.valor or 0),
-                    'valor_km': f'R$ {item.valor_km:.2f}',
+                    'valor_km': format_brl(item.valor_km),
                     'valor_km_raw': float(item.valor_km or 0),
-                    'valor_pedagio': f'R$ {item.valor_pedagio:.2f}',
+                    'valor_pedagio': format_brl(item.valor_pedagio),
                     'valor_pedagio_raw': float(item.valor_pedagio or 0),
-                    'valor_hospedagem': f'R$ {item.valor_hospedagem:.2f}',
+                    'valor_hospedagem': format_brl(item.valor_hospedagem),
                     'valor_hospedagem_raw': float(item.valor_hospedagem or 0),
-                    'valor_fluvial': f'R$ {item.valor_fluvial:.2f}',
+                    'valor_fluvial': format_brl(item.valor_fluvial),
                     'valor_fluvial_raw': float(item.valor_fluvial or 0),
-                    'valor_outros': f'R$ {item.valor_outros:.2f}',
+                    'valor_outros': format_brl(item.valor_outros),
                     'valor_outros_raw': float(item.valor_outros or 0),
                 })
         else:
@@ -1869,7 +1884,7 @@ def obter_detalhes_completos(request, solicitacao_id):
             valor_receita_calculado = 0.0
             if valor_total_casual > soma_detalhados_casual:
                 valor_receita_calculado = valor_total_casual - soma_detalhados_casual
-            dados['valor_receita'] = f'R$ {valor_receita_calculado:.2f}'
+            dados['valor_receita'] = format_brl(valor_receita_calculado)
             dados['valor_receita_raw'] = float(valor_receita_calculado)
         
         # Se for solicitação de técnico, adicionar itens de técnico
@@ -1886,9 +1901,9 @@ def obter_detalhes_completos(request, solicitacao_id):
                     'servico_id': item.servico.id if item.servico else None,
                     'cliente_empresa': item.cliente_empresa.nome if item.cliente_empresa else '',
                     'cliente_empresa_id': item.cliente_empresa.id if item.cliente_empresa else None,
-                    'valor_pagamento': f'R$ {item.valor_pagamento_tecnico:.2f}',
+                    'valor_pagamento': format_brl(item.valor_pagamento_tecnico),
                     'valor_pagamento_raw': float(item.valor_pagamento_tecnico or 0),
-                    'valor_extra': f'R$ {item.valor_extra:.2f}',
+                    'valor_extra': format_brl(item.valor_extra),
                     'valor_extra_raw': float(item.valor_extra or 0),
                     'descricao': item.descricao or '',
                     'data_realizacao': item.data_realizacao_atividade.strftime('%Y-%m-%d') if item.data_realizacao_atividade else '',

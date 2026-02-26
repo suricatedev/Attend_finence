@@ -7,184 +7,85 @@ from django.http import JsonResponse
 from datetime import datetime, timedelta
 from calendar import monthrange
 import json
-from solicitacoes.models import Solicitacoes
+from solicitacoes.models import Solicitacoes, SolicitacaoTecnico, SolicitacaoRotaItem
 from servicos.models import Servico
 from usuarios.decorators import user_can_view_dashboard, user_can_view_reports
 from django.shortcuts import render, redirect
 
 def dashboard(request):
+    """Dashboard de Custos: apenas métricas e gráficos de análise de custos."""
     if request.method == "GET":
         if not request.user.is_authenticated:
             return redirect('login')
-        
-        # Verificar permissão: apenas Administrador e Financeiro podem ver dashboard
         if not user_can_view_dashboard(request.user):
             messages.error(request, 'Você não tem permissão para acessar esta página.')
             return redirect('home')
-        
-        # Buscar todas as solicitações
+
         todas_solicitacoes = Solicitacoes.objects.all()
         total_solicitacoes = todas_solicitacoes.count()
-        
-        # Métricas por status
         pendentes = todas_solicitacoes.filter(status='pendente').count()
         aprovadas = todas_solicitacoes.filter(status='aprovado').count()
-        recusadas = todas_solicitacoes.filter(status='recusado').count()
-        concluidas = todas_solicitacoes.filter(status='concluido').count()
-        
-        # Valores financeiros
         valor_total = todas_solicitacoes.aggregate(Sum('valor'))['valor__sum'] or 0
-        valor_aprovadas = todas_solicitacoes.filter(status='aprovado').aggregate(Sum('valor'))['valor__sum'] or 0
-        valor_pendentes = todas_solicitacoes.filter(status='pendente').aggregate(Sum('valor'))['valor__sum'] or 0
-        valor_concluidas = todas_solicitacoes.filter(status='concluido').aggregate(Sum('valor'))['valor__sum'] or 0
-        
-        # Taxa de aprovação
-        taxa_aprovacao = 0
-        if total_solicitacoes > 0:
-            processadas = aprovadas + recusadas + concluidas
-            if processadas > 0:
-                taxa_aprovacao = (aprovadas / processadas) * 100
-        
-        # Solicitações por mês (últimos 12 meses) com status separado
+
         hoje = timezone.now().date()
-        solicitacoes_por_mes = []
-        solicitacoes_por_mes_detalhado = []
-        
-        # Gerar dados para os últimos 12 meses
-        # Começar do mês atual e retroceder 11 meses (total de 12 meses)
-        from datetime import date
-        
-        # Nome do mês em português
-        meses_pt = {
-            1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun',
-            7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'
-        }
-        
-        # Primeiro dia do mês atual
-        primeiro_dia_mes_atual = hoje.replace(day=1)
-        
-        # Gerar os últimos 12 meses (do mais antigo para o mais recente)
-        # Começar de 11 meses atrás até o mês atual
-        for i in range(12):
-            # i=0: 11 meses atrás (mais antigo)
-            # i=11: mês atual (mais recente)
-            meses_retroceder = 11 - i
-            
-            # Calcular o mês retrocedendo a partir do mês atual
-            # Se estamos em novembro (mês 11) e retrocedemos 0 meses, temos novembro
-            # Se retrocedemos 1 mês, temos outubro
-            # Se retrocedemos 2 meses, temos setembro
-            mes_calcular = primeiro_dia_mes_atual.month - meses_retroceder
-            ano_calcular = primeiro_dia_mes_atual.year
-            
-            # Ajustar para ano anterior se necessário
-            while mes_calcular <= 0:
-                mes_calcular += 12
-                ano_calcular -= 1
-            
-            mes_inicio = date(ano_calcular, mes_calcular, 1)
-            
-            # Próximo mês (fim do período)
-            if mes_inicio.month == 12:
-                mes_fim = date(mes_inicio.year + 1, 1, 1)
-            else:
-                mes_fim = date(mes_inicio.year, mes_inicio.month + 1, 1)
-            
-            mes_solicitacoes = todas_solicitacoes.filter(
-                data_de_criacao__gte=mes_inicio,
-                data_de_criacao__lt=mes_fim
-            )
-            
-            count_total = mes_solicitacoes.count()
-            count_criadas = count_total
-            # Considerar solicitações concluídas como aprovadas também, pois necessariamente passaram por aprovação
-            count_aprovadas = mes_solicitacoes.filter(status__in=['aprovado', 'concluido']).count()
-            count_recusadas = mes_solicitacoes.filter(status='recusado').count()
-            count_concluidas = mes_solicitacoes.filter(status='concluido').count()
-            
-            solicitacoes_por_mes.append({
-                'mes': meses_pt[mes_inicio.month],
-                'count': count_total,
-                'ano': mes_inicio.year,
-                'mes_numero': mes_inicio.month,
-                'data_inicio': mes_inicio.isoformat(),
-                'data_fim': mes_fim.isoformat()
-            })
-            
-            solicitacoes_por_mes_detalhado.append({
-                'mes': meses_pt[mes_inicio.month],
-                'criadas': count_criadas,
-                'aprovadas': count_aprovadas,
-                'recusadas': count_recusadas,
-                'concluidas': count_concluidas,
-                'ano': mes_inicio.year,
-                'mes_numero': mes_inicio.month,
-                'data_inicio': mes_inicio.isoformat(),
-                'data_fim': mes_fim.isoformat()
-            })
-        
-        # Não precisa fazer reverse() pois já estamos gerando na ordem correta (do mais antigo para o mais recente)
-        
-        # Debug: verificar se todos os 12 meses foram gerados
-        if len(solicitacoes_por_mes_detalhado) != 12:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning(f'Atenção: Esperado 12 meses, mas foram gerados {len(solicitacoes_por_mes_detalhado)} meses')
-        
-        # Debug: imprimir os meses gerados
-        if solicitacoes_por_mes_detalhado:
-            primeiro_mes = solicitacoes_por_mes_detalhado[0]
-            ultimo_mes = solicitacoes_por_mes_detalhado[-1]
-            print(f"DEBUG: Primeiro mês (mais antigo): {primeiro_mes['mes']} {primeiro_mes['ano']}")
-            print(f"DEBUG: Último mês (mais recente): {ultimo_mes['mes']} {ultimo_mes['ano']}")
-            print(f"DEBUG: Total de meses: {len(solicitacoes_por_mes_detalhado)}")
-            meses_str = [f"{m['mes']} {m['ano']}" for m in solicitacoes_por_mes_detalhado]
-            print(f"DEBUG: Todos os meses gerados: {meses_str}")
-            ultimos_3_str = [f"{m['mes']} {m['ano']}" for m in solicitacoes_por_mes_detalhado[-3:]]
-            print(f"DEBUG: Últimos 3 meses: {ultimos_3_str}")
-        
-        # Solicitações por status (para gráfico)
-        status_data = {
-            'pendente': pendentes,
-            'aprovado': aprovadas,
-            'recusado': recusadas,
-            'concluido': concluidas
-        }
-        
-        # Média mensal
-        media_mensal = 0
-        if len(solicitacoes_por_mes) > 0:
-            total_meses = sum(m['count'] for m in solicitacoes_por_mes)
-            media_mensal = total_meses / len(solicitacoes_por_mes) if len(solicitacoes_por_mes) > 0 else 0
-        
+        data_inicial_custos = hoje - timedelta(days=30)
+        data_final_custos = hoje
+        qs_custos = Solicitacoes.objects.filter(
+            data_de_criacao__gte=data_inicial_custos,
+            data_de_criacao__lte=data_final_custos
+        )
+        custo_logistico = float(qs_custos.aggregate(Sum('valor_em_rota'))['valor_em_rota__sum'] or 0)
+        custo_desloc_solic = (qs_custos.aggregate(Sum('valor_km'))['valor_km__sum'] or 0) + (qs_custos.aggregate(Sum('valor_pedagio'))['valor_pedagio__sum'] or 0)
+        custo_desloc_itens = SolicitacaoRotaItem.objects.filter(
+            solicitacao__data_de_criacao__gte=data_inicial_custos,
+            solicitacao__data_de_criacao__lte=data_final_custos
+        ).aggregate(total_km=Sum('valor_km'), total_ped=Sum('valor_pedagio'))
+        custo_desloc_itens = (custo_desloc_itens['total_km'] or 0) + (custo_desloc_itens['total_ped'] or 0)
+        custo_deslocamento = float(custo_desloc_solic + custo_desloc_itens)
+        ids_custos = list(qs_custos.values_list('id', flat=True))
+        custo_tecnicos = float(SolicitacaoTecnico.objects.filter(solicitacao_id__in=ids_custos).aggregate(Sum('valor_pagamento_tecnico'))['valor_pagamento_tecnico__sum'] or 0)
+        valor_total_custos = float(qs_custos.aggregate(Sum('valor'))['valor__sum'] or 0)
+        custo_outros = max(0, valor_total_custos - (custo_logistico + custo_tecnicos + custo_deslocamento))
+        cost_distribution = [custo_deslocamento, custo_logistico, custo_tecnicos, custo_outros]
+        service_type_data = [custo_deslocamento, custo_logistico, custo_tecnicos]
+        evolution_weeks = []
+        for i in range(4):
+            fim = data_final_custos - timedelta(days=i * 7)
+            ini = fim - timedelta(days=6)
+            qw = Solicitacoes.objects.filter(data_de_criacao__gte=ini, data_de_criacao__lte=fim)
+            ids_w = list(qw.values_list('id', flat=True))
+            log_w = float(qw.aggregate(Sum('valor_em_rota'))['valor_em_rota__sum'] or 0)
+            desl_s = (qw.aggregate(Sum('valor_km'))['valor_km__sum'] or 0) + (qw.aggregate(Sum('valor_pedagio'))['valor_pedagio__sum'] or 0)
+            desl_i = SolicitacaoRotaItem.objects.filter(solicitacao__data_de_criacao__gte=ini, solicitacao__data_de_criacao__lte=fim).aggregate(total_km=Sum('valor_km'), total_ped=Sum('valor_pedagio'))
+            desl_i = (desl_i['total_km'] or 0) + (desl_i['total_ped'] or 0)
+            tec_w = float(SolicitacaoTecnico.objects.filter(solicitacao_id__in=ids_w).aggregate(Sum('valor_pagamento_tecnico'))['valor_pagamento_tecnico__sum'] or 0)
+            evolution_weeks.append({'label': f'Semana {4 - i}', 'tecnicos': tec_w, 'logistica': log_w, 'deslocamento': float(desl_s) + float(desl_i)})
+        evolution_weeks.reverse()
+
         context = {
-            # Métricas principais
             'total_solicitacoes': total_solicitacoes,
             'pendentes': pendentes,
             'aprovadas': aprovadas,
-            'recusadas': recusadas,
-            'concluidas': concluidas,
-            
-            # Valores
             'valor_total': valor_total,
-            'valor_aprovadas': valor_aprovadas,
-            'valor_pendentes': valor_pendentes,
-            'valor_concluidas': valor_concluidas,
-            
-            # Taxas
-            'taxa_aprovacao': taxa_aprovacao,
-            
-            # Dados para gráficos (convertidos para JSON)
-            'solicitacoes_por_mes_json': mark_safe(json.dumps(solicitacoes_por_mes)),
-            'solicitacoes_por_mes_detalhado_json': mark_safe(json.dumps(solicitacoes_por_mes_detalhado)),
-            'status_data': status_data,
-            'media_mensal': int(media_mensal),
+            'custo_logistico': custo_logistico,
+            'custo_tecnicos': custo_tecnicos,
+            'custo_deslocamento': custo_deslocamento,
+            'data_inicial_custos': data_inicial_custos,
+            'data_final_custos': data_final_custos,
+            'cost_distribution': mark_safe(json.dumps(cost_distribution)),
+            'service_type_data': mark_safe(json.dumps(service_type_data)),
+            'evolution_weeks': mark_safe(json.dumps(evolution_weeks)),
         }
-        
         return render(request, "dashboard/dashboard.html", context)
         
     elif request.method == "POST":
         pass
+
+
+def redirect_to_dashboard(request):
+    """Redireciona para a aba Dashboards (conteúdo de custos está lá)."""
+    return redirect('dashboard')
+
 
 def dashboard_metrics(request):
     """View para retornar métricas do dashboard filtradas por período via AJAX"""

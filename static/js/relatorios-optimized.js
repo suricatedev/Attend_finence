@@ -1178,6 +1178,7 @@ class RelatoriosOptimized {
     }
 
     updateMiniReports() {
+        if (!document.getElementById('miniReportsGrid')) return;
         const data = this.filteredData;
         const total = data.length;
 

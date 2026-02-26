@@ -2,41 +2,19 @@
 {% load static %}
 {% load solicitacoes_filters %}
 
-{% block title %}Attend Finance - Dashboard de Custos{% endblock %}
+{% block title %}Dashboard de Custos - Attend Finance{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/dashboard-custos.css' %}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body .header, .main-content .header, header.header {
-            background: #1C1C1C !important;
-            background-color: #1C1C1C !important;
-            color: white !important;
-        }
-        .header .app-title, .header .logo-icon { color: white !important; }
-        .header .tab-btn { color: rgba(255, 255, 255, 0.8) !important; }
-        .header .tab-btn.active { background: #FFCB57 !important; color: #1C1C1C !important; }
-        .header .action-btn, .header .action-btn i { color: white !important; }
-        .header .action-btn:hover { background: rgba(255, 255, 255, 0.1) !important; color: white !important; }
-        .header .user-avatar, .header .user-avatar-btn img { border-color: white !important; }
-        .header .btn-primary {
-            background: #FFCB57 !important; color: #1C1C1C !important;
-            box-shadow: 0 4px 15px rgba(255, 203, 87, 0.4) !important;
-        }
-        .header .btn-primary:hover {
-            background: #FFD700 !important; transform: translateY(-2px) !important;
-        }
-        .header .btn-primary i { color: #1C1C1C !important; }
-    </style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-view dashboard-custos-view">
+<div class="dashboard-custos-view">
     <!-- Cabeçalho Superior -->
     <header class="dashboard-custos-header">
         <div>
             <h1 class="dashboard-custos-title">Análise de Custos Financeiros</h1>
-            <p class="dashboard-custos-periodo">Período: {{ data_inicial_custos|date:"d/m/Y" }} até {{ data_final_custos|date:"d/m/Y" }}</p>
+            <p class="dashboard-custos-periodo">Período: {{ data_inicial|date:"d/m/Y" }} até {{ data_final|date:"d/m/Y" }}</p>
         </div>
         <div class="dashboard-custos-actions">
             <a href="{% url 'home' %}" class="btn-custos btn-custos-primary">
@@ -59,7 +37,9 @@
                     <p class="kpi-label">Total de Solicitações</p>
                     <h3 class="kpi-value">{{ total_solicitacoes }}</h3>
                 </div>
-                <div class="kpi-icon-wrap kpi-icon-blue"><i class="fas fa-file-invoice"></i></div>
+                <div class="kpi-icon-wrap kpi-icon-blue">
+                    <i class="fas fa-file-invoice"></i>
+                </div>
             </div>
         </div>
         <div class="kpi-card kpi-card-gold">
@@ -68,7 +48,9 @@
                     <p class="kpi-label">Valor Total</p>
                     <h3 class="kpi-value text-attend-dark">{{ valor_total|brl }}</h3>
                 </div>
-                <div class="kpi-icon-wrap kpi-icon-gold"><i class="fas fa-dollar-sign"></i></div>
+                <div class="kpi-icon-wrap kpi-icon-gold">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
             </div>
         </div>
         <div class="kpi-card kpi-card-green">
@@ -77,7 +59,9 @@
                     <p class="kpi-label">Aprovadas</p>
                     <h3 class="kpi-value">{{ aprovadas }}</h3>
                 </div>
-                <div class="kpi-icon-wrap kpi-icon-green"><i class="fas fa-check-circle"></i></div>
+                <div class="kpi-icon-wrap kpi-icon-green">
+                    <i class="fas fa-check-circle"></i>
+                </div>
             </div>
         </div>
         <div class="kpi-card kpi-card-red">
@@ -86,7 +70,9 @@
                     <p class="kpi-label">Pendentes</p>
                     <h3 class="kpi-value">{{ pendentes }}</h3>
                 </div>
-                <div class="kpi-icon-wrap kpi-icon-red"><i class="fas fa-clock"></i></div>
+                <div class="kpi-icon-wrap kpi-icon-red">
+                    <i class="fas fa-clock"></i>
+                </div>
             </div>
         </div>
         <div class="kpi-card kpi-card-indigo">
@@ -95,7 +81,9 @@
                     <p class="kpi-label">Custo Logístico</p>
                     <h3 class="kpi-value">{{ custo_logistico|brl }}</h3>
                 </div>
-                <div class="kpi-icon-wrap kpi-icon-indigo"><i class="fas fa-truck"></i></div>
+                <div class="kpi-icon-wrap kpi-icon-indigo">
+                    <i class="fas fa-truck"></i>
+                </div>
             </div>
         </div>
         <div class="kpi-card kpi-card-teal">
@@ -104,7 +92,9 @@
                     <p class="kpi-label">Custo com Técnicos</p>
                     <h3 class="kpi-value">{{ custo_tecnicos|brl }}</h3>
                 </div>
-                <div class="kpi-icon-wrap kpi-icon-teal"><i class="fas fa-user-cog"></i></div>
+                <div class="kpi-icon-wrap kpi-icon-teal">
+                    <i class="fas fa-user-cog"></i>
+                </div>
             </div>
         </div>
         <div class="kpi-card kpi-card-orange">
@@ -113,7 +103,9 @@
                     <p class="kpi-label">Custo Deslocamento</p>
                     <h3 class="kpi-value">{{ custo_deslocamento|brl }}</h3>
                 </div>
-                <div class="kpi-icon-wrap kpi-icon-orange"><i class="fas fa-route"></i></div>
+                <div class="kpi-icon-wrap kpi-icon-orange">
+                    <i class="fas fa-route"></i>
+                </div>
             </div>
         </div>
     </section>
@@ -121,19 +113,32 @@
     <!-- Seção de Gráficos -->
     <section class="dashboard-custos-charts">
         <div class="chart-card">
-            <h4 class="chart-card-title"><i class="fas fa-chart-pie text-attend-gold"></i> Distribuição de Custos Operacionais</h4>
-            <div class="chart-card-canvas"><canvas id="costDistributionChart"></canvas></div>
+            <h4 class="chart-card-title">
+                <i class="fas fa-chart-pie text-attend-gold"></i> Distribuição de Custos Operacionais
+            </h4>
+            <div class="chart-card-canvas">
+                <canvas id="costDistributionChart"></canvas>
+            </div>
         </div>
         <div class="chart-card">
-            <h4 class="chart-card-title"><i class="fas fa-tools text-attend-gold"></i> Custo por Tipo de Serviço</h4>
-            <div class="chart-card-canvas"><canvas id="serviceTypeChart"></canvas></div>
+            <h4 class="chart-card-title">
+                <i class="fas fa-tools text-attend-gold"></i> Custo por Tipo de Serviço
+            </h4>
+            <div class="chart-card-canvas">
+                <canvas id="serviceTypeChart"></canvas>
+            </div>
         </div>
         <div class="chart-card chart-card-full">
-            <h4 class="chart-card-title"><i class="fas fa-chart-bar text-attend-gold"></i> Evolução de Gastos (Técnico, Logística e Deslocamento)</h4>
-            <div class="chart-card-canvas"><canvas id="evolutionChart"></canvas></div>
+            <h4 class="chart-card-title">
+                <i class="fas fa-chart-bar text-attend-gold"></i> Evolução de Gastos (Técnico, Logística e Deslocamento)
+            </h4>
+            <div class="chart-card-canvas">
+                <canvas id="evolutionChart"></canvas>
+            </div>
         </div>
     </section>
 </div>
+
 <script>
     window.DASHBOARD_CUSTOS_DATA = {
         costDistribution: {{ cost_distribution }},
@@ -144,15 +149,6 @@
 {% endblock %}
 
 {% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{% static 'js/dashboard-custos.js' %}" defer></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var header = document.querySelector('.header');
-            if (header) {
-                header.style.background = '#1C1C1C';
-                header.style.backgroundColor = '#1C1C1C';
-                header.style.color = 'white';
-            }
-        });
-    </script>
 {% endblock %}

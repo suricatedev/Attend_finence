@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load solicitacoes_filters %}
 
 {% block title %}Relatórios - Sistema de Gestão Financeira{% endblock %}
 
@@ -250,7 +251,7 @@
                     <i class="fas fa-dollar-sign"></i>
                 </div>
                 <div class="stat-content">
-                    <h3 id="valorTotal">R$ {{ valor_total|floatformat:2 }}</h3>
+                    <h3 id="valorTotal">{{ valor_total|brl }}</h3>
                     <p>Valor Total</p>
                 </div>
             </div>
@@ -280,58 +281,63 @@
         <h3 class="dashboard-indicadores-title"><i class="fas fa-chart-line"></i> Dashboard de Indicadores</h3>
         <p class="dashboard-indicadores-subtitle">Eficiência Operacional</p>
         <div class="dashboard-indicadores-grid">
-            <!-- Card Lead Time Médio + gráfico de linha -->
+            <!-- 1. Eficiência Operacional – Lead Time Médio -->
             <div class="indicador-card indicador-card-lead">
                 <div class="indicador-card-header">
-                    <span class="indicador-card-label">Lead Time Médio</span>
+                    <span class="indicador-card-label">Eficiência Operacional – Lead Time Médio</span>
                 </div>
+                <p class="indicador-card-desc">Tempo entre abertura da solicitação e conclusão</p>
                 <div class="indicador-card-value" id="leadTimeValor">—</div>
                 <div class="indicador-card-trend" id="leadTimeTrend">
                     <span class="trend-badge trend-up"><i class="fas fa-arrow-up"></i> <span id="leadTimeVs">0%</span> (vs Mês Passado)</span>
                 </div>
                 <div class="indicador-mini-chart">
-                    <canvas id="chartPendenciasLinha" height="80"></canvas>
+                    <canvas id="chartPendenciasLinha" height="56"></canvas>
                     <span class="mini-chart-label">Pendências p/ Analista</span>
                 </div>
             </div>
-            <!-- Card % + gráfico de barras -->
+            <!-- 2. Eficiência – Porcentagem de Erros/Ajustes -->
             <div class="indicador-card indicador-card-percent">
                 <div class="indicador-card-header">
-                    <span class="indicador-card-label">Taxa de Pendência</span>
+                    <span class="indicador-card-label">Eficiência (Porcentagem de Erros/Ajustes)</span>
                 </div>
+                <p class="indicador-card-desc">Indicador de qualidade – menor número = menos retrabalho</p>
                 <div class="indicador-card-value" id="taxaPendenciaValor">—</div>
                 <div class="indicador-card-trend" id="taxaPendenciaTrend">
                     <span class="trend-badge trend-down"><i class="fas fa-arrow-down"></i> <span id="taxaPendenciaVs">0%</span> (vs Mês Passado)</span>
                 </div>
                 <div class="indicador-mini-chart">
-                    <canvas id="chartPendenciasBarras" height="80"></canvas>
+                    <canvas id="chartPendenciasBarras" height="56"></canvas>
                     <span class="mini-chart-label">Pendências p/ Analista</span>
                 </div>
             </div>
-            <!-- Pareto de Gastos (Serviço) -->
+            <!-- 3. Pareto de Gastos (Serviço/Departamento) -->
             <div class="indicador-card indicador-card-pareto">
                 <div class="indicador-card-header">
-                    <span class="indicador-card-label">Pareto de Gastos (Serviço)</span>
+                    <span class="indicador-card-label">Pareto de Gastos (Serviço/Departamento)</span>
                 </div>
-                <div class="indicador-card-legend" id="paretoLegend">Departamento (R$ 0,00)</div>
+                <p class="indicador-card-desc">Maiores centros de custo – princípio 80/20</p>
+                <div class="indicador-card-legend" id="paretoLegend">Serviço/Departamento (R$ 0,00)</div>
                 <div class="indicador-chart-wrap">
-                    <canvas id="chartPareto" height="220"></canvas>
+                    <canvas id="chartPareto" height="180"></canvas>
                 </div>
             </div>
-            <!-- Concentração por Favorecido (Donut) -->
+            <!-- 4. Concentração por Categoria/Favorecido (Gráfico de Rosca) -->
             <div class="indicador-card indicador-card-donut">
                 <div class="indicador-card-header">
-                    <span class="indicador-card-label">Concentração por Favorecido</span>
+                    <span class="indicador-card-label">Concentração por Categoria/Favorecido</span>
                 </div>
+                <p class="indicador-card-desc">Distribuição % entre fornecedores – monitor de dependência</p>
                 <div class="indicador-chart-wrap">
-                    <canvas id="chartConcentracao" height="220"></canvas>
+                    <canvas id="chartConcentracao" height="180"></canvas>
                 </div>
             </div>
-            <!-- Previsão Próx. 7 Dias -->
+            <!-- 5. Previsão Próximos 7 Dias (Conciliação) -->
             <div class="indicador-card indicador-card-previsao">
                 <div class="indicador-card-header">
-                    <span class="indicador-card-label">Previsão Próx. 7 Dias</span>
+                    <span class="indicador-card-label">Previsão Próximos 7 Dias (Conciliação)</span>
                 </div>
+                <p class="indicador-card-desc">% das previsões conciliadas – fluxo de caixa da próxima semana</p>
                 <div class="previsao-content">
                     <div class="previsao-ring-wrap">
                         <canvas id="chartPrevisaoRing" width="120" height="120"></canvas>
@@ -351,29 +357,6 @@
                     </label>
                     <span class="toggle-label">Domiciliação</span>
                 </div>
-            </div>
-        </div>
-        <!-- Mini indicadores resumidos (mantidos para compatibilidade) -->
-        <div class="mini-reports-grid mini-reports-grid-compact" id="miniReportsGrid" style="margin-top: 1rem;">
-            <div class="mini-report-card" id="miniReportValorMedio">
-                <div class="mini-report-header"><span class="mini-report-label">Valor médio</span><i class="fas fa-calculator"></i></div>
-                <div class="mini-report-value" id="miniReportValorMedioVal">—</div>
-            </div>
-            <div class="mini-report-card" id="miniReportStatus">
-                <div class="mini-report-header"><span class="mini-report-label">Por status</span><i class="fas fa-chart-bar"></i></div>
-                <div class="mini-report-bars" id="miniReportStatusBars"></div>
-            </div>
-            <div class="mini-report-card" id="miniReportServicos">
-                <div class="mini-report-header"><span class="mini-report-label">Top serviços</span><i class="fas fa-briefcase"></i></div>
-                <div class="mini-report-list" id="miniReportServicosList"></div>
-            </div>
-            <div class="mini-report-card" id="miniReportRecebedores">
-                <div class="mini-report-header"><span class="mini-report-label">Top recebedores</span><i class="fas fa-user-tie"></i></div>
-                <div class="mini-report-list" id="miniReportRecebedoresList"></div>
-            </div>
-            <div class="mini-report-card" id="miniReportTaxa">
-                <div class="mini-report-header"><span class="mini-report-label">Taxa aprovação</span><i class="fas fa-percentage"></i></div>
-                <div class="mini-report-value" id="miniReportTaxaVal">—</div>
             </div>
         </div>
     </section>
@@ -497,28 +480,28 @@
                         <td>{{ solicitacao.cliente_empresa|default:"-" }}</td>
                         <td>{{ solicitacao.cnpj|default:"-" }}</td>
                         <td>{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% else %}N/A{% endif %}</td>
-                        <td><strong>R$ {{ solicitacao.valor|floatformat:2 }}</strong></td>
+                        <td><strong>{{ solicitacao.valor|brl }}</strong></td>
                         <td class="valores-detalhados-toggle-cell" style="display: none;"></td>
                         <td class="valores-detalhados-col" style="display: none;">
-                            <span class="valor-receita">R$ {{ solicitacao.valor_receita|floatformat:2 }}</span>
+                            <span class="valor-receita">{{ solicitacao.valor_receita|brl }}</span>
                         </td>
                         <td class="valores-detalhados-col" style="display: none;">
-                            <span class="valor-em-rota" style="color: #FF6B6B; font-weight: 700;">R$ {{ solicitacao.valor_em_rota|floatformat:2 }}</span>
+                            <span class="valor-em-rota" style="color: #FF6B6B; font-weight: 700;">{{ solicitacao.valor_em_rota|brl }}</span>
                         </td>
                         <td class="valores-detalhados-col" style="display: none;">
-                            <span class="valor-detail">R$ {{ solicitacao.valor_km|floatformat:2 }}</span>
+                            <span class="valor-detail">{{ solicitacao.valor_km|brl }}</span>
                         </td>
                         <td class="valores-detalhados-col" style="display: none;">
-                            <span class="valor-detail">R$ {{ solicitacao.valor_pedagio|floatformat:2 }}</span>
+                            <span class="valor-detail">{{ solicitacao.valor_pedagio|brl }}</span>
                         </td>
                         <td class="valores-detalhados-col" style="display: none;">
-                            <span class="valor-detail">R$ {{ solicitacao.valor_hospedagem|floatformat:2 }}</span>
+                            <span class="valor-detail">{{ solicitacao.valor_hospedagem|brl }}</span>
                         </td>
                         <td class="valores-detalhados-col" style="display: none;">
-                            <span class="valor-detail">R$ {{ solicitacao.valor_fluvial|floatformat:2 }}</span>
+                            <span class="valor-detail">{{ solicitacao.valor_fluvial|brl }}</span>
                         </td>
                         <td class="valores-detalhados-col" style="display: none;">
-                            <span class="valor-detail">R$ {{ solicitacao.valor_outros|floatformat:2 }}</span>
+                            <span class="valor-detail">{{ solicitacao.valor_outros|brl }}</span>
                         </td>
                         <td>
                             <span class="status-badge status-{{ solicitacao.status }}">

@@ -1,4 +1,54 @@
-﻿/* ========================================
+/* ========================================
+   PRIVACIDADE DE VALORES (****** + olho)
+   ======================================== */
+.private-value-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+.private-value-wrap .private-value-display {
+    letter-spacing: 0.08em;
+    user-select: none;
+}
+.btn-reveal-value {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: #64748b;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s, background 0.2s;
+}
+.btn-reveal-value:hover {
+    color: #FFCB57;
+    background: rgba(255, 203, 87, 0.15);
+}
+.btn-reveal-value i {
+    font-size: 0.85rem;
+}
+.card .info-item.private-value-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.card .info-item.private-value-wrap .info-value {
+    flex: 0 1 auto;
+    min-width: 0;
+}
+.detail-value.private-value-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.detail-value.private-value-wrap .private-value-display {
+    font-weight: 600;
+}
+
+/* ========================================
    MODAL DE DETALHES DO CARD
    ======================================== */
 

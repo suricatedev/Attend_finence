@@ -55,7 +55,14 @@
 
         // Cards Lead Time e Taxa
         var leadEl = document.getElementById('leadTimeValor');
-        if (leadEl) leadEl.textContent = data.lead_time_medio ? data.lead_time_medio + ' Dias' : '—';
+        if (leadEl) {
+            if (data.lead_time_medio != null && data.lead_time_medio !== '') {
+                var leadStr = Number(data.lead_time_medio).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+                leadEl.textContent = leadStr + ' Dias';
+            } else {
+                leadEl.textContent = '—';
+            }
+        }
         var leadVs = document.getElementById('leadTimeVs');
         if (leadVs) {
             leadVs.textContent = (data.lead_time_vs_mes > 0 ? '+' : '') + data.lead_time_vs_mes + '%';
@@ -76,11 +83,12 @@
             }
         }
 
-        // Legenda Pareto
+        // Legenda Pareto (Serviço/Departamento – R$ X.XXX,XX)
         var paretoLegend = document.getElementById('paretoLegend');
         if (paretoLegend) {
             var tot = data.total_departamento || 0;
-            paretoLegend.textContent = 'Departamento (R$ ' + tot.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ')';
+            var totStr = Number(tot).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            paretoLegend.textContent = 'Serviço/Departamento (R$ ' + totStr + ')';
         }
 
         // Previsão %
@@ -162,7 +170,11 @@
     function renderChartPareto(pareto, totalDepartamento) {
         var canvas = document.getElementById('chartPareto');
         if (!canvas) return;
-        var labels = pareto.map(function(p) { return (p.nome || '').substring(0, 12); });
+        var labels = pareto.map(function(p) {
+            var nome = (p.nome || '').substring(0, 10);
+            var pct = p.percentual != null ? p.percentual : 0;
+            return nome + ' ' + pct + '%';
+        });
         var valores = pareto.map(function(p) { return p.percentual || 0; });
         var acumulado = pareto.map(function(p) { return p.acumulado || 0; });
         if (!labels.length) { labels = ['']; valores = [0]; acumulado = [0]; }
