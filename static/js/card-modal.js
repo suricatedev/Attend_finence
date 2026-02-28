@@ -68,14 +68,15 @@ function initializeCardExpansion() {
             card.removeEventListener('click', card._modalClickHandler);
         }
         
-        // Clique simples com prioridade máxima
+        // Clique simples com prioridade máxima (não abrir modal ao clicar no checkbox de seleção)
         card._modalClickHandler = function(e) {
             if (e.target.closest('.card-actions') || 
                 e.target.closest('.card-action-btn') ||
                 e.target.closest('.card-count') ||
                 e.target.closest('.selected-date-display') ||
                 e.target.closest('.date-filter-btn') ||
-                e.target.closest('.btn-delete-card')) {
+                e.target.closest('.btn-delete-card') ||
+                e.target.closest('.card-select-checkbox')) {
                 return;
             }
             
@@ -857,6 +858,16 @@ function setModalValorPrivado(valorStr, valorReceitaStr) {
     }
 }
 
+// Atualiza nome do recebedor no modal mantendo privacidade (****** + olho para revelar)
+function setModalRecebedorPrivado(recebedorStr) {
+    var wrap = document.getElementById('modal-recebedor-wrap');
+    var display = document.getElementById('modal-recebedor');
+    if (wrap && display) {
+        wrap.setAttribute('data-private-real', recebedorStr || 'N/A');
+        display.textContent = '******';
+    }
+}
+
 // Função para preencher os dados do card no modal
 function populateCardDetails(data) {
     // Preencher informações básicas
@@ -869,8 +880,7 @@ function populateCardDetails(data) {
     const solicitanteElement = document.getElementById('modal-solicitante');
     if (solicitanteElement) solicitanteElement.textContent = data.solicitante || 'N/A';
     
-    const recebedorElement = document.getElementById('modal-recebedor');
-    if (recebedorElement) recebedorElement.textContent = data.recebedor || 'N/A';
+    setModalRecebedorPrivado(data.recebedor || 'N/A');
     
     // Adicionar campos adicionais (Chave PIX, Cliente/Empresa, CNPJ) nas informações básicas para solicitações Casual
     const infoBasicasSection = document.querySelector('.detail-section.info-basicas');
@@ -1031,13 +1041,14 @@ function populateCardDetails(data) {
                 </div>` 
                 : '';
             
-            // Construir informações de recebedor, PIX, cliente/empresa e CNPJ
+            // Construir informações de recebedor, PIX, cliente/empresa e CNPJ (com privacidade)
+            const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
             const infoAdicional = [];
             if (item.recebedor) {
-                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-user-check"></i> Recebedor:</span><span class="route-item-modal-value">${item.recebedor}</span></div>`);
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-user-check"></i> Recebedor:</span><span class="route-item-modal-value private-value-wrap" data-private-real="${esc(item.recebedor)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
             }
             if (item.chave_pix) {
-                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-qrcode"></i> Chave PIX:</span><span class="route-item-modal-value">${item.chave_pix}</span></div>`);
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-qrcode"></i> Chave PIX:</span><span class="route-item-modal-value private-value-wrap" data-private-real="${esc(item.chave_pix)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
             }
             if (item.cliente_empresa) {
                 infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-building"></i> Cliente/Empresa:</span><span class="route-item-modal-value">${item.cliente_empresa}</span></div>`);
@@ -1210,13 +1221,14 @@ function populateCardDetails(data) {
                 </div>` 
                 : '';
             
-            // Construir informações adicionais
+            // Construir informações adicionais (com privacidade para recebedor e PIX)
+            const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
             const infoAdicional = [];
             if (item.recebedor) {
-                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-user-check"></i> Recebedor:</span><span class="route-item-modal-value">${item.recebedor}</span></div>`);
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-user-check"></i> Recebedor:</span><span class="route-item-modal-value private-value-wrap" data-private-real="${esc(item.recebedor)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
             }
             if (item.chave_pix) {
-                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-qrcode"></i> Chave PIX:</span><span class="route-item-modal-value">${item.chave_pix}</span></div>`);
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-qrcode"></i> Chave PIX:</span><span class="route-item-modal-value private-value-wrap" data-private-real="${esc(item.chave_pix)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
             }
             if (item.data_realizacao && item.data_realizacao !== 'N/A') {
                 infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-calendar"></i> Data Realização:</span><span class="route-item-modal-value">${item.data_realizacao}</span></div>`);

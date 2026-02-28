@@ -1032,14 +1032,16 @@ class RelatoriosOptimized {
     getRowHTML(item) {
         const isExpanded = localStorage.getItem('valoresDetalhadosExpanded') === 'true';
         const displayStyle = isExpanded ? 'table-cell' : 'none';
-        
+        const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        const recebedorVal = item.recebedor || '-';
+        const chavePixVal = item.chavePix || '-';
         return `
             <td>${item.ticket || item.id}</td>
             <td>${item.title}</td>
             <td>${item.solicitante}</td>
             <td>${item.supervisor || '-'}</td>
-            <td>${item.recebedor || '-'}</td>
-            <td>${item.chavePix || '-'}</td>
+            <td><span class="private-value-wrap" data-private-real="${esc(recebedorVal)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></td>
+            <td><span class="private-value-wrap" data-private-real="${esc(chavePixVal)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></td>
             <td>${item.clienteEmpresa || '-'}</td>
             <td>${item.cnpj || '-'}</td>
             <td>${item.service}</td>
@@ -1432,7 +1434,7 @@ class RelatoriosOptimized {
                         </div>
                         <div class="detail-item">
                             <label>Recebedor:</label>
-                            <span>${dados.recebedor || 'N/A'}</span>
+                            <span class="private-value-wrap" data-private-real="${(dados.recebedor || 'N/A').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span>
                         </div>
                         <div class="detail-item">
                             <label>Serviço:</label>
@@ -1533,12 +1535,13 @@ class RelatoriosOptimized {
                     // Construir informações adicionais (recebedor, PIX, cliente/empresa, CNPJ)
                     let infoAdicional = '';
                     if (item.recebedor || item.chave_pix || item.cliente_empresa || item.cnpj) {
+                        const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
                         infoAdicional = '<div class="route-item-info-adicional">';
                         if (item.recebedor) {
-                            infoAdicional += `<div class="route-item-info"><label><i class="fas fa-user-check"></i> Recebedor:</label><span>${item.recebedor}</span></div>`;
+                            infoAdicional += `<div class="route-item-info"><label><i class="fas fa-user-check"></i> Recebedor:</label><span class="private-value-wrap" data-private-real="${esc(item.recebedor)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`;
                         }
                         if (item.chave_pix) {
-                            infoAdicional += `<div class="route-item-info"><label><i class="fas fa-qrcode"></i> Chave PIX:</label><span>${item.chave_pix}</span></div>`;
+                            infoAdicional += `<div class="route-item-info"><label><i class="fas fa-qrcode"></i> Chave PIX:</label><span class="private-value-wrap" data-private-real="${esc(item.chave_pix)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`;
                         }
                         if (item.cliente_empresa) {
                             infoAdicional += `<div class="route-item-info"><label><i class="fas fa-building"></i> Cliente/Empresa:</label><span>${item.cliente_empresa}</span></div>`;

@@ -94,6 +94,32 @@
             line-height: 1.5;
         }
         
+        .private-value-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+        }
+        .private-value-wrap .private-value-display {
+            letter-spacing: 0.08em;
+            user-select: none;
+        }
+        .btn-reveal-value {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            color: #64748b;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-reveal-value:hover {
+            color: #FFCB57;
+            background: rgba(255, 203, 87, 0.15);
+        }
+        
         .valores-resumo {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -555,12 +581,18 @@
                 </div>
                 <div class="info-item">
                     <div class="info-item-label">Recebedor Principal</div>
-                    <div class="info-item-value">{{ solicitacao.nome_do_recebedor }}</div>
+                    <div class="info-item-value private-value-wrap" data-private-real="{{ solicitacao.nome_do_recebedor|default:'' }}">
+                        <span class="private-value-display">******</span>
+                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                    </div>
                 </div>
                 {% if solicitacao.chave_pix %}
                 <div class="info-item">
                     <div class="info-item-label">Chave PIX</div>
-                    <div class="info-item-value">{{ solicitacao.chave_pix }}</div>
+                    <div class="info-item-value private-value-wrap" data-private-real="{{ solicitacao.chave_pix }}">
+                        <span class="private-value-display">******</span>
+                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                    </div>
                 </div>
                 {% endif %}
                 {% if solicitacao.cliente_empresa %}
@@ -626,8 +658,18 @@
                         <td><strong>ID {{ item.ordem }}</strong></td>
                         <td>#{{ item.ticket_item }}</td>
                         <td>{{ item.servico }}</td>
-                        <td>{{ item.recebedor|default:"-" }}</td>
-                        <td>{{ item.chave_pix|default:"-" }}</td>
+                        <td>
+                            <span class="private-value-wrap" data-private-real="{{ item.recebedor|default:'' }}">
+                                <span class="private-value-display">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="private-value-wrap" data-private-real="{{ item.chave_pix|default:'' }}">
+                                <span class="private-value-display">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                            </span>
+                        </td>
                         <td>{{ item.cliente_empresa|default:"-" }}</td>
                         <td>{{ item.cnpj|default:"-" }}</td>
                         <td class="valor-destaque">{{ item.valor_total|brl }}</td>
@@ -744,6 +786,30 @@
             <p>ID da Solicitação: #{{ solicitacao.ticket }} | Data: {{ data_exportacao|date:"d/m/Y" }} às {{ data_exportacao|time:"H:i:s" }}</p>
         </div>
     </div>
+    <script>
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-reveal-value');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var wrap = btn.closest('.private-value-wrap');
+        if (!wrap) return;
+        var display = wrap.querySelector('.private-value-display');
+        var real = wrap.getAttribute('data-private-real') || '';
+        if (!display) return;
+        if (display.textContent === '******') {
+            display.textContent = real || 'N/A';
+            var icon = btn.querySelector('i');
+            if (icon) icon.className = 'fas fa-eye-slash';
+            btn.setAttribute('title', 'Ocultar');
+        } else {
+            display.textContent = '******';
+            var icon = btn.querySelector('i');
+            if (icon) icon.className = 'fas fa-eye';
+            btn.setAttribute('title', 'Mostrar');
+        }
+    }, true);
+    </script>
 </body>
 </html>
 

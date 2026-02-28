@@ -475,7 +475,12 @@
                                 -
                             {% endif %}
                         </td>
-                        <td>{{ solicitacao.nome_do_recebedor|default:"-" }}</td>
+                        <td>
+                            <span class="private-value-wrap" data-private-real="{{ solicitacao.nome_do_recebedor|default:'' }}">
+                                <span class="private-value-display">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                            </span>
+                        </td>
                         <td>{{ solicitacao.chave_pix|default:"-" }}</td>
                         <td>{{ solicitacao.cliente_empresa|default:"-" }}</td>
                         <td>{{ solicitacao.cnpj|default:"-" }}</td>
@@ -615,5 +620,29 @@
                 reportsFullscreen.style.setProperty('background-color', '#1C1C1C', 'important');
             }
         }, 100);
+        
+        // Toggle privacidade (****** <-> valor real) para recebedor/PIX na página de relatórios
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('.btn-reveal-value');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            var wrap = btn.closest('.private-value-wrap');
+            if (!wrap) return;
+            var display = wrap.querySelector('.private-value-display');
+            var real = wrap.getAttribute('data-private-real') || '';
+            if (!display) return;
+            if (display.textContent === '******') {
+                display.textContent = real || 'N/A';
+                var icon = btn.querySelector('i');
+                if (icon) icon.className = 'fas fa-eye-slash';
+                btn.setAttribute('title', 'Ocultar');
+            } else {
+                display.textContent = '******';
+                var icon = btn.querySelector('i');
+                if (icon) icon.className = 'fas fa-eye';
+                btn.setAttribute('title', 'Mostrar');
+            }
+        }, true);
     </script>
 {% endblock %}

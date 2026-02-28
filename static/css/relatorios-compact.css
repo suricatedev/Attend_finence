@@ -29,6 +29,33 @@ header.header {
     box-sizing: border-box;
 }
 
+/* Privacidade recebedor/PIX (****** + olho para revelar) */
+.reports-fullscreen .private-value-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+.reports-fullscreen .private-value-wrap .private-value-display {
+    letter-spacing: 0.08em;
+    user-select: none;
+}
+.reports-fullscreen .btn-reveal-value {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: #94a3b8;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.reports-fullscreen .btn-reveal-value:hover {
+    color: #FFCB57;
+    background: rgba(255, 203, 87, 0.15);
+}
+
 /* Garantir que a tabela seja sempre visível */
 .table-section {
     display: flex !important;

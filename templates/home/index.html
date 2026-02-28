@@ -398,7 +398,10 @@
                                     <div class="info-item">
                                         <i class="fas fa-user-check"></i>
                                         <span class="info-label">RECEBEDOR</span>
-                            <span class="info-value">{{ solicitacao.nome_do_recebedor }}</span>
+                                        <div class="private-value-wrap" data-private-real="{{ solicitacao.nome_do_recebedor|default:'' }}">
+                                            <span class="info-value private-value-display">******</span>
+                                            <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                                        </div>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
@@ -516,7 +519,10 @@
                                     <div class="info-item">
                                         <i class="fas fa-user-check"></i>
                                         <span class="info-label">RECEBEDOR</span>
-                            <span class="info-value">{{ solicitacao.nome_do_recebedor }}</span>
+                                        <div class="private-value-wrap" data-private-real="{{ solicitacao.nome_do_recebedor|default:'' }}">
+                                            <span class="info-value private-value-display">******</span>
+                                            <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                                        </div>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
@@ -639,7 +645,10 @@
                                     <div class="info-item">
                                         <i class="fas fa-user-check"></i>
                                         <span class="info-label">RECEBEDOR</span>
-                            <span class="info-value">{{ solicitacao.nome_do_recebedor }}</span>
+                                        <div class="private-value-wrap" data-private-real="{{ solicitacao.nome_do_recebedor|default:'' }}">
+                                            <span class="info-value private-value-display">******</span>
+                                            <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                                        </div>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
@@ -757,7 +766,10 @@
                                     <div class="info-item">
                                         <i class="fas fa-user-check"></i>
                                         <span class="info-label">RECEBEDOR</span>
-                            <span class="info-value">{{ solicitacao.nome_do_recebedor }}</span>
+                                        <div class="private-value-wrap" data-private-real="{{ solicitacao.nome_do_recebedor|default:'' }}">
+                                            <span class="info-value private-value-display">******</span>
+                                            <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                                        </div>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
@@ -875,7 +887,10 @@
                                     <div class="info-item">
                                         <i class="fas fa-user-check"></i>
                                         <span class="info-label">RECEBEDOR</span>
-                            <span class="info-value">{{ solicitacao.nome_do_recebedor }}</span>
+                                        <div class="private-value-wrap" data-private-real="{{ solicitacao.nome_do_recebedor|default:'' }}">
+                                            <span class="info-value private-value-display">******</span>
+                                            <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                                        </div>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
@@ -952,7 +967,10 @@
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Recebedor</div>
-                            <div class="detail-value" id="modal-recebedor">N/A</div>
+                            <div class="detail-value private-value-wrap" id="modal-recebedor-wrap" data-private-real="">
+                                <span class="private-value-display" id="modal-recebedor">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                            </div>
                         </div>
                     </div>
 
@@ -1674,14 +1692,19 @@
             }
             const moveSelect = e.target.closest('.column-move-select');
             if (moveSelect && moveSelect.value) {
-                const sourceColumn = moveSelect.getAttribute('data-column');
                 const targetColumn = moveSelect.value;
-                const columnContent = document.querySelector(`.column-content[data-column="${sourceColumn}"]`);
-                if (!columnContent) return;
-                const allCards = columnContent.querySelectorAll('.card[data-card-id]:not(.empty-column)');
-                const cards = Array.from(allCards).filter(card => card.querySelector('.card-select-checkbox')?.checked);
+                // Coletar todas as solicitações marcadas em qualquer coluna do Kanban
+                const allColumnContents = document.querySelectorAll('.column-content[data-column]');
+                const cards = [];
+                allColumnContents.forEach(columnContent => {
+                    const columnCards = columnContent.querySelectorAll('.card[data-card-id]:not(.empty-column)');
+                    columnCards.forEach(card => {
+                        const cb = card.querySelector('.card-select-checkbox');
+                        if (cb && cb.checked) cards.push(card);
+                    });
+                });
                 if (cards.length === 0) {
-                    alert('Selecione pelo menos uma solicitação (use o checkbox nos cards ou "Selecionar todas").');
+                    alert('Selecione pelo menos uma solicitação (marque o checkbox nos cards ou use "Selecionar todas" em uma coluna).');
                     moveSelect.value = '';
                     return;
                 }
@@ -1697,6 +1720,7 @@
                     let p = Promise.resolve();
                     cards.forEach(card => {
                         const cardId = card.getAttribute('data-card-id');
+                        const sourceColumn = card.closest('.kanban-column')?.getAttribute('data-column') || '';
                         p = p.then(() => {
                             if (typeof window.moveCardDirectly !== 'function') return Promise.reject(new Error('moveCardDirectly não disponível'));
                             return window.moveCardDirectly(cardId, targetColumn, card, sourceColumn, justificativaEstorno, { skipReload: true });
@@ -1723,9 +1747,11 @@
                         moveSelect.value = '';
                         return;
                     }
+                    const sourceColumns = [...new Set(cards.map(c => c.closest('.kanban-column')?.getAttribute('data-column')).filter(Boolean))];
+                    const sourceName = sourceColumns.length === 1 ? (columnNames[sourceColumns[0]] || sourceColumns[0]) : 'Várias colunas';
                     window.solicitarJustificativaEstorno({
                         cardTitle: cards.length + ' solicitação(ões)',
-                        sourceName: columnNames[sourceColumn] || sourceColumn,
+                        sourceName: sourceName,
                         targetName: 'Estorno'
                     }).then((justificativaEstorno) => {
                         if (!justificativaEstorno) { moveSelect.value = ''; return; }
