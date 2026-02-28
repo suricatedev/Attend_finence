@@ -1,6 +1,10 @@
 /* ========================================
    PRIVACIDADE DE VALORES (****** + olho)
    ======================================== */
+/* Ocultar botão de revelar para quem não é Financeiro/Administrador (ex.: grupo Solicitante) */
+body.cannot-see-values .btn-reveal-value {
+    display: none !important;
+}
 .private-value-wrap {
     display: inline-flex;
     align-items: center;

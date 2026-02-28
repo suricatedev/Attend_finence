@@ -18,8 +18,9 @@
     <!-- Definir flag ANTES de qualquer JavaScript executar -->
     <script>
         window.MODAL_CONTROLLED_BY_BASE = true;
-        window.USER_CAN_CHANGE_STATUS = {% if user|can_change_status %}true{% else %}false{% endif %};
+        window.USER_CAN_CHANGE_STATUS = {% if user|is_financeiro or user|is_admin %}true{% else %}false{% endif %};
         window.USER_IS_FINANCEIRO = {% if user|is_financeiro %}true{% else %}false{% endif %};
+        window.USER_IS_SOLICITANTE = {% if user|is_solicitante %}true{% else %}false{% endif %};
         
         // Salvar valores originais dos contadores do backend
         window.originalCounters = {
@@ -331,10 +332,14 @@
                 <span class="card-count">{{ num_solicitacoes_pendentes }}</span>
                         </div>
                         <div class="column-total-value" data-column="planning">
+                            {% if user|is_financeiro or user|is_admin %}
                             Total: <span class="private-value-wrap column-total-amount-wrap" data-private-real="">
                                 <span class="private-value-display column-total-amount">******</span>
                                 <button type="button" class="btn-reveal-value" title="Mostrar total" aria-label="Mostrar total"><i class="fas fa-eye"></i></button>
                             </span>
+                            {% else %}
+                            Total: <span class="column-total-masked">******</span>
+                            {% endif %}
                             {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="planning" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                             {% endif %}
@@ -403,10 +408,14 @@
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
+                                        {% if user|is_financeiro or user|is_admin %}
                                         <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
                                             <span class="info-value private-value-display">******</span>
                                             <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
                                         </div>
+                                        {% else %}
+                                        <span class="info-value">******</span>
+                                        {% endif %}
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
@@ -449,10 +458,14 @@
                 <span class="card-count">{{ num_solicitacoes_recusados }}</span>
                         </div>
                         <div class="column-total-value" data-column="test">
+                            {% if user|is_financeiro or user|is_admin %}
                             Total: <span class="private-value-wrap column-total-amount-wrap" data-private-real="">
                                 <span class="private-value-display column-total-amount">******</span>
                                 <button type="button" class="btn-reveal-value" title="Mostrar total" aria-label="Mostrar total"><i class="fas fa-eye"></i></button>
                             </span>
+                            {% else %}
+                            Total: <span class="column-total-masked">******</span>
+                            {% endif %}
                             {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="test" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                             {% endif %}
@@ -521,10 +534,14 @@
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
+                                        {% if user|is_financeiro or user|is_admin %}
                                         <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
                                             <span class="info-value private-value-display">******</span>
                                             <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
                                         </div>
+                                        {% else %}
+                                        <span class="info-value">******</span>
+                                        {% endif %}
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
@@ -572,10 +589,14 @@
                 <span class="card-count">{{ num_solicitacoes_aprovado }}</span>
                         </div>
                         <div class="column-total-value" data-column="launch">
+                            {% if user|is_financeiro or user|is_admin %}
                             Total: <span class="private-value-wrap column-total-amount-wrap" data-private-real="">
                                 <span class="private-value-display column-total-amount">******</span>
                                 <button type="button" class="btn-reveal-value" title="Mostrar total" aria-label="Mostrar total"><i class="fas fa-eye"></i></button>
                             </span>
+                            {% else %}
+                            Total: <span class="column-total-masked">******</span>
+                            {% endif %}
                             {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="launch" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                             {% endif %}
@@ -644,10 +665,14 @@
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
+                                        {% if user|is_financeiro or user|is_admin %}
                                         <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
                                             <span class="info-value private-value-display">******</span>
                                             <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
                                         </div>
+                                        {% else %}
+                                        <span class="info-value">******</span>
+                                        {% endif %}
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
@@ -690,10 +715,14 @@
                 <span class="card-count">{{ num_solicitacoes_concluido }}</span>
                         </div>
                         <div class="column-total-value" data-column="success">
+                            {% if user|is_financeiro or user|is_admin %}
                             Total: <span class="private-value-wrap column-total-amount-wrap" data-private-real="">
                                 <span class="private-value-display column-total-amount">******</span>
                                 <button type="button" class="btn-reveal-value" title="Mostrar total" aria-label="Mostrar total"><i class="fas fa-eye"></i></button>
                             </span>
+                            {% else %}
+                            Total: <span class="column-total-masked">******</span>
+                            {% endif %}
                             {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="success" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                             {% endif %}
@@ -762,10 +791,14 @@
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
+                                        {% if user|is_financeiro or user|is_admin %}
                                         <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
                                             <span class="info-value private-value-display">******</span>
                                             <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
                                         </div>
+                                        {% else %}
+                                        <span class="info-value">******</span>
+                                        {% endif %}
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
@@ -808,10 +841,14 @@
                 <span class="card-count">{{ num_solicitacoes_estorno }}</span>
                         </div>
                         <div class="column-total-value" data-column="refund">
+                            {% if user|is_financeiro or user|is_admin %}
                             Total: <span class="private-value-wrap column-total-amount-wrap" data-private-real="">
                                 <span class="private-value-display column-total-amount">******</span>
                                 <button type="button" class="btn-reveal-value" title="Mostrar total" aria-label="Mostrar total"><i class="fas fa-eye"></i></button>
                             </span>
+                            {% else %}
+                            Total: <span class="column-total-masked">******</span>
+                            {% endif %}
                             {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="refund" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
                             {% endif %}
@@ -880,10 +917,14 @@
                                     <div class="info-item">
                                         <i class="fas fa-dollar-sign"></i>
                                         <span class="info-label">VALOR</span>
+                                        {% if user|is_financeiro or user|is_admin %}
                                         <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
                                             <span class="info-value private-value-display">******</span>
                                             <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
                                         </div>
+                                        {% else %}
+                                        <span class="info-value">******</span>
+                                        {% endif %}
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-calendar-plus"></i>
@@ -1103,6 +1144,11 @@
     <script>
         // Filtro de data por coluna do Kanban - Modal elegante
         document.addEventListener('DOMContentLoaded', function() {
+            // Somente Financeiro e Administrador podem ver o botão de revelar valores; Solicitante não.
+            if (window.USER_CAN_CHANGE_STATUS === false) {
+                document.querySelectorAll('.btn-reveal-value').forEach(function(btn) { btn.remove(); });
+            }
+
             const dateFilterModal = document.getElementById('dateFilterModal');
             const dateFilterInput = document.getElementById('dateFilterInput');
             const closeDateFilterModal = document.getElementById('closeDateFilterModal');
@@ -1130,6 +1176,13 @@
             // Observar quando novos cards são adicionados ao DOM
             const observer = new MutationObserver(function(mutations) {
                 mutations.forEach(function(mutation) {
+                    if (mutation.addedNodes.length && window.USER_CAN_CHANGE_STATUS === false) {
+                        mutation.addedNodes.forEach(function(node) {
+                            if (node.nodeType === 1 && node.querySelectorAll) {
+                                node.querySelectorAll('.btn-reveal-value').forEach(function(btn) { btn.remove(); });
+                            }
+                        });
+                    }
                     if (mutation.addedNodes.length) {
                         mutation.addedNodes.forEach(function(node) {
                             if (node.nodeType === 1 && (node.classList && node.classList.contains('card'))) {
