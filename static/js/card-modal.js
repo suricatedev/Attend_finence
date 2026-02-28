@@ -68,7 +68,7 @@ function initializeCardExpansion() {
             card.removeEventListener('click', card._modalClickHandler);
         }
         
-        // Clique simples com prioridade máxima (não abrir modal ao clicar no checkbox de seleção)
+        // Clique simples com prioridade máxima (não abrir modal ao clicar no checkbox ou no botão de revelar valor)
         card._modalClickHandler = function(e) {
             if (e.target.closest('.card-actions') || 
                 e.target.closest('.card-action-btn') ||
@@ -76,7 +76,8 @@ function initializeCardExpansion() {
                 e.target.closest('.selected-date-display') ||
                 e.target.closest('.date-filter-btn') ||
                 e.target.closest('.btn-delete-card') ||
-                e.target.closest('.card-select-checkbox')) {
+                e.target.closest('.card-select-checkbox') ||
+                e.target.closest('.btn-reveal-value')) {
                 return;
             }
             
@@ -858,16 +859,6 @@ function setModalValorPrivado(valorStr, valorReceitaStr) {
     }
 }
 
-// Atualiza nome do recebedor no modal mantendo privacidade (****** + olho para revelar)
-function setModalRecebedorPrivado(recebedorStr) {
-    var wrap = document.getElementById('modal-recebedor-wrap');
-    var display = document.getElementById('modal-recebedor');
-    if (wrap && display) {
-        wrap.setAttribute('data-private-real', recebedorStr || 'N/A');
-        display.textContent = '******';
-    }
-}
-
 // Função para preencher os dados do card no modal
 function populateCardDetails(data) {
     // Preencher informações básicas
@@ -880,7 +871,8 @@ function populateCardDetails(data) {
     const solicitanteElement = document.getElementById('modal-solicitante');
     if (solicitanteElement) solicitanteElement.textContent = data.solicitante || 'N/A';
     
-    setModalRecebedorPrivado(data.recebedor || 'N/A');
+    const recebedorElement = document.getElementById('modal-recebedor');
+    if (recebedorElement) recebedorElement.textContent = data.recebedor || 'N/A';
     
     // Adicionar campos adicionais (Chave PIX, Cliente/Empresa, CNPJ) nas informações básicas para solicitações Casual
     const infoBasicasSection = document.querySelector('.detail-section.info-basicas');
@@ -897,12 +889,16 @@ function populateCardDetails(data) {
         // Adicionar campos adicionais se existirem nos dados (para solicitações Casual)
         if (data.isCasual && !data.isTecnico && data.valoresDetalhados) {
             if (data.valoresDetalhados.chave_pix) {
+                const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
                 const chavePixItem = document.createElement('div');
                 chavePixItem.className = 'detail-item';
                 chavePixItem.id = 'modal-chave-pix-item';
                 chavePixItem.innerHTML = `
                     <div class="detail-label">Chave PIX</div>
-                    <div class="detail-value" id="modal-chave-pix">${data.valoresDetalhados.chave_pix}</div>
+                    <div class="detail-value private-value-wrap" id="modal-chave-pix-wrap" data-private-real="${esc(data.valoresDetalhados.chave_pix)}">
+                        <span class="private-value-display" id="modal-chave-pix">******</span>
+                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                    </div>
                 `;
                 infoBasicasSection.appendChild(chavePixItem);
             }
@@ -1014,22 +1010,23 @@ function populateCardDetails(data) {
             
             console.log(`🔍 Criando item ${index + 1}:`, item);
             
-            // Construir HTML dos valores detalhados
+            // Construir HTML dos valores detalhados (com privacidade)
+            const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
             const valoresDetalhados = [];
             if (item.valor_km && item.valor_km !== 'R$ 0,00') {
-                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">KM:</span><span>${item.valor_km}</span></div>`);
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">KM:</span><span class="private-value-wrap" data-private-real="${esc(item.valor_km)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
             }
             if (item.valor_pedagio && item.valor_pedagio !== 'R$ 0,00') {
-                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Pedágio:</span><span>${item.valor_pedagio}</span></div>`);
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Pedágio:</span><span class="private-value-wrap" data-private-real="${esc(item.valor_pedagio)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
             }
             if (item.valor_hospedagem && item.valor_hospedagem !== 'R$ 0,00') {
-                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Hospedagem:</span><span>${item.valor_hospedagem}</span></div>`);
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Hospedagem:</span><span class="private-value-wrap" data-private-real="${esc(item.valor_hospedagem)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
             }
             if (item.valor_fluvial && item.valor_fluvial !== 'R$ 0,00') {
-                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Fluvial:</span><span>${item.valor_fluvial}</span></div>`);
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Fluvial:</span><span class="private-value-wrap" data-private-real="${esc(item.valor_fluvial)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
             }
             if (item.valor_outros && item.valor_outros !== 'R$ 0,00') {
-                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Outros:</span><span>${item.valor_outros}</span></div>`);
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Outros:</span><span class="private-value-wrap" data-private-real="${esc(item.valor_outros)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
             }
             
             const valoresDetalhadosHTML = valoresDetalhados.length > 0 
@@ -1042,10 +1039,9 @@ function populateCardDetails(data) {
                 : '';
             
             // Construir informações de recebedor, PIX, cliente/empresa e CNPJ (com privacidade)
-            const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
             const infoAdicional = [];
             if (item.recebedor) {
-                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-user-check"></i> Recebedor:</span><span class="route-item-modal-value private-value-wrap" data-private-real="${esc(item.recebedor)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-user-check"></i> Recebedor:</span><span class="route-item-modal-value">${item.recebedor}</span></div>`);
             }
             if (item.chave_pix) {
                 infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-qrcode"></i> Chave PIX:</span><span class="route-item-modal-value private-value-wrap" data-private-real="${esc(item.chave_pix)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
@@ -1203,13 +1199,14 @@ function populateCardDetails(data) {
             
             console.log(`🔍 Criando item de técnico ${index + 1}:`, item);
             
-            // Construir HTML dos valores detalhados
+            // Construir HTML dos valores detalhados (com privacidade)
+            const escTec = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
             const valoresDetalhados = [];
             if (item.valor_pagamento_tecnico && item.valor_pagamento_tecnico !== 'R$ 0,00') {
-                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Valor Pagamento:</span><span>${item.valor_pagamento_tecnico}</span></div>`);
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Valor Pagamento:</span><span class="private-value-wrap" data-private-real="${escTec(item.valor_pagamento_tecnico)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
             }
             if (item.valor_extra && item.valor_extra !== 'R$ 0,00') {
-                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Valor Extra:</span><span>${item.valor_extra}</span></div>`);
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Valor Extra:</span><span class="private-value-wrap" data-private-real="${escTec(item.valor_extra)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
             }
             
             const valoresDetalhadosHTML = valoresDetalhados.length > 0 
@@ -1225,7 +1222,7 @@ function populateCardDetails(data) {
             const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
             const infoAdicional = [];
             if (item.recebedor) {
-                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-user-check"></i> Recebedor:</span><span class="route-item-modal-value private-value-wrap" data-private-real="${esc(item.recebedor)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-user-check"></i> Recebedor:</span><span class="route-item-modal-value">${item.recebedor}</span></div>`);
             }
             if (item.chave_pix) {
                 infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-qrcode"></i> Chave PIX:</span><span class="route-item-modal-value private-value-wrap" data-private-real="${esc(item.chave_pix)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
@@ -1348,24 +1345,25 @@ function populateCardDetails(data) {
         const valores = data.valoresDetalhados;
         const valoresDetalhados = [];
         
-        // Construir cards para cada valor detalhado (se diferente de R$ 0,00)
+        // Construir cards para cada valor detalhado com privacidade (se diferente de R$ 0,00)
+        const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
         if (valores.valor_km && valores.valor_km !== 'R$ 0,00') {
-            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">KM:</span><span>${valores.valor_km}</span></div>`);
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">KM:</span><span class="private-value-wrap" data-private-real="${esc(valores.valor_km)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
         }
         if (valores.valor_pedagio && valores.valor_pedagio !== 'R$ 0,00') {
-            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Pedágio:</span><span>${valores.valor_pedagio}</span></div>`);
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Pedágio:</span><span class="private-value-wrap" data-private-real="${esc(valores.valor_pedagio)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
         }
         if (valores.valor_hospedagem && valores.valor_hospedagem !== 'R$ 0,00') {
-            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Hospedagem:</span><span>${valores.valor_hospedagem}</span></div>`);
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Hospedagem:</span><span class="private-value-wrap" data-private-real="${esc(valores.valor_hospedagem)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
         }
         if (valores.valor_fluvial && valores.valor_fluvial !== 'R$ 0,00') {
-            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Fluvial:</span><span>${valores.valor_fluvial}</span></div>`);
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Fluvial:</span><span class="private-value-wrap" data-private-real="${esc(valores.valor_fluvial)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
         }
         if (valores.valor_outros && valores.valor_outros !== 'R$ 0,00') {
-            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Outros:</span><span>${valores.valor_outros}</span></div>`);
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Outros:</span><span class="private-value-wrap" data-private-real="${esc(valores.valor_outros)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
         }
         if (valores.valor_receita && valores.valor_receita !== 'R$ 0,00') {
-            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Receita:</span><span>${valores.valor_receita}</span></div>`);
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Receita:</span><span class="private-value-wrap" data-private-real="${esc(valores.valor_receita)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
         }
         
         if (valoresDetalhados.length > 0) {
@@ -1395,10 +1393,10 @@ function populateCardDetails(data) {
             casualValoresSection.appendChild(servicoInfo);
         }
         
-        // Adicionar seção de Informações Adicionais (Chave PIX, Cliente/Empresa, CNPJ)
+        // Adicionar seção de Informações Adicionais (Chave PIX com privacidade, Cliente/Empresa, CNPJ)
         const infoAdicional = [];
         if (valores.chave_pix) {
-            infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-qrcode"></i> Chave PIX:</span><span class="route-item-modal-value">${valores.chave_pix}</span></div>`);
+            infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-qrcode"></i> Chave PIX:</span><span class="route-item-modal-value private-value-wrap" data-private-real="${esc(valores.chave_pix)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
         }
         if (valores.cliente_empresa) {
             infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-building"></i> Cliente/Empresa:</span><span class="route-item-modal-value">${valores.cliente_empresa}</span></div>`);
@@ -2086,9 +2084,46 @@ function closeCardDetailModal() {
     }
 })();
 
-// Inicialização quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', function() {
+// Toggle de privacidade (****** <-> valor real) para todos os .btn-reveal-value na página e no modal
+function setupPrivacyToggleListener() {
+    if (window._privacyToggleListenerAdded) return;
+    window._privacyToggleListenerAdded = true;
+    function handleRevealClick(e) {
+        var btn = e.target.closest('.btn-reveal-value');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var wrap = btn.closest('.private-value-wrap');
+        if (!wrap) return;
+        var display = wrap.querySelector('.private-value-display');
+        if (!display) return;
+        var real = (wrap.getAttribute('data-private-real') || '').trim();
+        var textoAtual = (display.textContent || '').trim();
+        // Considerar mascarado se for só asteriscos (qualquer quantidade)
+        var estaMascarado = /^\*+$/.test(textoAtual) || textoAtual === '******';
+        if (estaMascarado) {
+            display.textContent = real || 'N/A';
+            var icon = btn.querySelector('i');
+            if (icon) { icon.className = 'fas fa-eye-slash'; }
+            btn.setAttribute('title', 'Ocultar');
+            btn.setAttribute('aria-label', 'Ocultar valor');
+        } else {
+            display.textContent = '******';
+            var icon = btn.querySelector('i');
+            if (icon) { icon.className = 'fas fa-eye'; }
+            btn.setAttribute('title', 'Mostrar valor');
+            btn.setAttribute('aria-label', 'Mostrar valor');
+        }
+    }
+    document.addEventListener('click', handleRevealClick, true);
+}
+
+// Inicialização quando o DOM estiver carregado (ou imediatamente se já carregou)
+function initCardModal() {
     calculateQueueTime();
+    
+    // Toggle de privacidade nos valores/recebedor/PIX (cards e modal)
+    setupPrivacyToggleListener();
     
     // Atualizar a cada minuto
     setInterval(calculateQueueTime, 60000);
@@ -2107,7 +2142,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Expor função globalmente para debug
     window.initializeCardExpansion = initializeCardExpansion;
     window.openCardDetailModal = openCardDetailModal;
-});
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCardModal);
+} else {
+    initCardModal();
+}
 
 // ========================================
 // SISTEMA DE FILTROS DAS COLUNAS

@@ -42,14 +42,11 @@ class RelatoriosOptimized {
         this.setDefaultDates();
         this.initValoresDetalhados();
         
-        // Filtros visíveis por padrão
-        const filtersToggle = document.getElementById('filtersToggle');
-        const filtersContent = document.getElementById('filtersContent');
-        if (filtersToggle && filtersContent) {
-            // Não colapsar por padrão - deixar visível
-            filtersToggle.classList.remove('collapsed');
-            filtersContent.classList.remove('collapsed');
-        }
+        // Filtros Normais e Avançados visíveis por padrão
+        const filtersContentNormal = document.getElementById('filtersContentNormal');
+        const filtersContentAdvanced = document.getElementById('filtersContentAdvanced');
+        if (filtersContentNormal) filtersContentNormal.classList.remove('collapsed');
+        if (filtersContentAdvanced) filtersContentAdvanced.classList.remove('collapsed');
         
         // Renderizar tabela inicialmente com todos os dados
         // Isso garante que os dados estejam visíveis e os filtros funcionem
@@ -361,22 +358,30 @@ class RelatoriosOptimized {
     }
 
     setupEventListeners() {
-        // Toggle para colapsar filtros
-        const filtersToggle = document.getElementById('filtersToggle');
+        // Toggle para colapsar Filtros Normais
+        const filtersToggleNormal = document.getElementById('filtersToggleNormal');
+        const filtersContentNormal = document.getElementById('filtersContentNormal');
+        if (filtersToggleNormal && filtersContentNormal) {
+            filtersToggleNormal.addEventListener('click', () => {
+                filtersToggleNormal.classList.toggle('collapsed');
+                filtersContentNormal.classList.toggle('collapsed');
+            });
+        }
+        // Toggle para colapsar Filtros Avançados (inclui Dashboard de Indicadores)
+        const filtersToggleAdvanced = document.getElementById('filtersToggleAdvanced');
+        const filtersContentAdvanced = document.getElementById('filtersContentAdvanced');
+        if (filtersToggleAdvanced && filtersContentAdvanced) {
+            filtersToggleAdvanced.addEventListener('click', () => {
+                filtersToggleAdvanced.classList.toggle('collapsed');
+                filtersContentAdvanced.classList.toggle('collapsed');
+            });
+        }
         
         // Toggle para expandir/colapsar colunas de valores detalhados
         const toggleValoresBtn = document.getElementById('toggleValoresDetalhados');
         if (toggleValoresBtn) {
             toggleValoresBtn.addEventListener('click', () => {
                 this.toggleValoresDetalhados();
-            });
-        }
-        const filtersContent = document.getElementById('filtersContent');
-        
-        if (filtersToggle && filtersContent) {
-            filtersToggle.addEventListener('click', () => {
-                filtersToggle.classList.toggle('collapsed');
-                filtersContent.classList.toggle('collapsed');
             });
         }
 
@@ -1033,14 +1038,13 @@ class RelatoriosOptimized {
         const isExpanded = localStorage.getItem('valoresDetalhadosExpanded') === 'true';
         const displayStyle = isExpanded ? 'table-cell' : 'none';
         const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-        const recebedorVal = item.recebedor || '-';
         const chavePixVal = item.chavePix || '-';
         return `
             <td>${item.ticket || item.id}</td>
             <td>${item.title}</td>
             <td>${item.solicitante}</td>
             <td>${item.supervisor || '-'}</td>
-            <td><span class="private-value-wrap" data-private-real="${esc(recebedorVal)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></td>
+            <td>${item.recebedor || '-'}</td>
             <td><span class="private-value-wrap" data-private-real="${esc(chavePixVal)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></td>
             <td>${item.clienteEmpresa || '-'}</td>
             <td>${item.cnpj || '-'}</td>
@@ -1434,7 +1438,7 @@ class RelatoriosOptimized {
                         </div>
                         <div class="detail-item">
                             <label>Recebedor:</label>
-                            <span class="private-value-wrap" data-private-real="${(dados.recebedor || 'N/A').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span>
+                            <span>${dados.recebedor || 'N/A'}</span>
                         </div>
                         <div class="detail-item">
                             <label>Serviço:</label>
@@ -1538,7 +1542,7 @@ class RelatoriosOptimized {
                         const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
                         infoAdicional = '<div class="route-item-info-adicional">';
                         if (item.recebedor) {
-                            infoAdicional += `<div class="route-item-info"><label><i class="fas fa-user-check"></i> Recebedor:</label><span class="private-value-wrap" data-private-real="${esc(item.recebedor)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`;
+                            infoAdicional += `<div class="route-item-info"><label><i class="fas fa-user-check"></i> Recebedor:</label><span class="route-item-modal-value">${item.recebedor}</span></div>`;
                         }
                         if (item.chave_pix) {
                             infoAdicional += `<div class="route-item-info"><label><i class="fas fa-qrcode"></i> Chave PIX:</label><span class="private-value-wrap" data-private-real="${esc(item.chave_pix)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`;

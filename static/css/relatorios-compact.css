@@ -324,6 +324,22 @@ header.header {
     margin: 0;
 }
 
+/* Filtros Avançados: conteúdo pode ser longo (inclui Dashboard de Indicadores) */
+.filters-section-advanced .filters-content {
+    max-height: none;
+}
+.filters-section-advanced .filters-content.collapsed {
+    max-height: 0;
+}
+.filters-section-advanced .dashboard-indicadores-section {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+.filters-advanced-grid {
+    margin-bottom: 0;
+}
+
 .filters-main {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

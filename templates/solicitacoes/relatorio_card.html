@@ -1,10 +1,12 @@
 {% load solicitacoes_filters %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Relatório - {{ solicitacao.titulo }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous">
     <style>
         * {
             margin: 0;
@@ -105,19 +107,35 @@
             user-select: none;
         }
         .btn-reveal-value {
-            background: none;
-            border: none;
-            padding: 4px;
+            background: rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            padding: 6px 8px;
             cursor: pointer;
-            color: #64748b;
-            border-radius: 4px;
+            color: #475569;
+            border-radius: 6px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            margin-left: 6px;
+            flex-shrink: 0;
+        }
+        .btn-reveal-value i {
+            font-size: 1rem;
         }
         .btn-reveal-value:hover {
-            color: #FFCB57;
-            background: rgba(255, 203, 87, 0.15);
+            color: #1e293b;
+            background: rgba(255, 203, 87, 0.25);
+            border-color: #FFCB57;
+        }
+        .valor-card .btn-reveal-value {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+        }
+        .valor-card .btn-reveal-value:hover {
+            background: rgba(255, 255, 255, 0.5);
+            border-color: white;
+            color: white;
         }
         
         .valores-resumo {
@@ -144,6 +162,11 @@
         .valor-card-value {
             font-size: 1.8rem;
             font-weight: 700;
+        }
+        .valor-card-value.private-value-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .tabela-wrapper {
@@ -581,10 +604,7 @@
                 </div>
                 <div class="info-item">
                     <div class="info-item-label">Recebedor Principal</div>
-                    <div class="info-item-value private-value-wrap" data-private-real="{{ solicitacao.nome_do_recebedor|default:'' }}">
-                        <span class="private-value-display">******</span>
-                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
-                    </div>
+                    <div class="info-item-value">{{ solicitacao.nome_do_recebedor|default:"-" }}</div>
                 </div>
                 {% if solicitacao.chave_pix %}
                 <div class="info-item">
@@ -604,7 +624,10 @@
                 {% if solicitacao.cnpj %}
                 <div class="info-item">
                     <div class="info-item-label">CNPJ</div>
-                    <div class="info-item-value">{{ solicitacao.cnpj }}</div>
+                    <div class="info-item-value private-value-wrap" data-private-real="{{ solicitacao.cnpj }}">
+                        <span class="private-value-display">******</span>
+                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                    </div>
                 </div>
                 {% endif %}
             </div>
@@ -616,16 +639,25 @@
             <div class="valores-resumo">
                 <div class="valor-card">
                     <div class="valor-card-label">Valor Total (Detalhados)</div>
-                    <div class="valor-card-value">{{ valor_total_detalhados|brl }}</div>
+                    <div class="valor-card-value private-value-wrap" data-private-real="{{ valor_total_detalhados|brl }}">
+                        <span class="private-value-display">******</span>
+                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                    </div>
                 </div>
                 <div class="valor-card" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);">
                     <div class="valor-card-label">Valor da Receita</div>
-                    <div class="valor-card-value">{{ valor_receita|brl }}</div>
+                    <div class="valor-card-value private-value-wrap" data-private-real="{{ valor_receita|brl }}">
+                        <span class="private-value-display">******</span>
+                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                    </div>
                 </div>
                 {% if solicitacao.valor_em_rota %}
                 <div class="valor-card" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
                     <div class="valor-card-label">Valor EM ROTA</div>
-                    <div class="valor-card-value">{{ solicitacao.valor_em_rota|brl }}</div>
+                    <div class="valor-card-value private-value-wrap" data-private-real="{{ solicitacao.valor_em_rota|brl }}">
+                        <span class="private-value-display">******</span>
+                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                    </div>
                 </div>
                 {% endif %}
             </div>
@@ -658,12 +690,7 @@
                         <td><strong>ID {{ item.ordem }}</strong></td>
                         <td>#{{ item.ticket_item }}</td>
                         <td>{{ item.servico }}</td>
-                        <td>
-                            <span class="private-value-wrap" data-private-real="{{ item.recebedor|default:'' }}">
-                                <span class="private-value-display">******</span>
-                                <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
-                            </span>
-                        </td>
+                        <td>{{ item.recebedor|default:"-" }}</td>
                         <td>
                             <span class="private-value-wrap" data-private-real="{{ item.chave_pix|default:'' }}">
                                 <span class="private-value-display">******</span>
@@ -671,8 +698,18 @@
                             </span>
                         </td>
                         <td>{{ item.cliente_empresa|default:"-" }}</td>
-                        <td>{{ item.cnpj|default:"-" }}</td>
-                        <td class="valor-destaque">{{ item.valor_total|brl }}</td>
+                        <td>
+                            <span class="private-value-wrap" data-private-real="{{ item.cnpj|default:'' }}">
+                                <span class="private-value-display">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                            </span>
+                        </td>
+                        <td class="valor-destaque">
+                            <span class="private-value-wrap" data-private-real="{{ item.valor_total|brl }}">
+                                <span class="private-value-display">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                            </span>
+                        </td>
                         <td class="td-valores-detalhados">
                             <div class="valores-detalhados-item">
                                 {% if item.valor_km > 0 or item.valor_pedagio > 0 or item.valor_hospedagem > 0 or item.valor_fluvial > 0 or item.valor_outros > 0 %}
@@ -680,31 +717,31 @@
                                         {% if item.valor_km and item.valor_km > 0 %}
                                         <span class="valor-item">
                                             <span class="label">KM:</span>
-                                            <span class="value">{{ item.valor_km|brl }}</span>
+                                            <span class="value private-value-wrap" data-private-real="{{ item.valor_km|brl }}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span>
                                         </span>
                                         {% endif %}
                                         {% if item.valor_pedagio and item.valor_pedagio > 0 %}
                                         <span class="valor-item">
                                             <span class="label">Pedágio:</span>
-                                            <span class="value">{{ item.valor_pedagio|brl }}</span>
+                                            <span class="value private-value-wrap" data-private-real="{{ item.valor_pedagio|brl }}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span>
                                         </span>
                                         {% endif %}
                                         {% if item.valor_hospedagem and item.valor_hospedagem > 0 %}
                                         <span class="valor-item">
                                             <span class="label">Hospedagem:</span>
-                                            <span class="value">{{ item.valor_hospedagem|brl }}</span>
+                                            <span class="value private-value-wrap" data-private-real="{{ item.valor_hospedagem|brl }}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span>
                                         </span>
                                         {% endif %}
                                         {% if item.valor_fluvial and item.valor_fluvial > 0 %}
                                         <span class="valor-item">
                                             <span class="label">Fluvial:</span>
-                                            <span class="value">{{ item.valor_fluvial|brl }}</span>
+                                            <span class="value private-value-wrap" data-private-real="{{ item.valor_fluvial|brl }}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span>
                                         </span>
                                         {% endif %}
                                         {% if item.valor_outros and item.valor_outros > 0 %}
                                         <span class="valor-item">
                                             <span class="label">Outros:</span>
-                                            <span class="value">{{ item.valor_outros|brl }}</span>
+                                            <span class="value private-value-wrap" data-private-real="{{ item.valor_outros|brl }}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span>
                                         </span>
                                         {% endif %}
                                     </div>
@@ -713,7 +750,12 @@
                                 {% endif %}
                             </div>
                         </td>
-                        <td class="valor-destaque">{{ item.valor_atividade|brl }}</td>
+                        <td class="valor-destaque">
+                            <span class="private-value-wrap" data-private-real="{{ item.valor_atividade|brl }}">
+                                <span class="private-value-display">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                            </span>
+                        </td>
                         <td>
                             {% if item.atividade_produtiva is not None %}
                                 {% if item.atividade_produtiva %}
@@ -795,9 +837,11 @@
         var wrap = btn.closest('.private-value-wrap');
         if (!wrap) return;
         var display = wrap.querySelector('.private-value-display');
-        var real = wrap.getAttribute('data-private-real') || '';
         if (!display) return;
-        if (display.textContent === '******') {
+        var real = (wrap.getAttribute('data-private-real') || '').trim();
+        var textoAtual = (display.textContent || '').trim();
+        var estaMascarado = /^\*+$/.test(textoAtual);
+        if (estaMascarado) {
             display.textContent = real || 'N/A';
             var icon = btn.querySelector('i');
             if (icon) icon.className = 'fas fa-eye-slash';

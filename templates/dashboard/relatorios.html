@@ -65,20 +65,15 @@
         </div>
     </header>
 
-    <!-- Filtros Avançados -->
-    <section class="filters-section">
+    <!-- Filtros Normais -->
+    <section class="filters-section filters-section-normal">
         <div class="filters-container">
-            <!-- Toggle para colapsar filtros -->
-            <div class="filters-toggle" id="filtersToggle">
-                <h3>Filtros Avançados</h3>
+            <div class="filters-toggle" id="filtersToggleNormal">
+                <h3><i class="fas fa-filter"></i> Filtros Normais</h3>
                 <i class="fas fa-chevron-up"></i>
             </div>
-            
-            <!-- Conteúdo dos filtros -->
-            <div class="filters-content" id="filtersContent">
-                <!-- Filtros Principais - Organizados em grupos lógicos -->
+            <div class="filters-content" id="filtersContentNormal">
                 <div class="filters-main">
-                    <!-- Grupo 1: Status e Tipo (Botões) -->
                     <div class="filter-group filter-group-buttons">
                         <label><i class="fas fa-filter"></i> Status</label>
                         <div class="status-filters">
@@ -104,7 +99,6 @@
                             </button>
                         </div>
                     </div>
-
                     <div class="filter-group filter-group-buttons">
                         <label><i class="fas fa-tag"></i> Tipo</label>
                         <div class="status-filters">
@@ -122,8 +116,6 @@
                             </button>
                         </div>
                     </div>
-
-                    <!-- Grupo 2: Período (como na referência) -->
                     <div class="filter-group filter-group-dates">
                         <label><i class="fas fa-calendar-alt"></i> Período</label>
                         <div class="period-quick-buttons period-quick-buttons-report">
@@ -158,79 +150,26 @@
                             <input type="date" id="dateTo" class="date-input">
                         </div>
                     </div>
-
-                    <!-- Grupo 3: Serviço, Recebedor e Prioridade (Selects) -->
-                    <div class="filter-group">
-                        <label><i class="fas fa-briefcase"></i> Serviço</label>
-                        <select id="serviceFilter" class="select-input">
-                            <option value="">Todos os serviços</option>
-                            {% for servico in servicos_disponiveis %}
-                            <option value="{{ servico.id }}">{{ servico.nome }}</option>
-                            {% empty %}
-                            <option value="" disabled>Nenhum serviço disponível</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label><i class="fas fa-user-check"></i> Recebedor</label>
-                        <select id="recebedorFilter" class="select-input">
-                            <option value="">Todos os recebedores</option>
-                            {% for recebedor in recebedores_disponiveis %}
-                            <option value="{{ recebedor.nome }}">{{ recebedor.nome }}</option>
-                            {% empty %}
-                            <option value="" disabled>Nenhum recebedor disponível</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label><i class="fas fa-exclamation-circle"></i> Prioridade</label>
-                        <select id="priorityFilter" class="select-input">
-                            <option value="">Todas as prioridades</option>
-                            <option value="baixa">Baixa</option>
-                            <option value="media">Média</option>
-                            <option value="alta">Alta</option>
-                        </select>
-                    </div>
-
-                    <!-- Grupo 4: Cliente/Empresa, CNPJ e Chave PIX -->
-                    <div class="filter-group">
-                        <label><i class="fas fa-building"></i> Cliente/Empresa</label>
-                        <input type="text" id="clienteEmpresaFilter" class="select-input" placeholder="Buscar cliente/empresa...">
-                    </div>
-
-                    <div class="filter-group">
-                        <label><i class="fas fa-id-card"></i> CNPJ</label>
-                        <input type="text" id="cnpjFilter" class="select-input" placeholder="Buscar CNPJ...">
-                    </div>
-
-                    <div class="filter-group">
-                        <label><i class="fas fa-key"></i> Chave PIX</label>
-                        <input type="text" id="chavePixFilter" class="select-input" placeholder="Buscar chave PIX...">
-                    </div>
                 </div>
-
-            <!-- Busca e Ações -->
-            <div class="filters-actions">
-                <div class="search-group">
-                    <input type="text" id="searchInput" placeholder="Buscar por ID, título, solicitante, recebedor, cliente/empresa, CNPJ, PIX..." class="search-input">
-                    <button class="btn-search" id="applySearch">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
-                <div class="action-buttons">
-                    <button class="btn-secondary" id="clearFilters">
-                        <i class="fas fa-eraser"></i>
-                        Limpar
-                    </button>
-                    <button class="btn-primary" id="applyFilters">
-                        <i class="fas fa-filter"></i>
-                        Aplicar Filtros
-                    </button>
+                <div class="filters-actions">
+                    <div class="search-group">
+                        <input type="text" id="searchInput" placeholder="Buscar por ID, título, solicitante, recebedor, cliente/empresa, CNPJ, PIX..." class="search-input">
+                        <button class="btn-search" id="applySearch">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-secondary" id="clearFilters">
+                            <i class="fas fa-eraser"></i>
+                            Limpar
+                        </button>
+                        <button class="btn-primary" id="applyFilters">
+                            <i class="fas fa-filter"></i>
+                            Aplicar Filtros
+                        </button>
+                    </div>
                 </div>
             </div>
-            </div> <!-- Fechar filters-content -->
         </div>
     </section>
 
@@ -276,11 +215,66 @@
         </div>
     </section>
 
-    <!-- Dashboard de Indicadores - Eficiência Operacional -->
-    <section class="dashboard-indicadores-section" id="dashboardIndicadoresSection">
-        <h3 class="dashboard-indicadores-title"><i class="fas fa-chart-line"></i> Dashboard de Indicadores</h3>
-        <p class="dashboard-indicadores-subtitle">Eficiência Operacional</p>
-        <div class="dashboard-indicadores-grid">
+    <!-- Filtros Avançados (inclui filtros extras + Dashboard de Indicadores) -->
+    <section class="filters-section filters-section-advanced">
+        <div class="filters-container">
+            <div class="filters-toggle" id="filtersToggleAdvanced">
+                <h3><i class="fas fa-sliders-h"></i> Filtros Avançados</h3>
+                <i class="fas fa-chevron-up"></i>
+            </div>
+            <div class="filters-content" id="filtersContentAdvanced">
+                <!-- Filtros adicionais -->
+                <div class="filters-main filters-advanced-grid">
+                    <div class="filter-group">
+                        <label><i class="fas fa-briefcase"></i> Serviço</label>
+                        <select id="serviceFilter" class="select-input">
+                            <option value="">Todos os serviços</option>
+                            {% for servico in servicos_disponiveis %}
+                            <option value="{{ servico.id }}">{{ servico.nome }}</option>
+                            {% empty %}
+                            <option value="" disabled>Nenhum serviço disponível</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label><i class="fas fa-user-check"></i> Recebedor</label>
+                        <select id="recebedorFilter" class="select-input">
+                            <option value="">Todos os recebedores</option>
+                            {% for recebedor in recebedores_disponiveis %}
+                            <option value="{{ recebedor.nome }}">{{ recebedor.nome }}</option>
+                            {% empty %}
+                            <option value="" disabled>Nenhum recebedor disponível</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label><i class="fas fa-exclamation-circle"></i> Prioridade</label>
+                        <select id="priorityFilter" class="select-input">
+                            <option value="">Todas as prioridades</option>
+                            <option value="baixa">Baixa</option>
+                            <option value="media">Média</option>
+                            <option value="alta">Alta</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label><i class="fas fa-building"></i> Cliente/Empresa</label>
+                        <input type="text" id="clienteEmpresaFilter" class="select-input" placeholder="Buscar cliente/empresa...">
+                    </div>
+                    <div class="filter-group">
+                        <label><i class="fas fa-id-card"></i> CNPJ</label>
+                        <input type="text" id="cnpjFilter" class="select-input" placeholder="Buscar CNPJ...">
+                    </div>
+                    <div class="filter-group">
+                        <label><i class="fas fa-key"></i> Chave PIX</label>
+                        <input type="text" id="chavePixFilter" class="select-input" placeholder="Buscar chave PIX...">
+                    </div>
+                </div>
+
+                <!-- Dashboard de Indicadores (dentro de Filtros Avançados) -->
+                <div class="dashboard-indicadores-section" id="dashboardIndicadoresSection">
+                    <h3 class="dashboard-indicadores-title"><i class="fas fa-chart-line"></i> Dashboard de Indicadores</h3>
+                    <p class="dashboard-indicadores-subtitle">Eficiência Operacional</p>
+                    <div class="dashboard-indicadores-grid">
             <!-- 1. Eficiência Operacional – Lead Time Médio -->
             <div class="indicador-card indicador-card-lead">
                 <div class="indicador-card-header">
@@ -356,6 +350,9 @@
                         <span class="toggle-slider"></span>
                     </label>
                     <span class="toggle-label">Domiciliação</span>
+                </div>
+            </div>
+        </div>
                 </div>
             </div>
         </div>
@@ -475,12 +472,7 @@
                                 -
                             {% endif %}
                         </td>
-                        <td>
-                            <span class="private-value-wrap" data-private-real="{{ solicitacao.nome_do_recebedor|default:'' }}">
-                                <span class="private-value-display">******</span>
-                                <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
-                            </span>
-                        </td>
+                        <td>{{ solicitacao.nome_do_recebedor|default:"-" }}</td>
                         <td>{{ solicitacao.chave_pix|default:"-" }}</td>
                         <td>{{ solicitacao.cliente_empresa|default:"-" }}</td>
                         <td>{{ solicitacao.cnpj|default:"-" }}</td>
