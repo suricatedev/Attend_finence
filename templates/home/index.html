@@ -1623,57 +1623,212 @@
             }
         });
 
-        // Exportar todas as solicitações filtradas da coluna para TXT (template Deslocamento)
+        // Formatar valor para exibição (R$ X.XXX,XX)
+        function fmtBRL(v) { return (v != null && !isNaN(v)) ? Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00'; }
+
+        // Monta resumo de tipos de serviço, ex.:
+        //  - "2 Manutenção Vsat Faixa A"
+        //  - "2 Manutenção Vsat Faixa A\r\n1 Manutenção Vsat Faixa C"
+        function summarizeServiceCounts(servicos) {
+            const counts = {};
+            (servicos || []).forEach(function(s) {
+                const v = (s || '').trim();
+                if (!v || v === '-' || v.toLowerCase() === 'n/a') return;
+                counts[v] = (counts[v] || 0) + 1;
+            });
+            const keys = Object.keys(counts);
+            if (!keys.length) return '';
+            return keys.sort().map(function(nome) {
+                return String(counts[nome]) + ' ' + nome;
+            }).join('\r\n');
+        }
+
+        // Exportar TXT no formato de solicitação AGRUPADA (itens_rota)
+        // Modelo:
+        // Deslocamento (solicitante)
+        //
+        // (TICKET) - R$ (soma detalhados do ticket) - (serviço) - R$ (valor da atividade)
+        //
+        // Adiantamento - R$ (soma detalhados de todos os tickets)
+        // Receita - R$ (soma das atividades de todos os tickets)
+        // ————————
+        function buildAgrupadaExportData(dados) {
+            const itens = dados.itens_rota || [];
+            if (itens.length === 0) return null;
+
+            const nomeSolicitante = (dados.solicitante || '').trim() || '-';
+            const tipoLabel = dados.is_tecnico ? 'Solicitação de técnico' : 'Deslocamento';
+
+            let adiantamentoTotal = 0;
+            let receitaTotal = 0;
+            const servicos = [];
+
+            // Sempre SOMAR: adiantamento = soma dos detalhamentos (KM+Pedágio+…), receita = soma do valor da atividade de cada item. Nunca subtrair.
+            const linhas = itens.map(function(item) {
+                const vKm = Math.max(0, item.valor_km_raw != null ? item.valor_km_raw : 0);
+                const vPed = Math.max(0, item.valor_pedagio_raw != null ? item.valor_pedagio_raw : 0);
+                const vHosp = Math.max(0, item.valor_hospedagem_raw != null ? item.valor_hospedagem_raw : 0);
+                const vFluv = Math.max(0, item.valor_fluvial_raw != null ? item.valor_fluvial_raw : 0);
+                const vOutros = Math.max(0, item.valor_outros_raw != null ? item.valor_outros_raw : 0);
+                const deslocamento = vKm + vPed + vHosp + vFluv + vOutros;
+                const atividade = Math.max(0, item.valor_raw != null ? item.valor_raw : 0);
+
+                adiantamentoTotal += deslocamento;
+                receitaTotal += atividade;
+
+                const ticket = (item.ticket_item || '').trim();
+                const servico = (item.servico || '').trim() || '-';
+                servicos.push(servico);
+                // Só exibir valor da atividade no final quando o serviço for Manutenção Faixa D
+                const isFaixaD = /faixa\s*d/i.test(servico);
+                const sufixoValor = isFaixaD ? ' - (R$ ' + fmtBRL(atividade) + ')' : '';
+                return '(' + ticket + ') - R$ ' + fmtBRL(deslocamento) + ' - ' + servico + sufixoValor;
+            });
+
+            const resumoServicos = summarizeServiceCounts(servicos);
+
+            const text = [
+                tipoLabel + ' (' + nomeSolicitante + ')',
+                '',
+                linhas.join('\r\n'),
+                '',
+                'Adiantamento - R$ ' + fmtBRL(adiantamentoTotal),
+                'Receita - R$ ' + fmtBRL(receitaTotal),
+                '',
+                resumoServicos || '',
+                '————————'
+            ].join('\r\n');
+
+            return { text: text, adiantamento: adiantamentoTotal, receita: receitaTotal };
+        }
+
+        // Exportar TXT no formato de solicitação SIMPLES (sem itens_rota)
+        function buildSimplesExportDataFromDados(dados) {
+            if (!dados) return null;
+            const nomeSolicitante = (dados.solicitante || '').trim() || '-';
+            const tipoLabel = dados.is_tecnico ? 'Solicitação de técnico' : 'Deslocamento';
+            const ticket = (dados.ticket || '').trim();
+            const servico = (dados.servico || '').trim() || '-';
+
+            const vKm = dados.valor_km_raw != null ? dados.valor_km_raw : 0;
+            const vPed = dados.valor_pedagio_raw != null ? dados.valor_pedagio_raw : 0;
+            const vHosp = dados.valor_hospedagem_raw != null ? dados.valor_hospedagem_raw : 0;
+            const vFluv = dados.valor_fluvial_raw != null ? dados.valor_fluvial_raw : 0;
+            const vOutros = dados.valor_outros_raw != null ? dados.valor_outros_raw : 0;
+            const deslocamento = vKm + vPed + vHosp + vFluv + vOutros; // soma dos detalhamentos
+            const atividade = dados.valor_receita_raw != null ? dados.valor_receita_raw : 0; // valor da atividade (receita)
+
+            // Solicitação individual: não exibir valor da atividade na linha (só adiantamento e receita no bloco)
+            const linha = '(' + ticket + ') - R$ ' + fmtBRL(deslocamento) + ' - ' + servico;
+            const resumoServicos = summarizeServiceCounts([servico]);
+
+            const text = [
+                tipoLabel + ' (' + nomeSolicitante + ')',
+                '',
+                linha,
+                '',
+                'Adiantamento - R$ ' + fmtBRL(deslocamento),
+                'Receita - R$ ' + fmtBRL(atividade),
+                '',
+                resumoServicos || '',
+                '————————'
+            ].join('\r\n');
+            return { text: text, adiantamento: deslocamento, receita: atividade };
+        }
+
+        // Exportar uma solicitação simples (sem itens agrupados)
         function buildCardExportText(card) {
             const ticket = card.getAttribute('data-ticket') || '';
-            const valor = parseFloat(String(card.getAttribute('data-valor') || '0').replace(',', '.')) || 0;
-            const valorReceita = parseFloat(String(card.getAttribute('data-valor-receita') || '0').replace(',', '.')) || 0;
+            // Aqui NÃO vamos subtrair valor da atividade do deslocamento.
+            // data-valor já é a soma dos detalhamentos (KM, Pedágio, etc.) e
+            // data-valor-receita é o valor da atividade (receita).
+            const valor = parseFloat(String(card.getAttribute('data-valor') || '0').replace(',', '.')) || 0; // deslocamento
+            const valorReceita = parseFloat(String(card.getAttribute('data-valor-receita') || '0').replace(',', '.')) || 0; // atividade
             const servicoNome = card.getAttribute('data-servico-nome') || '';
             const solicitanteNome = card.getAttribute('data-solicitante-nome') || card.getAttribute('data-solicitante') || '';
             const isTecnico = card.getAttribute('data-is-tecnico') === 'true';
-            function fmt(v) { return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-            const adiantamento = valor - valorReceita;
+            const adiantamento = valor; // apenas soma dos detalhamentos (sem subtrair a atividade)
             const tipoLabel = isTecnico ? 'Solicitação de técnico' : 'Deslocamento';
-            const linhaDetalhes = `(TICKET: ${ticket}) - Valor do deslocamento: R$ ${fmt(adiantamento)} - tipo de atividade: ${servicoNome || '-'} (valor da atividade: R$ ${fmt(valorReceita)})`;
+            // Solicitação individual: não exibir valor da atividade na linha
+            const linhaDetalhes = `(${ticket}) - R$ ${fmtBRL(adiantamento)} - ${servicoNome || '-'}`;
             return [
                 `${tipoLabel} (${solicitanteNome})`,
                 '',
                 linhaDetalhes,
                 '',
                 '',
-                `Adiantamento - R$ ${fmt(adiantamento)}`,
-                `Receita - R$ ${fmt(valorReceita)}`,
+                'Adiantamento - R$ ' + fmtBRL(adiantamento),
+                'Receita - R$ ' + fmtBRL(valorReceita),
                 '',
                 '————————'
             ].join('\r\n');
         }
+
         document.addEventListener('click', function(e) {
             const btn = e.target.closest('.column-export-txt-btn');
             if (!btn) return;
             e.preventDefault();
             e.stopPropagation();
             const column = btn.getAttribute('data-column');
-            const columnContent = document.querySelector(`.column-content[data-column="${column}"]`);
+            const columnContent = document.querySelector('.column-content[data-column="' + column + '"]');
             if (!columnContent) return;
             const cards = columnContent.querySelectorAll('.card[data-card-id]:not(.empty-column)');
             const visibleCards = [];
-            cards.forEach(card => {
+            cards.forEach(function(card) {
                 const style = window.getComputedStyle(card);
                 if (style.display !== 'none' && style.visibility !== 'hidden' && !card.classList.contains('filtered-out') && card.offsetParent !== null) {
                     visibleCards.push(card);
                 }
             });
-            const blocos = visibleCards.map(card => buildCardExportText(card));
-            const texto = blocos.length ? blocos.join('\r\n\r\n') : '';
-            const nomesColuna = { planning: 'pendente', test: 'recusado', launch: 'aprovado', success: 'concluido', refund: 'estorno' };
-            const nomeArquivo = (nomesColuna[column] || column) + '_export.txt';
-            const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = nomeArquivo;
-            a.click();
-            URL.revokeObjectURL(url);
+            if (visibleCards.length === 0) {
+                if (typeof Utils !== 'undefined' && Utils.showNotification) Utils.showNotification('Nenhuma solicitação visível para exportar.', 'info');
+                else alert('Nenhuma solicitação visível para exportar.');
+                return;
+            }
+            (function() {
+                const nomesColuna = { planning: 'pendente', test: 'recusado', launch: 'aprovado', success: 'concluido', refund: 'estorno' };
+                const nomeArquivo = (nomesColuna[column] || column) + '_export.txt';
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') && document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const headers = { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken, 'Accept': 'application/json' };
+                if (!csrfToken) headers['X-CSRFToken'] = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1];
+                Promise.all(visibleCards.map(function(card) {
+                    const id = card.getAttribute('data-card-id');
+                    return fetch('/solicitacoes/obter-detalhes-completos/' + id + '/', { method: 'GET', headers: headers, credentials: 'same-origin' })
+                        .then(function(r) { return r.json(); })
+                        .then(function(res) {
+                            if (res && res.success && res.dados) {
+                                if (res.dados.itens_rota && res.dados.itens_rota.length > 0) return buildAgrupadaExportData(res.dados);
+                                return buildSimplesExportDataFromDados(res.dados) || { text: buildCardExportText(card), adiantamento: 0, receita: 0 };
+                            }
+                            return { text: buildCardExportText(card), adiantamento: 0, receita: 0 };
+                        })
+                        .catch(function() { return { text: buildCardExportText(card), adiantamento: 0, receita: 0 }; });
+                })).then(function(blocos) {
+                    const blocosOk = (blocos || []).filter(function(b) { return b && typeof b.text === 'string'; });
+                    const totalAdiantamento = blocosOk.reduce(function(acc, b) { return acc + (Number(b.adiantamento) || 0); }, 0);
+                    const totalReceita = blocosOk.reduce(function(acc, b) { return acc + (Number(b.receita) || 0); }, 0);
+
+                    const textoCorpo = blocosOk.map(function(b) { return b.text; }).join('\r\n\r\n');
+                    const textoTotais = [
+                        '',
+                        '',
+                        '',
+                        '',
+                        'valor total de adiantamento R$ ' + fmtBRL(totalAdiantamento),
+                        'valor total de receita R$  ' + fmtBRL(totalReceita)
+                    ].join('\r\n');
+
+                    const texto = (textoCorpo || '') + textoTotais;
+                    const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = nomeArquivo;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    if (typeof Utils !== 'undefined' && Utils.showNotification) Utils.showNotification('Exportação TXT concluída.', 'success');
+                });
+            })();
         });
 
         // Selecionar todas / mover selecionados em massa

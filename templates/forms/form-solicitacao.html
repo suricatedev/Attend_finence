@@ -1,4 +1,4 @@
-﻿<!-- Modal para criar nova solicitação financeira -->
+<!-- Modal para criar nova solicitação financeira -->
 <div class="modal" id="createCampaignModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -2207,13 +2207,13 @@
                             if (idField) {
                                 idField.value = item.ticket_item || '';
                             }
-                            const detalhadosSoma = (item.valor_km_raw || 0) + (item.valor_pedagio_raw || 0) + (item.valor_hospedagem_raw || 0) + (item.valor_fluvial_raw || 0) + (item.valor_outros_raw || 0);
-                            const valorAtividadeCalc = Math.max(0, (item.valor_raw || 0) - detalhadosSoma);
-                            somaAtividades += valorAtividadeCalc;
+                            // item.valor_raw no backend já é o valor da atividade (não subtrair os detalhados)
+                            const valorAtividade = Math.max(0, item.valor_raw != null ? item.valor_raw : 0);
+                            somaAtividades += valorAtividade;
                             const valorField = document.getElementById(`routeValor${numero}`);
                             if (valorField) {
-                                valorField.value = formatarValorMonetario(valorAtividadeCalc);
-                                valorField.dataset.valorAtividade = valorAtividadeCalc.toFixed(2);
+                                valorField.value = formatarValorMonetario(valorAtividade);
+                                valorField.dataset.valorAtividade = valorAtividade.toFixed(2);
                             }
                             const servicoSelect = document.getElementById(`routeServico${numero}`);
                             if (servicoSelect) {
