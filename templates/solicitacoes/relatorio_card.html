@@ -712,42 +712,28 @@
                         </td>
                         <td class="td-valores-detalhados">
                             <div class="valores-detalhados-item">
-                                {% if item.valor_km > 0 or item.valor_pedagio > 0 or item.valor_hospedagem > 0 or item.valor_fluvial > 0 or item.valor_outros > 0 %}
-                                    <div class="valores-detalhados-lista">
-                                        {% if item.valor_km and item.valor_km > 0 %}
-                                        <span class="valor-item">
-                                            <span class="label">KM:</span>
-                                            <span class="value private-value-wrap" data-private-real="{{ item.valor_km|brl }}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span>
-                                        </span>
-                                        {% endif %}
-                                        {% if item.valor_pedagio and item.valor_pedagio > 0 %}
-                                        <span class="valor-item">
-                                            <span class="label">Pedágio:</span>
-                                            <span class="value private-value-wrap" data-private-real="{{ item.valor_pedagio|brl }}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span>
-                                        </span>
-                                        {% endif %}
-                                        {% if item.valor_hospedagem and item.valor_hospedagem > 0 %}
-                                        <span class="valor-item">
-                                            <span class="label">Hospedagem:</span>
-                                            <span class="value private-value-wrap" data-private-real="{{ item.valor_hospedagem|brl }}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span>
-                                        </span>
-                                        {% endif %}
-                                        {% if item.valor_fluvial and item.valor_fluvial > 0 %}
-                                        <span class="valor-item">
-                                            <span class="label">Fluvial:</span>
-                                            <span class="value private-value-wrap" data-private-real="{{ item.valor_fluvial|brl }}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span>
-                                        </span>
-                                        {% endif %}
-                                        {% if item.valor_outros and item.valor_outros > 0 %}
-                                        <span class="valor-item">
-                                            <span class="label">Outros:</span>
-                                            <span class="value private-value-wrap" data-private-real="{{ item.valor_outros|brl }}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span>
-                                        </span>
-                                        {% endif %}
-                                    </div>
-                                {% else %}
-                                    <span class="sem-valor">-</span>
-                                {% endif %}
+                                <div class="valores-detalhados-lista">
+                                    <span class="valor-item">
+                                        <span class="label">KM:</span>
+                                        <span class="value private-value-wrap" data-private-real="{% if item.valor_km is not None %}{{ item.valor_km|brl }}{% else %}R$ 0,00{% endif %}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span>
+                                    </span>
+                                    <span class="valor-item">
+                                        <span class="label">Pedágio:</span>
+                                        <span class="value private-value-wrap" data-private-real="{% if item.valor_pedagio is not None %}{{ item.valor_pedagio|brl }}{% else %}R$ 0,00{% endif %}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span>
+                                    </span>
+                                    <span class="valor-item">
+                                        <span class="label">Hospedagem:</span>
+                                        <span class="value private-value-wrap" data-private-real="{% if item.valor_hospedagem is not None %}{{ item.valor_hospedagem|brl }}{% else %}R$ 0,00{% endif %}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span>
+                                    </span>
+                                    <span class="valor-item">
+                                        <span class="label">Fluvial:</span>
+                                        <span class="value private-value-wrap" data-private-real="{% if item.valor_fluvial is not None %}{{ item.valor_fluvial|brl }}{% else %}R$ 0,00{% endif %}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span>
+                                    </span>
+                                    <span class="valor-item">
+                                        <span class="label">Outros:</span>
+                                        <span class="value private-value-wrap" data-private-real="{% if item.valor_outros is not None %}{{ item.valor_outros|brl }}{% else %}R$ 0,00{% endif %}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span>
+                                    </span>
+                                </div>
                             </div>
                         </td>
                         <td class="valor-destaque">

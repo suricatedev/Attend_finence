@@ -1010,24 +1010,19 @@ function populateCardDetails(data) {
             
             console.log(`🔍 Criando item ${index + 1}:`, item);
             
-            // Construir HTML dos valores detalhados (com privacidade)
+            // Construir HTML dos valores detalhados (com privacidade) – sempre exibir todos os cards (valor ou R$ 0,00)
             const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+            const valorKm = item.valor_km || 'R$ 0,00';
+            const valorPedagio = item.valor_pedagio || 'R$ 0,00';
+            const valorHospedagem = item.valor_hospedagem || 'R$ 0,00';
+            const valorFluvial = item.valor_fluvial || 'R$ 0,00';
+            const valorOutros = item.valor_outros || 'R$ 0,00';
             const valoresDetalhados = [];
-            if (item.valor_km && item.valor_km !== 'R$ 0,00') {
-                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">KM:</span><span class="private-value-wrap" data-private-real="${esc(item.valor_km)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-            }
-            if (item.valor_pedagio && item.valor_pedagio !== 'R$ 0,00') {
-                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Pedágio:</span><span class="private-value-wrap" data-private-real="${esc(item.valor_pedagio)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-            }
-            if (item.valor_hospedagem && item.valor_hospedagem !== 'R$ 0,00') {
-                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Hospedagem:</span><span class="private-value-wrap" data-private-real="${esc(item.valor_hospedagem)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-            }
-            if (item.valor_fluvial && item.valor_fluvial !== 'R$ 0,00') {
-                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Fluvial:</span><span class="private-value-wrap" data-private-real="${esc(item.valor_fluvial)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-            }
-            if (item.valor_outros && item.valor_outros !== 'R$ 0,00') {
-                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Outros:</span><span class="private-value-wrap" data-private-real="${esc(item.valor_outros)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-            }
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">KM:</span><span class="private-value-wrap" data-private-real="${esc(valorKm)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Pedágio:</span><span class="private-value-wrap" data-private-real="${esc(valorPedagio)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Hospedagem:</span><span class="private-value-wrap" data-private-real="${esc(valorHospedagem)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Fluvial:</span><span class="private-value-wrap" data-private-real="${esc(valorFluvial)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Outros:</span><span class="private-value-wrap" data-private-real="${esc(valorOutros)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
             
             const valoresDetalhadosHTML = valoresDetalhados.length > 0 
                 ? `<div class="route-item-valores-detalhados">
@@ -1345,41 +1340,24 @@ function populateCardDetails(data) {
         const valores = data.valoresDetalhados;
         const valoresDetalhados = [];
         
-        // Construir cards para cada valor detalhado com privacidade (se diferente de R$ 0,00)
+        // Sempre exibir todos os cards de detalhamento (KM, Pedágio, Hospedagem, Fluvial, Outros, Receita), com R$ 0,00 quando vazio
         const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-        if (valores.valor_km && valores.valor_km !== 'R$ 0,00') {
-            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">KM:</span><span class="private-value-wrap" data-private-real="${esc(valores.valor_km)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-        }
-        if (valores.valor_pedagio && valores.valor_pedagio !== 'R$ 0,00') {
-            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Pedágio:</span><span class="private-value-wrap" data-private-real="${esc(valores.valor_pedagio)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-        }
-        if (valores.valor_hospedagem && valores.valor_hospedagem !== 'R$ 0,00') {
-            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Hospedagem:</span><span class="private-value-wrap" data-private-real="${esc(valores.valor_hospedagem)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-        }
-        if (valores.valor_fluvial && valores.valor_fluvial !== 'R$ 0,00') {
-            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Fluvial:</span><span class="private-value-wrap" data-private-real="${esc(valores.valor_fluvial)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-        }
-        if (valores.valor_outros && valores.valor_outros !== 'R$ 0,00') {
-            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Outros:</span><span class="private-value-wrap" data-private-real="${esc(valores.valor_outros)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-        }
-        if (valores.valor_receita && valores.valor_receita !== 'R$ 0,00') {
-            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Receita:</span><span class="private-value-wrap" data-private-real="${esc(valores.valor_receita)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-        }
+        const vKm = valores.valor_km || 'R$ 0,00';
+        const vPedagio = valores.valor_pedagio || 'R$ 0,00';
+        const vHospedagem = valores.valor_hospedagem || 'R$ 0,00';
+        const vFluvial = valores.valor_fluvial || 'R$ 0,00';
+        const vOutros = valores.valor_outros || 'R$ 0,00';
+        const vReceita = valores.valor_receita || 'R$ 0,00';
+        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">KM:</span><span class="private-value-wrap" data-private-real="${esc(vKm)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Pedágio:</span><span class="private-value-wrap" data-private-real="${esc(vPedagio)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Hospedagem:</span><span class="private-value-wrap" data-private-real="${esc(vHospedagem)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Fluvial:</span><span class="private-value-wrap" data-private-real="${esc(vFluvial)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Outros:</span><span class="private-value-wrap" data-private-real="${esc(vOutros)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Receita:</span><span class="private-value-wrap" data-private-real="${esc(vReceita)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
         
-        if (valoresDetalhados.length > 0) {
-            valoresGrid.innerHTML = valoresDetalhados.join('');
-            casualValoresSection.appendChild(valoresGrid);
-            console.log('✅ Grid de valores detalhados Casual criado com', valoresDetalhados.length, 'valores');
-        } else {
-            // Se não há valores detalhados, exibir mensagem
-            const semValores = document.createElement('div');
-            semValores.className = 'route-item-modal-info';
-            semValores.style.padding = '12px';
-            semValores.style.textAlign = 'center';
-            semValores.style.color = '#999';
-            semValores.innerHTML = '<i class="fas fa-info-circle"></i> Nenhum valor detalhado preenchido';
-            casualValoresSection.appendChild(semValores);
-        }
+        valoresGrid.innerHTML = valoresDetalhados.join('');
+        casualValoresSection.appendChild(valoresGrid);
+        console.log('✅ Grid de valores detalhados Casual criado com', valoresDetalhados.length, 'valores');
         
         // Exibir serviço se disponível
         if (valores.servico && valores.servico !== 'N/A') {
