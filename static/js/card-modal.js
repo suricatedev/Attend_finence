@@ -840,22 +840,24 @@ async function extractCardData(card) {
         }
     }
     
+    // Se a coluna do card está com valores revelados (olho do total clicado), mostrar valores no modal
+    data.columnRevealed = !!(card.closest && card.closest('.kanban-column') && card.closest('.kanban-column').classList.contains('column-revealed'));
     return data;
 }
 
-// Atualiza valores do modal mantendo privacidade (****** + olho para revelar)
-function setModalValorPrivado(valorStr, valorReceitaStr) {
+// Atualiza valores do modal: sem olho no modal; se columnRevealed, exibe valor real
+function setModalValorPrivado(valorStr, valorReceitaStr, columnRevealed) {
     var wrapValor = document.getElementById('modal-valor-wrap');
     var displayValor = document.getElementById('modal-valor');
     if (wrapValor && displayValor) {
         wrapValor.setAttribute('data-private-real', valorStr || 'R$ 0,00');
-        displayValor.textContent = '******';
+        displayValor.textContent = columnRevealed ? (valorStr || 'R$ 0,00') : '******';
     }
     var wrapReceita = document.getElementById('modal-valor-receita-wrap');
     var displayReceita = document.getElementById('modal-valor-receita');
     if (wrapReceita && displayReceita) {
         wrapReceita.setAttribute('data-private-real', valorReceitaStr || 'R$ 0,00');
-        displayReceita.textContent = '******';
+        displayReceita.textContent = columnRevealed ? (valorReceitaStr || 'R$ 0,00') : '******';
     }
 }
 
@@ -886,18 +888,18 @@ function populateCardDetails(data) {
         if (existingClienteEmpresa) existingClienteEmpresa.remove();
         if (existingCnpj) existingCnpj.remove();
         
-        // Adicionar campos adicionais se existirem nos dados (para solicitações Casual)
+        // Adicionar campos adicionais se existirem nos dados (para solicitações Casual) — sem olho; valor visível só se coluna revelada
         if (data.isCasual && !data.isTecnico && data.valoresDetalhados) {
             if (data.valoresDetalhados.chave_pix) {
                 const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+                const chavePixVal = data.valoresDetalhados.chave_pix;
                 const chavePixItem = document.createElement('div');
                 chavePixItem.className = 'detail-item';
                 chavePixItem.id = 'modal-chave-pix-item';
                 chavePixItem.innerHTML = `
                     <div class="detail-label">Chave PIX</div>
-                    <div class="detail-value private-value-wrap" id="modal-chave-pix-wrap" data-private-real="${esc(data.valoresDetalhados.chave_pix)}">
-                        <span class="private-value-display" id="modal-chave-pix">******</span>
-                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
+                    <div class="detail-value private-value-wrap" id="modal-chave-pix-wrap" data-private-real="${esc(chavePixVal)}">
+                        <span class="private-value-display" id="modal-chave-pix">${data.columnRevealed ? esc(chavePixVal) : '******'}</span>
                     </div>
                 `;
                 infoBasicasSection.appendChild(chavePixItem);
@@ -957,7 +959,7 @@ function populateCardDetails(data) {
                 valorLabel.style.display = '';
             }
             valorElement.style.display = '';
-            setModalValorPrivado(data.valor || 'R$ 0,00', data.valorReceita || 'R$ 0,00');
+            setModalValorPrivado(data.valor || 'R$ 0,00', data.valorReceita || 'R$ 0,00', data.columnRevealed);
             console.log('✅ Campo Valor Total configurado (mascarado)');
         } else {
             console.warn('⚠️ valorContainer ou valorElement não encontrado');
@@ -1010,19 +1012,21 @@ function populateCardDetails(data) {
             
             console.log(`🔍 Criando item ${index + 1}:`, item);
             
-            // Construir HTML dos valores detalhados (com privacidade) – sempre exibir todos os cards (valor ou R$ 0,00)
+            // Construir HTML dos valores detalhados — sem olho no modal; valor visível só se coluna revelada
             const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+            const colRev = !!data.columnRevealed;
+            const priv = (v) => colRev ? esc(v || 'R$ 0,00') : '******';
             const valorKm = item.valor_km || 'R$ 0,00';
             const valorPedagio = item.valor_pedagio || 'R$ 0,00';
             const valorHospedagem = item.valor_hospedagem || 'R$ 0,00';
             const valorFluvial = item.valor_fluvial || 'R$ 0,00';
             const valorOutros = item.valor_outros || 'R$ 0,00';
             const valoresDetalhados = [];
-            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">KM:</span><span class="private-value-wrap" data-private-real="${esc(valorKm)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Pedágio:</span><span class="private-value-wrap" data-private-real="${esc(valorPedagio)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Hospedagem:</span><span class="private-value-wrap" data-private-real="${esc(valorHospedagem)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Fluvial:</span><span class="private-value-wrap" data-private-real="${esc(valorFluvial)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Outros:</span><span class="private-value-wrap" data-private-real="${esc(valorOutros)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">KM:</span><span class="private-value-wrap" data-private-real="${esc(valorKm)}"><span class="private-value-display">${priv(valorKm)}</span></span></div>`);
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Pedágio:</span><span class="private-value-wrap" data-private-real="${esc(valorPedagio)}"><span class="private-value-display">${priv(valorPedagio)}</span></span></div>`);
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Hospedagem:</span><span class="private-value-wrap" data-private-real="${esc(valorHospedagem)}"><span class="private-value-display">${priv(valorHospedagem)}</span></span></div>`);
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Fluvial:</span><span class="private-value-wrap" data-private-real="${esc(valorFluvial)}"><span class="private-value-display">${priv(valorFluvial)}</span></span></div>`);
+            valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Outros:</span><span class="private-value-wrap" data-private-real="${esc(valorOutros)}"><span class="private-value-display">${priv(valorOutros)}</span></span></div>`);
             
             const valoresDetalhadosHTML = valoresDetalhados.length > 0 
                 ? `<div class="route-item-valores-detalhados">
@@ -1039,7 +1043,7 @@ function populateCardDetails(data) {
                 infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-user-check"></i> Recebedor:</span><span class="route-item-modal-value">${item.recebedor}</span></div>`);
             }
             if (item.chave_pix) {
-                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-qrcode"></i> Chave PIX:</span><span class="route-item-modal-value private-value-wrap" data-private-real="${esc(item.chave_pix)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-qrcode"></i> Chave PIX:</span><span class="route-item-modal-value private-value-wrap" data-private-real="${esc(item.chave_pix)}"><span class="private-value-display">${colRev ? esc(item.chave_pix) : '******'}</span></span></div>`);
             }
             if (item.cliente_empresa) {
                 infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-building"></i> Cliente/Empresa:</span><span class="route-item-modal-value">${item.cliente_empresa}</span></div>`);
@@ -1146,7 +1150,7 @@ function populateCardDetails(data) {
                 valorLabel.style.display = '';
             }
             valorElement.style.display = '';
-            setModalValorPrivado(data.valorTotalTecnico || data.valor || 'R$ 0,00', data.valorReceita || 'R$ 0,00');
+            setModalValorPrivado(data.valorTotalTecnico || data.valor || 'R$ 0,00', data.valorReceita || 'R$ 0,00', data.columnRevealed);
             console.log('✅ Campo Valor Total configurado (mascarado)');
         }
         
@@ -1194,14 +1198,16 @@ function populateCardDetails(data) {
             
             console.log(`🔍 Criando item de técnico ${index + 1}:`, item);
             
-            // Construir HTML dos valores detalhados (com privacidade)
+            // Construir HTML dos valores detalhados — sem olho no modal; valor visível só se coluna revelada
             const escTec = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+            const colRevTec = !!data.columnRevealed;
+            const privTec = (v) => colRevTec ? escTec(v) : '******';
             const valoresDetalhados = [];
             if (item.valor_pagamento_tecnico && item.valor_pagamento_tecnico !== 'R$ 0,00') {
-                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Valor Pagamento:</span><span class="private-value-wrap" data-private-real="${escTec(item.valor_pagamento_tecnico)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Valor Pagamento:</span><span class="private-value-wrap" data-private-real="${escTec(item.valor_pagamento_tecnico)}"><span class="private-value-display">${privTec(item.valor_pagamento_tecnico)}</span></span></div>`);
             }
             if (item.valor_extra && item.valor_extra !== 'R$ 0,00') {
-                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Valor Extra:</span><span class="private-value-wrap" data-private-real="${escTec(item.valor_extra)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Valor Extra:</span><span class="private-value-wrap" data-private-real="${escTec(item.valor_extra)}"><span class="private-value-display">${privTec(item.valor_extra)}</span></span></div>`);
             }
             
             const valoresDetalhadosHTML = valoresDetalhados.length > 0 
@@ -1213,14 +1219,14 @@ function populateCardDetails(data) {
                 </div>` 
                 : '';
             
-            // Construir informações adicionais (com privacidade para recebedor e PIX)
+            // Construir informações adicionais — sem olho; valor visível só se coluna revelada
             const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
             const infoAdicional = [];
             if (item.recebedor) {
                 infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-user-check"></i> Recebedor:</span><span class="route-item-modal-value">${item.recebedor}</span></div>`);
             }
             if (item.chave_pix) {
-                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-qrcode"></i> Chave PIX:</span><span class="route-item-modal-value private-value-wrap" data-private-real="${esc(item.chave_pix)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+                infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-qrcode"></i> Chave PIX:</span><span class="route-item-modal-value private-value-wrap" data-private-real="${esc(item.chave_pix)}"><span class="private-value-display">${colRevTec ? esc(item.chave_pix) : '******'}</span></span></div>`);
             }
             if (item.data_realizacao && item.data_realizacao !== 'N/A') {
                 infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-calendar"></i> Data Realização:</span><span class="route-item-modal-value">${item.data_realizacao}</span></div>`);
@@ -1297,7 +1303,7 @@ function populateCardDetails(data) {
                 valorLabel.style.display = '';
             }
             valorElement.style.display = '';
-            setModalValorPrivado(data.valoresDetalhados.valor_total || data.valor || 'R$ 0,00', data.valoresDetalhados.valor_receita || data.valorReceita || 'R$ 0,00');
+            setModalValorPrivado(data.valoresDetalhados.valor_total || data.valor || 'R$ 0,00', data.valoresDetalhados.valor_receita || data.valorReceita || 'R$ 0,00', data.columnRevealed);
             console.log('✅ Campo Valor Total Casual configurado (mascarado)');
         }
         
@@ -1340,20 +1346,22 @@ function populateCardDetails(data) {
         const valores = data.valoresDetalhados;
         const valoresDetalhados = [];
         
-        // Sempre exibir todos os cards de detalhamento (KM, Pedágio, Hospedagem, Fluvial, Outros, Receita), com R$ 0,00 quando vazio
+        // Sempre exibir todos os cards de detalhamento (KM, Pedágio, etc.) — sem olho no modal; valor visível só se coluna revelada
         const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        const colRevCasual = !!data.columnRevealed;
+        const privCasual = (v) => colRevCasual ? esc(v || 'R$ 0,00') : '******';
         const vKm = valores.valor_km || 'R$ 0,00';
         const vPedagio = valores.valor_pedagio || 'R$ 0,00';
         const vHospedagem = valores.valor_hospedagem || 'R$ 0,00';
         const vFluvial = valores.valor_fluvial || 'R$ 0,00';
         const vOutros = valores.valor_outros || 'R$ 0,00';
         const vReceita = valores.valor_receita || 'R$ 0,00';
-        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">KM:</span><span class="private-value-wrap" data-private-real="${esc(vKm)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Pedágio:</span><span class="private-value-wrap" data-private-real="${esc(vPedagio)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Hospedagem:</span><span class="private-value-wrap" data-private-real="${esc(vHospedagem)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Fluvial:</span><span class="private-value-wrap" data-private-real="${esc(vFluvial)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Outros:</span><span class="private-value-wrap" data-private-real="${esc(vOutros)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
-        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Receita:</span><span class="private-value-wrap" data-private-real="${esc(vReceita)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">KM:</span><span class="private-value-wrap" data-private-real="${esc(vKm)}"><span class="private-value-display">${privCasual(vKm)}</span></span></div>`);
+        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Pedágio:</span><span class="private-value-wrap" data-private-real="${esc(vPedagio)}"><span class="private-value-display">${privCasual(vPedagio)}</span></span></div>`);
+        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Hospedagem:</span><span class="private-value-wrap" data-private-real="${esc(vHospedagem)}"><span class="private-value-display">${privCasual(vHospedagem)}</span></span></div>`);
+        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Fluvial:</span><span class="private-value-wrap" data-private-real="${esc(vFluvial)}"><span class="private-value-display">${privCasual(vFluvial)}</span></span></div>`);
+        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Outros:</span><span class="private-value-wrap" data-private-real="${esc(vOutros)}"><span class="private-value-display">${privCasual(vOutros)}</span></span></div>`);
+        valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Receita:</span><span class="private-value-wrap" data-private-real="${esc(vReceita)}"><span class="private-value-display">${privCasual(vReceita)}</span></span></div>`);
         
         valoresGrid.innerHTML = valoresDetalhados.join('');
         casualValoresSection.appendChild(valoresGrid);
@@ -1371,10 +1379,10 @@ function populateCardDetails(data) {
             casualValoresSection.appendChild(servicoInfo);
         }
         
-        // Adicionar seção de Informações Adicionais (Chave PIX com privacidade, Cliente/Empresa, CNPJ)
+        // Adicionar seção de Informações Adicionais — sem olho; valor visível só se coluna revelada
         const infoAdicional = [];
         if (valores.chave_pix) {
-            infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-qrcode"></i> Chave PIX:</span><span class="route-item-modal-value private-value-wrap" data-private-real="${esc(valores.chave_pix)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`);
+            infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-qrcode"></i> Chave PIX:</span><span class="route-item-modal-value private-value-wrap" data-private-real="${esc(valores.chave_pix)}"><span class="private-value-display">${colRevCasual ? esc(valores.chave_pix) : '******'}</span></span></div>`);
         }
         if (valores.cliente_empresa) {
             infoAdicional.push(`<div class="route-item-modal-info"><span class="route-item-modal-label"><i class="fas fa-building"></i> Cliente/Empresa:</span><span class="route-item-modal-value">${valores.cliente_empresa}</span></div>`);
@@ -1414,7 +1422,7 @@ function populateCardDetails(data) {
             const valorLabel = valorContainer.querySelector('.detail-label');
             if (valorLabel) valorLabel.style.display = '';
             if (valorElement) valorElement.style.display = '';
-            setModalValorPrivado(data.valor || 'R$ 0,00', data.valorReceita || 'R$ 0,00');
+            setModalValorPrivado(data.valor || 'R$ 0,00', data.valorReceita || 'R$ 0,00', data.columnRevealed);
         }
         
         // Remover seções de valores detalhados se existirem
@@ -2062,22 +2070,45 @@ function closeCardDetailModal() {
     }
 })();
 
-// Toggle de privacidade (****** <-> valor real) para todos os .btn-reveal-value na página e no modal
+// Toggle de privacidade: só o olho do total da coluna; ao clicar, revela/oculta todos os valores daquela coluna
 function setupPrivacyToggleListener() {
     if (window._privacyToggleListenerAdded) return;
     window._privacyToggleListenerAdded = true;
+    function toggleColumnReveal(columnEl, reveal) {
+        var wraps = columnEl.querySelectorAll('.private-value-wrap');
+        wraps.forEach(function(w) {
+            var display = w.querySelector('.private-value-display');
+            if (!display) return;
+            var real = (w.getAttribute('data-private-real') || '').trim();
+            display.textContent = reveal ? (real || 'N/A') : '******';
+        });
+        var totalBtn = columnEl.querySelector('.column-total-amount-wrap .btn-reveal-value');
+        if (totalBtn) {
+            var icon = totalBtn.querySelector('i');
+            if (icon) { icon.className = reveal ? 'fas fa-eye-slash' : 'fas fa-eye'; }
+            totalBtn.setAttribute('title', reveal ? 'Ocultar' : 'Mostrar total');
+            totalBtn.setAttribute('aria-label', reveal ? 'Ocultar' : 'Mostrar total');
+        }
+    }
     function handleRevealClick(e) {
         var btn = e.target.closest('.btn-reveal-value');
         if (!btn) return;
         e.preventDefault();
         e.stopPropagation();
+        // Olho do total da coluna: revelar/ocultar TODOS os valores privados daquela coluna (total + cards)
+        if (btn.closest('.column-total-amount-wrap')) {
+            var columnEl = btn.closest('.kanban-column');
+            if (!columnEl) return;
+            var wasRevealed = columnEl.classList.toggle('column-revealed');
+            toggleColumnReveal(columnEl, wasRevealed);
+            return;
+        }
         var wrap = btn.closest('.private-value-wrap');
         if (!wrap) return;
         var display = wrap.querySelector('.private-value-display');
         if (!display) return;
         var real = (wrap.getAttribute('data-private-real') || '').trim();
         var textoAtual = (display.textContent || '').trim();
-        // Considerar mascarado se for só asteriscos (qualquer quantidade)
         var estaMascarado = /^\*+$/.test(textoAtual) || textoAtual === '******';
         if (estaMascarado) {
             display.textContent = real || 'N/A';

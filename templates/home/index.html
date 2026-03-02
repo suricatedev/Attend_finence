@@ -95,9 +95,10 @@
                 });
                 var valorStr = window.formatBRL(total);
                 totalWrap.setAttribute('data-private-real', valorStr);
-                totalDisplay.textContent = '******';
+                var colRevealed = columnEl.classList.contains('column-revealed');
+                totalDisplay.textContent = colRevealed ? valorStr : '******';
                 var btn = totalWrap.querySelector('.btn-reveal-value i');
-                if (btn) btn.className = 'fas fa-eye';
+                if (btn) btn.className = colRevealed ? 'fas fa-eye-slash' : 'fas fa-eye';
             });
         };
 
@@ -393,7 +394,6 @@
                                 <div class="card-info">
                                     <div class="info-item private-value-wrap" data-private-real="#{{ solicitacao.ticket }}">
                                         <span class="info-value private-value-display">******</span>
-                                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-user"></i>
@@ -411,7 +411,6 @@
                                         {% if user|is_financeiro or user|is_admin %}
                                         <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
                                             <span class="info-value private-value-display">******</span>
-                                            <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
                                         </div>
                                         {% else %}
                                         <span class="info-value">******</span>
@@ -519,7 +518,6 @@
                                 <div class="card-info">
                                     <div class="info-item private-value-wrap" data-private-real="#{{ solicitacao.ticket }}">
                                         <span class="info-value private-value-display">******</span>
-                                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-user"></i>
@@ -537,7 +535,6 @@
                                         {% if user|is_financeiro or user|is_admin %}
                                         <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
                                             <span class="info-value private-value-display">******</span>
-                                            <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
                                         </div>
                                         {% else %}
                                         <span class="info-value">******</span>
@@ -650,7 +647,6 @@
                                 <div class="card-info">
                                     <div class="info-item private-value-wrap" data-private-real="#{{ solicitacao.ticket }}">
                                         <span class="info-value private-value-display">******</span>
-                                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-user"></i>
@@ -668,7 +664,6 @@
                                         {% if user|is_financeiro or user|is_admin %}
                                         <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
                                             <span class="info-value private-value-display">******</span>
-                                            <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
                                         </div>
                                         {% else %}
                                         <span class="info-value">******</span>
@@ -776,7 +771,6 @@
                                 <div class="card-info">
                                     <div class="info-item private-value-wrap" data-private-real="#{{ solicitacao.ticket }}">
                                         <span class="info-value private-value-display">******</span>
-                                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-user"></i>
@@ -794,7 +788,6 @@
                                         {% if user|is_financeiro or user|is_admin %}
                                         <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
                                             <span class="info-value private-value-display">******</span>
-                                            <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
                                         </div>
                                         {% else %}
                                         <span class="info-value">******</span>
@@ -902,7 +895,6 @@
                                 <div class="card-info">
                                     <div class="info-item private-value-wrap" data-private-real="#{{ solicitacao.ticket }}">
                                         <span class="info-value private-value-display">******</span>
-                                        <button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button>
                                     </div>
                                     <div class="info-item">
                                         <i class="fas fa-user"></i>
@@ -920,7 +912,6 @@
                                         {% if user|is_financeiro or user|is_admin %}
                                         <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
                                             <span class="info-value private-value-display">******</span>
-                                            <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
                                         </div>
                                         {% else %}
                                         <span class="info-value">******</span>
@@ -1007,14 +998,12 @@
                             <div class="detail-label">Valor Total</div>
                             <div class="detail-value highlight private-value-wrap" id="modal-valor-wrap" data-private-real="">
                                 <span class="private-value-display" id="modal-valor">******</span>
-                                <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
                             </div>
                         </div>
                         <div class="detail-item-half">
                             <div class="detail-label">Valor da Receita</div>
                             <div class="detail-value highlight private-value-wrap" id="modal-valor-receita-wrap" data-private-real="" style="color: #FFCB57;">
                                 <span class="private-value-display" id="modal-valor-receita">******</span>
-                                <button type="button" class="btn-reveal-value" title="Mostrar valor" aria-label="Mostrar valor"><i class="fas fa-eye"></i></button>
                             </div>
                         </div>
                         </div>
