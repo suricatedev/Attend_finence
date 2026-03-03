@@ -1,8 +1,15 @@
 /* ========================================
    PRIVACIDADE DE VALORES (****** + olho)
    ======================================== */
-/* Ocultar botão de revelar para quem não é Financeiro/Administrador (ex.: grupo Solicitante) */
+/* Ocultar botão de revelar para quem não é Financeiro/Administrador, EXCETO o olho do total da coluna (Solicitante vê esse) */
 body.cannot-see-values .btn-reveal-value {
+    display: none !important;
+}
+body.cannot-see-values .column-total-amount-wrap .btn-reveal-value {
+    display: inline-flex !important;
+}
+/* Para Solicitante: na área acima dos cards mostrar só o olho (sem "Total:" nem valor) */
+.column-total-solicitante-eye-only .private-value-display {
     display: none !important;
 }
 .private-value-wrap {

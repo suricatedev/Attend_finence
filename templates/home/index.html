@@ -338,6 +338,11 @@
                                 <span class="private-value-display column-total-amount">******</span>
                                 <button type="button" class="btn-reveal-value" title="Mostrar total" aria-label="Mostrar total"><i class="fas fa-eye"></i></button>
                             </span>
+                            {% elif user|is_solicitante %}
+                            <span class="private-value-wrap column-total-amount-wrap column-total-solicitante-eye-only" data-private-real="">
+                                <span class="private-value-display column-total-amount" aria-hidden="true">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar valores" aria-label="Mostrar valores"><i class="fas fa-eye"></i></button>
+                            </span>
                             {% else %}
                             Total: <span class="column-total-masked">******</span>
                             {% endif %}
@@ -413,7 +418,9 @@
                                             <span class="info-value private-value-display">******</span>
                                         </div>
                                         {% else %}
-                                        <span class="info-value">******</span>
+                                        <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
+                                            <span class="info-value private-value-display">******</span>
+                                        </div>
                                         {% endif %}
                                     </div>
                                     <div class="info-item">
@@ -461,6 +468,11 @@
                             Total: <span class="private-value-wrap column-total-amount-wrap" data-private-real="">
                                 <span class="private-value-display column-total-amount">******</span>
                                 <button type="button" class="btn-reveal-value" title="Mostrar total" aria-label="Mostrar total"><i class="fas fa-eye"></i></button>
+                            </span>
+                            {% elif user|is_solicitante %}
+                            <span class="private-value-wrap column-total-amount-wrap column-total-solicitante-eye-only" data-private-real="">
+                                <span class="private-value-display column-total-amount" aria-hidden="true">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar valores" aria-label="Mostrar valores"><i class="fas fa-eye"></i></button>
                             </span>
                             {% else %}
                             Total: <span class="column-total-masked">******</span>
@@ -537,7 +549,9 @@
                                             <span class="info-value private-value-display">******</span>
                                         </div>
                                         {% else %}
-                                        <span class="info-value">******</span>
+                                        <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
+                                            <span class="info-value private-value-display">******</span>
+                                        </div>
                                         {% endif %}
                                     </div>
                                     <div class="info-item">
@@ -590,6 +604,11 @@
                             Total: <span class="private-value-wrap column-total-amount-wrap" data-private-real="">
                                 <span class="private-value-display column-total-amount">******</span>
                                 <button type="button" class="btn-reveal-value" title="Mostrar total" aria-label="Mostrar total"><i class="fas fa-eye"></i></button>
+                            </span>
+                            {% elif user|is_solicitante %}
+                            <span class="private-value-wrap column-total-amount-wrap column-total-solicitante-eye-only" data-private-real="">
+                                <span class="private-value-display column-total-amount" aria-hidden="true">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar valores" aria-label="Mostrar valores"><i class="fas fa-eye"></i></button>
                             </span>
                             {% else %}
                             Total: <span class="column-total-masked">******</span>
@@ -666,7 +685,9 @@
                                             <span class="info-value private-value-display">******</span>
                                         </div>
                                         {% else %}
-                                        <span class="info-value">******</span>
+                                        <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
+                                            <span class="info-value private-value-display">******</span>
+                                        </div>
                                         {% endif %}
                                     </div>
                                     <div class="info-item">
@@ -714,6 +735,11 @@
                             Total: <span class="private-value-wrap column-total-amount-wrap" data-private-real="">
                                 <span class="private-value-display column-total-amount">******</span>
                                 <button type="button" class="btn-reveal-value" title="Mostrar total" aria-label="Mostrar total"><i class="fas fa-eye"></i></button>
+                            </span>
+                            {% elif user|is_solicitante %}
+                            <span class="private-value-wrap column-total-amount-wrap column-total-solicitante-eye-only" data-private-real="">
+                                <span class="private-value-display column-total-amount" aria-hidden="true">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar valores" aria-label="Mostrar valores"><i class="fas fa-eye"></i></button>
                             </span>
                             {% else %}
                             Total: <span class="column-total-masked">******</span>
@@ -790,7 +816,9 @@
                                             <span class="info-value private-value-display">******</span>
                                         </div>
                                         {% else %}
-                                        <span class="info-value">******</span>
+                                        <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
+                                            <span class="info-value private-value-display">******</span>
+                                        </div>
                                         {% endif %}
                                     </div>
                                     <div class="info-item">
@@ -838,6 +866,11 @@
                             Total: <span class="private-value-wrap column-total-amount-wrap" data-private-real="">
                                 <span class="private-value-display column-total-amount">******</span>
                                 <button type="button" class="btn-reveal-value" title="Mostrar total" aria-label="Mostrar total"><i class="fas fa-eye"></i></button>
+                            </span>
+                            {% elif user|is_solicitante %}
+                            <span class="private-value-wrap column-total-amount-wrap column-total-solicitante-eye-only" data-private-real="">
+                                <span class="private-value-display column-total-amount" aria-hidden="true">******</span>
+                                <button type="button" class="btn-reveal-value" title="Mostrar valores" aria-label="Mostrar valores"><i class="fas fa-eye"></i></button>
                             </span>
                             {% else %}
                             Total: <span class="column-total-masked">******</span>
@@ -914,7 +947,9 @@
                                             <span class="info-value private-value-display">******</span>
                                         </div>
                                         {% else %}
-                                        <span class="info-value">******</span>
+                                        <div class="private-value-wrap" data-private-real="{{ solicitacao.get_valor_detalhados|brl }}">
+                                            <span class="info-value private-value-display">******</span>
+                                        </div>
                                         {% endif %}
                                     </div>
                                     <div class="info-item">
@@ -1133,9 +1168,11 @@
     <script>
         // Filtro de data por coluna do Kanban - Modal elegante
         document.addEventListener('DOMContentLoaded', function() {
-            // Somente Financeiro e Administrador podem ver o botão de revelar valores; Solicitante não.
+            // Remover olhos dos cards (não do total da coluna): Solicitante vê só o olho encima do card (total da coluna)
             if (window.USER_CAN_CHANGE_STATUS === false) {
-                document.querySelectorAll('.btn-reveal-value').forEach(function(btn) { btn.remove(); });
+                document.querySelectorAll('.btn-reveal-value').forEach(function(btn) {
+                    if (!btn.closest('.column-total-amount-wrap')) btn.remove();
+                });
             }
 
             const dateFilterModal = document.getElementById('dateFilterModal');
@@ -1168,7 +1205,9 @@
                     if (mutation.addedNodes.length && window.USER_CAN_CHANGE_STATUS === false) {
                         mutation.addedNodes.forEach(function(node) {
                             if (node.nodeType === 1 && node.querySelectorAll) {
-                                node.querySelectorAll('.btn-reveal-value').forEach(function(btn) { btn.remove(); });
+                                node.querySelectorAll('.btn-reveal-value').forEach(function(btn) {
+                                    if (!btn.closest('.column-total-amount-wrap')) btn.remove();
+                                });
                             }
                         });
                     }

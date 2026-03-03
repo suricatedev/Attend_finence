@@ -29,7 +29,26 @@ header.header {
     box-sizing: border-box;
 }
 
-/* Privacidade recebedor/PIX (****** + olho para revelar) */
+/* Um único olho no topo para revelar/ocultar todos os valores da página */
+.reports-fullscreen .btn-reports-reveal-values {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: rgba(255, 203, 87, 0.15);
+    border: 1px solid rgba(255, 203, 87, 0.4);
+    color: #FFCB57;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    margin-right: 12px;
+}
+.reports-fullscreen .btn-reports-reveal-values:hover {
+    background: rgba(255, 203, 87, 0.25);
+    border-color: #FFCB57;
+}
+
+/* Privacidade – wrappers de valor (sem olho por campo) */
 .reports-fullscreen .private-value-wrap {
     display: inline-flex;
     align-items: center;

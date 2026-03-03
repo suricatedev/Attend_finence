@@ -1039,38 +1039,41 @@ class RelatoriosOptimized {
         const displayStyle = isExpanded ? 'table-cell' : 'none';
         const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
         const chavePixVal = item.chavePix || '-';
+        const container = document.querySelector('.reports-fullscreen');
+        const revealed = container && container.classList.contains('reports-page-revealed');
+        const priv = (v) => revealed ? (v || '') : '******';
         return `
             <td>${item.ticket || item.id}</td>
             <td>${item.title}</td>
             <td>${item.solicitante}</td>
             <td>${item.supervisor || '-'}</td>
             <td>${item.recebedor || '-'}</td>
-            <td><span class="private-value-wrap" data-private-real="${esc(chavePixVal)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></td>
+            <td><span class="private-value-wrap" data-private-real="${esc(chavePixVal)}"><span class="private-value-display">${priv(chavePixVal)}</span></span></td>
             <td>${item.clienteEmpresa || '-'}</td>
             <td>${item.cnpj || '-'}</td>
             <td>${item.service}</td>
-            <td><strong>${item.valor}</strong></td>
+            <td><strong><span class="private-value-wrap" data-private-real="${esc(item.valor)}"><span class="private-value-display">${priv(item.valor)}</span></span></strong></td>
             <td class="valores-detalhados-toggle-cell" style="display: ${displayStyle};"></td>
             <td class="valores-detalhados-col" style="display: ${displayStyle};">
-                <span class="valor-receita">${item.valorReceita || 'R$ 0,00'}</span>
+                <span class="valor-receita private-value-wrap" data-private-real="${esc(item.valorReceita || 'R$ 0,00')}"><span class="private-value-display">${priv(item.valorReceita || 'R$ 0,00')}</span></span>
             </td>
             <td class="valores-detalhados-col" style="display: ${displayStyle};">
-                <span class="valor-em-rota" style="color: #FF6B6B; font-weight: 700;">${item.valorEmRota || 'R$ 0,00'}</span>
+                <span class="valor-em-rota private-value-wrap" style="color: #FF6B6B; font-weight: 700;" data-private-real="${esc(item.valorEmRota || 'R$ 0,00')}"><span class="private-value-display">${priv(item.valorEmRota || 'R$ 0,00')}</span></span>
             </td>
             <td class="valores-detalhados-col" style="display: ${displayStyle};">
-                <span class="valor-detail">${item.valorKm || 'R$ 0,00'}</span>
+                <span class="valor-detail private-value-wrap" data-private-real="${esc(item.valorKm || 'R$ 0,00')}"><span class="private-value-display">${priv(item.valorKm || 'R$ 0,00')}</span></span>
             </td>
             <td class="valores-detalhados-col" style="display: ${displayStyle};">
-                <span class="valor-detail">${item.valorPedagio || 'R$ 0,00'}</span>
+                <span class="valor-detail private-value-wrap" data-private-real="${esc(item.valorPedagio || 'R$ 0,00')}"><span class="private-value-display">${priv(item.valorPedagio || 'R$ 0,00')}</span></span>
             </td>
             <td class="valores-detalhados-col" style="display: ${displayStyle};">
-                <span class="valor-detail">${item.valorHospedagem || 'R$ 0,00'}</span>
+                <span class="valor-detail private-value-wrap" data-private-real="${esc(item.valorHospedagem || 'R$ 0,00')}"><span class="private-value-display">${priv(item.valorHospedagem || 'R$ 0,00')}</span></span>
             </td>
             <td class="valores-detalhados-col" style="display: ${displayStyle};">
-                <span class="valor-detail">${item.valorFluvial || 'R$ 0,00'}</span>
+                <span class="valor-detail private-value-wrap" data-private-real="${esc(item.valorFluvial || 'R$ 0,00')}"><span class="private-value-display">${priv(item.valorFluvial || 'R$ 0,00')}</span></span>
             </td>
             <td class="valores-detalhados-col" style="display: ${displayStyle};">
-                <span class="valor-detail">${item.valorOutros || 'R$ 0,00'}</span>
+                <span class="valor-detail private-value-wrap" data-private-real="${esc(item.valorOutros || 'R$ 0,00')}"><span class="private-value-display">${priv(item.valorOutros || 'R$ 0,00')}</span></span>
             </td>
             <td><span class="status-badge status-${item.status}">${item.statusDisplay}</span></td>
             <td><span class="priority-badge priority-${item.priority}">${item.priority}</span></td>
@@ -1169,12 +1172,25 @@ class RelatoriosOptimized {
         const valorTotalEl = document.getElementById('valorTotal');
         const aprovadasEl = document.getElementById('aprovadas');
         const pendentesEl = document.getElementById('pendentes');
+        const valorStr = `R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
-        // Atualizar apenas se houver filtros aplicados
-        if (totalSolicitacoes) totalSolicitacoes.textContent = total;
-        if (valorTotalEl) valorTotalEl.textContent = `R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        if (aprovadasEl) aprovadasEl.textContent = aprovadas;
-        if (pendentesEl) pendentesEl.textContent = pendentes;
+        if (totalSolicitacoes) {
+            const w = totalSolicitacoes.querySelector('.private-value-wrap');
+            if (w) w.setAttribute('data-private-real', total);
+        }
+        if (valorTotalEl) {
+            const w = valorTotalEl.querySelector('.private-value-wrap');
+            if (w) w.setAttribute('data-private-real', valorStr);
+        }
+        if (aprovadasEl) {
+            const w = aprovadasEl.querySelector('.private-value-wrap');
+            if (w) w.setAttribute('data-private-real', aprovadas);
+        }
+        if (pendentesEl) {
+            const w = pendentesEl.querySelector('.private-value-wrap');
+            if (w) w.setAttribute('data-private-real', pendentes);
+        }
+        if (typeof window.refreshReportsPrivacy === 'function') window.refreshReportsPrivacy();
     }
 
     parseValorNum(valorStr) {
@@ -1414,6 +1430,7 @@ class RelatoriosOptimized {
             
             const dados = result.dados;
             console.log('✅ Detalhes recebidos:', dados);
+            const reportsRevealed = document.querySelector('.reports-fullscreen') && document.querySelector('.reports-fullscreen').classList.contains('reports-page-revealed');
             
             // Construir HTML com todos os detalhes
             let html = `
@@ -1468,37 +1485,37 @@ class RelatoriosOptimized {
                     <div class="detail-grid">
                         <div class="detail-item highlight">
                             <label>Valor Total:</label>
-                            <span class="valor-total-detail">${dados.valor_total}</span>
+                            <span class="valor-total-detail private-value-wrap" data-private-real="${(dados.valor_total || '').replace(/"/g, '&quot;')}"><span class="private-value-display">${reportsRevealed ? (dados.valor_total || '') : '******'}</span></span>
                         </div>
                         <div class="detail-item highlight">
                             <label>Valor de Receita:</label>
-                            <span class="valor-receita-detail">${dados.valor_receita}</span>
+                            <span class="valor-receita-detail private-value-wrap" data-private-real="${(dados.valor_receita || '').replace(/"/g, '&quot;')}"><span class="private-value-display">${reportsRevealed ? (dados.valor_receita || '') : '******'}</span></span>
                         </div>
                         ${dados.tipo === 'em_rota' && dados.valor_em_rota && parseFloat(dados.valor_em_rota.replace(/[^\d,]/g, '').replace(',', '.')) > 0 ? `
                         <div class="detail-item highlight" style="background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(238, 90, 111, 0.1) 100%);">
                             <label>EM ROTA:</label>
-                            <span class="valor-receita-detail" style="color: #FF6B6B;">${dados.valor_em_rota}</span>
+                            <span class="valor-receita-detail private-value-wrap" style="color: #FF6B6B;" data-private-real="${(dados.valor_em_rota || '').replace(/"/g, '&quot;')}"><span class="private-value-display">${reportsRevealed ? (dados.valor_em_rota || '') : '******'}</span></span>
                         </div>
                         ` : ''}
                         <div class="detail-item">
                             <label>Valor KM:</label>
-                            <span>${dados.valor_km}</span>
+                            <span class="private-value-wrap" data-private-real="${(dados.valor_km || '').replace(/"/g, '&quot;')}"><span class="private-value-display">${reportsRevealed ? (dados.valor_km || '') : '******'}</span></span>
                         </div>
                         <div class="detail-item">
                             <label>Valor Pedágio:</label>
-                            <span>${dados.valor_pedagio}</span>
+                            <span class="private-value-wrap" data-private-real="${(dados.valor_pedagio || '').replace(/"/g, '&quot;')}"><span class="private-value-display">${reportsRevealed ? (dados.valor_pedagio || '') : '******'}</span></span>
                         </div>
                         <div class="detail-item">
                             <label>Valor Hospedagem:</label>
-                            <span>${dados.valor_hospedagem}</span>
+                            <span class="private-value-wrap" data-private-real="${(dados.valor_hospedagem || '').replace(/"/g, '&quot;')}"><span class="private-value-display">${reportsRevealed ? (dados.valor_hospedagem || '') : '******'}</span></span>
                         </div>
                         <div class="detail-item">
                             <label>Valor Fluvial:</label>
-                            <span>${dados.valor_fluvial}</span>
+                            <span class="private-value-wrap" data-private-real="${(dados.valor_fluvial || '').replace(/"/g, '&quot;')}"><span class="private-value-display">${reportsRevealed ? (dados.valor_fluvial || '') : '******'}</span></span>
                         </div>
                         <div class="detail-item">
                             <label>Valor Outros:</label>
-                            <span>${dados.valor_outros}</span>
+                            <span class="private-value-wrap" data-private-real="${(dados.valor_outros || '').replace(/"/g, '&quot;')}"><span class="private-value-display">${reportsRevealed ? (dados.valor_outros || '') : '******'}</span></span>
                     </div>
                 </div>
                 </div>
@@ -1545,7 +1562,7 @@ class RelatoriosOptimized {
                             infoAdicional += `<div class="route-item-info"><label><i class="fas fa-user-check"></i> Recebedor:</label><span class="route-item-modal-value">${item.recebedor}</span></div>`;
                         }
                         if (item.chave_pix) {
-                            infoAdicional += `<div class="route-item-info"><label><i class="fas fa-qrcode"></i> Chave PIX:</label><span class="private-value-wrap" data-private-real="${esc(item.chave_pix)}"><span class="private-value-display">******</span><button type="button" class="btn-reveal-value" title="Mostrar" aria-label="Mostrar"><i class="fas fa-eye"></i></button></span></div>`;
+                            infoAdicional += `<div class="route-item-info"><label><i class="fas fa-qrcode"></i> Chave PIX:</label><span class="private-value-wrap" data-private-real="${esc(item.chave_pix)}"><span class="private-value-display">${reportsRevealed ? esc(item.chave_pix) : '******'}</span></span></div>`;
                         }
                         if (item.cliente_empresa) {
                             infoAdicional += `<div class="route-item-info"><label><i class="fas fa-building"></i> Cliente/Empresa:</label><span>${item.cliente_empresa}</span></div>`;

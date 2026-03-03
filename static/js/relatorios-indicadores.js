@@ -53,14 +53,17 @@
     function updateIndicadores(data) {
         if (!data) data = fallbackData();
 
-        // Cards Lead Time e Taxa
+        // Cards Lead Time e Taxa (valores com privacidade – sem olho individual)
         var leadEl = document.getElementById('leadTimeValor');
         if (leadEl) {
-            if (data.lead_time_medio != null && data.lead_time_medio !== '') {
-                var leadStr = Number(data.lead_time_medio).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-                leadEl.textContent = leadStr + ' Dias';
-            } else {
-                leadEl.textContent = '—';
+            var leadWrap = leadEl.querySelector('.private-value-wrap');
+            if (leadWrap) {
+                if (data.lead_time_medio != null && data.lead_time_medio !== '') {
+                    var leadStr = Number(data.lead_time_medio).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+                    leadWrap.setAttribute('data-private-real', leadStr + ' Dias');
+                } else {
+                    leadWrap.setAttribute('data-private-real', '—');
+                }
             }
         }
         var leadVs = document.getElementById('leadTimeVs');
@@ -73,7 +76,10 @@
         }
 
         var taxaEl = document.getElementById('taxaPendenciaValor');
-        if (taxaEl) taxaEl.textContent = data.taxa_pendencia != null ? data.taxa_pendencia + '%' : '—';
+        if (taxaEl) {
+            var taxaWrap = taxaEl.querySelector('.private-value-wrap');
+            if (taxaWrap) taxaWrap.setAttribute('data-private-real', data.taxa_pendencia != null ? data.taxa_pendencia + '%' : '—');
+        }
         var taxaVs = document.getElementById('taxaPendenciaVs');
         if (taxaVs) {
             taxaVs.textContent = (data.taxa_vs_mes > 0 ? '+' : '') + data.taxa_vs_mes + '%';
@@ -83,17 +89,23 @@
             }
         }
 
-        // Legenda Pareto (Serviço/Departamento – R$ X.XXX,XX)
+        // Legenda Pareto (Serviço/Departamento – R$ X.XXX,XX) – com privacidade
         var paretoLegend = document.getElementById('paretoLegend');
         if (paretoLegend) {
             var tot = data.total_departamento || 0;
             var totStr = Number(tot).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            paretoLegend.textContent = 'Serviço/Departamento (R$ ' + totStr + ')';
+            var paretoWrap = paretoLegend.querySelector('.private-value-wrap');
+            if (paretoWrap) paretoWrap.setAttribute('data-private-real', 'Serviço/Departamento (R$ ' + totStr + ')');
         }
 
-        // Previsão %
+        // Previsão % – com privacidade
         var previsaoPct = document.getElementById('previsaoPct');
-        if (previsaoPct) previsaoPct.textContent = (data.previsao_conciliado_pct || 0) + '%';
+        if (previsaoPct) {
+            var pctVal = (data.previsao_conciliado_pct || 0) + '%';
+            var previsaoWrap = previsaoPct.querySelector('.private-value-wrap');
+            if (previsaoWrap) previsaoWrap.setAttribute('data-private-real', pctVal);
+        }
+        if (typeof window.refreshReportsPrivacy === 'function') window.refreshReportsPrivacy();
 
         // Gráficos
         renderChartPendenciasLinha(data.serie_pendentes || []);

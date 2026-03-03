@@ -274,21 +274,6 @@
                         <i class="fas fa-plus"></i>
                         <span>Nova Solicitação Financeira</span>
                     </button>
-
-                    <div class="view-tabs">
-                        <a href="{% url 'home' %}" class="tab-btn {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-                            <i class="fas fa-th"></i>
-                            <span>Cards</span>
-                        </a>
-                        <a href="{% url 'relatorio' %}" class="tab-btn {% if request.resolver_match.url_name == 'relatorio' %}active{% endif %}">
-                            <i class="fas fa-chart-bar"></i>
-                            <span>Relatórios</span>
-                        </a>
-                        <a href="{% url 'dashboard' %}" class="tab-btn {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboards</span>
-                        </a>
-                    </div>
                 </div>
 
                 <div class="header-right">

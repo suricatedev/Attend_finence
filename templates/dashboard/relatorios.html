@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load solicitacoes_filters %}
+{% load usuarios_tags %}
 
 {% block title %}Relatórios - Sistema de Gestão Financeira{% endblock %}
 
@@ -48,10 +49,12 @@
             </div>
         </div>
         <div class="header-right">
-            <button class="btn-primary-reports" id="createCampaignBtn">
-                <i class="fas fa-plus"></i>
-                <span>Nova Solicitação Financeira</span>
+            {% if user|is_financeiro or user|is_admin %}
+            <button type="button" class="btn-reports-reveal-values" id="reportsRevealValuesBtn" title="Mostrar valores" aria-label="Mostrar valores">
+                <i class="fas fa-eye"></i>
+                <span>Valores</span>
             </button>
+            {% endif %}
             <div class="export-actions">
                 <button class="btn-export" id="exportExcel">
                     <i class="fas fa-file-excel"></i>
@@ -181,7 +184,7 @@
                     <i class="fas fa-file-invoice-dollar"></i>
                 </div>
                 <div class="stat-content">
-                    <h3 id="totalSolicitacoes">{{ total_solicitacoes }}</h3>
+                    <h3 id="totalSolicitacoes"><span class="private-value-wrap" data-private-real="{{ total_solicitacoes }}"><span class="private-value-display">******</span></span></h3>
                     <p>Total de Solicitações</p>
                 </div>
             </div>
@@ -190,7 +193,7 @@
                     <i class="fas fa-dollar-sign"></i>
                 </div>
                 <div class="stat-content">
-                    <h3 id="valorTotal">{{ valor_total|brl }}</h3>
+                    <h3 id="valorTotal"><span class="private-value-wrap" data-private-real="{{ valor_total|brl }}"><span class="private-value-display">******</span></span></h3>
                     <p>Valor Total</p>
                 </div>
             </div>
@@ -199,7 +202,7 @@
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div class="stat-content">
-                    <h3 id="aprovadas">{{ aprovadas }}</h3>
+                    <h3 id="aprovadas"><span class="private-value-wrap" data-private-real="{{ aprovadas }}"><span class="private-value-display">******</span></span></h3>
                     <p>Aprovadas</p>
                 </div>
             </div>
@@ -208,7 +211,7 @@
                     <i class="fas fa-clock"></i>
                 </div>
                 <div class="stat-content">
-                    <h3 id="pendentes">{{ pendentes }}</h3>
+                    <h3 id="pendentes"><span class="private-value-wrap" data-private-real="{{ pendentes }}"><span class="private-value-display">******</span></span></h3>
                     <p>Pendentes</p>
                 </div>
             </div>
@@ -281,7 +284,7 @@
                     <span class="indicador-card-label">Eficiência Operacional – Lead Time Médio</span>
                 </div>
                 <p class="indicador-card-desc">Tempo entre abertura da solicitação e conclusão</p>
-                <div class="indicador-card-value" id="leadTimeValor">—</div>
+                <div class="indicador-card-value" id="leadTimeValor"><span class="private-value-wrap" data-private-real=""><span class="private-value-display">******</span></span></div>
                 <div class="indicador-card-trend" id="leadTimeTrend">
                     <span class="trend-badge trend-up"><i class="fas fa-arrow-up"></i> <span id="leadTimeVs">0%</span> (vs Mês Passado)</span>
                 </div>
@@ -296,7 +299,7 @@
                     <span class="indicador-card-label">Eficiência (Porcentagem de Erros/Ajustes)</span>
                 </div>
                 <p class="indicador-card-desc">Indicador de qualidade – menor número = menos retrabalho</p>
-                <div class="indicador-card-value" id="taxaPendenciaValor">—</div>
+                <div class="indicador-card-value" id="taxaPendenciaValor"><span class="private-value-wrap" data-private-real=""><span class="private-value-display">******</span></span></div>
                 <div class="indicador-card-trend" id="taxaPendenciaTrend">
                     <span class="trend-badge trend-down"><i class="fas fa-arrow-down"></i> <span id="taxaPendenciaVs">0%</span> (vs Mês Passado)</span>
                 </div>
@@ -311,7 +314,7 @@
                     <span class="indicador-card-label">Pareto de Gastos (Serviço/Departamento)</span>
                 </div>
                 <p class="indicador-card-desc">Maiores centros de custo – princípio 80/20</p>
-                <div class="indicador-card-legend" id="paretoLegend">Serviço/Departamento (R$ 0,00)</div>
+                <div class="indicador-card-legend" id="paretoLegend"><span class="private-value-wrap" data-private-real="Serviço/Departamento (R$ 0,00)"><span class="private-value-display">******</span></span></div>
                 <div class="indicador-chart-wrap">
                     <canvas id="chartPareto" height="180"></canvas>
                 </div>
@@ -336,7 +339,7 @@
                     <div class="previsao-ring-wrap">
                         <canvas id="chartPrevisaoRing" width="120" height="120"></canvas>
                         <div class="previsao-ring-text">
-                            <span class="previsao-pct" id="previsaoPct">0%</span>
+                            <span class="previsao-pct" id="previsaoPct"><span class="private-value-wrap" data-private-real="0%"><span class="private-value-display">******</span></span></span>
                             <span class="previsao-label">Conciliado</span>
                         </div>
                     </div>
@@ -473,32 +476,32 @@
                             {% endif %}
                         </td>
                         <td>{{ solicitacao.nome_do_recebedor|default:"-" }}</td>
-                        <td>{{ solicitacao.chave_pix|default:"-" }}</td>
+                        <td><span class="private-value-wrap" data-private-real="{{ solicitacao.chave_pix|default:'-' }}"><span class="private-value-display">******</span></span></td>
                         <td>{{ solicitacao.cliente_empresa|default:"-" }}</td>
                         <td>{{ solicitacao.cnpj|default:"-" }}</td>
                         <td>{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% else %}N/A{% endif %}</td>
-                        <td><strong>{{ solicitacao.valor|brl }}</strong></td>
+                        <td><strong><span class="private-value-wrap" data-private-real="{{ solicitacao.valor|brl }}"><span class="private-value-display">******</span></span></strong></td>
                         <td class="valores-detalhados-toggle-cell" style="display: none;"></td>
                         <td class="valores-detalhados-col" style="display: none;">
-                            <span class="valor-receita">{{ solicitacao.valor_receita|brl }}</span>
+                            <span class="valor-receita private-value-wrap" data-private-real="{{ solicitacao.valor_receita|brl }}"><span class="private-value-display">******</span></span>
                         </td>
                         <td class="valores-detalhados-col" style="display: none;">
-                            <span class="valor-em-rota" style="color: #FF6B6B; font-weight: 700;">{{ solicitacao.valor_em_rota|brl }}</span>
+                            <span class="valor-em-rota private-value-wrap" style="color: #FF6B6B; font-weight: 700;" data-private-real="{{ solicitacao.valor_em_rota|brl }}"><span class="private-value-display">******</span></span>
                         </td>
                         <td class="valores-detalhados-col" style="display: none;">
-                            <span class="valor-detail">{{ solicitacao.valor_km|brl }}</span>
+                            <span class="valor-detail private-value-wrap" data-private-real="{{ solicitacao.valor_km|brl }}"><span class="private-value-display">******</span></span>
                         </td>
                         <td class="valores-detalhados-col" style="display: none;">
-                            <span class="valor-detail">{{ solicitacao.valor_pedagio|brl }}</span>
+                            <span class="valor-detail private-value-wrap" data-private-real="{{ solicitacao.valor_pedagio|brl }}"><span class="private-value-display">******</span></span>
                         </td>
                         <td class="valores-detalhados-col" style="display: none;">
-                            <span class="valor-detail">{{ solicitacao.valor_hospedagem|brl }}</span>
+                            <span class="valor-detail private-value-wrap" data-private-real="{{ solicitacao.valor_hospedagem|brl }}"><span class="private-value-display">******</span></span>
                         </td>
                         <td class="valores-detalhados-col" style="display: none;">
-                            <span class="valor-detail">{{ solicitacao.valor_fluvial|brl }}</span>
+                            <span class="valor-detail private-value-wrap" data-private-real="{{ solicitacao.valor_fluvial|brl }}"><span class="private-value-display">******</span></span>
                         </td>
                         <td class="valores-detalhados-col" style="display: none;">
-                            <span class="valor-detail">{{ solicitacao.valor_outros|brl }}</span>
+                            <span class="valor-detail private-value-wrap" data-private-real="{{ solicitacao.valor_outros|brl }}"><span class="private-value-display">******</span></span>
                         </td>
                         <td>
                             <span class="status-badge status-{{ solicitacao.status }}">
@@ -613,28 +616,34 @@
             }
         }, 100);
         
-        // Toggle privacidade (****** <-> valor real) para recebedor/PIX na página de relatórios
-        document.addEventListener('click', function(e) {
-            var btn = e.target.closest('.btn-reveal-value');
-            if (!btn) return;
-            e.preventDefault();
-            e.stopPropagation();
-            var wrap = btn.closest('.private-value-wrap');
-            if (!wrap) return;
-            var display = wrap.querySelector('.private-value-display');
-            var real = wrap.getAttribute('data-private-real') || '';
-            if (!display) return;
-            if (display.textContent === '******') {
-                display.textContent = real || 'N/A';
+        // Um único olho no topo: ao clicar, revela/oculta todos os valores da página (como em Solicitações)
+        window.refreshReportsPrivacy = function() {
+            var container = document.querySelector('.reports-fullscreen');
+            var revealed = container && container.classList.contains('reports-page-revealed');
+            document.querySelectorAll('.reports-fullscreen .private-value-wrap').forEach(function(wrap) {
+                var display = wrap.querySelector('.private-value-display');
+                if (!display) return;
+                var real = (wrap.getAttribute('data-private-real') || '').trim();
+                display.textContent = revealed ? (real || 'N/A') : '******';
+            });
+            var btn = document.getElementById('reportsRevealValuesBtn');
+            if (btn) {
                 var icon = btn.querySelector('i');
-                if (icon) icon.className = 'fas fa-eye-slash';
-                btn.setAttribute('title', 'Ocultar');
-            } else {
-                display.textContent = '******';
-                var icon = btn.querySelector('i');
-                if (icon) icon.className = 'fas fa-eye';
-                btn.setAttribute('title', 'Mostrar');
+                if (icon) icon.className = revealed ? 'fas fa-eye-slash' : 'fas fa-eye';
+                btn.setAttribute('title', revealed ? 'Ocultar valores' : 'Mostrar valores');
+                btn.setAttribute('aria-label', revealed ? 'Ocultar valores' : 'Mostrar valores');
             }
-        }, true);
+        };
+        document.addEventListener('DOMContentLoaded', function() {
+            var btn = document.getElementById('reportsRevealValuesBtn');
+            if (btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var container = document.querySelector('.reports-fullscreen');
+                    if (container) container.classList.toggle('reports-page-revealed');
+                    window.refreshReportsPrivacy();
+                });
+            }
+        });
     </script>
 {% endblock %}
