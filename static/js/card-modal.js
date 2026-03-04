@@ -1938,19 +1938,29 @@ function updateColumnCounters() {
             
             counter.textContent = visibleCount;
             
-            // Mostrar/ocultar mensagem de coluna vazia
+            // Mostrar/ocultar mensagem de coluna vazia (texto conforme a coluna)
             const emptyMessage = content.querySelector('.empty-column');
+            const columnId = column.getAttribute('data-column') || '';
+            const emptyMessages = {
+                'planning': 'Nenhuma solicitação pendente',
+                'test': 'Nenhuma solicitação recusada',
+                'launch': 'Nenhuma solicitação aprovada',
+                'success': 'Nenhuma solicitação concluída',
+                'refund': 'Nenhuma solicitação em estorno'
+            };
+            const emptyText = emptyMessages[columnId] || 'Nenhuma solicitação';
             if (visibleCount === 0 && !emptyMessage) {
-                // Adicionar mensagem se não tiver cards
                 const empty = document.createElement('div');
                 empty.className = 'empty-column';
                 empty.innerHTML = `
                     <i class="fas fa-inbox"></i>
-                    <p>Nenhuma solicitação</p>
+                    <p>${emptyText}</p>
                 `;
                 content.appendChild(empty);
+            } else if (visibleCount === 0 && emptyMessage) {
+                const p = emptyMessage.querySelector('p');
+                if (p && p.textContent !== emptyText) p.textContent = emptyText;
             } else if (visibleCount > 0 && emptyMessage) {
-                // Remover mensagem se tiver cards
                 emptyMessage.remove();
             }
         }
@@ -2417,19 +2427,29 @@ function updateColumnCounters() {
             
             counter.textContent = visibleCount;
             
-            // Mostrar/ocultar mensagem de coluna vazia
+            // Mostrar/ocultar mensagem de coluna vazia (texto conforme a coluna)
             const emptyMessage = content.querySelector('.empty-column');
+            const columnId = column.getAttribute('data-column') || '';
+            const emptyMessages = {
+                'planning': 'Nenhuma solicitação pendente',
+                'test': 'Nenhuma solicitação recusada',
+                'launch': 'Nenhuma solicitação aprovada',
+                'success': 'Nenhuma solicitação concluída',
+                'refund': 'Nenhuma solicitação em estorno'
+            };
+            const emptyText = emptyMessages[columnId] || 'Nenhuma solicitação';
             if (visibleCount === 0 && !emptyMessage) {
-                // Adicionar mensagem se não tiver cards
                 const empty = document.createElement('div');
                 empty.className = 'empty-column';
                 empty.innerHTML = `
                     <i class="fas fa-inbox"></i>
-                    <p>Nenhuma solicitação</p>
+                    <p>${emptyText}</p>
                 `;
                 content.appendChild(empty);
+            } else if (visibleCount === 0 && emptyMessage) {
+                const p = emptyMessage.querySelector('p');
+                if (p && p.textContent !== emptyText) p.textContent = emptyText;
             } else if (visibleCount > 0 && emptyMessage) {
-                // Remover mensagem se tiver cards
                 emptyMessage.remove();
             }
         }

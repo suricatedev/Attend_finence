@@ -1,4 +1,4 @@
-﻿// JavaScript SUPER SIMPLES - Apenas abrir e fechar modal
+// JavaScript SUPER SIMPLES - Apenas abrir e fechar modal
 
 // Esperar a página carregar
 window.addEventListener('DOMContentLoaded', function() {
@@ -271,18 +271,15 @@ window.addEventListener('DOMContentLoaded', function() {
         // Garantir que o filtro seja salvo
         localStorage.setItem('filterType', filterToApply);
         
-        // Aplicar o filtro imediatamente (sem delay) e depois novamente após pequenos delays
+        // Aplicar o filtro imediatamente. Para deslocamento, NÃO chamar filterCardsByType no load:
+        // a página home já aplicou tipo + filtro "Hoje" no DOMContentLoaded; chamar aqui mostraria TODOS de novo.
         if (filterToApply === 'tecnico') {
             filterCardsByType('tecnico');
             setTimeout(() => filterCardsByType('tecnico'), 10);
             setTimeout(() => filterCardsByType('tecnico'), 100);
             setTimeout(() => filterCardsByType('tecnico'), 500);
-        } else if (filterToApply === 'deslocamento') {
-            filterCardsByType('deslocamento');
-            setTimeout(() => filterCardsByType('deslocamento'), 10);
-            setTimeout(() => filterCardsByType('deslocamento'), 100);
-            setTimeout(() => filterCardsByType('deslocamento'), 500);
         }
+        // Para deslocamento: não chamar filterCardsByType — manter o estado "Hoje" aplicado pela home.
         
         // Atualizar contadores após aplicar filtro no load
         setTimeout(() => {

@@ -152,8 +152,12 @@
                 document.addEventListener('DOMContentLoaded', applyMultiple);
             }
             
-            // Também aplicar após um delay para garantir
-            setTimeout(applyMultiple, 200);
+            // Para deslocamento NÃO rodar applyMultiple aos 200ms: o filtro "Hoje" já foi aplicado e não pode ser sobrescrito
+            setTimeout(function() {
+                if ((localStorage.getItem('filterType') || 'deslocamento') !== 'deslocamento') {
+                    applyMultiple();
+                }
+            }, 200);
         })();
     </script>
 {% endblock %}
@@ -1230,13 +1234,12 @@
                 });
             }
             
-            // Abrir modal ao clicar no botão de calendário (de qualquer coluna)
+            // Abrir modal ao clicar no botão de calendário — aplicar filtro somente na coluna clicada
             document.querySelectorAll('.date-filter-btn').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     e.preventDefault();
-                    // Não importa qual coluna, vamos aplicar em todas
-                    currentColumn = null; // null significa aplicar em todas
+                    currentColumn = this.getAttribute('data-column'); // aplicar apenas nesta coluna
                     openDateFilterModal();
                 });
             });
@@ -1257,13 +1260,14 @@
             closeDateFilterModal.addEventListener('click', closeModal);
             dateFilterModal.querySelector('.date-filter-modal-overlay').addEventListener('click', closeModal);
 
-            // Aplicar filtro em TODAS as colunas
+            // Aplicar filtro somente na coluna cujo calendário foi aberto (ou em todas se currentColumn for null)
             applyDateFilter.addEventListener('click', function() {
                 const selectedDate = dateFilterInput.value;
                 if (selectedDate) {
-                    // Aplicar filtro em todas as colunas
-                    const columns = ['planning', 'test', 'launch', 'success', 'refund'];
-                    columns.forEach(column => {
+                    const columnsToApply = currentColumn
+                        ? [currentColumn]
+                        : ['planning', 'test', 'launch', 'success', 'refund'];
+                    columnsToApply.forEach(column => {
                         filterCardsByDate(column, selectedDate);
                         showSelectedDate(column, selectedDate);
                     });
@@ -1273,10 +1277,12 @@
                 }
             });
 
-            // Limpar filtro de TODAS as colunas - volta para HOJE (padrão)
+            // Limpar filtro somente na coluna cujo calendário foi aberto (ou em todas se currentColumn for null)
             clearDateFilter.addEventListener('click', function() {
-                const columns = ['planning', 'test', 'launch', 'success', 'refund'];
-                columns.forEach(column => {
+                const columnsToClear = currentColumn
+                    ? [currentColumn]
+                    : ['planning', 'test', 'launch', 'success', 'refund'];
+                columnsToClear.forEach(column => {
                     filterByToday(column);
                 });
                 closeModal();
@@ -1355,28 +1361,44 @@
                 if (allBtn) allBtn.classList.remove('active');
             }
             
-            // Função para mostrar todos os cards
+            // Mostrar todos os cards apenas NA COLUNA indicada (respeitando tipo técnico/deslocamento), sem afetar as outras colunas
+            function showAllCardsInColumnOnly(column, filterType) {
+                const columnContent = document.querySelector(`.column-content[data-column="${column}"]`);
+                if (!columnContent) return;
+                const cards = columnContent.querySelectorAll('.card[data-de-criacao]');
+                let visibleCount = 0;
+                cards.forEach(card => {
+                    const isTecnico = card.getAttribute('data-is-tecnico') === 'true';
+                    const match = filterType === 'tecnico' ? isTecnico : !isTecnico;
+                    if (match) {
+                        card.style.display = '';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                var emptyCol = columnContent.querySelector('.empty-column');
+                if (visibleCount > 0 && emptyCol) emptyCol.remove();
+                if (typeof updateCardCount === 'function') updateCardCount(column, visibleCount);
+                if (typeof window.updateColumnTotalsAfterFilter === 'function') window.updateColumnTotalsAfterFilter();
+            }
+            
+            // Função para mostrar todos os cards (apenas na coluna clicada)
             function showAllCards(column) {
                 clearDateFilterForColumn(column);
                 showAll(column);
                 
-                // Atualizar botões
                 const todayBtn = document.querySelector(`.date-filter-today-btn[data-column="${column}"]`);
                 const allBtn = document.querySelector(`.date-filter-all-btn[data-column="${column}"]`);
                 if (todayBtn) todayBtn.classList.remove('active');
                 if (allBtn) allBtn.classList.add('active');
                 
-                // IMPORTANTE: Reaplicar filtro de tipo após limpar filtro de data
-                // Isso garante que quando "Todos" for clicado, apenas os cards do tipo selecionado sejam mostrados
                 const requestTypeSelect = document.getElementById('requestTypeSelect');
                 const savedFilter = localStorage.getItem('filterType');
                 const filterType = (requestTypeSelect && requestTypeSelect.value) ? requestTypeSelect.value : (savedFilter || 'deslocamento');
                 
-                if (typeof filterCardsByType === 'function') {
-                    filterCardsByType(filterType);
-                } else if (typeof window.applyFilterFast === 'function') {
-                    window.applyFilterFast();
-                }
+                // Aplicar "Todos" somente nesta coluna — não chamar filterCardsByType (que afetaria todas as colunas)
+                showAllCardsInColumnOnly(column, filterType);
             }
             
             // Event listeners para botões HOJE e TODOS
@@ -1437,16 +1459,15 @@
                 setTimeout(() => {
                     initializeTodayFilter();
                     
-                    // Reaplicar filtro de tipo após o filtro de data
+                    // Só reaplicar filtro de tipo para técnico. Para deslocamento, reaplicar "Hoje" de novo após 250ms
+                    // para garantir que prevaleça sobre applyFilterFast que pode rodar até 200ms.
                     setTimeout(() => {
-                        if (typeof filterCardsByType === 'function') {
-                            if (filterToApply === 'tecnico') {
-                                filterCardsByType('tecnico');
-                            } else if (filterToApply === 'deslocamento') {
-                                filterCardsByType('deslocamento');
-                            }
+                        if (filterToApply === 'tecnico' && typeof filterCardsByType === 'function') {
+                            filterCardsByType('tecnico');
+                        } else if (filterToApply === 'deslocamento' && typeof initializeTodayFilter === 'function') {
+                            initializeTodayFilter();
                         }
-                    }, 50);
+                    }, 250);
                 }, 50);
             }, 100);
             
@@ -1497,10 +1518,29 @@
                     }
                 });
                 
-                // Ocultar mensagem de coluna vazia se houver cards visíveis
+                // Mostrar/ocultar ou criar mensagem de coluna vazia (texto conforme a coluna, como em Recusado)
                 const emptyColumn = columnContent.querySelector('.empty-column');
-                if (emptyColumn) {
-                    emptyColumn.style.display = visibleCount > 0 ? 'none' : '';
+                const emptyTextByColumn = {
+                    'planning': 'Nenhuma solicitação pendente',
+                    'test': 'Nenhuma solicitação recusada',
+                    'launch': 'Nenhuma solicitação aprovada',
+                    'success': 'Nenhuma solicitação concluída',
+                    'refund': 'Nenhuma solicitação em estorno'
+                };
+                const emptyText = emptyTextByColumn[column] || 'Nenhuma solicitação';
+                if (visibleCount > 0 && emptyColumn) {
+                    emptyColumn.style.display = 'none';
+                } else if (visibleCount === 0) {
+                    if (emptyColumn) {
+                        emptyColumn.style.display = '';
+                        var p = emptyColumn.querySelector('p');
+                        if (p) p.textContent = emptyText;
+                    } else {
+                        var emptyDiv = document.createElement('div');
+                        emptyDiv.className = 'empty-column';
+                        emptyDiv.innerHTML = '<i class="fas fa-inbox"></i><p>' + emptyText + '</p>';
+                        columnContent.appendChild(emptyDiv);
+                    }
                 }
                 
                 // Atualizar contador
