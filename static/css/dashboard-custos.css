@@ -78,6 +78,25 @@
     background: #e5e7eb;
 }
 
+.btn-custos-reveal-values {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 204, 77, 0.2);
+    border: 1px solid rgba(255, 204, 77, 0.5);
+    color: #b8860b;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+.btn-custos-reveal-values:hover {
+    background: rgba(255, 204, 77, 0.3);
+    border-color: var(--attend-gold);
+    color: #1a1a1a;
+}
+
 .text-attend-gold {
     color: var(--attend-gold);
 }

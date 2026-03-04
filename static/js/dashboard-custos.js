@@ -13,6 +13,11 @@
     var serviceTypeData = data.serviceTypeData || [0, 0, 0];
     var evolutionWeeks = data.evolutionWeeks || [];
 
+    function isDashboardRevealed() {
+        var view = document.querySelector('.dashboard-custos-view');
+        return view && view.classList.contains('dashboard-custos-revealed');
+    }
+
     function initCharts() {
         var ctx1 = document.getElementById('costDistributionChart');
         if (ctx1) {
@@ -30,7 +35,18 @@
                 options: {
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom' }
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    var revealed = isDashboardRevealed();
+                                    var label = context.label || '';
+                                    var raw = context.raw;
+                                    if (!revealed) return label + ': ******';
+                                    return label + ': R$ ' + Number(raw).toLocaleString('pt-BR');
+                                }
+                            }
+                        }
                     },
                     cutout: '70%'
                 }
@@ -54,12 +70,24 @@
                     maintainAspectRatio: false,
                     indexAxis: 'y',
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    var revealed = isDashboardRevealed();
+                                    var label = context.label || '';
+                                    var raw = context.raw;
+                                    if (!revealed) return label + ': ******';
+                                    return label + ': R$ ' + Number(raw).toLocaleString('pt-BR');
+                                }
+                            }
+                        }
                     },
                     scales: {
                         x: {
                             ticks: {
                                 callback: function(value) {
+                                    if (!isDashboardRevealed()) return '******';
                                     return 'R$ ' + Number(value).toLocaleString('pt-BR');
                                 }
                             }
@@ -116,11 +144,25 @@
                 },
                 options: {
                     maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    var revealed = isDashboardRevealed();
+                                    var label = context.dataset ? context.dataset.label : '';
+                                    var value = context.parsed ? context.parsed.y : context.raw;
+                                    if (!revealed) return label + ': ******';
+                                    return label + ': R$ ' + Number(value).toLocaleString('pt-BR');
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         y: {
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
+                                    if (!isDashboardRevealed()) return '******';
                                     return 'R$ ' + Number(value).toLocaleString('pt-BR');
                                 }
                             }

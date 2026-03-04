@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load solicitacoes_filters %}
+{% load usuarios_tags %}
 
 {% block title %}Attend Finance - Dashboard de Custos{% endblock %}
 
@@ -39,9 +40,12 @@
             <p class="dashboard-custos-periodo">Período: {{ data_inicial_custos|date:"d/m/Y" }} até {{ data_final_custos|date:"d/m/Y" }}</p>
         </div>
         <div class="dashboard-custos-actions">
-            <a href="{% url 'home' %}" class="btn-custos btn-custos-primary">
-                <i class="fas fa-plus mr-2"></i> Nova Solicitação
-            </a>
+            {% if user|is_financeiro or user|is_admin %}
+            <button type="button" class="btn-custos btn-custos-reveal-values" id="dashboardCustosRevealValuesBtn" title="Mostrar valores" aria-label="Mostrar valores">
+                <i class="fas fa-eye"></i>
+                <span>Valores</span>
+            </button>
+            {% endif %}
             <button type="button" class="btn-custos btn-custos-secondary" id="btnExportExcel">
                 <i class="fas fa-file-excel mr-2 text-green-600"></i> Excel
             </button>
@@ -57,7 +61,7 @@
             <div class="kpi-card-inner">
                 <div>
                     <p class="kpi-label">Total de Solicitações</p>
-                    <h3 class="kpi-value">{{ total_solicitacoes }}</h3>
+                    <h3 class="kpi-value"><span class="private-value-wrap" data-private-real="{{ total_solicitacoes }}"><span class="private-value-display">******</span></span></h3>
                 </div>
                 <div class="kpi-icon-wrap kpi-icon-blue"><i class="fas fa-file-invoice"></i></div>
             </div>
@@ -66,7 +70,7 @@
             <div class="kpi-card-inner">
                 <div>
                     <p class="kpi-label">Valor Total</p>
-                    <h3 class="kpi-value text-attend-dark">{{ valor_total|brl }}</h3>
+                    <h3 class="kpi-value text-attend-dark"><span class="private-value-wrap" data-private-real="{{ valor_total|brl }}"><span class="private-value-display">******</span></span></h3>
                 </div>
                 <div class="kpi-icon-wrap kpi-icon-gold"><i class="fas fa-dollar-sign"></i></div>
             </div>
@@ -75,7 +79,7 @@
             <div class="kpi-card-inner">
                 <div>
                     <p class="kpi-label">Aprovadas</p>
-                    <h3 class="kpi-value">{{ aprovadas }}</h3>
+                    <h3 class="kpi-value"><span class="private-value-wrap" data-private-real="{{ aprovadas }}"><span class="private-value-display">******</span></span></h3>
                 </div>
                 <div class="kpi-icon-wrap kpi-icon-green"><i class="fas fa-check-circle"></i></div>
             </div>
@@ -84,7 +88,7 @@
             <div class="kpi-card-inner">
                 <div>
                     <p class="kpi-label">Pendentes</p>
-                    <h3 class="kpi-value">{{ pendentes }}</h3>
+                    <h3 class="kpi-value"><span class="private-value-wrap" data-private-real="{{ pendentes }}"><span class="private-value-display">******</span></span></h3>
                 </div>
                 <div class="kpi-icon-wrap kpi-icon-red"><i class="fas fa-clock"></i></div>
             </div>
@@ -93,7 +97,7 @@
             <div class="kpi-card-inner">
                 <div>
                     <p class="kpi-label">Custo Logístico</p>
-                    <h3 class="kpi-value">{{ custo_logistico|brl }}</h3>
+                    <h3 class="kpi-value"><span class="private-value-wrap" data-private-real="{{ custo_logistico|brl }}"><span class="private-value-display">******</span></span></h3>
                 </div>
                 <div class="kpi-icon-wrap kpi-icon-indigo"><i class="fas fa-truck"></i></div>
             </div>
@@ -102,7 +106,7 @@
             <div class="kpi-card-inner">
                 <div>
                     <p class="kpi-label">Custo com Técnicos</p>
-                    <h3 class="kpi-value">{{ custo_tecnicos|brl }}</h3>
+                    <h3 class="kpi-value"><span class="private-value-wrap" data-private-real="{{ custo_tecnicos|brl }}"><span class="private-value-display">******</span></span></h3>
                 </div>
                 <div class="kpi-icon-wrap kpi-icon-teal"><i class="fas fa-user-cog"></i></div>
             </div>
@@ -111,7 +115,7 @@
             <div class="kpi-card-inner">
                 <div>
                     <p class="kpi-label">Custo Deslocamento</p>
-                    <h3 class="kpi-value">{{ custo_deslocamento|brl }}</h3>
+                    <h3 class="kpi-value"><span class="private-value-wrap" data-private-real="{{ custo_deslocamento|brl }}"><span class="private-value-display">******</span></span></h3>
                 </div>
                 <div class="kpi-icon-wrap kpi-icon-orange"><i class="fas fa-route"></i></div>
             </div>
@@ -152,6 +156,33 @@
                 header.style.background = '#1C1C1C';
                 header.style.backgroundColor = '#1C1C1C';
                 header.style.color = 'white';
+            }
+            window.refreshDashboardCustosPrivacy = function() {
+                var container = document.querySelector('.dashboard-custos-view');
+                if (!container) return;
+                var revealed = container.classList.contains('dashboard-custos-revealed');
+                container.querySelectorAll('.private-value-wrap').forEach(function(wrap) {
+                    var display = wrap.querySelector('.private-value-display');
+                    if (!display) return;
+                    var real = (wrap.getAttribute('data-private-real') || '').trim();
+                    display.textContent = revealed ? (real || 'N/A') : '******';
+                });
+                var btn = document.getElementById('dashboardCustosRevealValuesBtn');
+                if (btn) {
+                    var icon = btn.querySelector('i');
+                    if (icon) icon.className = revealed ? 'fas fa-eye-slash' : 'fas fa-eye';
+                    btn.setAttribute('title', revealed ? 'Ocultar valores' : 'Mostrar valores');
+                    btn.setAttribute('aria-label', revealed ? 'Ocultar valores' : 'Mostrar valores');
+                }
+            };
+            var btn = document.getElementById('dashboardCustosRevealValuesBtn');
+            if (btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var container = document.querySelector('.dashboard-custos-view');
+                    if (container) container.classList.toggle('dashboard-custos-revealed');
+                    if (typeof window.refreshDashboardCustosPrivacy === 'function') window.refreshDashboardCustosPrivacy();
+                });
             }
         });
     </script>

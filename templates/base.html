@@ -267,6 +267,7 @@
                     </div>
                 </div>
 
+                {% if request.resolver_match.url_name != 'dashboard' and request.resolver_match.url_name != 'dashboard_custos' and request.resolver_match.url_name != 'servicos' and request.resolver_match.url_name != 'auditoria' %}
                 <div class="header-center">
                     <div class="request-type-selector">
                         <select class="btn-primary-select" id="requestTypeSelect">
@@ -281,6 +282,7 @@
                         <span>Nova Solicitação Financeira</span>
                     </button>
                 </div>
+                {% endif %}
 
                 <div class="header-right">
                     <div class="user-actions">

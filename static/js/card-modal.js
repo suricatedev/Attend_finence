@@ -888,10 +888,10 @@ function populateCardDetails(data) {
         if (existingClienteEmpresa) existingClienteEmpresa.remove();
         if (existingCnpj) existingCnpj.remove();
         
+        const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
         // Adicionar campos adicionais se existirem nos dados (para solicitações Casual) — sem olho; valor visível só se coluna revelada
         if (data.isCasual && !data.isTecnico && data.valoresDetalhados) {
             if (data.valoresDetalhados.chave_pix) {
-                const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
                 const chavePixVal = data.valoresDetalhados.chave_pix;
                 const chavePixItem = document.createElement('div');
                 chavePixItem.className = 'detail-item';
@@ -923,6 +923,43 @@ function populateCardDetails(data) {
                 cnpjItem.innerHTML = `
                     <div class="detail-label">CNPJ</div>
                     <div class="detail-value" id="modal-cnpj">${data.valoresDetalhados.cnpj}</div>
+                `;
+                infoBasicasSection.appendChild(cnpjItem);
+            }
+        }
+        // Solicitação agrupada (Em Rota / Técnico): exibir Chave PIX (e opcionalmente Cliente/Empresa, CNPJ) no painel esquerdo, como na individual — usar primeiro item
+        if ((data.isEmRota || data.isTecnico) && data.itensRota && data.itensRota.length > 0) {
+            const primeiro = data.itensRota[0];
+            if (primeiro.chave_pix) {
+                const chavePixVal = primeiro.chave_pix;
+                const chavePixItem = document.createElement('div');
+                chavePixItem.className = 'detail-item';
+                chavePixItem.id = 'modal-chave-pix-item';
+                chavePixItem.innerHTML = `
+                    <div class="detail-label">Chave PIX</div>
+                    <div class="detail-value private-value-wrap" id="modal-chave-pix-wrap" data-private-real="${esc(chavePixVal)}">
+                        <span class="private-value-display" id="modal-chave-pix">${data.columnRevealed ? esc(chavePixVal) : '******'}</span>
+                    </div>
+                `;
+                infoBasicasSection.appendChild(chavePixItem);
+            }
+            if (primeiro.cliente_empresa) {
+                const clienteEmpresaItem = document.createElement('div');
+                clienteEmpresaItem.className = 'detail-item';
+                clienteEmpresaItem.id = 'modal-cliente-empresa-item';
+                clienteEmpresaItem.innerHTML = `
+                    <div class="detail-label">Cliente/Empresa</div>
+                    <div class="detail-value" id="modal-cliente-empresa">${esc(primeiro.cliente_empresa)}</div>
+                `;
+                infoBasicasSection.appendChild(clienteEmpresaItem);
+            }
+            if (primeiro.cnpj) {
+                const cnpjItem = document.createElement('div');
+                cnpjItem.className = 'detail-item';
+                cnpjItem.id = 'modal-cnpj-item';
+                cnpjItem.innerHTML = `
+                    <div class="detail-label">CNPJ</div>
+                    <div class="detail-value" id="modal-cnpj">${esc(primeiro.cnpj)}</div>
                 `;
                 infoBasicasSection.appendChild(cnpjItem);
             }

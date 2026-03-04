@@ -17,9 +17,6 @@
             <p class="dashboard-custos-periodo">Período: {{ data_inicial|date:"d/m/Y" }} até {{ data_final|date:"d/m/Y" }}</p>
         </div>
         <div class="dashboard-custos-actions">
-            <a href="{% url 'home' %}" class="btn-custos btn-custos-primary">
-                <i class="fas fa-plus mr-2"></i> Nova Solicitação
-            </a>
             <button type="button" class="btn-custos btn-custos-secondary" id="btnExportExcel">
                 <i class="fas fa-file-excel mr-2 text-green-600"></i> Excel
             </button>
