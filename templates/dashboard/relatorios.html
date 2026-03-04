@@ -8,16 +8,28 @@
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/relatorios-compact.css' %}">
     <style>
-        /* Garantir que o header de relatórios seja preto - mesma cor do background */
+        /* Navbar de relatórios branca */
         body .reports-header,
         .reports-fullscreen .reports-header,
         header.reports-header {
-            background: #1C1C1C !important;
-            background-color: #1C1C1C !important;
-            color: white !important;
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            color: #1a1a1a !important;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .reports-header .page-title h1,
+        .reports-header .page-title p { color: #1a1a1a !important; }
+        .reports-header .btn-back {
+            background: #f3f4f6 !important;
+            color: #374151 !important;
+            border: 1px solid #e5e7eb;
+        }
+        .reports-header .btn-back:hover {
+            background: #e5e7eb !important;
+            color: #1f2937 !important;
         }
         
-        /* Garantir que o background seja a mesma cor do header */
+        /* Garantir que o background do conteúdo permaneça escuro */
         body .reports-fullscreen,
         .reports-fullscreen {
             background: #1C1C1C !important;
@@ -37,7 +49,7 @@
 <!-- Página de Relatórios em Tela Cheia -->
 <div class="reports-fullscreen" style="background: #1C1C1C !important; background-color: #1C1C1C !important;">
     <!-- Header com Botão Voltar -->
-    <header class="reports-header" style="background: #1C1C1C !important; background-color: #1C1C1C !important;">
+    <header class="reports-header" style="background: #ffffff !important; background-color: #ffffff !important; color: #1a1a1a;">
         <div class="header-left">
             <button class="btn-back" onclick="window.history.back()">
                 <i class="fas fa-arrow-left"></i>
@@ -577,15 +589,15 @@
     <script src="{% static 'js/relatorios-optimized.js' %}" defer></script>
     <script src="{% static 'js/relatorios-indicadores.js' %}" defer></script>
     <script>
-        // Garantir que o header e background sejam pretos
+        // Navbar de relatórios branca; conteúdo mantém fundo escuro
         document.addEventListener('DOMContentLoaded', function() {
             const reportsHeader = document.querySelector('.reports-header');
             const reportsFullscreen = document.querySelector('.reports-fullscreen');
             
             if (reportsHeader) {
-                reportsHeader.style.background = '#1C1C1C';
-                reportsHeader.style.backgroundColor = '#1C1C1C';
-                reportsHeader.style.color = 'white';
+                reportsHeader.style.background = '#ffffff';
+                reportsHeader.style.backgroundColor = '#ffffff';
+                reportsHeader.style.color = '#1a1a1a';
             }
             
             if (reportsFullscreen) {
@@ -593,21 +605,19 @@
                 reportsFullscreen.style.backgroundColor = '#1C1C1C';
             }
             
-            // Garantir que o header padrão esteja oculto
             const defaultHeader = document.querySelector('.main-content > .header');
             if (defaultHeader) {
                 defaultHeader.style.display = 'none';
             }
         });
         
-        // Também aplicar após um pequeno delay para garantir
         setTimeout(function() {
             const reportsHeader = document.querySelector('.reports-header');
             const reportsFullscreen = document.querySelector('.reports-fullscreen');
             
             if (reportsHeader) {
-                reportsHeader.style.setProperty('background', '#1C1C1C', 'important');
-                reportsHeader.style.setProperty('background-color', '#1C1C1C', 'important');
+                reportsHeader.style.setProperty('background', '#ffffff', 'important');
+                reportsHeader.style.setProperty('background-color', '#ffffff', 'important');
             }
             
             if (reportsFullscreen) {

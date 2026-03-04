@@ -357,10 +357,11 @@
                     </div>
                 </div>
                 
-                <!-- Valor de Receita para Casual -->
+                <!-- Valor de Receita para Casual: exibido = atividade + detalhados; enviado ao backend = só valor da atividade -->
                 <div class="form-group" style="margin-top: 1.5rem;">
                     <label for="casualValorReceita">Valor de Receita <span class="required">*</span></label>
-                    <input type="text" id="casualValorReceita" name="casual_valor_receita" class="valor-receita-casual" placeholder="R$ 0,00" required style="font-weight: 700; font-size: 1.1rem; color: #FFCB57;">
+                    <input type="text" id="casualValorReceita" class="valor-receita-casual" placeholder="R$ 0,00" required style="font-weight: 700; font-size: 1.1rem; color: #FFCB57;">
+                    <input type="hidden" id="casual_valor_receita_submit" name="casual_valor_receita" value="">
                 </div>
                 
                 <div class="form-group">
@@ -1905,22 +1906,24 @@
                     campoValorTotal.value = formatarValorMonetario(totalDetalhados);
                 }
                 
-                // Atualizar o hidden com total geral (detalhados + receita)
+                // Valor de Receita exibido = valor da atividade + valores detalhados (soma automática)
+                const valorReceita = valorAtividade + totalDetalhados;
                 const campoValorHidden = document.getElementById('casual_valor_hidden');
+                const receitaInput = document.getElementById('casualValorReceita');
+                const receitaSubmit = document.getElementById('casual_valor_receita_submit');
+                if (receitaInput) {
+                    receitaInput.value = formatarValorMonetario(valorReceita);
+                    receitaInput.dataset.auto = valorReceita.toFixed(2);
+                    receitaInput.dataset.manual = '0';
+                    receitaInput.dataset.total = valorReceita.toFixed(2);
+                }
+                // Backend espera só o valor da atividade em casual_valor_receita (total = detalhados + receita no servidor)
+                if (receitaSubmit) {
+                    receitaSubmit.value = formatarValorMonetario(valorAtividade);
+                }
                 if (campoValorHidden) {
-                    const receitaInput = document.getElementById('casualValorReceita');
-                    // Valor da receita é SOMENTE o valor da atividade (sem manual extra)
-                    if (receitaInput) {
-                        receitaInput.value = formatarValorMonetario(valorAtividade);
-                        receitaInput.dataset.auto = valorAtividade.toFixed(2);
-                        receitaInput.dataset.manual = '0'; // Sempre zerar manual extra
-                        receitaInput.dataset.total = valorAtividade.toFixed(2);
-                    }
                     const totalGeral = totalDetalhados + valorAtividade;
                     campoValorHidden.value = totalGeral.toFixed(2).replace('.', ',');
-                    
-                } else {
-                    
                 }
                 
                 return totalDetalhados + valorAtividade;
@@ -2422,6 +2425,28 @@
                     casualValorReceita.dataset.manual = '0';
                     // Recalcular valor total
                     calcularValorTotalCasual();
+                });
+            }
+            
+            // Listener no "Valor da atividade" para recalcularem "Valor de Receita" quando for editado
+            const campoValorAtividade = document.getElementById('casualValorAtividade');
+            if (campoValorAtividade) {
+                campoValorAtividade.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value) {
+                        value = value.replace(/^0+/, '');
+                        if (!value) value = '0';
+                        const numericValue = parseFloat(value) / 100;
+                        e.target.value = formatarValorMonetario(numericValue);
+                    } else {
+                        e.target.value = '';
+                    }
+                    if (window.calcularValorTotalCasual) window.calcularValorTotalCasual();
+                });
+                campoValorAtividade.addEventListener('blur', function(e) {
+                    const valor = (window.parseValorMonetario || parseValorMonetario)(e.target.value);
+                    e.target.value = (window.formatarValorMonetario || formatarValorMonetario)(valor);
+                    if (window.calcularValorTotalCasual) window.calcularValorTotalCasual();
                 });
             }
             

@@ -9,20 +9,22 @@
     <link rel="stylesheet" href="{% static 'css/dashboard-custos.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* Navbar branca na página de Dashboards */
         body .header, .main-content .header, header.header {
-            background: #1C1C1C !important;
-            background-color: #1C1C1C !important;
-            color: white !important;
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            color: #1a1a1a !important;
+            border-bottom: 1px solid #e5e7eb;
         }
-        .header .app-title, .header .logo-icon { color: white !important; }
-        .header .tab-btn { color: rgba(255, 255, 255, 0.8) !important; }
+        .header .app-title, .header .logo-icon { color: #1a1a1a !important; }
+        .header .tab-btn { color: #4b5563 !important; }
         .header .tab-btn.active { background: #FFCB57 !important; color: #1C1C1C !important; }
-        .header .action-btn, .header .action-btn i { color: white !important; }
-        .header .action-btn:hover { background: rgba(255, 255, 255, 0.1) !important; color: white !important; }
-        .header .user-avatar, .header .user-avatar-btn img { border-color: white !important; }
+        .header .action-btn, .header .action-btn i { color: #374151 !important; }
+        .header .action-btn:hover { background: #f3f4f6 !important; color: #1f2937 !important; }
+        .header .user-avatar, .header .user-avatar-btn img { border-color: #e5e7eb !important; }
         .header .btn-primary {
             background: #FFCB57 !important; color: #1C1C1C !important;
-            box-shadow: 0 4px 15px rgba(255, 203, 87, 0.4) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
         }
         .header .btn-primary:hover {
             background: #FFD700 !important; transform: translateY(-2px) !important;
@@ -153,9 +155,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             var header = document.querySelector('.header');
             if (header) {
-                header.style.background = '#1C1C1C';
-                header.style.backgroundColor = '#1C1C1C';
-                header.style.color = 'white';
+                header.style.background = '#ffffff';
+                header.style.backgroundColor = '#ffffff';
+                header.style.color = '#1a1a1a';
             }
             window.refreshDashboardCustosPrivacy = function() {
                 var container = document.querySelector('.dashboard-custos-view');

@@ -34,13 +34,53 @@ def dashboard(request):
             data_de_criacao__gte=data_inicial_custos,
             data_de_criacao__lte=data_final_custos
         )
-        custo_logistico = float(qs_custos.aggregate(Sum('valor_em_rota'))['valor_em_rota__sum'] or 0)
-        custo_desloc_solic = (qs_custos.aggregate(Sum('valor_km'))['valor_km__sum'] or 0) + (qs_custos.aggregate(Sum('valor_pedagio'))['valor_pedagio__sum'] or 0)
-        custo_desloc_itens = SolicitacaoRotaItem.objects.filter(
+        # Custo Logístico = soma de "Valor da atividade" + "Valores detalhados" apenas das solicitações com serviço "Chamado Logístico"
+        servico_chamado_logistico = Servico.objects.filter(nome__iexact='Chamado Logístico').first()
+        custo_logistico = 0.0
+        if servico_chamado_logistico:
+            qs_log_solic = qs_custos.filter(servico_id=servico_chamado_logistico.id)
+            agg_log_solic = qs_log_solic.aggregate(
+                vrec=Sum('valor_receita'), sk=Sum('valor_km'), sp=Sum('valor_pedagio'),
+                sh=Sum('valor_hospedagem'), sf=Sum('valor_fluvial'), so=Sum('valor_outros')
+            )
+            custo_log_solic = (
+                (agg_log_solic['vrec'] or 0) + (agg_log_solic['sk'] or 0) + (agg_log_solic['sp'] or 0) +
+                (agg_log_solic['sh'] or 0) + (agg_log_solic['sf'] or 0) + (agg_log_solic['so'] or 0)
+            )
+            itens_log = SolicitacaoRotaItem.objects.filter(
+                solicitacao__data_de_criacao__gte=data_inicial_custos,
+                solicitacao__data_de_criacao__lte=data_final_custos,
+                servico_id=servico_chamado_logistico.id
+            )
+            agg_log_itens = itens_log.aggregate(
+                v=Sum('valor'), ik=Sum('valor_km'), ip=Sum('valor_pedagio'),
+                ih=Sum('valor_hospedagem'), iflu=Sum('valor_fluvial'), io=Sum('valor_outros')
+            )
+            custo_log_itens = (
+                (agg_log_itens['v'] or 0) + (agg_log_itens['ik'] or 0) + (agg_log_itens['ip'] or 0) +
+                (agg_log_itens['ih'] or 0) + (agg_log_itens['iflu'] or 0) + (agg_log_itens['io'] or 0)
+            )
+            custo_logistico = float(custo_log_solic + custo_log_itens)
+        # Custo deslocamento = soma de todos os "Valores Detalhados" (KM, Pedágio, Hospedagem, Fluvial, Outros) de todas as solicitações
+        agg_solic = qs_custos.aggregate(
+            s_km=Sum('valor_km'), s_ped=Sum('valor_pedagio'), s_hosp=Sum('valor_hospedagem'),
+            s_flu=Sum('valor_fluvial'), s_out=Sum('valor_outros')
+        )
+        custo_desloc_solic = (
+            (agg_solic['s_km'] or 0) + (agg_solic['s_ped'] or 0) + (agg_solic['s_hosp'] or 0) +
+            (agg_solic['s_flu'] or 0) + (agg_solic['s_out'] or 0)
+        )
+        agg_itens = SolicitacaoRotaItem.objects.filter(
             solicitacao__data_de_criacao__gte=data_inicial_custos,
             solicitacao__data_de_criacao__lte=data_final_custos
-        ).aggregate(total_km=Sum('valor_km'), total_ped=Sum('valor_pedagio'))
-        custo_desloc_itens = (custo_desloc_itens['total_km'] or 0) + (custo_desloc_itens['total_ped'] or 0)
+        ).aggregate(
+            i_km=Sum('valor_km'), i_ped=Sum('valor_pedagio'), i_hosp=Sum('valor_hospedagem'),
+            i_flu=Sum('valor_fluvial'), i_out=Sum('valor_outros')
+        )
+        custo_desloc_itens = (
+            (agg_itens['i_km'] or 0) + (agg_itens['i_ped'] or 0) + (agg_itens['i_hosp'] or 0) +
+            (agg_itens['i_flu'] or 0) + (agg_itens['i_out'] or 0)
+        )
         custo_deslocamento = float(custo_desloc_solic + custo_desloc_itens)
         ids_custos = list(qs_custos.values_list('id', flat=True))
         custo_tecnicos = float(SolicitacaoTecnico.objects.filter(solicitacao_id__in=ids_custos).aggregate(Sum('valor_pagamento_tecnico'))['valor_pagamento_tecnico__sum'] or 0)
@@ -54,10 +94,19 @@ def dashboard(request):
             ini = fim - timedelta(days=6)
             qw = Solicitacoes.objects.filter(data_de_criacao__gte=ini, data_de_criacao__lte=fim)
             ids_w = list(qw.values_list('id', flat=True))
-            log_w = float(qw.aggregate(Sum('valor_em_rota'))['valor_em_rota__sum'] or 0)
-            desl_s = (qw.aggregate(Sum('valor_km'))['valor_km__sum'] or 0) + (qw.aggregate(Sum('valor_pedagio'))['valor_pedagio__sum'] or 0)
-            desl_i = SolicitacaoRotaItem.objects.filter(solicitacao__data_de_criacao__gte=ini, solicitacao__data_de_criacao__lte=fim).aggregate(total_km=Sum('valor_km'), total_ped=Sum('valor_pedagio'))
-            desl_i = (desl_i['total_km'] or 0) + (desl_i['total_ped'] or 0)
+            log_w = 0.0
+            if servico_chamado_logistico:
+                qw_log = qw.filter(servico_id=servico_chamado_logistico.id)
+                agg_w_s = qw_log.aggregate(vrec=Sum('valor_receita'), sk=Sum('valor_km'), sp=Sum('valor_pedagio'), sh=Sum('valor_hospedagem'), sf=Sum('valor_fluvial'), so=Sum('valor_outros'))
+                log_w_s = (agg_w_s['vrec'] or 0) + (agg_w_s['sk'] or 0) + (agg_w_s['sp'] or 0) + (agg_w_s['sh'] or 0) + (agg_w_s['sf'] or 0) + (agg_w_s['so'] or 0)
+                itens_w = SolicitacaoRotaItem.objects.filter(solicitacao__data_de_criacao__gte=ini, solicitacao__data_de_criacao__lte=fim, servico_id=servico_chamado_logistico.id)
+                agg_w_i = itens_w.aggregate(v=Sum('valor'), ik=Sum('valor_km'), ip=Sum('valor_pedagio'), ih=Sum('valor_hospedagem'), iflu=Sum('valor_fluvial'), io=Sum('valor_outros'))
+                log_w_i = (agg_w_i['v'] or 0) + (agg_w_i['ik'] or 0) + (agg_w_i['ip'] or 0) + (agg_w_i['ih'] or 0) + (agg_w_i['iflu'] or 0) + (agg_w_i['io'] or 0)
+                log_w = float(log_w_s + log_w_i)
+            agg_ws = qw.aggregate(s_km=Sum('valor_km'), s_ped=Sum('valor_pedagio'), s_hosp=Sum('valor_hospedagem'), s_flu=Sum('valor_fluvial'), s_out=Sum('valor_outros'))
+            desl_s = (agg_ws['s_km'] or 0) + (agg_ws['s_ped'] or 0) + (agg_ws['s_hosp'] or 0) + (agg_ws['s_flu'] or 0) + (agg_ws['s_out'] or 0)
+            agg_wi = SolicitacaoRotaItem.objects.filter(solicitacao__data_de_criacao__gte=ini, solicitacao__data_de_criacao__lte=fim).aggregate(i_km=Sum('valor_km'), i_ped=Sum('valor_pedagio'), i_hosp=Sum('valor_hospedagem'), i_flu=Sum('valor_fluvial'), i_out=Sum('valor_outros'))
+            desl_i = (agg_wi['i_km'] or 0) + (agg_wi['i_ped'] or 0) + (agg_wi['i_hosp'] or 0) + (agg_wi['i_flu'] or 0) + (agg_wi['i_out'] or 0)
             tec_w = float(SolicitacaoTecnico.objects.filter(solicitacao_id__in=ids_w).aggregate(Sum('valor_pagamento_tecnico'))['valor_pagamento_tecnico__sum'] or 0)
             evolution_weeks.append({'label': f'Semana {4 - i}', 'tecnicos': tec_w, 'logistica': log_w, 'deslocamento': float(desl_s) + float(desl_i)})
         evolution_weeks.reverse()
