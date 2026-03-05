@@ -1463,10 +1463,10 @@
                     // para garantir que prevaleça sobre applyFilterFast que pode rodar até 200ms.
                     setTimeout(() => {
                         if (filterToApply === 'tecnico' && typeof filterCardsByType === 'function') {
-                            filterCardsByType('tecnico');
+                                filterCardsByType('tecnico');
                         } else if (filterToApply === 'deslocamento' && typeof initializeTodayFilter === 'function') {
                             initializeTodayFilter();
-                        }
+                            }
                     }, 250);
                 }, 50);
             }, 100);
@@ -1531,7 +1531,7 @@
                 if (visibleCount > 0 && emptyColumn) {
                     emptyColumn.style.display = 'none';
                 } else if (visibleCount === 0) {
-                    if (emptyColumn) {
+                if (emptyColumn) {
                         emptyColumn.style.display = '';
                         var p = emptyColumn.querySelector('p');
                         if (p) p.textContent = emptyText;
@@ -1854,8 +1854,8 @@
                 return;
             }
             (function() {
-                const nomesColuna = { planning: 'pendente', test: 'recusado', launch: 'aprovado', success: 'concluido', refund: 'estorno' };
-                const nomeArquivo = (nomesColuna[column] || column) + '_export.txt';
+            const nomesColuna = { planning: 'pendente', test: 'recusado', launch: 'aprovado', success: 'concluido', refund: 'estorno' };
+            const nomeArquivo = (nomesColuna[column] || column) + '_export.txt';
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') && document.querySelector('[name=csrfmiddlewaretoken]').value;
                 const headers = { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken, 'Accept': 'application/json' };
                 if (!csrfToken) headers['X-CSRFToken'] = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1];
@@ -1887,13 +1887,13 @@
                     ].join('\r\n');
 
                     const texto = (textoCorpo || '') + textoTotais;
-                    const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = nomeArquivo;
-                    a.click();
-                    URL.revokeObjectURL(url);
+            const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = nomeArquivo;
+            a.click();
+            URL.revokeObjectURL(url);
                     if (typeof Utils !== 'undefined' && Utils.showNotification) Utils.showNotification('Exportação TXT concluída.', 'success');
                 });
             })();

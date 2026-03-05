@@ -126,25 +126,28 @@ def ping(request):
 def registrar_recebedor(nome, chave_pix=None):
     """
     Garante que o recebedor esteja registrado na tabela Recebedor.
-    Retorna o objeto criado/atualizado ou None quando não foi possível registrar.
+    Se o recebedor já existir, NÃO altera chave_pix (evita sobrescrever com valor antigo da solicitação).
+    Só define chave_pix ao CRIAR um novo recebedor.
+    Retorna o objeto criado ou existente, ou None quando não foi possível registrar.
     """
     if not nome:
         return None
     
-    chave_pix_normalizada = (chave_pix or "").strip()
-    if not chave_pix_normalizada:
-        chave_pix_normalizada = ""
+    chave_pix_normalizada = (chave_pix or "").strip() if chave_pix else ""
+    nome_stripped = nome.strip()
     
     try:
-        recebedor_obj, created = Recebedor.objects.update_or_create(
-            nome=nome.strip(),
-            defaults={
-                'chave_pix': chave_pix_normalizada,
-                'ativo': True,
-            }
+        recebedor_obj = Recebedor.objects.filter(nome__iexact=nome_stripped).first()
+        if recebedor_obj:
+            # Não atualizar chave_pix do cadastro ao salvar solicitação (evita overwrite com valor antigo)
+            return recebedor_obj
+        # Só criar novo recebedor com chave_pix quando não existir
+        recebedor_obj = Recebedor.objects.create(
+            nome=nome_stripped,
+            chave_pix=chave_pix_normalizada or "",
+            ativo=True,
         )
-        if created:
-            print(f"✅ Recebedor '{recebedor_obj.nome}' registrado automaticamente.")
+        print(f"✅ Recebedor '{recebedor_obj.nome}' registrado automaticamente.")
         return recebedor_obj
     except Exception as e:
         print(f"⚠️ Erro ao registrar recebedor '{nome}': {e}")
@@ -1794,6 +1797,12 @@ def obter_detalhes_completos(request, solicitacao_id):
             status_novo='estorno'
         ).order_by('-data_hora').first()
 
+        # Chave PIX: usar valor atual da tabela Recebedor (não o salvo na solicitação) para evitar exibir valor antigo no formulário
+        chave_pix_casual = solicitacao.chave_pix or ''
+        if solicitacao.tipo == 'casual' and not is_tecnico and solicitacao.nome_do_recebedor:
+            receb = Recebedor.objects.filter(nome__iexact=solicitacao.nome_do_recebedor.strip()).first()
+            if receb:
+                chave_pix_casual = receb.chave_pix or ''
         # Informações básicas
         dados = {
             'id': solicitacao.id,
@@ -1801,7 +1810,7 @@ def obter_detalhes_completos(request, solicitacao_id):
             'titulo': solicitacao.titulo,
             'solicitante': str(solicitacao.nome_solicitante),
             'recebedor': solicitacao.nome_do_recebedor,
-            'chave_pix': solicitacao.chave_pix or '' if not is_tecnico and solicitacao.tipo != 'em_rota' else '',
+            'chave_pix': chave_pix_casual,
             'cliente_empresa': solicitacao.cliente_empresa or '',
             'cnpj': solicitacao.cnpj or '',
             'servico': solicitacao.servico.nome if solicitacao.servico else 'N/A',
@@ -1851,15 +1860,31 @@ def obter_detalhes_completos(request, solicitacao_id):
                 valor_receita_calculado += valor_atividade_item
             dados['valor_receita'] = format_brl(valor_receita_calculado)
             dados['valor_receita_raw'] = float(valor_receita_calculado)
+            # Mapa nome recebedor (lower) -> chave_pix atual (uma query para todos os itens, match case-insensitive)
+            nomes_recebedores = list({(item.recebedor or '').strip() for item in itens_rota if (item.recebedor or '').strip()})
+            recebedores_pix = {}
+            if nomes_recebedores:
+                if len(nomes_recebedores) == 1:
+                    r = Recebedor.objects.filter(nome__iexact=nomes_recebedores[0]).only('nome', 'chave_pix').first()
+                    if r:
+                        recebedores_pix[r.nome.lower()] = r.chave_pix or ''
+                else:
+                    q = Q()
+                    for n in nomes_recebedores:
+                        q |= Q(nome__iexact=n)
+                    for r in Recebedor.objects.filter(q).only('nome', 'chave_pix'):
+                        recebedores_pix[r.nome.lower()] = r.chave_pix or ''
             dados['itens_rota'] = []
             for item in itens_rota:
+                nome_item = (item.recebedor or '').strip()
+                chave_pix_item = (recebedores_pix.get(nome_item.lower(), item.chave_pix or '') if nome_item else (item.chave_pix or ''))
                 dados['itens_rota'].append({
                     'ordem': item.ordem,
                     'ticket_item': item.ticket_item,
                     'servico': item.servico.nome if item.servico else 'N/A',
                     'servico_id': item.servico.id if item.servico else None,
                     'recebedor': item.recebedor or '',
-                    'chave_pix': item.chave_pix or '',
+                    'chave_pix': chave_pix_item,
                     'cliente_empresa': item.cliente_empresa or '',
                     'cnpj': item.cnpj or '',
                     'valor': format_brl(item.valor),

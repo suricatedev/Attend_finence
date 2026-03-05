@@ -68,9 +68,10 @@ class Solicitacoes(models.Model):
     ticket = models.CharField(max_length=25, unique=True, help_text="ID único da solicitação (Ex: INC001, ROTA-002)")
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='pendente')
     titulo = models.CharField(max_length = 70) 
-    nome_solicitante = models.ForeignKey(User, on_delete=models.CASCADE) 
-    nome_do_recebedor = models.CharField(max_length = 30)
-    chave_pix = models.CharField(max_length=255, blank=True, null=True, verbose_name="Chave PIX")
+    nome_solicitante = models.ForeignKey(User, on_delete=models.CASCADE)
+    recebedor = models.ForeignKey(Recebedor, on_delete=models.SET_NULL, null=True, blank=True, related_name='solicitacoes_principal', verbose_name="Recebedor")
+    nome_do_recebedor = models.CharField(max_length=100, blank=True, null=True, verbose_name="Nome do Recebedor (legado)")
+    chave_pix = models.CharField(max_length=255, blank=True, null=True, verbose_name="Chave PIX (legado)")
     cliente_empresa = models.CharField(max_length=200, blank=True, null=True, verbose_name="Cliente/Empresa")
     cnpj = models.CharField(max_length=18, blank=True, null=True, verbose_name="CNPJ")
     valor = models.FloatField()
@@ -147,9 +148,10 @@ class SolicitacaoRotaItem(models.Model):
     servico = models.ForeignKey('servicos.Servico', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Serviço")
     ordem = models.IntegerField(default=1, verbose_name="Ordem")
     
-    # Campos de recebedor e chave PIX para cada ID
-    recebedor = models.CharField(max_length=100, blank=True, null=True, verbose_name="Nome do Recebedor")
-    chave_pix = models.CharField(max_length=255, blank=True, null=True, verbose_name="Chave PIX")
+    # Recebedor como FK; nome/chave_pix legados mantidos para migração
+    recebedor_fk = models.ForeignKey(Recebedor, on_delete=models.SET_NULL, null=True, blank=True, related_name='itens_rota', verbose_name="Recebedor")
+    recebedor = models.CharField(max_length=100, blank=True, null=True, verbose_name="Nome do Recebedor (legado)")
+    chave_pix = models.CharField(max_length=255, blank=True, null=True, verbose_name="Chave PIX (legado)")
     cliente_empresa = models.CharField(max_length=200, blank=True, null=True, verbose_name="Cliente/Empresa")
     cnpj = models.CharField(max_length=18, blank=True, null=True, verbose_name="CNPJ")
     

@@ -1,11 +1,11 @@
 from django.shortcuts import render
 from django.contrib import messages
-from django.db.models import Sum, Count, Avg, Q, F
+from django.db.models import Sum, Count, Avg, Q, F, Min, Max
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.http import JsonResponse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from calendar import monthrange
 import json
 from solicitacoes.models import Solicitacoes, SolicitacaoTecnico, SolicitacaoRotaItem
@@ -21,7 +21,7 @@ def dashboard(request):
         if not user_can_view_dashboard(request.user):
             messages.error(request, 'Você não tem permissão para acessar esta página.')
             return redirect('home')
-
+        
         todas_solicitacoes = Solicitacoes.objects.all()
         total_solicitacoes = todas_solicitacoes.count()
         pendentes = todas_solicitacoes.filter(status='pendente').count()
@@ -29,12 +29,14 @@ def dashboard(request):
         valor_total = todas_solicitacoes.aggregate(Sum('valor'))['valor__sum'] or 0
 
         hoje = timezone.now().date()
-        data_inicial_custos = hoje - timedelta(days=30)
-        data_final_custos = hoje
-        qs_custos = Solicitacoes.objects.filter(
-            data_de_criacao__gte=data_inicial_custos,
-            data_de_criacao__lte=data_final_custos
-        )
+        # KPIs e gráficos de custo consideram todo o período (todas as solicitações)
+        qs_custos = Solicitacoes.objects.all()
+        ids_custos = list(qs_custos.values_list('id', flat=True))
+        period_bounds = Solicitacoes.objects.aggregate(Min('data_de_criacao'), Max('data_de_criacao'))
+        v_min = period_bounds.get('data_de_criacao__min')
+        v_max = period_bounds.get('data_de_criacao__max')
+        data_inicial_custos = v_min.date() if isinstance(v_min, datetime) else (v_min if isinstance(v_min, date) else hoje)
+        data_final_custos = v_max.date() if isinstance(v_max, datetime) else (v_max if isinstance(v_max, date) else hoje)
         # Custo Logístico = soma de "Valor da atividade" + "Valores detalhados" apenas das solicitações com serviço "Chamado Logístico"
         servico_chamado_logistico = Servico.objects.filter(nome__iexact='Chamado Logístico').first()
         custo_logistico = 0.0
@@ -49,8 +51,7 @@ def dashboard(request):
                 (agg_log_solic['sh'] or 0) + (agg_log_solic['sf'] or 0) + (agg_log_solic['so'] or 0)
             )
             itens_log = SolicitacaoRotaItem.objects.filter(
-                solicitacao__data_de_criacao__gte=data_inicial_custos,
-                solicitacao__data_de_criacao__lte=data_final_custos,
+                solicitacao_id__in=ids_custos,
                 servico_id=servico_chamado_logistico.id
             )
             agg_log_itens = itens_log.aggregate(
@@ -71,10 +72,7 @@ def dashboard(request):
             (agg_solic['s_km'] or 0) + (agg_solic['s_ped'] or 0) + (agg_solic['s_hosp'] or 0) +
             (agg_solic['s_flu'] or 0) + (agg_solic['s_out'] or 0)
         )
-        agg_itens = SolicitacaoRotaItem.objects.filter(
-            solicitacao__data_de_criacao__gte=data_inicial_custos,
-            solicitacao__data_de_criacao__lte=data_final_custos
-        ).aggregate(
+        agg_itens = SolicitacaoRotaItem.objects.filter(solicitacao_id__in=ids_custos).aggregate(
             i_km=Sum('valor_km'), i_ped=Sum('valor_pedagio'), i_hosp=Sum('valor_hospedagem'),
             i_flu=Sum('valor_fluvial'), i_out=Sum('valor_outros')
         )
@@ -83,7 +81,6 @@ def dashboard(request):
             (agg_itens['i_flu'] or 0) + (agg_itens['i_out'] or 0)
         )
         custo_deslocamento = float(custo_desloc_solic + custo_desloc_itens)
-        ids_custos = list(qs_custos.values_list('id', flat=True))
         # Custo com Técnicos = soma do Valor Total de cada item (Valor que vai pagar para o técnico + Valor Extra)
         agg_tec = SolicitacaoTecnico.objects.filter(solicitacao_id__in=ids_custos).aggregate(
             s=Sum(F('valor_pagamento_tecnico') + Coalesce(F('valor_extra'), 0.0))
@@ -95,7 +92,7 @@ def dashboard(request):
         service_type_data = [custo_deslocamento, custo_logistico, custo_tecnicos]
         evolution_weeks = []
         for i in range(4):
-            fim = data_final_custos - timedelta(days=i * 7)
+            fim = hoje - timedelta(days=i * 7)
             ini = fim - timedelta(days=6)
             qw = Solicitacoes.objects.filter(data_de_criacao__gte=ini, data_de_criacao__lte=fim)
             ids_w = list(qw.values_list('id', flat=True))
@@ -118,7 +115,7 @@ def dashboard(request):
             tec_w = float(agg_tec_w['s'] or 0)
             evolution_weeks.append({'label': f'Semana {4 - i}', 'tecnicos': tec_w, 'logistica': log_w, 'deslocamento': float(desl_s) + float(desl_i)})
         evolution_weeks.reverse()
-
+        
         context = {
             'total_solicitacoes': total_solicitacoes,
             'pendentes': pendentes,
@@ -218,7 +215,7 @@ def dashboard_metrics(request):
         'valor_total': float(valor_total),
         'period': period
     })
-
+    
 
 def _get_relatorio_date_range(period, date_from_str, date_to_str):
     """Retorna (data_inicial, data_final) para o período dos relatórios."""

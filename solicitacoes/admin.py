@@ -24,16 +24,67 @@ class ClienteEmpresaAdmin(admin.ModelAdmin):
 
 @admin.register(Solicitacoes)
 class SolicitacoesAdmin(admin.ModelAdmin):
-    list_display = ('ticket', 'titulo', 'tipo', 'status', 'prioridade', 'valor', 'nome_do_recebedor', 'cliente_empresa', 'cnpj', 'data_de_criacao')
+    list_display = ('ticket', 'titulo', 'tipo', 'status', 'prioridade', 'valor', 'recebedor', 'cliente_empresa', 'cnpj', 'data_de_criacao')
     list_filter = ('status', 'prioridade', 'tipo', 'data_de_criacao')
-    search_fields = ('ticket', 'titulo', 'nome_do_recebedor', 'cliente_empresa', 'cnpj')
-    readonly_fields = ('data_de_criacao', 'tempo_criacao')
+    search_fields = ('ticket', 'titulo', 'nome_do_recebedor', 'cliente_empresa', 'cnpj', 'recebedor__nome')
+    readonly_fields = ('data_de_criacao', 'tempo_criacao', 'data_entrada_status', 'nome_do_recebedor', 'chave_pix')
+    autocomplete_fields = ['recebedor']
+
+    fieldsets = (
+        (None, {
+            'fields': ('ticket', 'titulo', 'status', 'prioridade', 'nome_solicitante', 'recebedor', 'valor', 'servico', 'tipo')
+        }),
+        ('Cliente / CNPJ', {
+            'fields': ('cliente_empresa', 'cnpj')
+        }),
+        ('Datas e descrição', {
+            'fields': ('data_de_pagamento', 'data_de_criacao', 'tempo_criacao', 'tempo_fila', 'descricao', 'data_entrada_status', 'data_aprovacao')
+        }),
+        ('Valores detalhados', {
+            'fields': ('valor_km', 'valor_pedagio', 'valor_hospedagem', 'valor_fluvial', 'valor_outros', 'valor_receita', 'valor_em_rota', 'descricao_em_rota')
+        }),
+        ('Legado (somente leitura)', {
+            'classes': ('collapse',),
+            'fields': ('nome_do_recebedor', 'chave_pix')
+        }),
+        ('Outros', {
+            'classes': ('collapse',),
+            'fields': ('anexo', 'excluida', 'data_exclusao', 'excluida_por')
+        }),
+    )
+
+    def save_model(self, request, obj, form, change):
+        if obj.recebedor:
+            obj.nome_do_recebedor = obj.recebedor.nome
+            obj.chave_pix = obj.recebedor.chave_pix or ''
+        super().save_model(request, obj, form, change)
 
 @admin.register(SolicitacaoRotaItem)
 class SolicitacaoRotaItemAdmin(admin.ModelAdmin):
-    list_display = ('solicitacao', 'ticket_item', 'ordem', 'valor', 'servico', 'recebedor', 'chave_pix', 'cliente_empresa', 'cnpj')
+    list_display = ('solicitacao', 'ticket_item', 'ordem', 'valor', 'servico', 'recebedor_fk', 'cliente_empresa', 'cnpj')
     list_filter = ('servico', 'ordem')
-    search_fields = ('ticket_item', 'solicitacao__titulo', 'recebedor', 'cliente_empresa', 'cnpj')
+    search_fields = ('ticket_item', 'solicitacao__titulo', 'recebedor', 'cliente_empresa', 'cnpj', 'recebedor_fk__nome')
+    readonly_fields = ('recebedor', 'chave_pix')
+    autocomplete_fields = ['recebedor_fk']
+
+    fieldsets = (
+        (None, {
+            'fields': ('solicitacao', 'ticket_item', 'ordem', 'servico', 'recebedor_fk', 'valor', 'cliente_empresa', 'cnpj')
+        }),
+        ('Valores detalhados', {
+            'fields': ('valor_km', 'valor_pedagio', 'valor_hospedagem', 'valor_fluvial', 'valor_outros')
+        }),
+        ('Legado (somente leitura)', {
+            'classes': ('collapse',),
+            'fields': ('recebedor', 'chave_pix')
+        }),
+    )
+
+    def save_model(self, request, obj, form, change):
+        if obj.recebedor_fk:
+            obj.recebedor = obj.recebedor_fk.nome
+            obj.chave_pix = obj.recebedor_fk.chave_pix or ''
+        super().save_model(request, obj, form, change)
 
 @admin.register(SolicitacaoTecnico)
 class SolicitacaoTecnicoAdmin(admin.ModelAdmin):
