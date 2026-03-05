@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib import messages
-from django.db.models import Sum, Count, Avg, Q
+from django.db.models import Sum, Count, Avg, Q, F
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.http import JsonResponse
@@ -83,7 +84,11 @@ def dashboard(request):
         )
         custo_deslocamento = float(custo_desloc_solic + custo_desloc_itens)
         ids_custos = list(qs_custos.values_list('id', flat=True))
-        custo_tecnicos = float(SolicitacaoTecnico.objects.filter(solicitacao_id__in=ids_custos).aggregate(Sum('valor_pagamento_tecnico'))['valor_pagamento_tecnico__sum'] or 0)
+        # Custo com Técnicos = soma do Valor Total de cada item (Valor que vai pagar para o técnico + Valor Extra)
+        agg_tec = SolicitacaoTecnico.objects.filter(solicitacao_id__in=ids_custos).aggregate(
+            s=Sum(F('valor_pagamento_tecnico') + Coalesce(F('valor_extra'), 0.0))
+        )
+        custo_tecnicos = float(agg_tec['s'] or 0)
         valor_total_custos = float(qs_custos.aggregate(Sum('valor'))['valor__sum'] or 0)
         custo_outros = max(0, valor_total_custos - (custo_logistico + custo_tecnicos + custo_deslocamento))
         cost_distribution = [custo_deslocamento, custo_logistico, custo_tecnicos, custo_outros]
@@ -107,7 +112,10 @@ def dashboard(request):
             desl_s = (agg_ws['s_km'] or 0) + (agg_ws['s_ped'] or 0) + (agg_ws['s_hosp'] or 0) + (agg_ws['s_flu'] or 0) + (agg_ws['s_out'] or 0)
             agg_wi = SolicitacaoRotaItem.objects.filter(solicitacao__data_de_criacao__gte=ini, solicitacao__data_de_criacao__lte=fim).aggregate(i_km=Sum('valor_km'), i_ped=Sum('valor_pedagio'), i_hosp=Sum('valor_hospedagem'), i_flu=Sum('valor_fluvial'), i_out=Sum('valor_outros'))
             desl_i = (agg_wi['i_km'] or 0) + (agg_wi['i_ped'] or 0) + (agg_wi['i_hosp'] or 0) + (agg_wi['i_flu'] or 0) + (agg_wi['i_out'] or 0)
-            tec_w = float(SolicitacaoTecnico.objects.filter(solicitacao_id__in=ids_w).aggregate(Sum('valor_pagamento_tecnico'))['valor_pagamento_tecnico__sum'] or 0)
+            agg_tec_w = SolicitacaoTecnico.objects.filter(solicitacao_id__in=ids_w).aggregate(
+                s=Sum(F('valor_pagamento_tecnico') + Coalesce(F('valor_extra'), 0.0))
+            )
+            tec_w = float(agg_tec_w['s'] or 0)
             evolution_weeks.append({'label': f'Semana {4 - i}', 'tecnicos': tec_w, 'logistica': log_w, 'deslocamento': float(desl_s) + float(desl_i)})
         evolution_weeks.reverse()
 
