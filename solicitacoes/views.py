@@ -2210,7 +2210,45 @@ def auditoria_logs(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    # Labels em português para exibição dos campos na auditoria
+    AUDIT_FIELD_LABELS = {
+        'chave_pix': 'Chave PIX',
+        'nome': 'Nome',
+        'nome_do_recebedor': 'Nome do Recebedor',
+        'recebedor': 'Recebedor',
+        'ticket': 'Ticket',
+        'titulo': 'Título',
+        'status': 'Status',
+        'prioridade': 'Prioridade',
+        'valor': 'Valor',
+        'valor_receita': 'Valor Receita',
+        'valor_km': 'Valor KM',
+        'valor_pedagio': 'Valor Pedágio',
+        'valor_hospedagem': 'Valor Hospedagem',
+        'valor_fluvial': 'Valor Fluvial',
+        'valor_outros': 'Valor Outros',
+        'cliente_empresa': 'Cliente/Empresa',
+        'cnpj': 'CNPJ',
+        'servico': 'Serviço',
+        'descricao': 'Descrição',
+        'data_de_pagamento': 'Data de Pagamento',
+        'data_de_criacao': 'Data de Criação',
+        'valor_pagamento_tecnico': 'Valor Pagamento Técnico',
+        'valor_extra': 'Valor Extra',
+        'ativo': 'Ativo',
+        'data_criacao': 'Data de Criação',
+        'data_atualizacao': 'Data de Atualização',
+    }
+
+    # Resolver ticket da solicitação para cada log que tem solicitacao_id
+    ids_solic = list({log.solicitacao_id for log in page_obj if getattr(log, 'solicitacao_id', None) is not None})
+    tickets_por_id = {}
+    if ids_solic:
+        for sid, ticket in Solicitacoes.objects.filter(pk__in=ids_solic).values_list('id', 'ticket'):
+            tickets_por_id[sid] = ticket or '-'
+
     for log in page_obj:
+        log.ticket_solicitacao = tickets_por_id.get(getattr(log, 'solicitacao_id', None), None) if getattr(log, 'solicitacao_id', None) else None
         cambios = []
         antes = log.dados_anteriores or {}
         depois = log.dados_novos or {}
@@ -2220,17 +2258,18 @@ def auditoria_logs(request):
         for campo in campos:
             val_antes = antes.get(campo, '-')
             val_depois = depois.get(campo, '-')
-            # Se for dicionário ou lista, converter para string para exibição
             if isinstance(val_antes, (dict, list)): val_antes = json.dumps(val_antes, ensure_ascii=False)
             if isinstance(val_depois, (dict, list)): val_depois = json.dumps(val_depois, ensure_ascii=False)
-            
+            label = AUDIT_FIELD_LABELS.get(campo, campo.replace('_', ' ').title())
             cambios.append({
                 'campo': campo,
+                'label': label,
                 'antes': val_antes,
                 'depois': val_depois,
             })
         log.detalhes_formatados = cambios
         log.detalhes_json = json.dumps(cambios, ensure_ascii=False)
+        log.campos_alterados_display = ', '.join([AUDIT_FIELD_LABELS.get(c, c.replace('_', ' ').title()) for c in (log.campos_alterados or [])]) or '-'
 
     context = {
         'page_obj': page_obj,

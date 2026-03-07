@@ -2192,6 +2192,27 @@ function initCardModal() {
         initializeCardExpansion();
     }, 1000);
     
+    // Fallback: delegação de evento no document para garantir que cards em qualquer coluna (ex.: Concluído) abram o modal
+    document.body.addEventListener('click', function cardClickDelegation(e) {
+        var card = e.target && e.target.closest && e.target.closest('.card');
+        if (!card || !card.getAttribute('data-card-id')) return;
+        if (e.target.closest('.card-actions') || e.target.closest('.card-action-btn') || e.target.closest('.card-count') ||
+            e.target.closest('.card-select-checkbox') || e.target.closest('.btn-reveal-value') || e.target.closest('.date-filter-btn') ||
+            e.target.closest('.btn-delete-card') || e.target.closest('.selected-date-display')) return;
+        if (card.classList.contains('dragging')) return;
+        // Só abrir pelo fallback se o card ainda não tiver sido inicializado (evita duplo open)
+        if (card.hasAttribute('data-modal-initialized')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        openCardDetailModal(card);
+        card.setAttribute('data-modal-initialized', 'true');
+    }, false);
+    
+    // Re-inicializar também no load para capturar qualquer card que apareça depois
+    window.addEventListener('load', function() {
+        initializeCardExpansion();
+    });
+    
     // Inicializar filtros das colunas
     initializeColumnFilters();
     

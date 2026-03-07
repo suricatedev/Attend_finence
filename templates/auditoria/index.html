@@ -159,6 +159,7 @@
         .badge-create { background: #e6fffa; color: #047481; border: 1px solid #b2f5ea; }
         .badge-update { background: #fffaf0; color: #9c4221; border: 1px solid #feebc8; }
         .badge-delete { background: #fff5f5; color: #9b2c2c; border: 1px solid #fed7d7; }
+        .badge-login { background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; }
 
         /* Estilo Usuário */
         .user-info {
@@ -253,6 +254,18 @@
         .audit-modal-body {
             padding: 24px;
             overflow-y: auto;
+        }
+
+        /* Coluna Campo(s) alterado(s): exibir lista completa com quebra de linha */
+        .audit-campos-cell {
+            max-width: 320px;
+            min-width: 140px;
+            white-space: normal;
+            word-break: break-word;
+            line-height: 1.4;
+            vertical-align: top;
+            padding-top: 10px;
+            padding-bottom: 10px;
         }
 
         .diff-table {
@@ -369,10 +382,11 @@
                     <tr>
                         <th>Data/Hora</th>
                         <th>Ação</th>
-                        <th>App</th>
-                        <th>Modelo</th>
+                        <th>Solicitação</th>
+                        <th>Campo(s) alterado(s)</th>
+                        <th>App / Modelo</th>
                         <th>Objeto</th>
-                        <th>Usuário</th>
+                        <th>Quem</th>
                         <th>Origem</th>
                         <th>Ações</th>
                     </tr>
@@ -385,12 +399,14 @@
                             <span class="auditoria-badge badge-{{ log.acao }}">
                                 {% if log.acao == 'create' %}<i class="fas fa-plus-circle"></i>
                                 {% elif log.acao == 'update' %}<i class="fas fa-edit"></i>
-                                {% elif log.acao == 'delete' %}<i class="fas fa-trash-alt"></i>{% endif %}
+                                {% elif log.acao == 'delete' %}<i class="fas fa-trash-alt"></i>
+                                {% elif log.acao == 'login' %}<i class="fas fa-sign-in-alt"></i>{% endif %}
                                 {{ log.get_acao_display }}
                             </span>
                         </td>
-                        <td><span style="color: #718096; font-size: 0.8rem;">{{ log.app }}</span></td>
-                        <td><strong>{{ log.modelo }}</strong></td>
+                        <td><strong>{% if log.ticket_solicitacao %}{{ log.ticket_solicitacao }}{% else %}—{% endif %}</strong></td>
+                        <td class="audit-campos-cell" title="{{ log.campos_alterados_display }}">{{ log.campos_alterados_display|default:"—" }}</td>
+                        <td><span style="color: #718096; font-size: 0.8rem;">{{ log.app }}</span> / <strong>{{ log.modelo }}</strong></td>
                         <td><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">#{{ log.objeto_id }}</code></td>
                         <td>
                             <div class="user-info">
@@ -398,16 +414,22 @@
                                 <span>{{ log.usuario.username|default:"Sistema" }}</span>
                             </div>
                         </td>
-                        <td title="{{ log.origem }}"><span style="max-width: 150px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ log.origem|default:"-" }}</span></td>
+                        <td title="{{ log.origem }}"><span style="max-width: 120px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ log.origem|default:"—" }}</span></td>
                         <td>
-                            <button class="btn-view" onclick='showAuditDetail({{ log.id }}, {{ log.detalhes_json|safe }})'>
+                            <button class="btn-view btn-audit-detail" type="button"
+                                data-detalhes="{{ log.detalhes_json|escape }}"
+                                data-acao="{{ log.acao }}"
+                                data-usuario="{{ log.usuario.username|default:'Sistema' }}"
+                                data-ticket="{{ log.ticket_solicitacao|default:'' }}"
+                                data-datahora="{{ log.data_hora|date:'d/m/Y H:i:s' }}"
+                                data-origem="{{ log.origem|default:''|escapejs }}">
                                 <i class="fas fa-eye"></i> Detalhes
                             </button>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 40px;">Nenhum registro encontrado.</td>
+                        <td colspan="9" style="text-align: center; padding: 40px;">Nenhum registro encontrado.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -441,22 +463,29 @@
 <div id="auditDetailModal" class="audit-modal">
     <div class="audit-modal-content">
         <div class="audit-modal-header">
-            <h3><i class="fas fa-info-circle"></i> Detalhes da Modificação</h3>
+            <h3><i class="fas fa-info-circle"></i> Detalhes da Auditoria</h3>
             <button class="close-modal" onclick="closeAuditModal()">&times;</button>
         </div>
         <div class="audit-modal-body">
-            <table class="diff-table">
-                <thead>
-                    <tr>
-                        <th>Campo</th>
-                        <th>Antes</th>
-                        <th>Depois</th>
-                    </tr>
-                </thead>
-                <tbody id="auditModalTableBody">
-                    <!-- Preenchido via JS -->
-                </tbody>
-            </table>
+            <div id="auditModalResumo" class="audit-resumo" style="margin-bottom: 1rem; padding: 12px; background: #f8fafc; border-radius: 8px; font-size: 0.9rem;">
+                <!-- Quem, Solicitação, Data, Origem -->
+            </div>
+            <div id="auditModalTableWrap">
+                <table class="diff-table">
+                    <thead>
+                        <tr>
+                            <th>Campo alterado</th>
+                            <th>Valor anterior</th>
+                            <th>Valor novo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditModalTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div id="auditModalLoginMsg" style="display: none; padding: 1rem; text-align: center; color: #4a5568;">
+                Login registrado no sistema.
+            </div>
         </div>
     </div>
 </div>
@@ -465,41 +494,74 @@
 
 {% block extra_js %}
 <script>
-    function showAuditDetail(id, detalhes) {
+    function showAuditDetailFromButton(btn) {
         const modal = document.getElementById('auditDetailModal');
         const tbody = document.getElementById('auditModalTableBody');
-        tbody.innerHTML = '';
+        const wrap = document.getElementById('auditModalTableWrap');
+        const resumo = document.getElementById('auditModalResumo');
+        const loginMsg = document.getElementById('auditModalLoginMsg');
 
-        if (!detalhes || detalhes.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Nenhuma alteração detalhada encontrada.</td></tr>';
+        let detalhes = [];
+        try {
+            const raw = btn.getAttribute('data-detalhes');
+            if (raw) detalhes = JSON.parse(raw);
+        } catch (e) {
+            detalhes = [];
+        }
+        const acao = btn.getAttribute('data-acao') || '';
+        const usuario = btn.getAttribute('data-usuario') || 'Sistema';
+        const ticket = btn.getAttribute('data-ticket') || '';
+        const datahora = btn.getAttribute('data-datahora') || '';
+        const origem = btn.getAttribute('data-origem') || '';
+
+        resumo.innerHTML = '<strong>Quem:</strong> ' + (usuario || '—') + '<br>' +
+            '<strong>Solicitação:</strong> ' + (ticket ? ticket : '—') + '<br>' +
+            '<strong>Data/Hora:</strong> ' + (datahora || '—') + '<br>' +
+            (origem ? '<strong>Origem:</strong> <span title="' + origem + '">' + (origem.length > 60 ? origem.substring(0, 60) + '…' : origem) + '</span>' : '');
+
+        if (acao === 'login') {
+            wrap.style.display = 'none';
+            loginMsg.style.display = 'block';
+            loginMsg.textContent = 'Login realizado por ' + (usuario || 'Sistema') + ' em ' + (datahora || '');
         } else {
-            detalhes.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td style="font-weight: 600;">${item.campo}</td>
-                    <td><span class="val-diff val-before">${item.antes}</span></td>
-                    <td><span class="val-diff val-after">${item.depois}</span></td>
-                `;
-                tbody.appendChild(row);
-            });
+            wrap.style.display = 'block';
+            loginMsg.style.display = 'none';
+            tbody.innerHTML = '';
+            if (!detalhes || detalhes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Nenhum campo alterado ou detalhe disponível.</td></tr>';
+            } else {
+                detalhes.forEach(function(item) {
+                    const row = document.createElement('tr');
+                    const label = item.label || item.campo || '';
+                    row.innerHTML = '<td style="font-weight: 600;">' + (label || '—') + '</td>' +
+                        '<td><span class="val-diff val-before">' + (item.antes !== undefined && item.antes !== null ? String(item.antes) : '—') + '</span></td>' +
+                        '<td><span class="val-diff val-after">' + (item.depois !== undefined && item.depois !== null ? String(item.depois) : '—') + '</span></td>';
+                    tbody.appendChild(row);
+                });
+            }
         }
 
         modal.classList.add('show');
         document.body.style.overflow = 'hidden';
     }
 
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.btn-audit-detail').forEach(function(btn) {
+            btn.addEventListener('click', function() { showAuditDetailFromButton(this); });
+        });
+    });
+
     function closeAuditModal() {
         const modal = document.getElementById('auditDetailModal');
-        modal.classList.remove('show');
-        document.body.style.overflow = '';
-    }
-
-    // Fechar modal ao clicar fora
-    window.onclick = function(event) {
-        const modal = document.getElementById('auditDetailModal');
-        if (event.target == modal) {
-            closeAuditModal();
+        if (modal) {
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
         }
     }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('auditDetailModal');
+        if (modal && event.target === modal) closeAuditModal();
+    };
 </script>
 {% endblock %}

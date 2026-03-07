@@ -1125,6 +1125,7 @@
                 // PASSO 4: ADICIONAR O ELEMENTO AO DOM
                 try {
                     container.appendChild(novoId);
+                    if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
                 } catch (error) {
                     window.criandoNovoTecnicoId = false;
                     return false;
@@ -1358,9 +1359,12 @@
                     formTecnico.querySelectorAll('input, select, textarea').forEach(field => {
                         if (field.type !== 'file' && field.type !== 'hidden' && field.type !== 'button' && field.type !== 'submit') {
                             field.disabled = false;
-                            field.removeAttribute('readonly');
+                            if (!field.classList.contains('pix-input')) {
+                                field.removeAttribute('readonly');
+                            }
                         }
                     });
+                    if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
                     return; // Não executar o resto da função
                 }
                 
@@ -1375,6 +1379,7 @@
                                 field.removeAttribute('readonly');
                             }
                         });
+                        if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
                         // Mostrar botão de adicionar ID
                         const btnAdd = document.getElementById('btnAddRouteId');
                         const addContainer = document.querySelector('.add-id-container');
@@ -1418,6 +1423,7 @@
                                 field.removeAttribute('readonly');
                             }
                         });
+                        if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
                         
                         // ⚠️ GARANTIR que o campo description está habilitado e visível
                         const descriptionField = document.getElementById('campaignDescription');
@@ -1468,6 +1474,9 @@
 
             // Inicializar estado
             toggleForms();
+            // Garantir que Chave PIX fique readonly após qualquer init (evita que outro script remova)
+            setTimeout(function() { if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix(); }, 300);
+            setTimeout(function() { if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix(); }, 1000);
 
             // Validar campos opcionais: se ID for preenchido, valor e serviço também devem ser obrigatórios
             function setupRouteValidation() {
@@ -2553,7 +2562,9 @@
                         formTecnico.querySelectorAll('input, select, textarea').forEach(field => {
                             if (field.type !== 'file' && field.type !== 'hidden' && field.type !== 'button' && field.type !== 'submit') {
                                 field.disabled = false;
-                                field.removeAttribute('readonly');
+                                if (!field.classList.contains('pix-input')) {
+                                    field.removeAttribute('readonly');
+                                }
                                 // Garantir que selects tenham pelo menos uma opção
                                 if (field.tagName === 'SELECT' && field.options.length === 0) {
                                     console.warn(`⚠️ Select ${field.id || field.name} está vazio - precisamos popular`);
@@ -2576,6 +2587,7 @@
                                 }
                             }
                         });
+                        if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
                         
                         // Validar recebedores do formulário de técnico (validação específica)
                         try {
@@ -3138,6 +3150,29 @@
             // FUNCIONALIDADE DE RECEBEDOR E CHAVE PIX
             // ============================================
             
+            // Garantir que todos os campos Chave PIX permaneçam somente leitura (não editáveis pelo solicitante)
+            window.forcarReadonlyChavePix = function() {
+                var pixInputs = document.querySelectorAll('input.pix-input, input[id^="routePix"], input[id="campaignPix"], input[id^="tecnicoPix"]');
+                pixInputs.forEach(function(inp) {
+                    inp.setAttribute('readonly', 'readonly');
+                    inp.classList.add('pix-input');
+                    // Bloquear digitação e colar mesmo se alguém remover readonly (camada extra)
+                    inp.onkeydown = function(e) {
+                        if (e.key === 'Tab' || e.key === 'Enter' || e.key === 'Escape') return;
+                        e.preventDefault();
+                        return false;
+                    };
+                    inp.onpaste = function(e) { e.preventDefault(); return false; };
+                });
+            };
+            // Ao perder foco em campo PIX, reforçar readonly
+            document.addEventListener('focusout', function(e) {
+                var t = e.target;
+                if (!t || !t.setAttribute) return;
+                var isPix = (t.classList && t.classList.contains('pix-input')) || (t.id && (t.id.indexOf('routePix') === 0 || t.id === 'campaignPix' || t.id.indexOf('tecnicoPix') === 0));
+                if (isPix) t.setAttribute('readonly', 'readonly');
+            }, true);
+            
             // Armazenar lista global de recebedores
             // Variável global para recebedores
             if (typeof window.recebedoresGlobal === 'undefined') {
@@ -3502,6 +3537,7 @@
                         
                         if (pixInput) {
                             pixInput.value = recebedor.chave_pix || '';
+                            if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
                         }
                         
                         // Fechar dropdown
@@ -3609,6 +3645,7 @@
                 
                 if (!nomeRecebedor) {
                     pixInput.value = '';
+                    if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
                     return;
                 }
                 
@@ -3620,6 +3657,7 @@
                     
                     if (recebedor) {
                         pixInput.value = recebedor.chave_pix || '';
+                        if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
                         return;
                     }
                 }
@@ -3643,10 +3681,12 @@
                         } else {
                             pixInput.value = '';
                         }
+                        if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
                     })
                     .catch(error => {
                         
                         pixInput.value = '';
+                        if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
                     });
             }
             

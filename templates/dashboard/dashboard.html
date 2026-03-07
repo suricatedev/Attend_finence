@@ -50,16 +50,17 @@
             {% endif %}
             <button type="button" class="btn-custos btn-custos-secondary" id="btnExportExcel">
                 <i class="fas fa-file-excel mr-2 text-green-600"></i> Excel
-            </button>
+                    </button>
             <button type="button" class="btn-custos btn-custos-secondary" id="btnExportPDF">
                 <i class="fas fa-file-pdf mr-2 text-red-600"></i> PDF
-            </button>
+                    </button>
         </div>
     </header>
 
     <!-- Cartões de KPI -->
     <section class="dashboard-custos-kpis">
         <div class="kpi-card kpi-card-blue">
+            <button type="button" class="kpi-info-icon" aria-label="Explicação da métrica" title="Quantidade total de solicitações financeiras cadastradas no sistema, considerando todo o período." data-kpi-explanation="Quantidade total de solicitações financeiras cadastradas no sistema, considerando todo o período."><i class="fas fa-info-circle"></i></button>
             <div class="kpi-card-inner">
                 <div>
                     <p class="kpi-label">Total de Solicitações</p>
@@ -69,6 +70,7 @@
             </div>
         </div>
         <div class="kpi-card kpi-card-gold">
+            <button type="button" class="kpi-info-icon" aria-label="Explicação da métrica" title="Soma do valor total de todas as solicitações do sistema (todo o período)." data-kpi-explanation="Soma do valor total de todas as solicitações do sistema (todo o período)."><i class="fas fa-info-circle"></i></button>
             <div class="kpi-card-inner">
                 <div>
                     <p class="kpi-label">Valor Total</p>
@@ -78,6 +80,7 @@
             </div>
         </div>
         <div class="kpi-card kpi-card-green">
+            <button type="button" class="kpi-info-icon" aria-label="Explicação da métrica" title="Solicitações já aprovadas ou concluídas (status Aprovado ou Concluído)." data-kpi-explanation="Solicitações já aprovadas ou concluídas (status Aprovado ou Concluído)."><i class="fas fa-info-circle"></i></button>
             <div class="kpi-card-inner">
                 <div>
                     <p class="kpi-label">Aprovadas</p>
@@ -87,6 +90,7 @@
             </div>
         </div>
         <div class="kpi-card kpi-card-red">
+            <button type="button" class="kpi-info-icon" aria-label="Explicação da métrica" title="Solicitações aguardando análise (status Pendente)." data-kpi-explanation="Solicitações aguardando análise (status Pendente)."><i class="fas fa-info-circle"></i></button>
             <div class="kpi-card-inner">
                 <div>
                     <p class="kpi-label">Pendentes</p>
@@ -96,6 +100,7 @@
             </div>
         </div>
         <div class="kpi-card kpi-card-indigo">
+            <button type="button" class="kpi-info-icon" aria-label="Explicação da métrica" title="Soma do valor da atividade e dos valores detalhados (KM, Pedágio, Hospedagem, etc.) das solicitações com serviço Chamado Logístico." data-kpi-explanation="Soma do valor da atividade e dos valores detalhados (KM, Pedágio, Hospedagem, etc.) das solicitações com serviço Chamado Logístico."><i class="fas fa-info-circle"></i></button>
             <div class="kpi-card-inner">
                 <div>
                     <p class="kpi-label">Custo Logístico</p>
@@ -105,6 +110,7 @@
             </div>
         </div>
         <div class="kpi-card kpi-card-teal">
+            <button type="button" class="kpi-info-icon" aria-label="Explicação da métrica" title="Soma do valor pago ao técnico mais valor extra de todas as solicitações de técnico." data-kpi-explanation="Soma do valor pago ao técnico mais valor extra de todas as solicitações de técnico."><i class="fas fa-info-circle"></i></button>
             <div class="kpi-card-inner">
                 <div>
                     <p class="kpi-label">Custo com Técnicos</p>
@@ -114,6 +120,7 @@
             </div>
         </div>
         <div class="kpi-card kpi-card-orange">
+            <button type="button" class="kpi-info-icon" aria-label="Explicação da métrica" title="Soma de todos os valores detalhados (KM, Pedágio, Hospedagem, Fluvial, Outros) de todas as solicitações." data-kpi-explanation="Soma de todos os valores detalhados (KM, Pedágio, Hospedagem, Fluvial, Outros) de todas as solicitações."><i class="fas fa-info-circle"></i></button>
             <div class="kpi-card-inner">
                 <div>
                     <p class="kpi-label">Custo Deslocamento</p>
@@ -123,6 +130,9 @@
             </div>
         </div>
     </section>
+
+    <!-- Popover de explicação da métrica (exibido ao clicar no ícone i) -->
+    <div id="kpiExplanationPopover" class="kpi-explanation-popover" role="tooltip" aria-hidden="true"></div>
 
     <!-- Seção de Gráficos -->
     <section class="dashboard-custos-charts">
@@ -137,7 +147,7 @@
         <div class="chart-card chart-card-full">
             <h4 class="chart-card-title"><i class="fas fa-chart-bar text-attend-gold"></i> Evolução de Gastos (Técnico, Logística e Deslocamento)</h4>
             <div class="chart-card-canvas"><canvas id="evolutionChart"></canvas></div>
-        </div>
+    </div>
     </section>
 </div>
 <script>
@@ -186,6 +196,41 @@
                     if (typeof window.refreshDashboardCustosPrivacy === 'function') window.refreshDashboardCustosPrivacy();
                 });
             }
+
+            // Popover de explicação ao clicar no ícone (i) de cada KPI
+            var popover = document.getElementById('kpiExplanationPopover');
+            function closeKpiPopover() {
+                if (popover) {
+                    popover.classList.remove('is-visible');
+                    popover.setAttribute('aria-hidden', 'true');
+                }
+            }
+            function showKpiPopover(btn) {
+                var text = btn.getAttribute('data-kpi-explanation') || btn.getAttribute('title') || '';
+                if (!popover || !text) return;
+                popover.textContent = text;
+                var rect = btn.getBoundingClientRect();
+                popover.style.left = Math.max(8, rect.left) + 'px';
+                popover.style.top = (rect.bottom + 6) + 'px';
+                popover.classList.add('is-visible');
+                popover.setAttribute('aria-hidden', 'false');
+            }
+            document.querySelectorAll('.kpi-info-icon').forEach(function(iconBtn) {
+                iconBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (popover && popover.classList.contains('is-visible') && popover.textContent === (this.getAttribute('data-kpi-explanation') || '')) {
+                        closeKpiPopover();
+                    } else {
+                        showKpiPopover(this);
+                    }
+                });
+            });
+            document.addEventListener('click', function(e) {
+                if (popover && popover.classList.contains('is-visible') && !e.target.closest('.kpi-info-icon')) {
+                    closeKpiPopover();
+                }
+            });
         });
     </script>
 {% endblock %}

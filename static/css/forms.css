@@ -1,4 +1,4 @@
-﻿/* Modal */
+/* Modal */
 .modal {
     display: none;
     position: fixed;
@@ -72,6 +72,16 @@
     margin-bottom: 20px;
     position: relative;
     z-index: 1;
+}
+
+/* Campo Chave PIX: somente leitura, não editável pelo solicitante */
+input.pix-input,
+input[id^="routePix"],
+input[id="campaignPix"],
+input[id^="tecnicoPix"] {
+    cursor: not-allowed !important;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .form-group label {

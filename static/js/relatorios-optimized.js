@@ -858,13 +858,19 @@ class RelatoriosOptimized {
                 }
             }
 
-            // Filtro de busca (inclui novos campos)
+            // Filtro de busca (inclui ID/ticket e texto)
             if (this.currentFilters.search) {
-                const searchTerm = this.currentFilters.search;
-                const searchableText = `${item.id} ${item.title} ${item.solicitante} ${item.supervisor || ''} ${item.recebedor} ${item.service || ''} ${item.clienteEmpresa || ''} ${item.cnpj || ''} ${item.chavePix || ''}`.toLowerCase();
-                if (!searchableText.includes(searchTerm)) {
+                const searchTerm = (this.currentFilters.search || '').toLowerCase().trim();
+                const itemIdStr = String(item.id || '').toLowerCase().trim();
+                const itemTicketStr = String(item.ticket || '').toLowerCase().trim();
+                // Termo só numérico: busca exata por ID ou ticket (Nº OS) — evita "11" pegar 21313, 123123123
+                if (/^\d+$/.test(searchTerm)) {
+                    if (itemIdStr === searchTerm || itemTicketStr === searchTerm) return true;
                     return false;
                 }
+                // Termo com letras ou misto: busca por "contém" em todos os campos
+                const searchableText = `${item.id} ${item.ticket || ''} ${item.title} ${item.solicitante} ${item.supervisor || ''} ${item.recebedor} ${item.service || ''} ${item.clienteEmpresa || ''} ${item.cnpj || ''} ${item.chavePix || ''}`.toLowerCase();
+                if (!searchableText.includes(searchTerm)) return false;
             }
 
             return true;

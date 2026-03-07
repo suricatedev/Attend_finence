@@ -25,7 +25,8 @@ def dashboard(request):
         todas_solicitacoes = Solicitacoes.objects.all()
         total_solicitacoes = todas_solicitacoes.count()
         pendentes = todas_solicitacoes.filter(status='pendente').count()
-        aprovadas = todas_solicitacoes.filter(status='aprovado').count()
+        # Aprovadas = já aprovadas (status aprovado) + concluídas (fluxo normal: aprovado -> concluído)
+        aprovadas = todas_solicitacoes.filter(status__in=['aprovado', 'concluido']).count()
         valor_total = todas_solicitacoes.aggregate(Sum('valor'))['valor__sum'] or 0
 
         hoje = timezone.now().date()

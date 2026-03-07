@@ -1,5 +1,6 @@
 from django.apps import apps
 from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.signals import user_logged_in
 from django.db.models.signals import post_save, pre_delete, pre_save
 
 from .audit_utils import get_current_request, pop_old_state, serialize_instance, set_old_state
@@ -79,7 +80,15 @@ def auditoria_post_save(sender, instance, created, **kwargs):
             # Para criação, todos os campos são "alterados"
             campos_alterados = list(new_data.keys())
 
-        # Criar o log de auditoria
+        # Identificar solicitação relacionada (para exibir "qual solicitação foi editada")
+        solicitacao_id = None
+        if instance._meta.model_name == 'solicitacoes':
+            solicitacao_id = instance.pk
+        elif instance._meta.model_name == 'solicitacaorotaitem' and hasattr(instance, 'solicitacao_id'):
+            solicitacao_id = instance.solicitacao_id
+        elif instance._meta.model_name == 'solicitacaotecnico' and hasattr(instance, 'solicitacao_id'):
+            solicitacao_id = instance.solicitacao_id
+
         AuditoriaLog.objects.create(
             app=instance._meta.app_label,
             modelo=instance._meta.model_name,
@@ -89,6 +98,7 @@ def auditoria_post_save(sender, instance, created, **kwargs):
             dados_anteriores=old_data,
             dados_novos=new_data if acao != 'delete' else None,
             campos_alterados=campos_alterados,
+            solicitacao_id=solicitacao_id,
             ip_address=ip_address,
             user_agent=user_agent,
             origem=origem,
@@ -103,6 +113,13 @@ def auditoria_pre_delete(sender, instance, **kwargs):
     try:
         user, ip_address, user_agent, origem = _get_request_context()
         old_data = serialize_instance(instance, sensitive_fields=SENSITIVE_FIELDS)
+        solicitacao_id = None
+        if instance._meta.model_name == 'solicitacoes':
+            solicitacao_id = instance.pk
+        elif instance._meta.model_name == 'solicitacaorotaitem' and hasattr(instance, 'solicitacao_id'):
+            solicitacao_id = instance.solicitacao_id
+        elif instance._meta.model_name == 'solicitacaotecnico' and hasattr(instance, 'solicitacao_id'):
+            solicitacao_id = instance.solicitacao_id
         AuditoriaLog.objects.create(
             app=instance._meta.app_label,
             modelo=instance._meta.model_name,
@@ -112,12 +129,37 @@ def auditoria_pre_delete(sender, instance, **kwargs):
             dados_anteriores=old_data,
             dados_novos=None,
             campos_alterados=list(old_data.keys()),
+            solicitacao_id=solicitacao_id,
             ip_address=ip_address,
             user_agent=user_agent,
             origem=origem,
         )
     except Exception as e:
         print(f"❌ Erro na auditoria (pre_delete): {str(e)}")
+
+
+def log_user_login(sender, request, user, **kwargs):
+    """Registra na auditoria quando um usuário faz login."""
+    try:
+        ip_address = (request.META.get('HTTP_X_FORWARDED_FOR') or '').split(',')[0].strip() or request.META.get('REMOTE_ADDR')
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
+        origem = request.path or '/usuarios/login/'
+        AuditoriaLog.objects.create(
+            app='auth',
+            modelo='user',
+            objeto_id=str(user.pk),
+            acao='login',
+            usuario=user,
+            dados_anteriores=None,
+            dados_novos=None,
+            campos_alterados=None,
+            solicitacao_id=None,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            origem=origem,
+        )
+    except Exception as e:
+        print(f"❌ Erro ao registrar login na auditoria: {str(e)}")
 
 
 def connect_auditoria_signals():
@@ -146,3 +188,4 @@ def connect_auditoria_signals():
 
 # Conectar os signals
 connect_auditoria_signals()
+user_logged_in.connect(log_user_login, dispatch_uid='auditoria_log_user_login')
