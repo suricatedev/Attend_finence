@@ -209,6 +209,20 @@ input[id^="tecnicoPix"] {
     cursor: not-allowed;
 }
 
+/* Em Rota: recebedor dos itens 2+ é cópia do 1º (somente leitura) */
+input.route-recebedor-locked {
+    cursor: not-allowed !important;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Técnico: nome do técnico e PIX dos itens 2+ são cópia do 1º (somente leitura) */
+input.tecnico-recebedor-locked {
+    cursor: not-allowed !important;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
 /* Estilos para campo de arquivo */
 .form-group input[type="file"] {
     padding: 8px;

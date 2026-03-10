@@ -79,7 +79,7 @@
                             <div class="form-group route-pix-field">
                                 <label for="routePix1">Chave PIX</label>
                                 <input type="text" id="routePix1" name="route_pix_1" class="pix-input" placeholder="Chave PIX será preenchida automaticamente" readonly style="background-color: #f0f0f0;">
-                                <small class="form-help">Preenchido automaticamente</small>
+                                <small class="form-help">Preenchido automaticamente. Em solicitação agrupada, todos os itens usam o mesmo recebedor e chave PIX.</small>
                             </div>
                             <div class="form-group route-cliente-empresa-field">
                                 <label for="routeClienteEmpresa1">Cliente/Empresa</label>
@@ -155,15 +155,15 @@
                             <div class="form-group route-recebedor-field">
                                 <label for="routeRecebedor2">Recebedor <span class="required">*</span></label>
                                 <div class="recebedor-dropdown-wrapper">
-                                    <input type="text" id="routeRecebedor2" name="route_recebedor_2" class="recebedor-input" placeholder="Digite ou selecione o recebedor" autocomplete="off" required>
+                                    <input type="text" id="routeRecebedor2" name="route_recebedor_2" class="recebedor-input route-recebedor-locked" placeholder="Igual ao 1º item" autocomplete="off" required readonly>
                                     <div class="recebedor-dropdown" id="recebedor-dropdown-2" style="display: none;"></div>
                                 </div>
-                                <small class="form-help">Digite para buscar ou clique para ver todos os recebedores</small>
+                                <small class="form-help">Igual ao 1º item (solicitação agrupada)</small>
                             </div>
                             <div class="form-group route-pix-field">
                                 <label for="routePix2">Chave PIX</label>
                                 <input type="text" id="routePix2" name="route_pix_2" class="pix-input" placeholder="Chave PIX será preenchida automaticamente" readonly style="background-color: #f0f0f0;">
-                                <small class="form-help">Preenchido automaticamente</small>
+                                <small class="form-help">Igual ao 1º item (solicitação agrupada)</small>
                             </div>
                             <div class="form-group route-cliente-empresa-field">
                                 <label for="routeClienteEmpresa2">Cliente/Empresa</label>
@@ -424,7 +424,7 @@
                             <div class="form-group route-pix-field">
                                 <label for="tecnicoPix1">Chave PIX</label>
                                 <input type="text" id="tecnicoPix1" name="tecnico_pix_1" class="pix-input" placeholder="Chave PIX será preenchida automaticamente" readonly style="background-color: #f0f0f0;">
-                                <small class="form-help">Preenchido automaticamente</small>
+                                <small class="form-help">Preenchido automaticamente. Em solicitação agrupada, todos os itens usam o mesmo técnico e chave PIX.</small>
                             </div>
                             
                             <!-- Segunda linha: Serviço, Cliente/Empresa, Valor Pagamento -->
@@ -876,78 +876,66 @@
                         
                         // Buscar recebedores via AJAX e popular o datalist
                         fetch('/solicitacoes/buscar-recebedores/')
-                            .then(response => response.json())
-                            .then(data => {
+                            .then(function(response) { return response.json(); })
+                            .then(function(data) {
                                 if (data.success && data.recebedores) {
-                                    // Limpar datalist existente
                                     datalist.innerHTML = '';
-                                    
-                                    // Adicionar recebedores
-                                    data.recebedores.forEach(recebedor => {
-                                        const option = document.createElement('option');
+                                    data.recebedores.forEach(function(recebedor) {
+                                        var option = document.createElement('option');
                                         option.value = recebedor.nome;
                                         option.textContent = recebedor.nome;
                                         option.setAttribute('data-pix', recebedor.chave_pix || '');
                                         datalist.appendChild(option);
                                     });
-
                                 }
                             })
-                            .catch(error => {
-                                
+                            .catch(function(error) {
                             });
                     }
                     
                     // Popular select de cliente/empresa para o novo ID dinâmico
-                    const clienteEmpresaSelect = novoId.querySelector(`select[id*="routeClienteEmpresa${novoNumero}"]`);
+                    var clienteEmpresaSelect = novoId.querySelector('select[id*="routeClienteEmpresa' + novoNumero + '"]');
                     if (clienteEmpresaSelect) {
-                        // Buscar select de referência (ID 1) para copiar opções
-                        const clienteEmpresaSelectRef = document.querySelector('#routeClienteEmpresa1');
+                        var clienteEmpresaSelectRef = document.querySelector('#routeClienteEmpresa1');
                         if (clienteEmpresaSelectRef && clienteEmpresaSelectRef.tagName === 'SELECT' && clienteEmpresaSelectRef.options.length > 1) {
-                            // Limpar opções atuais
                             clienteEmpresaSelect.innerHTML = '<option value="">Selecione o cliente/empresa</option>';
-                            
-                            // Copiar todas as opções do select de referência
-                            for (let i = 1; i < clienteEmpresaSelectRef.options.length; i++) {
-                                const option = clienteEmpresaSelectRef.options[i];
-                                const novaOption = document.createElement('option');
+                            for (var ci = 1; ci < clienteEmpresaSelectRef.options.length; ci++) {
+                                var option = clienteEmpresaSelectRef.options[ci];
+                                var novaOption = document.createElement('option');
                                 novaOption.value = option.value;
                                 novaOption.textContent = option.textContent;
                                 clienteEmpresaSelect.appendChild(novaOption);
                             }
                         } else {
-                            // Se não houver referência, buscar via AJAX
                             fetch('/solicitacoes/buscar-clientes-empresas/?q=')
-                                .then(response => response.json())
-                                .then(data => {
+                                .then(function(response) { return response.json(); })
+                                .then(function(data) {
                                     if (data.success && data.clientes_empresas) {
                                         clienteEmpresaSelect.innerHTML = '<option value="">Selecione o cliente/empresa</option>';
-                                        data.clientes_empresas.forEach(cliente => {
-                                            const option = document.createElement('option');
-                                            option.value = cliente.id;
-                                            option.textContent = cliente.nome;
-                                            clienteEmpresaSelect.appendChild(option);
+                                        data.clientes_empresas.forEach(function(cliente) {
+                                            var opt = document.createElement('option');
+                                            opt.value = cliente.id;
+                                            opt.textContent = cliente.nome;
+                                            clienteEmpresaSelect.appendChild(opt);
                                         });
                                     }
                                 })
-                                .catch(error => {
+                                .catch(function(error) {
                                     console.error('Erro ao carregar clientes/empresas:', error);
                                 });
                         }
-                        
-                        // Adicionar listener para preencher CNPJ quando selecionar cliente
                         clienteEmpresaSelect.addEventListener('change', function() {
-                            const cnpjInput = document.getElementById(`routeCnpj${novoNumero}`);
+                            var cnpjInput = document.getElementById('routeCnpj' + novoNumero);
                             if (cnpjInput && this.value) {
-                                // Buscar CNPJ do cliente selecionado
-                                fetch(`/solicitacoes/buscar-clientes-empresas/?id=${this.value}`)
-                                    .then(response => response.json())
-                                    .then(data => {
+                                var urlCnpjSel = '/solicitacoes/buscar-clientes-empresas/?id=' + encodeURIComponent(this.value);
+                                fetch(urlCnpjSel)
+                                    .then(function(response) { return response.json(); })
+                                    .then(function(data) {
                                         if (data.success && data.clientes_empresas && data.clientes_empresas.length > 0) {
                                             cnpjInput.value = data.clientes_empresas[0].cnpj || '';
                                         }
                                     })
-                                    .catch(error => {
+                                    .catch(function(error) {
                                         console.error('Erro ao buscar CNPJ:', error);
                                     });
                             } else if (cnpjInput) {
@@ -959,8 +947,8 @@
                 
                 // Calcular total inicial após adicionar ao DOM
                 // Usar múltiplos delays para garantir que o DOM está totalmente renderizado
-                requestAnimationFrame(() => {
-                    setTimeout(() => {
+                requestAnimationFrame(function() {
+                    setTimeout(function() {
                         // Verificar se o elemento ainda existe no DOM
                         const elementoVerificar = document.querySelector(`[data-route-id="${novoNumero}"]`);
                         if (elementoVerificar) {
@@ -1126,6 +1114,7 @@
                 try {
                     container.appendChild(novoId);
                     if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
+                    if (window.syncTecnicoRecebedorPixFromFirst) window.syncTecnicoRecebedorPixFromFirst();
                 } catch (error) {
                     window.criandoNovoTecnicoId = false;
                     return false;
@@ -1179,43 +1168,38 @@
                             clienteEmpresaSelect.appendChild(novaOption);
                         }
                     } else {
-                        // Se não houver referência, buscar via AJAX
                         fetch('/solicitacoes/buscar-clientes-empresas/?q=')
-                            .then(response => response.json())
-                            .then(data => {
+                            .then(function(response) { return response.json(); })
+                            .then(function(data) {
                                 if (data.success && data.clientes_empresas) {
                                     clienteEmpresaSelect.innerHTML = '<option value="">Selecione o cliente/empresa</option>';
-                                    data.clientes_empresas.forEach(cliente => {
-                                        const option = document.createElement('option');
+                                    data.clientes_empresas.forEach(function(cliente) {
+                                        var option = document.createElement('option');
                                         option.value = cliente.id;
                                         option.textContent = cliente.nome;
                                         clienteEmpresaSelect.appendChild(option);
                                     });
                                 }
                             })
-                            .catch(error => {
+                            .catch(function(error) {
                                 console.error('Erro ao carregar clientes/empresas:', error);
                             });
                     }
                     
-                    // Garantir que o select está habilitado
                     clienteEmpresaSelect.disabled = false;
                     clienteEmpresaSelect.removeAttribute('readonly');
                 }
                 
                 // PASSO 6: Configurar autocomplete para o novo ticket
-                const recebedorInput = novoId.querySelector(`#tecnicoRecebedor${novoNumero}`);
-                const pixInput = novoId.querySelector(`#tecnicoPix${novoNumero}`);
-                const dropdownId = `recebedor-dropdown-tecnico-${novoNumero}`;
+                var recebedorInput = novoId.querySelector('#tecnicoRecebedor' + novoNumero);
+                var pixInput = novoId.querySelector('#tecnicoPix' + novoNumero);
+                var dropdownId = 'recebedor-dropdown-tecnico-' + novoNumero;
                 
                 if (recebedorInput) {
-                    // Garantir que o input tem a classe correta
                     recebedorInput.classList.add('recebedor-input');
-                    
-                    // Verificar se o dropdown existe, se não, criar
-                    let dropdown = novoId.querySelector(`#${dropdownId}`);
+                    var dropdown = novoId.querySelector('#' + dropdownId);
                     if (!dropdown) {
-                        const wrapper = recebedorInput.closest('.recebedor-dropdown-wrapper');
+                        var wrapper = recebedorInput.closest('.recebedor-dropdown-wrapper');
                         if (wrapper) {
                             dropdown = document.createElement('div');
                             dropdown.id = dropdownId;
@@ -1225,17 +1209,18 @@
                         }
                     }
                     
-                    // Configurar event listeners para autocomplete (os listeners globais já devem estar ativos)
-                    // Mas vamos garantir que o PIX seja preenchido quando um recebedor for selecionado
                     recebedorInput.addEventListener('blur', function() {
-                        // A validação e preenchimento do PIX será feito pelos listeners globais
-                        // Mas podemos adicionar um fallback aqui se necessário
-                        setTimeout(() => {
+                        setTimeout(function() {
                             if (window.recebedoresGlobal && window.recebedoresGlobal.length > 0) {
-                                const nomeRecebedor = recebedorInput.value.trim();
-                                const recebedor = window.recebedoresGlobal.find(r => 
-                                    r && r.nome && r.nome.trim().toLowerCase() === nomeRecebedor.toLowerCase()
-                                );
+                                var nomeRecebedor = recebedorInput.value.trim();
+                                var recebedor = null;
+                                for (var rf = 0; rf < window.recebedoresGlobal.length; rf++) {
+                                    var r = window.recebedoresGlobal[rf];
+                                    if (r && r.nome && r.nome.trim().toLowerCase() === nomeRecebedor.toLowerCase()) {
+                                        recebedor = r;
+                                        break;
+                                    }
+                                }
                                 if (recebedor && pixInput) {
                                     pixInput.value = recebedor.chave_pix || '';
                                 }
@@ -1355,16 +1340,19 @@
                 // Se o formulário de técnico estiver ativo, NÃO desabilitar seus campos
                 if (isTecnicoActive) {
                     console.log('✅ Formulário de técnico está ativo - pulando toggleForms para preservar campos de técnico');
-                    // Garantir que os campos de técnico estejam habilitados
+                    // Habilitar campos (exceto recebedor/PIX dos itens 2+ — ficam iguais ao 1º)
                     formTecnico.querySelectorAll('input, select, textarea').forEach(field => {
-                        if (field.type !== 'file' && field.type !== 'hidden' && field.type !== 'button' && field.type !== 'submit') {
-                            field.disabled = false;
-                            if (!field.classList.contains('pix-input')) {
-                                field.removeAttribute('readonly');
-                            }
+                        if (field.type === 'file' || field.type === 'hidden' || field.type === 'button' || field.type === 'submit') return;
+                        var gr = field.closest('.tecnico-id-group');
+                        var tid = gr ? gr.getAttribute('data-tecnico-id') : '';
+                        if (tid && tid !== '1' && field.name && (field.name.indexOf('tecnico_recebedor_') === 0 || field.name.indexOf('tecnico_pix_') === 0)) return;
+                        field.disabled = false;
+                        if (!field.classList.contains('pix-input') && !field.classList.contains('tecnico-recebedor-locked')) {
+                            field.removeAttribute('readonly');
                         }
                     });
                     if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
+                    if (window.syncTecnicoRecebedorPixFromFirst) window.syncTecnicoRecebedorPixFromFirst();
                     return; // Não executar o resto da função
                 }
                 
@@ -1372,14 +1360,18 @@
                     // Mostrar formulário Em Rota
                     if (formEmRota) {
                         formEmRota.style.display = 'block';
-                        // Habilitar campos do Em Rota
+                        if (typeof carregarRecebedores === 'function') carregarRecebedores();
+                        // Habilitar campos do Em Rota (exceto recebedor/PIX dos itens 2+ — ficam iguais ao 1º)
                         formEmRota.querySelectorAll('input, select, textarea').forEach(field => {
-                            if (field.type !== 'file' && !field.readOnly) {
-                                field.disabled = false;
-                                field.removeAttribute('readonly');
-                            }
+                            if (field.type === 'file' || field.readOnly) return;
+                            var gr = field.closest('.route-id-group');
+                            var rid = gr ? gr.getAttribute('data-route-id') : '';
+                            if (rid && rid !== '1' && field.name && (field.name.indexOf('route_recebedor_') === 0 || field.name.indexOf('route_pix_') === 0)) return;
+                            field.disabled = false;
+                            field.removeAttribute('readonly');
                         });
                         if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
+                        if (window.syncEmRotaRecebedorPixFromFirst) window.syncEmRotaRecebedorPixFromFirst();
                         // Mostrar botão de adicionar ID
                         const btnAdd = document.getElementById('btnAddRouteId');
                         const addContainer = document.querySelector('.add-id-container');
@@ -1416,6 +1408,7 @@
                     if (formCasual) {
                         formCasual.style.display = 'block';
                         formCasual.style.visibility = 'visible';
+                        if (typeof carregarRecebedores === 'function') carregarRecebedores();
                         // Habilitar campos do Casual
                         formCasual.querySelectorAll('input, select, textarea').forEach(field => {
                             if (field.type !== 'file' && !field.readOnly) {
@@ -2037,7 +2030,8 @@
                         // Mostrar formulário de técnico
                         if (formTecnico) {
                             formTecnico.style.display = 'block';
-                            
+                            if (typeof carregarRecebedores === 'function') carregarRecebedores();
+                            if (typeof window.assegurarDropdownTecnico === 'function') window.assegurarDropdownTecnico();
                             // Preencher campos de anexos e prioridade
                             const tecnicoAnexos = document.getElementById('tecnicoAnexos');
                             // Anexos não podem ser preenchidos (file input não permite definir valor por segurança)
@@ -2049,14 +2043,15 @@
                             
                             // Buscar e preencher itens de técnico
                             if (dados.id) {
-                                fetch(`/solicitacoes/obter-itens-tecnico/${dados.id}/`)
-                                    .then(response => {
+                                var urlItensTec = '/solicitacoes/obter-itens-tecnico/' + dados.id + '/';
+                                fetch(urlItensTec)
+                                    .then(function(response) {
                                         if (!response.ok) {
-                                            throw new Error(`Erro ${response.status}: ${response.statusText}`);
+                                            throw new Error('Erro ' + response.status + ': ' + response.statusText);
                                         }
                                         return response.json();
                                     })
-                                    .then(resultado => {
+                                    .then(function(resultado) {
                                         if (resultado.success && resultado.itens && resultado.itens.length > 0) {
                                             console.log('✅ Itens de técnico carregados:', resultado.itens);
                                             const itens = resultado.itens;
@@ -2070,43 +2065,32 @@
                                             
                                             // Preencher primeiro item (ID 1)
                                             if (itens.length > 0) {
-                                                const item1 = itens[0];
-                                                const formatarValor = (valorRaw) => {
+                                                var item1 = itens[0];
+                                                function formatarValorItem1(valorRaw) {
                                                     if (window.formatarValorMonetario) {
                                                         return window.formatarValorMonetario(valorRaw || 0);
                                                     }
                                                     return (valorRaw || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                                                };
-                                                
-                                                const setTecnicoCampo = (campoId, valor) => {
-                                                    const campo = document.getElementById(campoId);
+                                                }
+                                                function setTecnicoCampoItem1(campoId, valor) {
+                                                    var campo = document.getElementById(campoId);
                                                     if (campo) campo.value = valor || '';
-                                                };
-                                                
-                                                setTecnicoCampo('tecnicoSolicitacao1', item1.ticket_tecnico || '');
-                                                setTecnicoCampo('tecnicoRecebedor1', item1.recebedor || '');
-                                                setTecnicoCampo('tecnicoPix1', item1.chave_pix || '');
+                                                }
+                                                setTecnicoCampoItem1('tecnicoSolicitacao1', item1.ticket_tecnico || '');
+                                                setTecnicoCampoItem1('tecnicoRecebedor1', item1.recebedor || '');
+                                                setTecnicoCampoItem1('tecnicoPix1', item1.chave_pix || '');
                                                 if (item1.servico_id) {
-                                                    setTecnicoCampo('tecnicoServico1', item1.servico_id);
+                                                    setTecnicoCampoItem1('tecnicoServico1', item1.servico_id);
                                                 }
                                                 if (item1.cliente_empresa_id) {
-                                                    setTecnicoCampo('tecnicoClienteEmpresa1', item1.cliente_empresa_id);
+                                                    setTecnicoCampoItem1('tecnicoClienteEmpresa1', item1.cliente_empresa_id);
                                                 }
-                                                const formatarValorTecnico = (valorRaw) => {
-                                                    if (window.formatarValorMonetario) {
-                                                        return window.formatarValorMonetario(valorRaw || 0);
-                                                    }
-                                                    return (valorRaw || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                                                };
-                                                
-                                                setTecnicoCampo('tecnicoValorPagamento1', formatarValorTecnico(item1.valor_pagamento_raw || 0));
-                                                setTecnicoCampo('tecnicoValorExtra1', formatarValorTecnico(item1.valor_extra_raw || 0));
-                                                setTecnicoCampo('tecnicoDataRealizacao1', item1.data_realizacao || '');
-                                                setTecnicoCampo('tecnicoDataPagamento1', item1.data_pagamento || '');
-                                                
-                                                // Preencher atividade produtiva (radio button)
-                                                const atividadeProdutiva1 = document.getElementById('atividadeProdutiva1');
-                                                const atividadeImprodutiva1 = document.getElementById('atividadeImprodutiva1');
+                                                setTecnicoCampoItem1('tecnicoValorPagamento1', formatarValorItem1(item1.valor_pagamento_raw || 0));
+                                                setTecnicoCampoItem1('tecnicoValorExtra1', formatarValorItem1(item1.valor_extra_raw || 0));
+                                                setTecnicoCampoItem1('tecnicoDataRealizacao1', item1.data_realizacao || '');
+                                                setTecnicoCampoItem1('tecnicoDataPagamento1', item1.data_pagamento || '');
+                                                var atividadeProdutiva1 = document.getElementById('atividadeProdutiva1');
+                                                var atividadeImprodutiva1 = document.getElementById('atividadeImprodutiva1');
                                                 if (item1.atividade_produtiva_bool !== undefined) {
                                                     if (atividadeProdutiva1) atividadeProdutiva1.checked = item1.atividade_produtiva_bool;
                                                     if (atividadeImprodutiva1) atividadeImprodutiva1.checked = !item1.atividade_produtiva_bool;
@@ -2116,58 +2100,56 @@
                                             }
                                             
                                             // Criar IDs dinâmicos para os demais itens
-                                            for (let i = 1; i < itens.length; i++) {
-                                                if (window.criarNovoTecnicoId) {
-                                                    window.criarNovoTecnicoId();
-                                                    
-                                                    // Aguardar um pouco para o DOM ser atualizado
-                                                    setTimeout(() => {
-                                                        const item = itens[i];
-                                                        const numero = i + 1;
-                                                        const setTecnicoCampo = (campoId, valor) => {
-                                                            const campo = document.getElementById(campoId);
-                                                            if (campo) campo.value = valor || '';
-                                                        };
-                                                        
-                                                        setTecnicoCampo(`tecnicoSolicitacao${numero}`, item.ticket_tecnico || '');
-                                                        setTecnicoCampo(`tecnicoRecebedor${numero}`, item.recebedor || '');
-                                                        setTecnicoCampo(`tecnicoPix${numero}`, item.chave_pix || '');
-                                                        if (item.servico_id) {
-                                                            setTecnicoCampo(`tecnicoServico${numero}`, item.servico_id);
-                                                        }
-                                                        if (item.cliente_empresa_id) {
-                                                            setTecnicoCampo(`tecnicoClienteEmpresa${numero}`, item.cliente_empresa_id);
-                                                        }
-                                                        const formatarValorTecnico = (valorRaw) => {
-                                                            if (window.formatarValorMonetario) {
-                                                                return window.formatarValorMonetario(valorRaw || 0);
+                                            for (var ii = 1; ii < itens.length; ii++) {
+                                                (function(idx) {
+                                                    if (window.criarNovoTecnicoId) {
+                                                        window.criarNovoTecnicoId();
+                                                        setTimeout(function() {
+                                                            var item = itens[idx];
+                                                            var numero = idx + 1;
+                                                            function setTecnicoCampoLoop(campoId, valor) {
+                                                                var campo = document.getElementById(campoId);
+                                                                if (campo) campo.value = valor || '';
                                                             }
-                                                            return (valorRaw || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                                                        };
-                                                        
-                                                        setTecnicoCampo(`tecnicoValorPagamento${numero}`, formatarValorTecnico(item.valor_pagamento_raw || 0));
-                                                        setTecnicoCampo(`tecnicoValorExtra${numero}`, formatarValorTecnico(item.valor_extra_raw || 0));
-                                                        setTecnicoCampo(`tecnicoDataRealizacao${numero}`, item.data_realizacao || '');
-                                                        setTecnicoCampo(`tecnicoDataPagamento${numero}`, item.data_pagamento || '');
-                                                        
-                                                        // Preencher atividade produtiva (radio button)
-                                                        const atividadeProdutiva = document.getElementById(`atividadeProdutiva${numero}`);
-                                                        const atividadeImprodutiva = document.getElementById(`atividadeImprodutiva${numero}`);
-                                                        if (item.atividade_produtiva_bool !== undefined) {
-                                                            if (atividadeProdutiva) atividadeProdutiva.checked = item.atividade_produtiva_bool;
-                                                            if (atividadeImprodutiva) atividadeImprodutiva.checked = !item.atividade_produtiva_bool;
-                                                        }
-                                                        
-                                                        setTecnicoCampo(`tecnicoDescricao${numero}`, item.descricao || '');
-                                                    }, 100 * i);
-                                                }
+                                                            function formatarValorTecnicoLoop(valorRaw) {
+                                                                if (window.formatarValorMonetario) {
+                                                                    return window.formatarValorMonetario(valorRaw || 0);
+                                                                }
+                                                                return (valorRaw || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                                                            }
+                                                            setTecnicoCampoLoop('tecnicoSolicitacao' + numero, item.ticket_tecnico || '');
+                                                            setTecnicoCampoLoop('tecnicoRecebedor' + numero, item.recebedor || '');
+                                                            setTecnicoCampoLoop('tecnicoPix' + numero, item.chave_pix || '');
+                                                            if (item.servico_id) {
+                                                                setTecnicoCampoLoop('tecnicoServico' + numero, item.servico_id);
+                                                            }
+                                                            if (item.cliente_empresa_id) {
+                                                                setTecnicoCampoLoop('tecnicoClienteEmpresa' + numero, item.cliente_empresa_id);
+                                                            }
+                                                            setTecnicoCampoLoop('tecnicoValorPagamento' + numero, formatarValorTecnicoLoop(item.valor_pagamento_raw || 0));
+                                                            setTecnicoCampoLoop('tecnicoValorExtra' + numero, formatarValorTecnicoLoop(item.valor_extra_raw || 0));
+                                                            setTecnicoCampoLoop('tecnicoDataRealizacao' + numero, item.data_realizacao || '');
+                                                            setTecnicoCampoLoop('tecnicoDataPagamento' + numero, item.data_pagamento || '');
+                                                            var atividadeProdutiva = document.getElementById('atividadeProdutiva' + numero);
+                                                            var atividadeImprodutiva = document.getElementById('atividadeImprodutiva' + numero);
+                                                            if (item.atividade_produtiva_bool !== undefined) {
+                                                                if (atividadeProdutiva) atividadeProdutiva.checked = item.atividade_produtiva_bool;
+                                                                if (atividadeImprodutiva) atividadeImprodutiva.checked = !item.atividade_produtiva_bool;
+                                                            }
+                                                            setTecnicoCampoLoop('tecnicoDescricao' + numero, item.descricao || '');
+                                                        }, 100 * idx);
+                                                    }
+                                                })(ii);
                                             }
+                                            setTimeout(function() {
+                                                if (window.syncTecnicoRecebedorPixFromFirst) window.syncTecnicoRecebedorPixFromFirst();
+                                            }, 100 * itens.length + 200);
                                         } else {
-                                            console.warn('⚠️ Nenhum item de técnico encontrado ou resultado inválido:', resultado);
+                                            console.warn('Nenhum item de técnico encontrado ou resultado inválido:', resultado);
                                         }
                                     })
-                                    .catch(error => {
-                                        console.error('❌ Erro ao carregar itens de técnico:', error);
+                                    .catch(function(error) {
+                                        console.error('Erro ao carregar itens de técnico:', error);
                                         alert('Erro ao carregar dados dos itens de técnico. Verifique o console para mais detalhes.');
                                     });
                             }
@@ -2243,20 +2225,24 @@
                             if (clienteField) {
                                 // Se for select, buscar o ID do cliente pelo nome
                                 if (clienteField.tagName === 'SELECT' && item.cliente_empresa) {
-                                    // Buscar cliente pelo nome para obter o ID
-                                    fetch(`/solicitacoes/buscar-clientes-empresas/?q=${encodeURIComponent(item.cliente_empresa)}`)
-                                        .then(response => response.json())
-                                        .then(data => {
+                                    var urlClienteItem = '/solicitacoes/buscar-clientes-empresas/?q=' + encodeURIComponent(item.cliente_empresa);
+                                    fetch(urlClienteItem)
+                                        .then(function(response) { return response.json(); })
+                                        .then(function(data) {
                                             if (data.success && data.clientes_empresas && data.clientes_empresas.length > 0) {
-                                                const cliente = data.clientes_empresas.find(c => 
-                                                    c.nome.toLowerCase() === item.cliente_empresa.toLowerCase()
-                                                );
+                                                var cliente = null;
+                                                for (var ck = 0; ck < data.clientes_empresas.length; ck++) {
+                                                    if (data.clientes_empresas[ck].nome && data.clientes_empresas[ck].nome.toLowerCase() === item.cliente_empresa.toLowerCase()) {
+                                                        cliente = data.clientes_empresas[ck];
+                                                        break;
+                                                    }
+                                                }
                                                 if (cliente) {
                                                     clienteField.value = cliente.id;
                                                 }
                                             }
                                         })
-                                        .catch(error => {
+                                        .catch(function(error) {
                                             console.error('Erro ao buscar cliente:', error);
                                         });
                                 } else {
@@ -2291,6 +2277,7 @@
                         if (window.calcularTotalTodosIDs) {
                             window.calcularTotalTodosIDs();
                         }
+                        if (window.syncEmRotaRecebedorPixFromFirst) window.syncEmRotaRecebedorPixFromFirst();
                     } else {
                         if (routeCasualRadio) {
                             routeCasualRadio.checked = true;
@@ -2316,20 +2303,24 @@
                         if (clienteField) {
                             // Se for select, buscar o ID do cliente pelo nome
                             if (clienteField.tagName === 'SELECT' && dados.cliente_empresa) {
-                                // Buscar cliente pelo nome para obter o ID
-                                fetch(`/solicitacoes/buscar-clientes-empresas/?q=${encodeURIComponent(dados.cliente_empresa)}`)
-                                    .then(response => response.json())
-                                    .then(data => {
+                                var urlClienteDados = '/solicitacoes/buscar-clientes-empresas/?q=' + encodeURIComponent(dados.cliente_empresa);
+                                fetch(urlClienteDados)
+                                    .then(function(response) { return response.json(); })
+                                    .then(function(data) {
                                         if (data.success && data.clientes_empresas && data.clientes_empresas.length > 0) {
-                                            const cliente = data.clientes_empresas.find(c => 
-                                                c.nome.toLowerCase() === dados.cliente_empresa.toLowerCase()
-                                            );
-                                            if (cliente) {
-                                                clienteField.value = cliente.id;
+                                            var clienteD = null;
+                                            for (var cd = 0; cd < data.clientes_empresas.length; cd++) {
+                                                if (data.clientes_empresas[cd].nome && data.clientes_empresas[cd].nome.toLowerCase() === dados.cliente_empresa.toLowerCase()) {
+                                                    clienteD = data.clientes_empresas[cd];
+                                                    break;
+                                                }
+                                            }
+                                            if (clienteD) {
+                                                clienteField.value = clienteD.id;
                                             }
                                         }
                                     })
-                                    .catch(error => {
+                                    .catch(function(error) {
                                         console.error('Erro ao buscar cliente:', error);
                                     });
                             } else {
@@ -2536,9 +2527,10 @@
                                     primeiroRecebedorInvalido.focus();
                                 }
                                 
+                                var listaInv = validacaoRecebedores.recebedoresInvalidos.map(function(r) { return '• ' + r; }).join('\n');
                                 alert('❌ Não é possível criar a solicitação!\n\n' +
                                       'Por favor, corrija os seguintes campos:\n' +
-                                      validacaoRecebedores.recebedoresInvalidos.map(r => `• ${r}`).join('\n') +
+                                      listaInv +
                                       '\n\nTodos os recebedores devem estar cadastrados no sistema.');
                                 
                                 return false;
@@ -2558,16 +2550,19 @@
                             console.log('✅ modoTecnico definido como true no início da validação');
                         }
                         
-                        // Formulário de técnico ativo - garantir que todos os campos estejam habilitados
+                        // Formulário de técnico ativo - habilitar campos (exceto recebedor/PIX dos itens 2+)
                         formTecnico.querySelectorAll('input, select, textarea').forEach(field => {
-                            if (field.type !== 'file' && field.type !== 'hidden' && field.type !== 'button' && field.type !== 'submit') {
-                                field.disabled = false;
-                                if (!field.classList.contains('pix-input')) {
-                                    field.removeAttribute('readonly');
-                                }
+                            if (field.type === 'file' || field.type === 'hidden' || field.type === 'button' || field.type === 'submit') return;
+                            var gr = field.closest('.tecnico-id-group');
+                            var tid = gr ? gr.getAttribute('data-tecnico-id') : '';
+                            if (tid && tid !== '1' && field.name && (field.name.indexOf('tecnico_recebedor_') === 0 || field.name.indexOf('tecnico_pix_') === 0)) return;
+                            field.disabled = false;
+                            if (!field.classList.contains('pix-input') && !field.classList.contains('tecnico-recebedor-locked')) {
+                                field.removeAttribute('readonly');
+                            }
                                 // Garantir que selects tenham pelo menos uma opção
                                 if (field.tagName === 'SELECT' && field.options.length === 0) {
-                                    console.warn(`⚠️ Select ${field.id || field.name} está vazio - precisamos popular`);
+                                    console.warn('Select ' + (field.id || field.name) + ' está vazio - precisamos popular');
                                     // Tentar popular do select de referência
                                     const selectRef = document.querySelector('#tecnicoServico1');
                                     if (selectRef && selectRef.options.length > 0) {
@@ -2585,9 +2580,9 @@
                                         }
                                     }
                                 }
-                            }
                         });
                         if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
+                        if (window.syncTecnicoRecebedorPixFromFirst) window.syncTecnicoRecebedorPixFromFirst();
                         
                         // Validar recebedores do formulário de técnico (validação específica)
                         try {
@@ -2602,9 +2597,10 @@
                                     primeiroRecebedorInvalido.focus();
                                 }
                                 
+                                var listaInvTec = validacaoRecebedores.recebedoresInvalidos.map(function(r) { return '• ' + r; }).join('\n');
                                 alert('❌ Não é possível criar a solicitação de técnico!\n\n' +
                                       'Por favor, corrija os seguintes campos:\n' +
-                                      validacaoRecebedores.recebedoresInvalidos.map(r => `• ${r}`).join('\n') +
+                                      listaInvTec +
                                       '\n\nTodos os técnicos devem estar cadastrados no sistema.');
                                 
                                 return false;
@@ -3172,19 +3168,81 @@
                 var isPix = (t.classList && t.classList.contains('pix-input')) || (t.id && (t.id.indexOf('routePix') === 0 || t.id === 'campaignPix' || t.id.indexOf('tecnicoPix') === 0));
                 if (isPix) t.setAttribute('readonly', 'readonly');
             }, true);
-            
+
+            /**
+             * Em solicitação agrupada (Em Rota), todos os itens devem ter o MESMO recebedor e chave PIX.
+             * Copia do 1º item para os demais e bloqueia campos recebedor/PIX dos itens 2+.
+             */
+            window.syncEmRotaRecebedorPixFromFirst = function() {
+                var formEmRota = document.getElementById('formEmRota');
+                if (!formEmRota || formEmRota.style.display === 'none') return;
+                var recebedor1 = document.getElementById('routeRecebedor1');
+                var pix1 = document.getElementById('routePix1');
+                if (!recebedor1 || !pix1) return;
+                var valorRecebedor = (recebedor1.value || '').trim();
+                var valorPix = (pix1.value || '').trim();
+                formEmRota.querySelectorAll('.route-id-group').forEach(function(group) {
+                    var routeId = group.getAttribute('data-route-id');
+                    if (!routeId || routeId === '1') return;
+                    var recInput = group.querySelector('input[name^="route_recebedor_"]');
+                    var pixInput = group.querySelector('input[name^="route_pix_"]');
+                    if (recInput) {
+                        recInput.value = valorRecebedor;
+                        recInput.setAttribute('readonly', 'readonly');
+                        recInput.classList.add('route-recebedor-locked');
+                    }
+                    if (pixInput) {
+                        pixInput.value = valorPix;
+                        pixInput.setAttribute('readonly', 'readonly');
+                        pixInput.classList.add('pix-input');
+                    }
+                });
+                if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
+            };
+
+            /**
+             * Em solicitação agrupada por técnico, todos os itens devem ter o MESMO recebedor (nome do técnico) e chave PIX.
+             * Copia do 1º item para os demais e bloqueia campos recebedor/PIX dos itens 2+.
+             */
+            window.syncTecnicoRecebedorPixFromFirst = function() {
+                var formTecnico = document.getElementById('formTecnico');
+                if (!formTecnico || formTecnico.style.display === 'none') return;
+                var recebedor1 = document.getElementById('tecnicoRecebedor1');
+                var pix1 = document.getElementById('tecnicoPix1');
+                if (!recebedor1 || !pix1) return;
+                var valorRecebedor = (recebedor1.value || '').trim();
+                var valorPix = (pix1.value || '').trim();
+                formTecnico.querySelectorAll('.tecnico-id-group').forEach(function(group) {
+                    var tecnicoId = group.getAttribute('data-tecnico-id');
+                    if (!tecnicoId || tecnicoId === '1') return;
+                    var recInput = group.querySelector('input[name^="tecnico_recebedor_"]');
+                    var pixInput = group.querySelector('input[name^="tecnico_pix_"]');
+                    if (recInput) {
+                        recInput.value = valorRecebedor;
+                        recInput.setAttribute('readonly', 'readonly');
+                        recInput.classList.add('tecnico-recebedor-locked');
+                    }
+                    if (pixInput) {
+                        pixInput.value = valorPix;
+                        pixInput.setAttribute('readonly', 'readonly');
+                        pixInput.classList.add('pix-input');
+                    }
+                });
+                if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
+            };
+
             // Armazenar lista global de recebedores
             // Variável global para recebedores
             if (typeof window.recebedoresGlobal === 'undefined') {
                 window.recebedoresGlobal = [];
             }
-            let recebedoresGlobal = window.recebedoresGlobal;
+            var recebedoresGlobal = window.recebedoresGlobal;
             
             // Carregar lista de recebedores ao carregar a página
             function carregarRecebedores() {
                 return fetch('/solicitacoes/buscar-recebedores/')
-                    .then(response => response.json())
-                    .then(data => {
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
                         if (data.success && data.recebedores) {
                             window.recebedoresGlobal = data.recebedores || [];
                             recebedoresGlobal = window.recebedoresGlobal;
@@ -3195,8 +3253,7 @@
                             return [];
                         }
                     })
-                    .catch(error => {
-                        
+                    .catch(function(error) {
                         window.recebedoresGlobal = [];
                         recebedoresGlobal = [];
                         return [];
@@ -3209,7 +3266,7 @@
                 const formGroup = recebedorInput.closest('.route-recebedor-field');
                 
                 // Remover mensagem de erro anterior
-                const errorMsg = formGroup?.querySelector('.recebedor-error-message');
+                const errorMsg = formGroup ? formGroup.querySelector('.recebedor-error-message') : null;
                 if (errorMsg) {
                     errorMsg.remove();
                 }
@@ -3229,9 +3286,9 @@
                     return true;
                 }
                 
-                    const recebedorExiste = window.recebedoresGlobal.some(r =>
-                    r && r.nome && r.nome.trim().toLowerCase() === nomeRecebedor.toLowerCase()
-                );
+                    var recebedorExiste = window.recebedoresGlobal.some(function(r) {
+                    return r && r.nome && r.nome.trim().toLowerCase() === nomeRecebedor.toLowerCase();
+                });
                 
                 if (!recebedorExiste) {
                     // Criar e mostrar mensagem de erro
@@ -3240,7 +3297,7 @@
                     errorDiv.textContent = '⚠️ Este recebedor não está cadastrado no sistema.';
                     
                     // Inserir após o form-help
-                    const formHelp = formGroup?.querySelector('.form-help');
+                    const formHelp = formGroup ? formGroup.querySelector('.form-help') : null;
                     if (formHelp) {
                         formHelp.insertAdjacentElement('afterend', errorDiv);
                     } else {
@@ -3312,18 +3369,19 @@
                         
                         // Criar ou atualizar mensagem de erro
                         const formGroup = recebedorInput.closest('.route-recebedor-field');
-                        const label = formGroup?.querySelector('label')?.textContent?.trim() || 'Recebedor';
+                        var labelEl = formGroup ? formGroup.querySelector('label') : null;
+                        const label = (labelEl && labelEl.textContent ? labelEl.textContent.trim() : '') || 'Recebedor';
                         recebedoresInvalidos.push(label);
                         
                         // Verificar se já existe mensagem de erro
-                        const errorMsg = formGroup?.querySelector('.recebedor-error-message');
+                        const errorMsg = formGroup ? formGroup.querySelector('.recebedor-error-message') : null;
                         if (!errorMsg) {
                             // Criar mensagem de erro
                             const errorDiv = document.createElement('div');
                             errorDiv.className = 'recebedor-error-message';
                             errorDiv.textContent = '⚠️ Este recebedor não está cadastrado no sistema.';
                             
-                            const formHelp = formGroup?.querySelector('.form-help');
+                            const formHelp = formGroup ? formGroup.querySelector('.form-help') : null;
                             if (formHelp) {
                                 formHelp.insertAdjacentElement('afterend', errorDiv);
                             } else {
@@ -3361,7 +3419,7 @@
                 if (e.target.classList.contains('recebedor-input')) {
                     const recebedorInput = e.target;
                     const formGroup = recebedorInput.closest('.route-recebedor-field');
-                    const errorMsg = formGroup?.querySelector('.recebedor-error-message');
+                    const errorMsg = formGroup ? formGroup.querySelector('.recebedor-error-message') : null;
                     if (errorMsg) {
                         errorMsg.remove();
                         recebedorInput.classList.remove('recebedor-input-error');
@@ -3389,39 +3447,61 @@
                     return;
                 }
                 
-                // Garantir que estamos usando o input correto
-                const recebedorInput = input.classList.contains('recebedor-input') 
+                var recebedorInput = input.classList.contains('recebedor-input') 
                     ? input 
                     : document.getElementById(input.id);
                 
                 if (!recebedorInput || !recebedorInput.classList.contains('recebedor-input')) {
-                    
                     return;
                 }
                 
-                const dropdown = document.getElementById(dropdownId);
-                if (!dropdown) {
-                    
-                    return;
+                // Preferir dropdown LOCAL (dentro do wrapper do input) para aparecer corretamente no modal; senão usar global no body
+                var wrapper = recebedorInput.closest('.recebedor-dropdown-wrapper');
+                var localDropdown = document.getElementById(dropdownId);
+                var useLocal = localDropdown && wrapper && wrapper.contains(localDropdown);
+                var dropdown;
+                if (useLocal) {
+                    dropdown = localDropdown;
+                    dropdown.dataset.currentDropdownId = dropdownId;
+                } else {
+                    dropdown = document.getElementById('recebedor-dropdown-global');
+                    if (!dropdown) {
+                        dropdown = document.createElement('div');
+                        dropdown.id = 'recebedor-dropdown-global';
+                        dropdown.className = 'recebedor-dropdown';
+                        dropdown.setAttribute('aria-hidden', 'true');
+                        document.body.appendChild(dropdown);
+                    }
+                    dropdown.dataset.currentDropdownId = dropdownId;
+                    if (dropdown.parentNode !== document.body) {
+                        document.body.appendChild(dropdown);
+                    }
                 }
                 
                 // Fechar todos os outros dropdowns de recebedor antes de abrir este
-                document.querySelectorAll('.recebedor-dropdown').forEach(otherDropdown => {
-                    if (otherDropdown.id !== dropdownId && otherDropdown.classList.contains('active')) {
+                document.querySelectorAll('.recebedor-dropdown').forEach(function(otherDropdown) {
+                    if (otherDropdown !== dropdown && otherDropdown.classList.contains('active')) {
                         otherDropdown.classList.remove('active');
                         otherDropdown.style.display = 'none';
-                        const otherFormGroup = recebedorInput.closest('.route-recebedor-field');
-                        if (otherFormGroup) {
-                            otherFormGroup.classList.remove('has-active-dropdown');
-                        }
                     }
                 });
+                document.querySelectorAll('.route-recebedor-field.has-active-dropdown').forEach(function(fg) { fg.classList.remove('has-active-dropdown'); });
                 
-                // Se recebedores ainda não foram carregados, carregar primeiro
-                if (!recebedoresGlobal || recebedoresGlobal.length === 0) {
-                    carregarRecebedores().then(() => {
-                        setTimeout(() => mostrarDropdownRecebedores(recebedorInput, dropdownId), 100);
-                    });
+                // Se recebedores ainda não foram carregados, mostrar dropdown "Carregando..." e carregar em seguida
+                var listaRecebedores = window.recebedoresGlobal;
+                if (!listaRecebedores || listaRecebedores.length === 0) {
+                    dropdown.innerHTML = '<div class="recebedor-dropdown-item empty">Carregando...</div>';
+                    if (useLocal) {
+                        dropdown.style.cssText = "display:block !important; visibility:visible !important; opacity:1 !important; pointer-events:auto !important; position:absolute !important; top:100% !important; left:0 !important; width:100% !important; max-height:300px !important; overflow-y:auto !important; z-index:99999 !important; background:#fff !important; border:1px solid #d1d5db !important; box-shadow:0 4px 12px rgba(0,0,0,0.15) !important; border-radius:0 0 8px 8px !important;";
+                    } else {
+                        posicionarDropdownGlobal(dropdown, recebedorInput);
+                    }
+                    var formGroup = recebedorInput.closest('.route-recebedor-field');
+                    if (formGroup) formGroup.classList.add('has-active-dropdown');
+                    dropdown.classList.add('active');
+                    carregarRecebedores()
+                        .then(function() { setTimeout(function() { mostrarDropdownRecebedores(recebedorInput, dropdownId); }, 80); })
+                        .catch(function() { setTimeout(function() { mostrarDropdownRecebedores(recebedorInput, dropdownId); }, 80); });
                     return;
                 }
                 
@@ -3429,82 +3509,47 @@
                 dropdown.innerHTML = '';
                 
                 // Filtrar recebedores baseado no texto digitado
-                const textoBusca = recebedorInput.value.toLowerCase().trim();
-                let recebedoresFiltrados;
-                
+                var textoBusca = (recebedorInput.value || '').toLowerCase().trim();
+                var recebedoresFiltrados;
                 if (textoBusca && textoBusca.length > 0) {
-                    recebedoresFiltrados = window.recebedoresGlobal.filter(r => 
-                        r && r.nome && r.nome.toLowerCase().includes(textoBusca)
-                    );
+                    recebedoresFiltrados = (window.recebedoresGlobal || []).filter(function(r) {
+                        return r && r.nome && r.nome.toLowerCase().indexOf(textoBusca) !== -1;
+                    });
                 } else {
-                    recebedoresFiltrados = window.recebedoresGlobal.filter(r => r && r.nome);
+                    recebedoresFiltrados = (window.recebedoresGlobal || []).filter(function(r) { return r && r.nome; });
                 }
                 
                 // Se não há recebedores, mostrar mensagem
                 if (!recebedoresFiltrados || recebedoresFiltrados.length === 0) {
                     dropdown.innerHTML = '<div class="recebedor-dropdown-item empty">Nenhum recebedor encontrado</div>';
                     
-                    // Fechar outros dropdowns
-                    document.querySelectorAll('.recebedor-dropdown').forEach(otherDropdown => {
-                        if (otherDropdown.id !== dropdownId) {
+                    document.querySelectorAll('.recebedor-dropdown').forEach(function(otherDropdown) {
+                        if (otherDropdown !== dropdown) {
                             otherDropdown.classList.remove('active');
                             otherDropdown.style.display = 'none';
                         }
                     });
                     
-                    // Calcular posição usando getBoundingClientRect para position: fixed
-                    const inputRect = recebedorInput.getBoundingClientRect();
-                    
-                    // Mostrar dropdown
-                    dropdown.style.display = 'block';
-                    
-                    // Usar position: fixed para garantir que apareça acima de TUDO
-                    dropdown.style.position = 'fixed';
-                    dropdown.style.top = (inputRect.bottom + window.scrollY) + 'px';
-                    dropdown.style.left = (inputRect.left + window.scrollX) + 'px';
-                    dropdown.style.width = inputRect.width + 'px';
-                    dropdown.style.setProperty('z-index', '2147483647', 'important'); // Z-index máximo absoluto
-                    dropdown.style.margin = '0';
-                    
-                    // Adicionar classe ao form-group
-                    const formGroup = recebedorInput.closest('.route-recebedor-field');
-                    if (formGroup) {
-                        formGroup.classList.add('has-active-dropdown');
+                    if (useLocal) {
+                        dropdown.style.cssText = "display:block !important; visibility:visible !important; opacity:1 !important; pointer-events:auto !important; position:absolute !important; top:100% !important; left:0 !important; width:100% !important; max-height:300px !important; overflow-y:auto !important; z-index:99999 !important; background:#fff !important; border:1px solid #d1d5db !important; box-shadow:0 4px 12px rgba(0,0,0,0.15) !important; border-radius:0 0 8px 8px !important;";
+                    } else {
+                        posicionarDropdownGlobal(dropdown, recebedorInput);
                     }
-                    
-                    setTimeout(() => {
-                        dropdown.classList.add('active');
-                        // Recalcular posição após renderização
-                        const newRect = recebedorInput.getBoundingClientRect();
-                        dropdown.style.top = (newRect.bottom + window.scrollY) + 'px';
-                        dropdown.style.left = (newRect.left + window.scrollX) + 'px';
-                        dropdown.style.width = newRect.width + 'px';
-                        dropdown.style.position = 'fixed';
-                        dropdown.style.setProperty('z-index', '2147483647', 'important'); // Z-index máximo absoluto
-                    }, 10);
-                    
+                    var formGroup = recebedorInput.closest('.route-recebedor-field');
+                    if (formGroup) formGroup.classList.add('has-active-dropdown');
+                    dropdown.classList.add('active');
                     return;
                 }
                 
-                // Criar itens do dropdown
-                recebedoresFiltrados.forEach(recebedor => {
+                // Criar itens do dropdown (usar concatenação para compatibilidade)
+                var svgPixPath = 'M 25 0.0390625 C 22.84 0.0390625 20.799531 0.88015625 19.269531 2.4101562 L 9.6796875 12 L 12.929688 12 C 14.529687 12 16.039922 12.619766 17.169922 13.759766 L 23.939453 20.529297 C 24.519453 21.109297 25.480547 21.109531 26.060547 20.519531 L 32.830078 13.759766 C 33.960078 12.619766 35.470312 12 37.070312 12 L 40.320312 12 L 30.730469 2.4101562 C 29.200469 0.88015625 27.16 0.0390625 25 0.0390625 z M 7.6796875 14 L 2.4101562 19.269531 C -0.74984375 22.429531 -0.74984375 27.570469 2.4101562 30.730469 L 7.6796875 36 L 12.929688 36 C 13.999687 36 14.999766 35.580078 15.759766 34.830078 L 22.529297 28.060547 C 23.889297 26.700547 26.110703 26.700547 27.470703 28.060547 L 34.240234 34.830078 C 35.000234 35.580078 36.000312 36 37.070312 36 L 42.320312 36 L 47.589844 30.730469 C 50.749844 27.570469 50.749844 22.429531 47.589844 19.269531 L 42.320312 14 L 37.070312 14 C 36.000313 14 35.000234 14.419922 34.240234 15.169922 L 27.470703 21.939453 C 26.790703 22.619453 25.9 22.960938 25 22.960938 C 24.1 22.960937 23.209297 22.619453 22.529297 21.939453 L 15.759766 15.169922 C 14.999766 14.419922 13.999688 14 12.929688 14 L 7.6796875 14 z M 25 29.037109 C 24.615 29.038359 24.229453 29.185469 23.939453 29.480469 L 17.169922 36.240234 C 16.039922 37.380234 14.529687 38 12.929688 38 L 9.6796875 38 L 19.269531 47.589844 C 20.799531 49.119844 22.84 49.960938 25 49.960938 C 27.16 49.960938 29.200469 49.119844 30.730469 47.589844 L 40.320312 38 L 37.070312 38 C 35.470313 38 33.960078 37.380234 32.830078 36.240234 L 26.060547 29.470703 C 25.770547 29.180703 25.385 29.035859 25 29.037109 z';
+                recebedoresFiltrados.forEach(function(recebedor) {
                     if (!recebedor || !recebedor.nome) return;
                     
-                    const item = document.createElement('div');
+                    var item = document.createElement('div');
                     item.className = 'recebedor-dropdown-item';
-                    item.innerHTML = `
-                        <div class="recebedor-item-content">
-                            <span class="recebedor-nome"><i class="fas fa-user"></i> ${recebedor.nome}</span>
-                            ${recebedor.chave_pix ? `
-                                <div class="recebedor-pix-line">
-                                    <svg class="recebedor-icon-svg" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 50 50">
-                                        <path d="M 25 0.0390625 C 22.84 0.0390625 20.799531 0.88015625 19.269531 2.4101562 L 9.6796875 12 L 12.929688 12 C 14.529687 12 16.039922 12.619766 17.169922 13.759766 L 23.939453 20.529297 C 24.519453 21.109297 25.480547 21.109531 26.060547 20.519531 L 32.830078 13.759766 C 33.960078 12.619766 35.470312 12 37.070312 12 L 40.320312 12 L 30.730469 2.4101562 C 29.200469 0.88015625 27.16 0.0390625 25 0.0390625 z M 7.6796875 14 L 2.4101562 19.269531 C -0.74984375 22.429531 -0.74984375 27.570469 2.4101562 30.730469 L 7.6796875 36 L 12.929688 36 C 13.999687 36 14.999766 35.580078 15.759766 34.830078 L 22.529297 28.060547 C 23.889297 26.700547 26.110703 26.700547 27.470703 28.060547 L 34.240234 34.830078 C 35.000234 35.580078 36.000312 36 37.070312 36 L 42.320312 36 L 47.589844 30.730469 C 50.749844 27.570469 50.749844 22.429531 47.589844 19.269531 L 42.320312 14 L 37.070312 14 C 36.000313 14 35.000234 14.419922 34.240234 15.169922 L 27.470703 21.939453 C 26.790703 22.619453 25.9 22.960938 25 22.960938 C 24.1 22.960937 23.209297 22.619453 22.529297 21.939453 L 15.759766 15.169922 C 14.999766 14.419922 13.999688 14 12.929688 14 L 7.6796875 14 z M 25 29.037109 C 24.615 29.038359 24.229453 29.185469 23.939453 29.480469 L 17.169922 36.240234 C 16.039922 37.380234 14.529687 38 12.929688 38 L 9.6796875 38 L 19.269531 47.589844 C 20.799531 49.119844 22.84 49.960938 25 49.960938 C 27.16 49.960938 29.200469 49.119844 30.730469 47.589844 L 40.320312 38 L 37.070312 38 C 35.470313 38 33.960078 37.380234 32.830078 36.240234 L 26.060547 29.470703 C 25.770547 29.180703 25.385 29.035859 25 29.037109 z" fill="#6b7280"/>
-                                    </svg>
-                                    <span class="recebedor-pix">${recebedor.chave_pix}</span>
-                                </div>
-                            ` : ''}
-                        </div>
-                    `;
+                    var pixHtml = (recebedor.chave_pix) ? '<div class="recebedor-pix-line"><svg class="recebedor-icon-svg" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 50 50"><path d="' + svgPixPath + '" fill="#6b7280"/></svg><span class="recebedor-pix">' + (recebedor.chave_pix || '') + '</span></div>' : '';
+                    item.innerHTML = '<div class="recebedor-item-content"><span class="recebedor-nome"><i class="fas fa-user"></i> ' + (recebedor.nome || '') + '</span>' + pixHtml + '</div>';
                     item.dataset.nome = recebedor.nome;
                     item.dataset.pix = recebedor.chave_pix || '';
                     
@@ -3512,25 +3557,21 @@
                         e.preventDefault();
                         e.stopPropagation();
                         
-                        // Preencher input com o nome selecionado
                         recebedorInput.value = recebedor.nome;
                         
-                        // Remover mensagem de erro se existir
-                        const formGroup = recebedorInput.closest('.route-recebedor-field');
-                        const errorMsg = formGroup?.querySelector('.recebedor-error-message');
+                        var formGroup = recebedorInput.closest('.route-recebedor-field');
+                        var errorMsg = formGroup ? formGroup.querySelector('.recebedor-error-message') : null;
                         if (errorMsg) {
                             errorMsg.remove();
                             recebedorInput.classList.remove('recebedor-input-error');
                         }
                         
-                        // Preencher chave PIX
-                        let pixInput = null;
-                        if (recebedorInput.id.includes('routeRecebedor')) {
+                        var pixInput = null;
+                        if (recebedorInput.id.indexOf('routeRecebedor') !== -1) {
                             pixInput = document.getElementById(recebedorInput.id.replace('routeRecebedor', 'routePix'));
-                        } else if (recebedorInput.id.startsWith('tecnicoRecebedor')) {
-                            // Suportar tanto tecnicoRecebedor quanto tecnicoRecebedor1, tecnicoRecebedor2, etc.
-                            const numeroID = recebedorInput.id.replace('tecnicoRecebedor', '');
-                            pixInput = document.getElementById(numeroID ? `tecnicoPix${numeroID}` : 'tecnicoPix');
+                        } else if (recebedorInput.id.indexOf('tecnicoRecebedor') === 0) {
+                            var numeroID = recebedorInput.id.replace('tecnicoRecebedor', '');
+                            pixInput = document.getElementById(numeroID ? ('tecnicoPix' + numeroID) : 'tecnicoPix');
                         } else {
                             pixInput = document.getElementById('campaignPix');
                         }
@@ -3538,6 +3579,8 @@
                         if (pixInput) {
                             pixInput.value = recebedor.chave_pix || '';
                             if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
+                            if (recebedorInput.id === 'routeRecebedor1' && window.syncEmRotaRecebedorPixFromFirst) window.syncEmRotaRecebedorPixFromFirst();
+                            if (recebedorInput.id === 'tecnicoRecebedor1' && window.syncTecnicoRecebedorPixFromFirst) window.syncTecnicoRecebedorPixFromFirst();
                         }
                         
                         // Fechar dropdown
@@ -3550,59 +3593,61 @@
                     dropdown.appendChild(item);
                 });
                 
-                // Fechar todos os outros dropdowns primeiro
-                document.querySelectorAll('.recebedor-dropdown').forEach(otherDropdown => {
-                    if (otherDropdown.id !== dropdownId) {
+                // Fechar outros dropdowns (não fechar o global que estamos usando)
+                document.querySelectorAll('.recebedor-dropdown').forEach(function(otherDropdown) {
+                    if (otherDropdown !== dropdown) {
                         otherDropdown.classList.remove('active');
                         otherDropdown.style.display = 'none';
-                        const otherFormGroup = recebedorInput.closest('.route-recebedor-field');
-                        if (otherFormGroup) {
-                            otherFormGroup.classList.remove('has-active-dropdown');
-                        }
                     }
                 });
+                document.querySelectorAll('.route-recebedor-field.has-active-dropdown').forEach(function(fg) { fg.classList.remove('has-active-dropdown'); });
+                var formGroup = recebedorInput.closest('.route-recebedor-field');
+                if (formGroup) formGroup.classList.add('has-active-dropdown');
                 
-                // Calcular posição usando getBoundingClientRect para position: fixed
-                const inputRect = recebedorInput.getBoundingClientRect();
-                
-                // Mostrar dropdown
-                dropdown.style.display = 'block';
-                
-                // Usar position: fixed para garantir que apareça acima de TUDO
-                dropdown.style.position = 'fixed';
-                dropdown.style.top = (inputRect.bottom + window.scrollY) + 'px';
-                dropdown.style.left = (inputRect.left + window.scrollX) + 'px';
-                dropdown.style.width = inputRect.width + 'px';
-                dropdown.style.setProperty('z-index', '2147483647', 'important'); // Z-index máximo absoluto
-                dropdown.style.margin = '0';
-                
-                // Adicionar classe ao form-group para ajustar z-index
-                const formGroup = recebedorInput.closest('.route-recebedor-field');
-                if (formGroup) {
-                    formGroup.classList.add('has-active-dropdown');
+                dropdown.classList.add('active');
+                if (useLocal) {
+                    dropdown.style.cssText = "display:block !important; visibility:visible !important; opacity:1 !important; pointer-events:auto !important; position:absolute !important; top:100% !important; left:0 !important; width:100% !important; max-height:300px !important; overflow-y:auto !important; z-index:99999 !important; background:#fff !important; border:1px solid #d1d5db !important; box-shadow:0 4px 12px rgba(0,0,0,0.15) !important; border-radius:0 0 8px 8px !important;";
+                } else {
+                    posicionarDropdownGlobal(dropdown, recebedorInput);
+                    requestAnimationFrame(function() { posicionarDropdownGlobal(dropdown, recebedorInput); });
+                    setTimeout(function() { posicionarDropdownGlobal(dropdown, recebedorInput); }, 50);
                 }
-                
-                // Adicionar classe active após pequeno delay para animação
-                setTimeout(() => {
-                    dropdown.classList.add('active');
-                    // Recalcular posição após renderização
-                    const newRect = recebedorInput.getBoundingClientRect();
-                    dropdown.style.top = (newRect.bottom + window.scrollY) + 'px';
-                    dropdown.style.left = (newRect.left + window.scrollX) + 'px';
-                    dropdown.style.width = newRect.width + 'px';
-                    dropdown.style.position = 'fixed';
-                    dropdown.style.setProperty('z-index', '2147483647', 'important'); // Z-index máximo absoluto
-                }, 10);
+            }
+            
+            // Posiciona o dropdown global abaixo do input (position fixed = coordenadas do viewport)
+            function posicionarDropdownGlobal(dropdown, recebedorInput) {
+                if (!dropdown || !recebedorInput) return;
+                var r = recebedorInput.getBoundingClientRect();
+                dropdown.style.setProperty('display', 'block', 'important');
+                dropdown.style.setProperty('visibility', 'visible', 'important');
+                dropdown.style.setProperty('opacity', '1', 'important');
+                dropdown.style.setProperty('pointer-events', 'auto', 'important');
+                dropdown.style.setProperty('position', 'fixed', 'important');
+                dropdown.style.setProperty('top', r.bottom + 'px', 'important');
+                dropdown.style.setProperty('left', r.left + 'px', 'important');
+                dropdown.style.setProperty('width', Math.max(r.width, 280) + 'px', 'important');
+                dropdown.style.setProperty('max-height', '300px', 'important');
+                dropdown.style.setProperty('min-height', '40px', 'important');
+                dropdown.style.setProperty('z-index', '2147483647', 'important');
+                dropdown.style.setProperty('margin', '0', 'important');
+                dropdown.style.setProperty('overflow-y', 'auto', 'important');
+                dropdown.style.setProperty('background', '#ffffff', 'important');
+                dropdown.style.setProperty('border', '1px solid #d1d5db', 'important');
+                dropdown.style.setProperty('box-shadow', "0 4px 12px rgba(0,0,0,0.15)", 'important');
+                dropdown.style.setProperty('border-radius', '0 0 8px 8px', 'important');
             }
             
             // Função para fechar dropdown e remover classe
             function fecharDropdownRecebedor(dropdownId) {
-                const dropdown = document.getElementById(dropdownId);
+                var dropdown = document.getElementById(dropdownId);
+                var globalDropdown = document.getElementById('recebedor-dropdown-global');
+                if (globalDropdown && globalDropdown.dataset.currentDropdownId === dropdownId) {
+                    dropdown = globalDropdown;
+                }
                 if (dropdown) {
-                    dropdown.style.display = 'none';
+                    dropdown.style.setProperty('display', 'none', 'important');
+                    dropdown.style.setProperty('visibility', 'hidden', 'important');
                     dropdown.classList.remove('active');
-                    
-                    // Remover listeners de scroll e resize
                     if (dropdown._scrollListener) {
                         window.removeEventListener('scroll', dropdown._scrollListener, true);
                         delete dropdown._scrollListener;
@@ -3611,33 +3656,61 @@
                         window.removeEventListener('resize', dropdown._resizeListener, true);
                         delete dropdown._resizeListener;
                     }
-                    
-                    // Remover classe do form-group
-                    const formGroup = dropdown.closest('.route-recebedor-field');
-                    if (formGroup) {
-                        formGroup.classList.remove('has-active-dropdown');
-                    }
+                    var formGroup = dropdown.closest ? dropdown.closest('.route-recebedor-field') : null;
+                    if (formGroup) formGroup.classList.remove('has-active-dropdown');
                 }
+                document.querySelectorAll('.route-recebedor-field.has-active-dropdown').forEach(function(fg) { fg.classList.remove('has-active-dropdown'); });
             }
             
-            // Função para fechar dropdown ao clicar fora
+            // Função para fechar dropdown ao clicar fora (considera dropdown global quando for o em uso)
             function configurarFecharDropdown(input, dropdownId) {
-                const handler = function(e) {
-                    const dropdown = document.getElementById(dropdownId);
-                    if (!dropdown) return;
-                    
-                    // Se clicou fora do input e do dropdown, fechar
-                    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                var handler = function(e) {
+                    var dropEl = document.getElementById('recebedor-dropdown-global');
+                    var dropEmUso = dropEl && dropEl.dataset.currentDropdownId === dropdownId;
+                    var elContemClique = dropEmUso ? dropEl.contains(e.target) : (function() {
+                        var d = document.getElementById(dropdownId);
+                        return d ? d.contains(e.target) : false;
+                    })();
+                    if (!input.contains(e.target) && !elContemClique) {
                         fecharDropdownRecebedor(dropdownId);
                         document.removeEventListener('click', handler);
                     }
                 };
-                
-                // Adicionar listener temporário
-                setTimeout(() => {
+                setTimeout(function() {
                     document.addEventListener('click', handler);
                 }, 100);
             }
+            
+            // Obter dropdownId a partir do input de recebedor (para delegação)
+            function getDropdownIdRecebedor(input) {
+                if (!input || !input.id) return null;
+                if (input.id === 'campaignRecebedor') return 'recebedor-dropdown-casual';
+                var m = input.id.match(/^routeRecebedor(\d*)$/);
+                if (m) return 'recebedor-dropdown-' + (m[1] || '1');
+                var t = input.id.match(/^tecnicoRecebedor(\d*)$/);
+                if (t) return t[1] ? ('recebedor-dropdown-tecnico-' + t[1]) : 'recebedor-dropdown-tecnico';
+                return null;
+            }
+            
+            // DELEGAÇÃO GLOBAL: garantir que ao focar ou clicar em QUALQUER .recebedor-input o dropdown abra (funciona mesmo se configurarRecebedores rodou antes do elemento existir)
+            document.addEventListener('focusin', function(e) {
+                var el = e.target;
+                if (!el || !el.classList || !el.classList.contains('recebedor-input')) return;
+                var dropdownId = getDropdownIdRecebedor(el);
+                if (!dropdownId || typeof mostrarDropdownRecebedores !== 'function') return;
+                mostrarDropdownRecebedores(el, dropdownId);
+                if (typeof configurarFecharDropdown === 'function') configurarFecharDropdown(el, dropdownId);
+            }, true);
+            document.addEventListener('click', function(e) {
+                var el = e.target;
+                if (!el || !el.classList || !el.classList.contains('recebedor-input')) return;
+                var dropdownId = getDropdownIdRecebedor(el);
+                if (!dropdownId || typeof mostrarDropdownRecebedores !== 'function') return;
+                e.preventDefault();
+                e.stopPropagation();
+                mostrarDropdownRecebedores(el, dropdownId);
+                if (typeof configurarFecharDropdown === 'function') configurarFecharDropdown(el, dropdownId);
+            }, true);
             
             // Função para preencher chave PIX automaticamente quando selecionar/digitar recebedor
             function preencherChavePixInput(recebedorInput, pixInput) {
@@ -3651,90 +3724,138 @@
                 
                 // Buscar recebedor na lista global primeiro
                     if (window.recebedoresGlobal && window.recebedoresGlobal.length > 0) {
-                        const recebedor = window.recebedoresGlobal.find(r =>
-                        r.nome && r.nome.toLowerCase() === nomeRecebedor.toLowerCase()
-                    );
-                    
+                        var recebedor = null;
+                        for (var ri = 0; ri < window.recebedoresGlobal.length; ri++) {
+                            var r = window.recebedoresGlobal[ri];
+                            if (r && r.nome && r.nome.toLowerCase() === nomeRecebedor.toLowerCase()) {
+                                recebedor = r;
+                                break;
+                            }
+                        }
                     if (recebedor) {
                         pixInput.value = recebedor.chave_pix || '';
                         if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
+                        if (recebedorInput.id === 'routeRecebedor1' && window.syncEmRotaRecebedorPixFromFirst) window.syncEmRotaRecebedorPixFromFirst();
+                        if (recebedorInput.id === 'tecnicoRecebedor1' && window.syncTecnicoRecebedorPixFromFirst) window.syncTecnicoRecebedorPixFromFirst();
                         return;
                     }
                 }
                 
-                // Se não encontrou, buscar via AJAX
-                fetch(`/solicitacoes/buscar-recebedores/?q=${encodeURIComponent(nomeRecebedor)}`)
-                    .then(response => response.json())
-                    .then(data => {
+                var urlReceb = '/solicitacoes/buscar-recebedores/?q=' + encodeURIComponent(nomeRecebedor);
+                fetch(urlReceb)
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
                         if (data.success && data.recebedores && data.recebedores.length > 0) {
-                            const recebedor = data.recebedores.find(r => 
-                                r.nome.toLowerCase() === nomeRecebedor.toLowerCase()
-                            );
-                            
-                            if (recebedor) {
-                                pixInput.value = recebedor.chave_pix || '';
+                            var recebedorAjax = null;
+                            for (var rj = 0; rj < data.recebedores.length; rj++) {
+                                if (data.recebedores[rj].nome && data.recebedores[rj].nome.toLowerCase() === nomeRecebedor.toLowerCase()) {
+                                    recebedorAjax = data.recebedores[rj];
+                                    break;
+                                }
+                            }
+                            if (recebedorAjax) {
+                                pixInput.value = recebedorAjax.chave_pix || '';
                             } else if (data.recebedores.length > 0) {
                                 pixInput.value = data.recebedores[0].chave_pix || '';
-                                } else {
-                                    pixInput.value = '';
+                            } else {
+                                pixInput.value = '';
                             }
                         } else {
                             pixInput.value = '';
                         }
                         if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
+                        if (recebedorInput.id === 'routeRecebedor1' && window.syncEmRotaRecebedorPixFromFirst) window.syncEmRotaRecebedorPixFromFirst();
+                        if (recebedorInput.id === 'tecnicoRecebedor1' && window.syncTecnicoRecebedorPixFromFirst) window.syncTecnicoRecebedorPixFromFirst();
                     })
-                    .catch(error => {
-                        
+                    .catch(function(error) {
                         pixInput.value = '';
                         if (window.forcarReadonlyChavePix) window.forcarReadonlyChavePix();
+                        if (recebedorInput.id === 'routeRecebedor1' && window.syncEmRotaRecebedorPixFromFirst) window.syncEmRotaRecebedorPixFromFirst();
+                        if (recebedorInput.id === 'tecnicoRecebedor1' && window.syncTecnicoRecebedorPixFromFirst) window.syncTecnicoRecebedorPixFromFirst();
                     });
             }
+            
+            // Garantir dropdown do campo Nome do Técnico (ID 1) — pode ser chamado no load e ao exibir o form
+            window.assegurarDropdownTecnico = function() {
+                var el = document.getElementById('tecnicoRecebedor1');
+                var pix = document.getElementById('tecnicoPix1');
+                if (!el || !pix || el.dataset.dropdownAttached === '1') return;
+                el.dataset.dropdownAttached = '1';
+                var id = 'recebedor-dropdown-tecnico-1';
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (typeof mostrarDropdownRecebedores === 'function') mostrarDropdownRecebedores(this, id);
+                    if (typeof configurarFecharDropdown === 'function') configurarFecharDropdown(this, id);
+                });
+                el.addEventListener('focus', function() {
+                    if (typeof mostrarDropdownRecebedores === 'function') mostrarDropdownRecebedores(this, id);
+                    if (typeof configurarFecharDropdown === 'function') configurarFecharDropdown(this, id);
+                });
+                el.addEventListener('input', function() {
+                    if (typeof mostrarDropdownRecebedores === 'function') mostrarDropdownRecebedores(this, id);
+                    if (typeof preencherChavePixInput === 'function') preencherChavePixInput(this, pix);
+                    if (window.syncTecnicoRecebedorPixFromFirst) window.syncTecnicoRecebedorPixFromFirst();
+                });
+                el.addEventListener('change', function() {
+                    if (typeof preencherChavePixInput === 'function') preencherChavePixInput(this, pix);
+                    if (window.syncTecnicoRecebedorPixFromFirst) window.syncTecnicoRecebedorPixFromFirst();
+                });
+            };
             
             // Adicionar event listeners para campos de recebedor existentes
             function configurarRecebedores() {
                 // Carregar recebedores primeiro
                 carregarRecebedores();
+                window.assegurarDropdownTecnico();
                 
-                // Para campos estáticos (ID 1 e 2)
-                for (let i = 1; i <= 2; i++) {
-                    const recebedorInput = document.getElementById(`routeRecebedor${i}`);
-                    const pixInput = document.getElementById(`routePix${i}`);
-                    const dropdownId = `recebedor-dropdown-${i}`;
+                // Para campos estáticos (ID 1 e 2) — Em Rota: só o 1º recebedor/PIX é editável; demais são cópia
+                for (var i = 1; i <= 2; i++) {
+                    var recebedorInput = document.getElementById('routeRecebedor' + i);
+                    var pixInput = document.getElementById('routePix' + i);
+                    var dropdownId = 'recebedor-dropdown-' + i;
+                    var isFirst = (i === 1);
                     
-                    if (recebedorInput && pixInput) {
-                        // Ao clicar/focar, mostrar dropdown
+                    if (recebedorInput && pixInput && recebedorInput.dataset.recebedorDropdownConfigured !== '1') {
+                        recebedorInput.dataset.recebedorDropdownConfigured = '1';
                         recebedorInput.addEventListener('click', function(e) {
                             e.stopPropagation();
-                            
-                            mostrarDropdownRecebedores(this, dropdownId);
-                            configurarFecharDropdown(this, dropdownId);
+                            var id = this.id.replace('routeRecebedor', '');
+                            var did = 'recebedor-dropdown-' + (id || '1');
+                            mostrarDropdownRecebedores(this, did);
+                            configurarFecharDropdown(this, did);
                         });
-                        
                         recebedorInput.addEventListener('focus', function() {
-                            
-                            mostrarDropdownRecebedores(this, dropdownId);
-                            configurarFecharDropdown(this, dropdownId);
+                            var id = this.id.replace('routeRecebedor', '');
+                            var did = 'recebedor-dropdown-' + (id || '1');
+                            mostrarDropdownRecebedores(this, did);
+                            configurarFecharDropdown(this, did);
                         });
-                        
-                        // Ao digitar, filtrar e mostrar dropdown
                         recebedorInput.addEventListener('input', function() {
-                            mostrarDropdownRecebedores(this, dropdownId);
-                            preencherChavePixInput(this, pixInput);
+                            var id = this.id.replace('routeRecebedor', '');
+                            var did = 'recebedor-dropdown-' + (id || '1');
+                            var pix = document.getElementById('routePix' + (id || '1'));
+                            mostrarDropdownRecebedores(this, did);
+                            if (pix) preencherChavePixInput(this, pix);
+                            if (id === '1' && window.syncEmRotaRecebedorPixFromFirst) window.syncEmRotaRecebedorPixFromFirst();
                         });
-                        
-                        // Ao mudar o valor, preencher chave PIX
                         recebedorInput.addEventListener('change', function() {
-                            preencherChavePixInput(this, pixInput);
+                            var id = this.id.replace('routeRecebedor', '');
+                            var pix = document.getElementById('routePix' + (id || '1'));
+                            if (pix) preencherChavePixInput(this, pix);
+                            if ((id || '1') === '1' && window.syncEmRotaRecebedorPixFromFirst) window.syncEmRotaRecebedorPixFromFirst();
                         });
                     }
                 }
+                
+                if (window.assegurarDropdownTecnico) window.assegurarDropdownTecnico();
                 
                 // Para formulário Casual
                 const campaignRecebedor = document.getElementById('campaignRecebedor');
                 const campaignPix = document.getElementById('campaignPix');
                 
-                if (campaignRecebedor && campaignPix) {
-                    // Ao clicar/focar, mostrar dropdown
+                if (campaignRecebedor && campaignPix && campaignRecebedor.dataset.recebedorDropdownConfigured !== '1') {
+                    campaignRecebedor.dataset.recebedorDropdownConfigured = '1';
+                    // Ao clicar/focar, mostrar dropdown (lista com nome e chave Pix)
                     campaignRecebedor.addEventListener('click', function(e) {
                         e.stopPropagation();
                         mostrarDropdownRecebedores(this, 'recebedor-dropdown-casual');
@@ -3756,7 +3877,44 @@
                     campaignRecebedor.addEventListener('change', function() {
                         preencherChavePixInput(this, campaignPix);
                     });
+                    
+                    // Clicar no texto "Digite para buscar ou clique para ver todos" abre a lista
+                    var campaignField = campaignRecebedor.closest('.route-recebedor-field');
+                    if (campaignField) {
+                        var helpEl = campaignField.querySelector('.form-help');
+                        if (helpEl) {
+                            helpEl.style.cursor = 'pointer';
+                            helpEl.setAttribute('title', 'Clique para abrir a lista de recebedores');
+                            helpEl.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                campaignRecebedor.focus();
+                                if (typeof mostrarDropdownRecebedores === 'function') {
+                                    mostrarDropdownRecebedores(campaignRecebedor, 'recebedor-dropdown-casual');
+                                    configurarFecharDropdown(campaignRecebedor, 'recebedor-dropdown-casual');
+                                }
+                            });
+                        }
+                    }
                 }
+                
+                // Delegação: clicar no texto de ajuda de QUALQUER campo recebedor abre a lista
+                document.addEventListener('click', function(e) {
+                    var target = e.target;
+                    if (!target || !target.classList || !target.classList.contains('form-help')) return;
+                    var field = target.closest('.route-recebedor-field');
+                    if (!field) return;
+                    var input = field.querySelector('.recebedor-input');
+                    if (!input) return;
+                    input.focus();
+                    var dropdownId = '';
+                    if (input.id === 'campaignRecebedor') dropdownId = 'recebedor-dropdown-casual';
+                    else if (input.id && input.id.indexOf('routeRecebedor') === 0) dropdownId = 'recebedor-dropdown-' + (input.id.replace('routeRecebedor', '') || '1');
+                    else if (input.id && input.id.indexOf('tecnicoRecebedor') === 0) dropdownId = input.id.replace('tecnicoRecebedor', '') ? ('recebedor-dropdown-tecnico-' + input.id.replace('tecnicoRecebedor', '')) : 'recebedor-dropdown-tecnico';
+                    if (dropdownId && typeof mostrarDropdownRecebedores === 'function') {
+                        mostrarDropdownRecebedores(input, dropdownId);
+                        configurarFecharDropdown(input, dropdownId);
+                    }
+                });
                 
                 // Para campos dinâmicos (usar event delegation)
                 document.addEventListener('click', function(e) {
@@ -3828,6 +3986,7 @@
                             if (pixInput) {
                                 preencherChavePixInput(recebedorInput, pixInput);
                             }
+                            if (recebedorInput.id === 'tecnicoRecebedor1' && window.syncTecnicoRecebedorPixFromFirst) window.syncTecnicoRecebedorPixFromFirst();
                         } else if (recebedorInput.id === 'campaignRecebedor') {
                             mostrarDropdownRecebedores(recebedorInput, 'recebedor-dropdown-casual');
                             const pixInput = document.getElementById('campaignPix');
@@ -3855,6 +4014,7 @@
                             if (pixInput) {
                                 preencherChavePixInput(recebedorInput, pixInput);
                             }
+                            if (recebedorInput.id === 'tecnicoRecebedor1' && window.syncTecnicoRecebedorPixFromFirst) window.syncTecnicoRecebedorPixFromFirst();
                         } else if (recebedorInput.id === 'campaignRecebedor') {
                             const pixInput = document.getElementById('campaignPix');
                             if (pixInput) {
@@ -3917,14 +4077,13 @@
             // Carregar lista de clientes/empresas ao carregar a página
             function carregarClientesEmpresas() {
                 fetch('/solicitacoes/buscar-clientes-empresas/')
-                    .then(response => response.json())
-                    .then(data => {
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
                         if (data.success && data.clientes_empresas) {
-                            // Preencher todos os datalists de clientes
-                            document.querySelectorAll('.clientes-datalist').forEach(datalist => {
+                            document.querySelectorAll('.clientes-datalist').forEach(function(datalist) {
                                 datalist.innerHTML = '';
-                                data.clientes_empresas.forEach(cliente => {
-                                    const option = document.createElement('option');
+                                data.clientes_empresas.forEach(function(cliente) {
+                                    var option = document.createElement('option');
                                     option.value = cliente.nome;
                                     option.setAttribute('data-cnpj', cliente.cnpj || '');
                                     datalist.appendChild(option);
@@ -3932,46 +4091,43 @@
                             });
                         }
                     })
-                    .catch(error => {
-                        
+                    .catch(function(error) {
                     });
             }
             
             // Função para preencher CNPJ automaticamente
             function preencherCnpj(clienteInput, cnpjInput) {
-                const nomeCliente = clienteInput.value.trim();
+                var nomeCliente = clienteInput.value.trim();
                 
                 if (!nomeCliente) {
                     cnpjInput.value = '';
                     return;
                 }
                 
-                // Buscar cliente via AJAX
-                fetch(`/solicitacoes/buscar-clientes-empresas/?q=${encodeURIComponent(nomeCliente)}`)
-                    .then(response => response.json())
-                    .then(data => {
+                var url = '/solicitacoes/buscar-clientes-empresas/?q=' + encodeURIComponent(nomeCliente);
+                fetch(url)
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
                         if (data.success && data.clientes_empresas) {
-                            // Procurar cliente exato
-                            const cliente = data.clientes_empresas.find(c => 
-                                c.nome.toLowerCase() === nomeCliente.toLowerCase()
-                            );
-                            
+                            var cliente = null;
+                            for (var i = 0; i < data.clientes_empresas.length; i++) {
+                                if (data.clientes_empresas[i].nome.toLowerCase() === nomeCliente.toLowerCase()) {
+                                    cliente = data.clientes_empresas[i];
+                                    break;
+                                }
+                            }
                             if (cliente) {
                                 cnpjInput.value = cliente.cnpj || '';
+                            } else if (data.clientes_empresas.length > 0) {
+                                cnpjInput.value = data.clientes_empresas[0].cnpj || '';
                             } else {
-                                // Se não encontrar exato, tentar o primeiro resultado
-                                if (data.clientes_empresas.length > 0) {
-                                    cnpjInput.value = data.clientes_empresas[0].cnpj || '';
-                                } else {
-                                    cnpjInput.value = '';
-                                }
+                                cnpjInput.value = '';
                             }
                         } else {
                             cnpjInput.value = '';
                         }
                     })
-                    .catch(error => {
-                        
+                    .catch(function(error) {
                         cnpjInput.value = '';
                     });
             }
@@ -3979,24 +4135,22 @@
             // Função para popular selects de cliente/empresa
             function popularSelectClienteEmpresa(selectElement) {
                 if (!selectElement || selectElement.tagName !== 'SELECT') return;
-                
-                // Verificar se já foi populado
                 if (selectElement.options.length > 1) return;
                 
                 fetch('/solicitacoes/buscar-clientes-empresas/?q=')
-                    .then(response => response.json())
-                    .then(data => {
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
                         if (data.success && data.clientes_empresas) {
                             selectElement.innerHTML = '<option value="">Selecione o cliente/empresa</option>';
-                            data.clientes_empresas.forEach(cliente => {
-                                const option = document.createElement('option');
+                            data.clientes_empresas.forEach(function(cliente) {
+                                var option = document.createElement('option');
                                 option.value = cliente.id;
                                 option.textContent = cliente.nome;
                                 selectElement.appendChild(option);
                             });
                         }
                     })
-                    .catch(error => {
+                    .catch(function(error) {
                         console.error('Erro ao carregar clientes/empresas:', error);
                     });
             }
@@ -4006,14 +4160,15 @@
                 if (!selectElement || !cnpjInput) return;
                 
                 if (selectElement.value) {
-                    fetch(`/solicitacoes/buscar-clientes-empresas/?id=${selectElement.value}`)
-                        .then(response => response.json())
-                        .then(data => {
+                    var urlCnpj = '/solicitacoes/buscar-clientes-empresas/?id=' + encodeURIComponent(selectElement.value);
+                    fetch(urlCnpj)
+                        .then(function(response) { return response.json(); })
+                        .then(function(data) {
                             if (data.success && data.clientes_empresas && data.clientes_empresas.length > 0) {
                                 cnpjInput.value = data.clientes_empresas[0].cnpj || '';
                             }
                         })
-                        .catch(error => {
+                        .catch(function(error) {
                             console.error('Erro ao buscar CNPJ:', error);
                         });
                 } else {
@@ -4023,10 +4178,9 @@
             
             // Adicionar event listeners para campos de cliente/empresa
             function configurarClientesEmpresas() {
-                // Popular e configurar selects estáticos (ID 1 e 2) para Em Rota
-                for (let i = 1; i <= 2; i++) {
-                    const clienteSelect = document.getElementById(`routeClienteEmpresa${i}`);
-                    const cnpjInput = document.getElementById(`routeCnpj${i}`);
+                for (var i = 1; i <= 2; i++) {
+                    var clienteSelect = document.getElementById('routeClienteEmpresa' + i);
+                    var cnpjInput = document.getElementById('routeCnpj' + i);
                     
                     if (clienteSelect && clienteSelect.tagName === 'SELECT') {
                         popularSelectClienteEmpresa(clienteSelect);
@@ -4039,9 +4193,8 @@
                     }
                 }
                 
-                // Popular e configurar select do formulário Casual
-                const campaignClienteEmpresa = document.getElementById('campaignClienteEmpresa');
-                const campaignCnpj = document.getElementById('campaignCnpj');
+                var campaignClienteEmpresa = document.getElementById('campaignClienteEmpresa');
+                var campaignCnpj = document.getElementById('campaignCnpj');
                 
                 if (campaignClienteEmpresa && campaignClienteEmpresa.tagName === 'SELECT') {
                     popularSelectClienteEmpresa(campaignClienteEmpresa);
@@ -4056,20 +4209,16 @@
                 // Para campos dinâmicos (usar event delegation)
                 document.addEventListener('change', function(e) {
                     if (e.target.classList.contains('cliente-empresa-select')) {
-                        const clienteSelect = e.target;
-                        
-                        // Verificar se é campo de rota dinâmico
+                        var clienteSelect = e.target;
                         if (clienteSelect.id.startsWith('routeClienteEmpresa')) {
-                            const numeroID = clienteSelect.id.replace('routeClienteEmpresa', '');
-                            const cnpjInput = document.getElementById(`routeCnpj${numeroID}`);
+                            var numeroID = clienteSelect.id.replace('routeClienteEmpresa', '');
+                            var cnpjInput = document.getElementById('routeCnpj' + numeroID);
                             
                             if (cnpjInput) {
                                 preencherCnpjPorSelect(clienteSelect, cnpjInput);
                             }
-                        }
-                        // Verificar se é campo Casual
-                        else if (clienteSelect.id === 'campaignClienteEmpresa') {
-                            const cnpjInput = document.getElementById('campaignCnpj');
+                        } else if (clienteSelect.id === 'campaignClienteEmpresa') {
+                            var cnpjInput = document.getElementById('campaignCnpj');
                             if (cnpjInput) {
                                 preencherCnpjPorSelect(clienteSelect, cnpjInput);
                             }
@@ -4080,33 +4229,27 @@
             
             // Função para carregar clientes/empresas no select de técnico
             function carregarClientesEmpresasTecnico() {
-                // Carregar para todos os selects de técnico que existirem (incluindo dinâmicos)
-                document.querySelectorAll('select[id^="tecnicoClienteEmpresa"]').forEach(select => {
-                    // Verificar se já foi populado (tem mais de 1 opção)
+                document.querySelectorAll('select[id^="tecnicoClienteEmpresa"]').forEach(function(select) {
                     if (select.options.length <= 1) {
                         fetch('/solicitacoes/buscar-clientes-empresas/?q=')
-                            .then(response => response.json())
-                            .then(data => {
+                            .then(function(response) { return response.json(); })
+                            .then(function(data) {
                                 if (data.success && data.clientes_empresas) {
-                                    // Limpar opções atuais (exceto a primeira se existir)
-                                    const primeiraOpcao = select.options[0]?.value === '' ? select.options[0].textContent : '';
-                                    select.innerHTML = primeiraOpcao ? `<option value="">${primeiraOpcao}</option>` : '<option value="">Selecione o cliente/empresa</option>';
-                                    
-                                    // Adicionar opções dos clientes
-                                    data.clientes_empresas.forEach(cliente => {
-                                        const option = document.createElement('option');
+                                    var primeiraOpcao = (select.options[0] && select.options[0].value === '') ? select.options[0].textContent : '';
+                                    select.innerHTML = primeiraOpcao ? '<option value="">' + primeiraOpcao + '</option>' : '<option value="">Selecione o cliente/empresa</option>';
+                                    data.clientes_empresas.forEach(function(cliente) {
+                                        var option = document.createElement('option');
                                         option.value = cliente.id;
                                         option.textContent = cliente.nome;
                                         select.appendChild(option);
                                     });
-                                    
-                                    console.log(`✅ ${data.clientes_empresas.length} clientes/empresas carregados no select ${select.id}`);
+                                    console.log(data.clientes_empresas.length + ' clientes/empresas carregados no select ' + select.id);
                                 } else {
-                                    console.warn('⚠️ Nenhum cliente/empresa encontrado');
+                                    console.warn('Nenhum cliente/empresa encontrado');
                                 }
                             })
-                            .catch(error => {
-                                console.error('❌ Erro ao carregar clientes/empresas para técnico:', error);
+                            .catch(function(error) {
+                                console.error('Erro ao carregar clientes/empresas para técnico:', error);
                             });
                     }
                 });
@@ -4130,8 +4273,23 @@
             } else {
                 configurarRecebedores();
                 configurarClientesEmpresas();
-                // Carregar clientes/empresas para o select de técnico
                 carregarClientesEmpresasTecnico();
+            }
+            
+            // Pré-carregar recebedores e reconfigurar dropdowns quando o modal de solicitação for aberto (lista ao focar/clicar no campo)
+            var modalEl = document.getElementById('createCampaignModal');
+            if (modalEl && typeof carregarRecebedores === 'function') {
+                var obsModal = new MutationObserver(function(mutations) {
+                    if (modalEl.classList.contains('show')) {
+                        carregarRecebedores();
+                        if (typeof configurarRecebedores === 'function') configurarRecebedores();
+                    }
+                });
+                obsModal.observe(modalEl, { attributes: true, attributeFilter: ['class'] });
+                if (modalEl.classList.contains('show')) {
+                    carregarRecebedores();
+                    if (typeof configurarRecebedores === 'function') configurarRecebedores();
+                }
             }
             
             // Atualizar função criarNovoRouteId para adicionar listeners aos novos campos
@@ -4139,29 +4297,20 @@
             if (criarNovoRouteIdOriginal) {
                 window.criarNovoRouteId = function(e) {
                     const resultado = criarNovoRouteIdOriginal(e);
-                    
-                    // Após criar novo ID, configurar listener para input de recebedor
+                    // Em Rota: todos os itens usam o mesmo recebedor/PIX do 1º — copiar e bloquear no novo item
+                    if (window.syncEmRotaRecebedorPixFromFirst) {
+                        setTimeout(function() { window.syncEmRotaRecebedorPixFromFirst(); }, 50);
+                    }
                     setTimeout(function() {
                         const novoNumero = window.routeIdCounter - 1;
                         const recebedorInput = document.getElementById(`routeRecebedor${novoNumero}`);
                         const pixInput = document.getElementById(`routePix${novoNumero}`);
-                        
                         if (recebedorInput && pixInput) {
-                            // Adicionar listeners para preencher PIX quando digitar/selecionar recebedor
-                            recebedorInput.addEventListener('input', function() {
-                                preencherChavePixInput(this, pixInput);
-                            });
-                            
-                            recebedorInput.addEventListener('change', function() {
-                                preencherChavePixInput(this, pixInput);
-                            });
-                            
-                            recebedorInput.addEventListener('blur', function() {
-                                preencherChavePixInput(this, pixInput);
-                            });
+                            recebedorInput.addEventListener('input', function() { preencherChavePixInput(this, pixInput); });
+                            recebedorInput.addEventListener('change', function() { preencherChavePixInput(this, pixInput); });
+                            recebedorInput.addEventListener('blur', function() { preencherChavePixInput(this, pixInput); });
                         }
                     }, 100);
-                    
                     return resultado;
                 };
             }
@@ -4178,22 +4327,23 @@
              * @param {HTMLElement} inputElement - O elemento input que contém o ID
              * @param {string} solicitacaoId - ID da solicitação em edição (opcional)
              */
-            async function verificarIdExistente(ticket, inputElement, solicitacaoId = null) {
+            async function verificarIdExistente(ticket, inputElement, solicitacaoId) {
+                if (solicitacaoId === undefined || solicitacaoId === null) solicitacaoId = null;
                 if (!ticket || !ticket.trim()) {
                     limparAvisoIdDuplicado(inputElement);
                     return;
                 }
                 
                 try {
-                    let url = `/solicitacoes/verificar-id-existente/?ticket=${encodeURIComponent(ticket.trim())}`;
+                    var url = '/solicitacoes/verificar-id-existente/?ticket=' + encodeURIComponent(ticket.trim());
                     if (solicitacaoId) {
-                        url += `&solicitacao_id=${encodeURIComponent(solicitacaoId)}`;
+                        url += '&solicitacao_id=' + encodeURIComponent(solicitacaoId);
                     }
                     
-                    const response = await fetch(url, {
+                    var response = await fetch(url, {
                         method: 'GET',
                         headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-Requested-With': 'XMLHttpRequest'
                         },
                         credentials: 'same-origin'
                     });
@@ -4220,8 +4370,8 @@
              * @param {string} mensagem - Mensagem de aviso
              * @param {object} detalhes - Detalhes adicionais (opcional)
              */
-            function mostrarAvisoIdDuplicado(inputElement, mensagem, detalhes = null) {
-
+            function mostrarAvisoIdDuplicado(inputElement, mensagem, detalhes) {
+                if (typeof detalhes === 'undefined') detalhes = null;
                 // Remover avisos anteriores
                 limparAvisoIdDuplicado(inputElement);
                 
@@ -4270,40 +4420,20 @@
                     errorDiv.setAttribute('role', 'alert');
                     
                     // Montar mensagem
-                    let msgHTML = `<i class="fas fa-exclamation-circle"></i> <strong>ID Já Cadastrado:</strong> ${mensagem}`;
+                    let msgHTML = '<i class="fas fa-exclamation-circle"></i> <strong>ID Já Cadastrado:</strong> ' + mensagem;
                     if (detalhes && detalhes.tipo) {
-                        msgHTML += `<br><small style="margin-left: 24px; display: block; margin-top: 4px;">Tipo: ${detalhes.tipo}${detalhes.status ? ' | Status: ' + detalhes.status : ''}</small>`;
+                        var statusExtra = detalhes.status ? (' | Status: ' + detalhes.status) : '';
+                        msgHTML += '<br><small style="margin-left: 24px; display: block; margin-top: 4px;">Tipo: ' + detalhes.tipo + statusExtra + '</small>';
                     }
                     
                     errorDiv.innerHTML = msgHTML;
                     
                     // ESTILO INLINE FORÇADO - VERMELHO BRILHANTE
-                    errorDiv.style.cssText = `
-                        color: white !important;
-                        font-size: 14px !important;
-                        font-weight: 500 !important;
-                        margin-top: 12px !important;
-                        margin-bottom: 12px !important;
-                        padding: 14px 18px !important;
-                        background-color: #dc3545 !important;
-                        border: 2px solid #dc3545 !important;
-                        border-radius: 8px !important;
-                        display: flex !important;
-                        flex-direction: column !important;
-                        align-items: flex-start !important;
-                        gap: 4px !important;
-                        visibility: visible !important;
-                        opacity: 1 !important;
-                        position: relative !important;
-                        z-index: 9999 !important;
-                        width: 100% !important;
-                        max-width: 100% !important;
-                        box-sizing: border-box !important;
-                        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4) !important;
-                    `;
+                    var boxShadowVal = "0 4px 12px rgba(220, 53, 69, 0.4)";
+                    errorDiv.style.cssText = 'color: white !important; font-size: 14px !important; font-weight: 500 !important; margin-top: 12px !important; margin-bottom: 12px !important; padding: 14px 18px !important; background-color: #dc3545 !important; border: 2px solid #dc3545 !important; border-radius: 8px !important; display: flex !important; flex-direction: column !important; align-items: flex-start !important; gap: 4px !important; visibility: visible !important; opacity: 1 !important; position: relative !important; z-index: 9999 !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; box-shadow: ' + boxShadowVal + ' !important;';
                     
                     // Garantir que ícone e texto tenham cor branca
-                    errorDiv.querySelectorAll('i, strong, small').forEach(el => {
+                    errorDiv.querySelectorAll('i, strong, small').forEach(function(el) {
                         el.style.color = 'white !important';
                     });
                     
@@ -4322,7 +4452,7 @@
                     void errorDiv.offsetHeight;
                     
                     // Scroll para o campo
-                    setTimeout(() => {
+                    setTimeout(function() {
                         errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }, 300);
                 } else {
@@ -4471,7 +4601,8 @@
                         // Limpar estilos ao perder foco se campo estiver preenchido
                         input.addEventListener('blur', function(e) {
                             if (e.target.value.trim()) {
-                                const errorMessage = e.target.closest('.form-group')?.querySelector('.error-message.id-duplicado-message');
+                                var formGroupEl = e.target.closest('.form-group');
+                                const errorMessage = formGroupEl ? formGroupEl.querySelector('.error-message.id-duplicado-message') : null;
                                 if (!errorMessage) {
                                     limparEstilosErroCampo(e.target);
                                 }

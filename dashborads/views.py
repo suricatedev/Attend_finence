@@ -429,7 +429,7 @@ def relatorio_indicadores(request):
         'taxa_vs_mes': taxa_vs,
     })
 
-
+    
 def relatorio(request):
     if request.method == "GET":
         if not request.user.is_authenticated:

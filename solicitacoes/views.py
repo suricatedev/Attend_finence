@@ -663,6 +663,15 @@ def receber_dados(request):
                             
                             print(f"✅ Item de técnico {i} validado e preparado. Ticket: {tecnico_id_solicitacao}, Valor: {valor_total}")
                         
+                        # Em solicitação agrupada por técnico, todos os itens devem ter o MESMO recebedor e chave PIX do primeiro item
+                        if len(itens_tecnico) >= 1:
+                            primeiro_recebedor_obj = itens_tecnico[0]['recebedor_obj']
+                            primeira_chave_pix = (itens_tecnico[0].get('tecnico_pix') or '') or (getattr(primeiro_recebedor_obj, 'chave_pix', None) or '')
+                            primeiro_recebedor = primeiro_recebedor_obj.nome
+                            for item in itens_tecnico:
+                                item['recebedor_obj'] = primeiro_recebedor_obj
+                                item['tecnico_pix'] = primeira_chave_pix
+                        
                         # Agora criar APENAS UMA solicitação principal
                         if len(itens_tecnico) == 0:
                             error_msg = 'Nenhum item de técnico válido encontrado.'
@@ -1111,7 +1120,15 @@ def receber_dados(request):
                     messages.error(request, 'Solicitação Em Rota precisa de no mínimo 1 item preenchido.')
                     return redirect('/solicitacoes/home/')
                 
-                nome_do_recebedor = recebedor_principal.strip()
+                # Em solicitação agrupada (Em Rota), todos os itens devem ter o MESMO recebedor e chave PIX do primeiro item
+                primeiro_recebedor = (itens_rota[0].get('recebedor') or '').strip()
+                primeira_chave_pix = (itens_rota[0].get('chave_pix') or '').strip()
+                for item in itens_rota:
+                    item['recebedor'] = primeiro_recebedor
+                    item['chave_pix'] = primeira_chave_pix
+                nome_do_recebedor = recebedor_principal.strip() or primeiro_recebedor
+                if not chave_pix_principal and primeira_chave_pix:
+                    chave_pix_principal = primeira_chave_pix
                 if not nome_do_recebedor:
                     messages.error(request, 'Informe pelo menos um recebedor nos itens da solicitação Em Rota.')
                     return redirect('/solicitacoes/home/')
