@@ -87,9 +87,7 @@ def dashboard(request):
             s=Sum(F('valor_pagamento_tecnico') + Coalesce(F('valor_extra'), 0.0))
         )
         custo_tecnicos = float(agg_tec['s'] or 0)
-        valor_total_custos = float(qs_custos.aggregate(Sum('valor'))['valor__sum'] or 0)
-        custo_outros = max(0, valor_total_custos - (custo_logistico + custo_tecnicos + custo_deslocamento))
-        cost_distribution = [custo_deslocamento, custo_logistico, custo_tecnicos, custo_outros]
+        cost_distribution = [custo_deslocamento, custo_logistico, custo_tecnicos]
         service_type_data = [custo_deslocamento, custo_logistico, custo_tecnicos]
         evolution_weeks = []
         for i in range(4):

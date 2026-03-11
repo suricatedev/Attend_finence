@@ -9,7 +9,7 @@
     Chart.defaults.color = '#666';
 
     var data = window.DASHBOARD_CUSTOS_DATA || {};
-    var costDistribution = data.costDistribution || [0, 0, 0, 0];
+    var costDistribution = (data.costDistribution || [0, 0, 0]).slice(0, 3);
     var serviceTypeData = data.serviceTypeData || [0, 0, 0];
     var evolutionWeeks = data.evolutionWeeks || [];
 
@@ -24,10 +24,10 @@
             new Chart(ctx1.getContext('2d'), {
                 type: 'doughnut',
                 data: {
-                    labels: ['Custo Deslocamento', 'Custo Logístico', 'Custo com Técnicos', 'Outros'],
+                    labels: ['Custo Deslocamento', 'Custo Logístico', 'Custo com Técnicos'],
                     datasets: [{
                         data: costDistribution,
-                        backgroundColor: ['#ffcc4d', '#3b82f6', '#10b981', '#94a3b8'],
+                        backgroundColor: ['#ffcc4d', '#3b82f6', '#10b981'],
                         borderWidth: 0,
                         hoverOffset: 10
                     }]
