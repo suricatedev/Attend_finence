@@ -490,7 +490,7 @@
                         <td>{{ solicitacao.nome_do_recebedor|default:"-" }}</td>
                         <td><span class="private-value-wrap" data-private-real="{{ solicitacao.chave_pix|default:'-' }}"><span class="private-value-display">******</span></span></td>
                         <td>{{ solicitacao.cliente_empresa|default:"-" }}</td>
-                        <td>{{ solicitacao.cnpj|default:"-" }}</td>
+                        <td><span class="private-value-wrap" data-private-real="{{ solicitacao.cnpj|default:'-' }}"><span class="private-value-display">******</span></span></td>
                         <td>{% if solicitacao.servico %}{{ solicitacao.servico.nome }}{% else %}N/A{% endif %}</td>
                         <td><strong><span class="private-value-wrap" data-private-real="{{ solicitacao.valor|brl }}"><span class="private-value-display">******</span></span></strong></td>
                         <td class="valores-detalhados-toggle-cell" style="display: none;"></td>
@@ -629,8 +629,10 @@
         // Um único olho no topo: ao clicar, revela/oculta todos os valores da página (como em Solicitações)
         window.refreshReportsPrivacy = function() {
             var container = document.querySelector('.reports-fullscreen');
-            var revealed = container && container.classList.contains('reports-page-revealed');
-            document.querySelectorAll('.reports-fullscreen .private-value-wrap').forEach(function(wrap) {
+            if (!container) return;
+            var revealed = container.classList.contains('reports-page-revealed');
+            var wraps = container.querySelectorAll('.private-value-wrap');
+            wraps.forEach(function(wrap) {
                 var display = wrap.querySelector('.private-value-display');
                 if (!display) return;
                 var real = (wrap.getAttribute('data-private-real') || '').trim();
@@ -644,16 +646,17 @@
                 btn.setAttribute('aria-label', revealed ? 'Ocultar valores' : 'Mostrar valores');
             }
         };
+        document.addEventListener('click', function(e) {
+            var btn = e.target && e.target.closest && e.target.closest('#reportsRevealValuesBtn');
+            if (!btn) return;
+            var container = document.querySelector('.reports-fullscreen');
+            if (!container || typeof window.refreshReportsPrivacy !== 'function') return;
+            e.preventDefault();
+            container.classList.toggle('reports-page-revealed');
+            setTimeout(function() { window.refreshReportsPrivacy(); }, 0);
+        }, true);
         document.addEventListener('DOMContentLoaded', function() {
-            var btn = document.getElementById('reportsRevealValuesBtn');
-            if (btn) {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    var container = document.querySelector('.reports-fullscreen');
-                    if (container) container.classList.toggle('reports-page-revealed');
-                    window.refreshReportsPrivacy();
-                });
-            }
+            if (typeof window.refreshReportsPrivacy === 'function') window.refreshReportsPrivacy();
         });
     </script>
 {% endblock %}

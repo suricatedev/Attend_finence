@@ -4180,16 +4180,16 @@
             function configurarClientesEmpresas() {
                 for (var i = 1; i <= 2; i++) {
                     var clienteSelect = document.getElementById('routeClienteEmpresa' + i);
-                    var cnpjInput = document.getElementById('routeCnpj' + i);
                     
                     if (clienteSelect && clienteSelect.tagName === 'SELECT') {
                         popularSelectClienteEmpresa(clienteSelect);
-                        
-                        if (cnpjInput) {
-                            clienteSelect.addEventListener('change', function() {
+                        clienteSelect.addEventListener('change', function() {
+                            var numeroID = this.id.replace('routeClienteEmpresa', '');
+                            var cnpjInput = document.getElementById('routeCnpj' + numeroID);
+                            if (cnpjInput) {
                                 preencherCnpjPorSelect(this, cnpjInput);
-                            });
-                        }
+                            }
+                        });
                     }
                 }
                 

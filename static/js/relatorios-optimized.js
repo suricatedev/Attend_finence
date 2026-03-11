@@ -126,23 +126,27 @@ class RelatoriosOptimized {
                 const valoresCells = row.querySelectorAll('.valores-detalhados-col');
                 let valorReceita = '', valorEmRota = '', valorKm = '', valorPedagio = '', valorHospedagem = '', valorFluvial = '', valorOutros = '';
                 
+                const getValorCell = (el) => {
+                    if (!el) return '';
+                    const w = el.querySelector('.private-value-wrap');
+                    return (w && w.getAttribute('data-private-real')) ? (w.getAttribute('data-private-real') || '').trim() : (el.textContent || '').trim();
+                };
                 if (valoresCells.length >= 7) {
-                    valorReceita = valoresCells[0]?.textContent.trim() || '';
-                    valorEmRota = valoresCells[1]?.textContent.trim() || '';
-                    valorKm = valoresCells[2]?.textContent.trim() || '';
-                    valorPedagio = valoresCells[3]?.textContent.trim() || '';
-                    valorHospedagem = valoresCells[4]?.textContent.trim() || '';
-                    valorFluvial = valoresCells[5]?.textContent.trim() || '';
-                    valorOutros = valoresCells[6]?.textContent.trim() || '';
+                    valorReceita = getValorCell(valoresCells[0]) || '';
+                    valorEmRota = getValorCell(valoresCells[1]) || '';
+                    valorKm = getValorCell(valoresCells[2]) || '';
+                    valorPedagio = getValorCell(valoresCells[3]) || '';
+                    valorHospedagem = getValorCell(valoresCells[4]) || '';
+                    valorFluvial = getValorCell(valoresCells[5]) || '';
+                    valorOutros = getValorCell(valoresCells[6]) || '';
                 } else if (valoresCells.length >= 6) {
-                    // Compatibilidade: se não houver coluna EM ROTA ainda
-                    valorReceita = valoresCells[0]?.textContent.trim() || '';
+                    valorReceita = getValorCell(valoresCells[0]) || '';
                     valorEmRota = '';
-                    valorKm = valoresCells[1]?.textContent.trim() || '';
-                    valorPedagio = valoresCells[2]?.textContent.trim() || '';
-                    valorHospedagem = valoresCells[3]?.textContent.trim() || '';
-                    valorFluvial = valoresCells[4]?.textContent.trim() || '';
-                    valorOutros = valoresCells[5]?.textContent.trim() || '';
+                    valorKm = getValorCell(valoresCells[1]) || '';
+                    valorPedagio = getValorCell(valoresCells[2]) || '';
+                    valorHospedagem = getValorCell(valoresCells[3]) || '';
+                    valorFluvial = getValorCell(valoresCells[4]) || '';
+                    valorOutros = getValorCell(valoresCells[5]) || '';
                 }
                 
                 // Usar índices mapeados ou fallback para índices fixos
@@ -165,12 +169,16 @@ class RelatoriosOptimized {
                     });
                 }
                 
-                // Extrair novos campos
+                const getCellValue = (cell) => {
+                    if (!cell) return '';
+                    const wrap = cell.querySelector('.private-value-wrap');
+                    return (wrap && wrap.getAttribute('data-private-real')) ? (wrap.getAttribute('data-private-real') || '').trim() : (cell.textContent || '').trim();
+                };
                 const supervisor = cells[3]?.textContent.trim() || '-';
                 const recebedor = cells[4]?.textContent.trim() || '';
-                const chavePix = cells[5]?.textContent.trim() || '';
+                const chavePix = getCellValue(cells[5]) || '';
                 const clienteEmpresa = cells[6]?.textContent.trim() || '';
-                const cnpj = cells[7]?.textContent.trim() || '';
+                const cnpj = getCellValue(cells[7]) || '';
                 const serviceText = cells[8]?.textContent.trim() || '';
                 
                 const statusBadge = cells[statusIdx]?.querySelector('.status-badge');
@@ -235,7 +243,7 @@ class RelatoriosOptimized {
                     cnpj: cnpj,
                     service: service, // ID do serviço (string vazia se não houver)
                     serviceName: serviceText || 'N/A', // Nome do serviço para mini relatórios
-                    valor: cells[9]?.textContent.trim() || '',
+                    valor: getCellValue(cells[9]) || '',
                     valorReceita: valorReceita,
                     valorEmRota: valorEmRota,
                     valorKm: valorKm,
@@ -1056,7 +1064,7 @@ class RelatoriosOptimized {
             <td>${item.recebedor || '-'}</td>
             <td><span class="private-value-wrap" data-private-real="${esc(chavePixVal)}"><span class="private-value-display">${priv(chavePixVal)}</span></span></td>
             <td>${item.clienteEmpresa || '-'}</td>
-            <td>${item.cnpj || '-'}</td>
+            <td><span class="private-value-wrap" data-private-real="${esc(item.cnpj || '-')}"><span class="private-value-display">${priv(item.cnpj || '-')}</span></span></td>
             <td>${item.service}</td>
             <td><strong><span class="private-value-wrap" data-private-real="${esc(item.valor)}"><span class="private-value-display">${priv(item.valor)}</span></span></strong></td>
             <td class="valores-detalhados-toggle-cell" style="display: ${displayStyle};"></td>
