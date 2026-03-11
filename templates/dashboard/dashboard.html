@@ -137,17 +137,29 @@
     <!-- Seção de Gráficos -->
     <section class="dashboard-custos-charts">
         <div class="chart-card">
-            <h4 class="chart-card-title"><i class="fas fa-chart-pie text-attend-gold"></i> Distribuição de Custos Operacionais</h4>
+            <h4 class="chart-card-title">
+                <i class="fas fa-chart-pie text-attend-gold"></i>
+                <span>Distribuição de Custos Operacionais</span>
+                <button type="button" class="kpi-info-icon chart-title-info-icon" aria-label="Explicação do gráfico" title="Proporção dos custos: Custo Deslocamento (valores detalhados KM, Pedágio, etc.), Custo Logístico (Chamado Logístico), Custo com Técnicos e Outros. Os valores correspondem aos mesmos dos KPIs acima." data-kpi-explanation="Mostra a proporção dos custos operacionais: Custo Deslocamento (soma de KM, Pedágio, Hospedagem, Fluvial, Outros de todas as solicitações), Custo Logístico (solicitações com serviço Chamado Logístico), Custo com Técnicos (valor pago ao técnico + valor extra) e Outros (demais custos). Os valores são os mesmos exibidos nos cartões de métricas acima."><i class="fas fa-info-circle"></i></button>
+            </h4>
             <div class="chart-card-canvas"><canvas id="costDistributionChart"></canvas></div>
         </div>
         <div class="chart-card">
-            <h4 class="chart-card-title"><i class="fas fa-tools text-attend-gold"></i> Custo por Tipo de Serviço</h4>
+            <h4 class="chart-card-title">
+                <i class="fas fa-tools text-attend-gold"></i>
+                <span>Custo por Tipo de Serviço</span>
+                <button type="button" class="kpi-info-icon chart-title-info-icon" aria-label="Explicação do gráfico" title="Valores por categoria: Custo Deslocamento, Custo Logístico e Custo com Técnicos (mesmas métricas dos KPIs)." data-kpi-explanation="Barras horizontais com o valor total de cada categoria: Custo Deslocamento (valores detalhados de todas as solicitações), Custo Logístico (Chamado Logístico) e Custo com Técnicos. Os valores correspondem aos mesmos dos cartões Custo Deslocamento, Custo Logístico e Custo com Técnicos."><i class="fas fa-info-circle"></i></button>
+            </h4>
             <div class="chart-card-canvas"><canvas id="serviceTypeChart"></canvas></div>
         </div>
         <div class="chart-card chart-card-full">
-            <h4 class="chart-card-title"><i class="fas fa-chart-bar text-attend-gold"></i> Evolução de Gastos (Técnico, Logística e Deslocamento)</h4>
+            <h4 class="chart-card-title">
+                <i class="fas fa-chart-bar text-attend-gold"></i>
+                <span>Evolução de Gastos (Técnico, Logística e Deslocamento)</span>
+                <button type="button" class="kpi-info-icon chart-title-info-icon" aria-label="Explicação do gráfico" title="Evolução semanal dos três tipos de custo nas últimas 4 semanas." data-kpi-explanation="Gráfico de linhas com a evolução semanal dos custos nas últimas 4 semanas: Custos Técnicos (valor pago ao técnico + valor extra), Logística (Chamado Logístico) e Deslocamento (valores detalhados). Cada ponto representa a soma dos gastos daquela semana."><i class="fas fa-info-circle"></i></button>
+            </h4>
             <div class="chart-card-canvas"><canvas id="evolutionChart"></canvas></div>
-    </div>
+        </div>
     </section>
 </div>
 <script>

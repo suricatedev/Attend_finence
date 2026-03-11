@@ -262,6 +262,12 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-wrap: wrap;
+}
+.chart-card-title .chart-title-info-icon {
+    position: static;
+    margin-left: auto;
+    flex-shrink: 0;
 }
 
 .chart-card-canvas {

@@ -24,7 +24,7 @@
             new Chart(ctx1.getContext('2d'), {
                 type: 'doughnut',
                 data: {
-                    labels: ['Deslocamento', 'Envio Logístico', 'Custo Técnico', 'Outros'],
+                    labels: ['Custo Deslocamento', 'Custo Logístico', 'Custo com Técnicos', 'Outros'],
                     datasets: [{
                         data: costDistribution,
                         backgroundColor: ['#ffcc4d', '#3b82f6', '#10b981', '#94a3b8'],
@@ -58,7 +58,7 @@
             new Chart(ctx2.getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: ['Deslocamento', 'Logística', 'Custo Técnico'],
+                    labels: ['Custo Deslocamento', 'Custo Logístico', 'Custo com Técnicos'],
                     datasets: [{
                         label: 'Custo (R$)',
                         data: serviceTypeData,
