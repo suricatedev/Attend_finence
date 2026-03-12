@@ -76,6 +76,16 @@
                     <i class="fas fa-file-pdf"></i>
                     <span>PDF</span>
                 </button>
+                {% if user|is_financeiro or user|is_admin %}
+                <a class="btn-export" href="{% url 'exportar_pix_ordens_pagamento' %}?format=xlsx" title="Exportar PIX/Ordens de Pagamento (XLSX)" aria-label="Exportar PIX/Ordens de Pagamento (XLSX)">
+                    <i class="fas fa-file-excel"></i>
+                    <span>PIX XLSX</span>
+                </a>
+                <a class="btn-export" href="{% url 'exportar_pix_ordens_pagamento' %}?format=csv" title="Exportar PIX/Ordens de Pagamento (CSV)" aria-label="Exportar PIX/Ordens de Pagamento (CSV)">
+                    <i class="fas fa-file-csv"></i>
+                    <span>PIX CSV</span>
+                </a>
+                {% endif %}
             </div>
         </div>
     </header>

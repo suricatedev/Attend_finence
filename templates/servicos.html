@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}Serviços - Sistema de Gestão Financeira{% endblock %}
@@ -224,6 +224,14 @@
                                 <i class="fas fa-file-upload"></i>
                                 Importar
                             </button>
+                            <a class="btn-export-recebedores" href="{% url 'exportar_recebedores' %}?format=xlsx" title="Exportar recebedores em Excel (XLSX)" aria-label="Exportar recebedores Excel">
+                                <i class="fas fa-file-excel"></i>
+                                Exportar (Excel)
+                            </a>
+                            <a class="btn-export-recebedores btn-export-csv" href="{% url 'exportar_recebedores' %}?format=csv" title="Exportar recebedores em CSV" aria-label="Exportar recebedores CSV">
+                                <i class="fas fa-file-csv"></i>
+                                Exportar (CSV)
+                            </a>
                         </div>
                     </div>
                     
@@ -576,6 +584,14 @@
                                 <i class="fas fa-plus"></i>
                                 Adicionar Cliente/Empresa
                             </button>
+                            <a class="btn-export-recebedores" href="{% url 'exportar_clientes_empresas' %}?format=xlsx" title="Exportar clientes/empresas em Excel (XLSX)" aria-label="Exportar clientes/empresas Excel">
+                                <i class="fas fa-file-excel"></i>
+                                Exportar (Excel)
+                            </a>
+                            <a class="btn-export-recebedores btn-export-csv" href="{% url 'exportar_clientes_empresas' %}?format=csv" title="Exportar clientes/empresas em CSV" aria-label="Exportar clientes/empresas CSV">
+                                <i class="fas fa-file-csv"></i>
+                                Exportar (CSV)
+                            </a>
                         </div>
                     </div>
                     

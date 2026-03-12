@@ -1,11 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.db import transaction
+from django.utils import timezone
 import json
-from io import StringIO
+import csv
+from io import StringIO, BytesIO
 try:
     import pandas as pd
     PANDAS_AVAILABLE = True
@@ -562,6 +564,123 @@ def importar_recebedores(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({'success': False, 'error': f'Erro ao importar recebedores: {str(e)}'}, status=400)
+
+
+@require_http_methods(["GET"])
+def exportar_recebedores(request):
+    """Exporta lista de recebedores em planilha (XLSX ou CSV): nome, chave PIX, ativo, supervisor, data criação."""
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Não autenticado'}, status=401)
+    if not user_can_view_services(request.user):
+        return JsonResponse({'error': 'Sem permissão'}, status=403)
+
+    fmt = (request.GET.get('format') or 'xlsx').strip().lower()
+    if fmt not in ('csv', 'xlsx'):
+        return JsonResponse({'error': 'Formato inválido. Use format=csv ou format=xlsx.'}, status=400)
+
+    try:
+        recebedores_list = Recebedor.objects.all().order_by('nome')
+    except Exception:
+        recebedores_list = Recebedor.objects.all().order_by('nome')
+
+    headers = ['Número', 'Nome', 'Chave PIX', 'Ativo', 'Supervisor', 'Data de Criação']
+    rows = []
+    for idx, r in enumerate(recebedores_list, start=1):
+        ativo_str = 'Sim' if r.ativo else 'Não'
+        supervisor_str = r.get_supervisor_display_name() if hasattr(r, 'get_supervisor_display_name') else (getattr(r, 'supervisor', None) or '')
+        data_criacao = r.data_criacao.strftime('%d/%m/%Y %H:%M') if getattr(r, 'data_criacao', None) else ''
+        rows.append([idx, r.nome or '', r.chave_pix or '', ativo_str, supervisor_str, data_criacao])
+
+    today = timezone.now().date().isoformat()
+    filename = f'recebedores_{today}'
+
+    if fmt == 'csv':
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = f'attachment; filename="{filename}.csv"'
+        response.write('\ufeff')
+        writer = csv.writer(response, delimiter=';')
+        writer.writerow(headers)
+        for row in rows:
+            writer.writerow(row)
+        return response
+
+    try:
+        from openpyxl import Workbook
+    except ImportError:
+        return JsonResponse({'error': 'openpyxl indisponível para exportar Excel'}, status=500)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Recebedores'
+    ws.append(headers)
+    for row in rows:
+        ws.append(row)
+    stream = BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+    response = HttpResponse(
+        stream.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}.xlsx"'
+    return response
+
+
+@require_http_methods(["GET"])
+def exportar_clientes_empresas(request):
+    """Exporta lista de clientes/empresas em planilha (XLSX ou CSV): nome, CNPJ, ativo, data criação."""
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Não autenticado'}, status=401)
+    if not user_can_view_services(request.user):
+        return JsonResponse({'error': 'Sem permissão'}, status=403)
+
+    fmt = (request.GET.get('format') or 'xlsx').strip().lower()
+    if fmt not in ('csv', 'xlsx'):
+        return JsonResponse({'error': 'Formato inválido. Use format=csv ou format=xlsx.'}, status=400)
+
+    clientes_list = ClienteEmpresa.objects.all().order_by('nome')
+
+    headers = ['Número', 'Nome', 'CNPJ', 'Ativo', 'Data de Criação']
+    rows = []
+    for idx, c in enumerate(clientes_list, start=1):
+        ativo_str = 'Sim' if c.ativo else 'Não'
+        data_criacao = c.data_criacao.strftime('%d/%m/%Y %H:%M') if getattr(c, 'data_criacao', None) else ''
+        rows.append([idx, c.nome or '', c.cnpj or '', ativo_str, data_criacao])
+
+    today = timezone.now().date().isoformat()
+    filename = f'clientes_empresas_{today}'
+
+    if fmt == 'csv':
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = f'attachment; filename="{filename}.csv"'
+        response.write('\ufeff')
+        writer = csv.writer(response, delimiter=';')
+        writer.writerow(headers)
+        for row in rows:
+            writer.writerow(row)
+        return response
+
+    try:
+        from openpyxl import Workbook
+    except ImportError:
+        return JsonResponse({'error': 'openpyxl indisponível para exportar Excel'}, status=500)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Clientes e Empresas'
+    ws.append(headers)
+    for row in rows:
+        ws.append(row)
+    stream = BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+    response = HttpResponse(
+        stream.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}.xlsx"'
+    return response
+
 
 # ============================================
 # VIEWS PARA CLIENTES/EMPRESAS

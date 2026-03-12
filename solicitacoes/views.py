@@ -19,8 +19,10 @@ from .models import (
 from servicos.models import Servico
 from django.utils import timezone
 from datetime import time, datetime, timedelta
+from io import BytesIO
+import csv
 import json
-from usuarios.decorators import group_required
+from usuarios.decorators import group_required, user_can_view_dashboard
 from .audit_utils import serialize_instance
 
 STATUS_VALIDOS = {choice[0] for choice in Solicitacoes._meta.get_field('status').choices}
@@ -2185,6 +2187,175 @@ def exportar_relatorio_card(request, solicitacao_id):
         messages.error(request, f'Erro ao gerar relatório: {str(e)}')
         return redirect('/solicitacoes/home/')
  
+
+@require_http_methods(["GET"])
+def exportar_pix_ordens_pagamento(request):
+    """
+    Exporta ordens de pagamento com PIX (principalmente Técnico) em CSV ou XLSX.
+
+    Query params:
+      - format: csv | xlsx (default: xlsx)
+      - include_rota: 1 para incluir itens Em Rota (opcional)
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Não autenticado'}, status=401)
+    if not user_can_view_dashboard(request.user):
+        return JsonResponse({'error': 'Sem permissão'}, status=403)
+
+    fmt = (request.GET.get('format') or 'xlsx').strip().lower()
+    include_rota = (request.GET.get('include_rota') or '').strip() in ('1', 'true', 'True', 'yes', 'sim')
+
+    headers = [
+        'Ticket Solicitação',
+        'Ordem',
+        'Ticket Item',
+        'Tipo',
+        'Recebedor',
+        'Chave PIX',
+        'Serviço',
+        'Cliente/Empresa',
+        'CNPJ',
+        'Valor Pagamento',
+        'Valor Extra',
+        'Valor Total',
+        'Data Realização',
+        'Data Pagamento',
+        'Status',
+        'Prioridade',
+        'Descrição',
+        'Atividade Produtiva',
+    ]
+
+    rows = []
+    ordem_por_solicitacao = {}
+
+    itens_tecnico = (
+        SolicitacaoTecnico.objects.select_related('solicitacao', 'recebedor', 'servico', 'cliente_empresa')
+        .all()
+        .order_by('solicitacao__data_de_criacao', 'solicitacao_id', 'id')
+    )
+    for item in itens_tecnico:
+        sol = item.solicitacao
+        sol_id = sol.id if sol else None
+        ordem_por_solicitacao[sol_id] = (ordem_por_solicitacao.get(sol_id, 0) + 1)
+        ordem = ordem_por_solicitacao[sol_id]
+
+        ticket_solic = sol.ticket if sol else ''
+        ticket_item = (item.ticket_item or '').strip() or ticket_solic
+        recebedor_nome = item.recebedor.nome if item.recebedor else ''
+        chave_pix = item.recebedor.chave_pix if item.recebedor else ''
+        servico_nome = item.servico.nome if item.servico else ''
+        cliente_nome = item.cliente_empresa.nome if item.cliente_empresa else ''
+        cnpj = (item.cliente_empresa.cnpj or '') if item.cliente_empresa and hasattr(item.cliente_empresa, 'cnpj') else ''
+        valor_pag = float(item.valor_pagamento_tecnico or 0.0)
+        valor_extra = float(item.valor_extra or 0.0)
+        valor_total = valor_pag + valor_extra
+        data_real = item.data_realizacao_atividade.isoformat() if item.data_realizacao_atividade else ''
+        data_pag = item.data_pagamento.isoformat() if item.data_pagamento else ''
+        status = sol.status if sol else ''
+        prioridade = sol.prioridade if sol else ''
+        descricao = item.descricao or ''
+        atividade_prod = 'Sim' if getattr(item, 'atividade_produtiva', False) else 'Não'
+
+        rows.append([
+            ticket_solic,
+            ordem,
+            ticket_item,
+            'Técnico',
+            recebedor_nome,
+            chave_pix,
+            servico_nome,
+            cliente_nome,
+            cnpj,
+            valor_pag,
+            valor_extra,
+            valor_total,
+            data_real,
+            data_pag,
+            status,
+            prioridade,
+            descricao,
+            atividade_prod,
+        ])
+
+    if include_rota:
+        itens_rota = (
+            SolicitacaoRotaItem.objects.select_related('solicitacao', 'servico', 'recebedor_fk')
+            .all()
+            .order_by('solicitacao__data_de_criacao', 'solicitacao_id', 'ordem', 'id')
+        )
+        for item in itens_rota:
+            sol = item.solicitacao
+            ticket_solic = sol.ticket if sol else ''
+            ticket_item = (item.ticket_item or '').strip()
+            recebedor_nome = (item.recebedor or '').strip() or (item.recebedor_fk.nome if item.recebedor_fk else '')
+            chave_pix = (item.chave_pix or '').strip() or (item.recebedor_fk.chave_pix if item.recebedor_fk else '')
+            servico_nome = item.servico.nome if item.servico else ''
+            cliente_nome = (item.cliente_empresa or '').strip()
+            cnpj = (item.cnpj or '').strip()
+            valor_pag = float(item.valor or 0.0)
+            valor_total = valor_pag + float(item.valor_km or 0.0) + float(item.valor_pedagio or 0.0) + float(item.valor_hospedagem or 0.0) + float(item.valor_fluvial or 0.0) + float(item.valor_outros or 0.0)
+            data_pag = sol.data_de_pagamento.isoformat() if sol and sol.data_de_pagamento else ''
+            status = sol.status if sol else ''
+            prioridade = sol.prioridade if sol else ''
+
+            rows.append([
+                ticket_solic,
+                int(item.ordem or 0),
+                ticket_item,
+                'Em Rota',
+                recebedor_nome,
+                chave_pix,
+                servico_nome,
+                cliente_nome,
+                cnpj,
+                valor_pag,
+                0.0,
+                float(valor_total),
+                '',
+                data_pag,
+                status,
+                prioridade,
+                '',
+                '',
+            ])
+
+    today = timezone.now().date().isoformat()
+    if fmt == 'csv':
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = f'attachment; filename=\"pix_ordens_pagamento_{today}.csv\"'
+        response.write('\ufeff')  # BOM UTF-8 para Excel
+        writer = csv.writer(response, delimiter=';')
+        writer.writerow(headers)
+        for r in rows:
+            writer.writerow(r)
+        return response
+
+    if fmt == 'xlsx':
+        try:
+            from openpyxl import Workbook
+        except Exception as e:
+            return JsonResponse({'error': f'openpyxl indisponível: {str(e)}'}, status=500)
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = 'PIX e Ordens de Pagamento'
+        ws.append(headers)
+        for r in rows:
+            ws.append(r)
+
+        stream = BytesIO()
+        wb.save(stream)
+        stream.seek(0)
+        response = HttpResponse(
+            stream.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename=\"pix_ordens_pagamento_{today}.xlsx\"'
+        return response
+
+    return JsonResponse({'error': 'Formato inválido. Use format=csv ou format=xlsx.'}, status=400)
+
 
 @group_required('Administrador', 'Financeiro')
 @require_http_methods(["GET"])

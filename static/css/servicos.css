@@ -200,6 +200,33 @@
     transform: scale(1.1) rotate(5deg);
 }
 
+/* Botão Exportar Recebedores - alinhado ao Importar */
+.btn-export-recebedores {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+    color: white;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+.btn-export-recebedores:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.5);
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: white;
+}
+.btn-export-recebedores i {
+    font-size: 1.1rem;
+}
+
 /* Botão de Submit Importar - Estilo no padrão do site */
 .btn-import-submit {
     background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
