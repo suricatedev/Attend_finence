@@ -266,19 +266,13 @@ def criar_recebedor(request):
         if Recebedor.objects.filter(nome__iexact=nome).exists():
             return JsonResponse({'success': False, 'error': f'Já existe um recebedor com o nome "{nome}"'})
         
-        # Criar recebedor, verificando se o campo supervisor existe
+        # Criar recebedor (modelo Recebedor tem campo supervisor)
         recebedor_data = {
             'nome': nome,
             'chave_pix': chave_pix,
-            'ativo': ativo
+            'ativo': ativo,
+            'supervisor': supervisor,
         }
-        # Adicionar supervisor apenas se o campo existir
-        try:
-            if 'supervisor' in [f.name for f in Recebedor._meta.get_fields()]:
-                recebedor_data['supervisor'] = supervisor
-        except Exception:
-            pass  # Se não conseguir verificar, não adicionar supervisor
-        
         recebedor = Recebedor.objects.create(**recebedor_data)
         
         return JsonResponse({

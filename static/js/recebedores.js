@@ -173,9 +173,11 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             
             const formData = new FormData(addRecebedorForm);
+            const supervisorVal = (formData.get('supervisor') || '').trim();
             const data = {
                 nome: formData.get('nome'),
                 chave_pix: formData.get('chave_pix'),
+                supervisor: supervisorVal || null,
                 ativo: formData.get('ativo')
             };
             
