@@ -152,7 +152,6 @@
                 document.addEventListener('DOMContentLoaded', applyMultiple);
             }
             
-            // Para deslocamento NÃO rodar applyMultiple aos 200ms: o filtro "Hoje" já foi aplicado e não pode ser sobrescrito
             setTimeout(function() {
                 if ((localStorage.getItem('filterType') || 'deslocamento') !== 'deslocamento') {
                     applyMultiple();
@@ -370,11 +369,11 @@
                         </div>
                         {% endif %}
                         <div class="column-date-filter">
-                            <span class="selected-date-display" data-column="planning">Hoje</span>
-                            <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="planning">
+                            <span class="selected-date-display" data-column="planning">Todos</span>
+                            <button class="date-filter-today-btn" title="Filtrar por hoje" data-column="planning">
                                 Hoje
                             </button>
-                            <button class="date-filter-all-btn" title="Mostrar todos" data-column="planning">
+                            <button class="date-filter-all-btn active" title="Mostrar todos" data-column="planning">
                                 Todos
                             </button>
                             <button class="date-filter-btn" title="Filtrar por data específica" data-column="planning">
@@ -501,11 +500,11 @@
                         </div>
                         {% endif %}
                         <div class="column-date-filter">
-                            <span class="selected-date-display" data-column="test">Hoje</span>
-                            <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="test">
+                            <span class="selected-date-display" data-column="test">Todos</span>
+                            <button class="date-filter-today-btn" title="Filtrar por hoje" data-column="test">
                                 Hoje
                             </button>
-                            <button class="date-filter-all-btn" title="Mostrar todos" data-column="test">
+                            <button class="date-filter-all-btn active" title="Mostrar todos" data-column="test">
                                 Todos
                             </button>
                             <button class="date-filter-btn" title="Filtrar por data" data-column="test">
@@ -637,11 +636,11 @@
                         </div>
                         {% endif %}
                         <div class="column-date-filter">
-                            <span class="selected-date-display" data-column="launch">Hoje</span>
-                            <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="launch">
+                            <span class="selected-date-display" data-column="launch">Todos</span>
+                            <button class="date-filter-today-btn" title="Filtrar por hoje" data-column="launch">
                                 Hoje
                             </button>
-                            <button class="date-filter-all-btn" title="Mostrar todos" data-column="launch">
+                            <button class="date-filter-all-btn active" title="Mostrar todos" data-column="launch">
                                 Todos
                             </button>
                             <button class="date-filter-btn" title="Filtrar por data" data-column="launch">
@@ -768,11 +767,11 @@
                         </div>
                         {% endif %}
                         <div class="column-date-filter">
-                            <span class="selected-date-display" data-column="success">Hoje</span>
-                            <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="success">
+                            <span class="selected-date-display" data-column="success">Todos</span>
+                            <button class="date-filter-today-btn" title="Filtrar por hoje" data-column="success">
                                 Hoje
                             </button>
-                            <button class="date-filter-all-btn" title="Mostrar todos" data-column="success">
+                            <button class="date-filter-all-btn active" title="Mostrar todos" data-column="success">
                                 Todos
                             </button>
                             <button class="date-filter-btn" title="Filtrar por data" data-column="success">
@@ -899,11 +898,11 @@
                         </div>
                         {% endif %}
                         <div class="column-date-filter">
-                            <span class="selected-date-display" data-column="refund">Hoje</span>
-                            <button class="date-filter-today-btn active" title="Filtrar por hoje" data-column="refund">
+                            <span class="selected-date-display" data-column="refund">Todos</span>
+                            <button class="date-filter-today-btn" title="Filtrar por hoje" data-column="refund">
                                 Hoje
                             </button>
-                            <button class="date-filter-all-btn" title="Mostrar todos" data-column="refund">
+                            <button class="date-filter-all-btn active" title="Mostrar todos" data-column="refund">
                                 Todos
                             </button>
                             <button class="date-filter-btn" title="Filtrar por data" data-column="refund">
@@ -1418,15 +1417,13 @@
                 });
             });
             
-            // Filtrar por hoje por padrão ao carregar a página (mas não se o filtro de técnico estiver ativo)
+            // Para "Solicitação por deslocamento" e "Solicitação por técnico": usar filtro "Todos" por padrão em todas as colunas
             function initializeTodayFilter() {
-                // Verificar se o filtro de técnico está ativo
                 const requestTypeSelect = document.getElementById('requestTypeSelect');
                 const savedFilter = localStorage.getItem('filterType');
                 const filterType = (requestTypeSelect && requestTypeSelect.value) ? requestTypeSelect.value : (savedFilter || 'deslocamento');
                 
-                if (filterType === 'tecnico') {
-                    // Se for técnico, mostrar todos os cards (não filtrar por data)
+                if (filterType === 'tecnico' || filterType === 'deslocamento') {
                     const columns = ['planning', 'test', 'launch', 'success', 'refund'];
                     columns.forEach(column => {
                         showAllCards(column);
@@ -1434,12 +1431,12 @@
                     return;
                 }
                 
-                // Para deslocamento, aplicar filtro de hoje normalmente
                 const columns = ['planning', 'test', 'launch', 'success', 'refund'];
                 columns.forEach(column => {
                     filterByToday(column);
                 });
             }
+            window.initializeTodayFilter = initializeTodayFilter;
             
             // Aplicar filtro de tipo PRIMEIRO, antes do filtro de data
             setTimeout(() => {
@@ -1455,18 +1452,18 @@
                     }
                 }
                 
-                // Depois aplicar o filtro de data (se necessário)
+                // Depois aplicar o filtro de data: para deslocamento e técnico, "Todos" em todas as colunas
                 setTimeout(() => {
                     initializeTodayFilter();
-                    
-                    // Só reaplicar filtro de tipo para técnico. Para deslocamento, reaplicar "Hoje" de novo após 250ms
-                    // para garantir que prevaleça sobre applyFilterFast que pode rodar até 200ms.
                     setTimeout(() => {
                         if (filterToApply === 'tecnico' && typeof filterCardsByType === 'function') {
-                                filterCardsByType('tecnico');
-                        } else if (filterToApply === 'deslocamento' && typeof initializeTodayFilter === 'function') {
+                            filterCardsByType('tecnico');
+                        } else if (filterToApply === 'deslocamento' && typeof filterCardsByType === 'function') {
+                            filterCardsByType('deslocamento');
+                        }
+                        if ((filterToApply === 'tecnico' || filterToApply === 'deslocamento') && typeof initializeTodayFilter === 'function') {
                             initializeTodayFilter();
-                            }
+                        }
                     }, 250);
                 }, 50);
             }, 100);

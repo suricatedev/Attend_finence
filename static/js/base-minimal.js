@@ -158,23 +158,19 @@ window.addEventListener('DOMContentLoaded', function() {
                     if (appTitle) {
                         appTitle.textContent = 'Solicitação financeira por tecnico';
                     }
-                    // Salvar filtro no localStorage
                     localStorage.setItem('filterType', 'tecnico');
-                    // Filtrar cards para mostrar apenas solicitações de técnico
                     setTimeout(() => {
-                        filterCardsByType('tecnico');
+                        if (typeof filterCardsByType === 'function') filterCardsByType('tecnico');
+                        if (typeof window.initializeTodayFilter === 'function') window.initializeTodayFilter();
                     }, 100);
                 } else if (selectedValue === 'deslocamento') {
-                    // Se selecionou "deslocamento", voltar ao título padrão
                     if (appTitle) {
                         appTitle.textContent = 'Solicitação de deslocamento';
                     }
-                    // Salvar filtro no localStorage
                     localStorage.setItem('filterType', 'deslocamento');
-                    // Filtrar cards para mostrar apenas solicitações de deslocamento (não técnico)
                     setTimeout(() => {
-                        filterCardsByType('deslocamento');
-                        // Restaurar contadores originais do backend quando for deslocamento
+                        if (typeof filterCardsByType === 'function') filterCardsByType('deslocamento');
+                        if (typeof window.initializeTodayFilter === 'function') window.initializeTodayFilter();
                         if (typeof window.updateCardCountersAfterFilter === 'function') {
                             window.updateCardCountersAfterFilter();
                         }
