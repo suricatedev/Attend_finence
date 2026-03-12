@@ -18,6 +18,32 @@ from usuarios.decorators import user_can_view_services
 from solicitacoes.models import Recebedor, ClienteEmpresa
 from solicitacoes.views import garantir_migracao_campos
 
+
+def _csv_cell(value):
+    """Normaliza valor para célula CSV: strip e substitui quebras de linha para evitar linhas quebradas."""
+    if value is None:
+        return ''
+    s = str(value).strip()
+    return s.replace('\r', ' ').replace('\n', ' ')
+
+
+def _write_csv_response(headers, rows, filename_base):
+    """Gera HttpResponse com CSV UTF-8, BOM e delimitador vírgula para o Excel separar em colunas."""
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="{filename_base}.csv"'
+    response.write('\ufeff')
+    writer = csv.writer(
+        response,
+        delimiter=',',
+        lineterminator='\r\n',
+        quoting=csv.QUOTE_MINIMAL,
+    )
+    writer.writerow(headers)
+    for row in rows:
+        writer.writerow([_csv_cell(c) for c in row])
+    return response
+
+
 def servicos(request):
     if not request.user.is_authenticated:
         return redirect('login')
@@ -211,6 +237,55 @@ def editar_servico(request, servico_id):
         import traceback
         traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@require_http_methods(["GET"])
+def exportar_servicos(request):
+    """Exporta lista de serviços cadastrados em CSV ou XLSX (ordenado por nome, formato consistente)."""
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Não autenticado'}, status=401)
+    if not user_can_view_services(request.user):
+        return JsonResponse({'error': 'Sem permissão'}, status=403)
+
+    fmt = (request.GET.get('format') or 'xlsx').strip().lower()
+    if fmt not in ('csv', 'xlsx'):
+        return JsonResponse({'error': 'Formato inválido. Use format=csv ou format=xlsx.'}, status=400)
+
+    servicos_list = Servico.objects.all().order_by('nome')
+
+    headers = ['ID', 'Nome', 'Descrição', 'Status']
+    rows = []
+    for s in servicos_list:
+        descricao = (s.descricao or '').strip() or 'Sem descrição'
+        status_str = s.get_status_display() if hasattr(s, 'get_status_display') else ('Ativo' if s.ativo else 'Inativo')
+        rows.append([s.id, s.nome or '', descricao, status_str])
+
+    today = timezone.now().date().isoformat()
+    filename = f'servicos_{today}'
+
+    if fmt == 'csv':
+        return _write_csv_response(headers, rows, filename)
+
+    try:
+        from openpyxl import Workbook
+    except ImportError:
+        return JsonResponse({'error': 'openpyxl indisponível para exportar Excel'}, status=500)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Serviços'
+    ws.append(headers)
+    for row in rows:
+        ws.append(row)
+    stream = BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+    response = HttpResponse(
+        stream.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}.xlsx"'
+    return response
+
 
 @require_http_methods(["POST", "DELETE"])
 def deletar_servico(request, servico_id):
@@ -577,26 +652,18 @@ def exportar_recebedores(request):
     except Exception:
         recebedores_list = Recebedor.objects.all().order_by('nome')
 
-    headers = ['Número', 'Nome', 'Chave PIX', 'Ativo', 'Supervisor', 'Data de Criação']
+    headers = ['Número', 'Nome', 'Chave PIX', 'Ativo', 'Supervisor']
     rows = []
     for idx, r in enumerate(recebedores_list, start=1):
         ativo_str = 'Sim' if r.ativo else 'Não'
         supervisor_str = r.get_supervisor_display_name() if hasattr(r, 'get_supervisor_display_name') else (getattr(r, 'supervisor', None) or '')
-        data_criacao = r.data_criacao.strftime('%d/%m/%Y %H:%M') if getattr(r, 'data_criacao', None) else ''
-        rows.append([idx, r.nome or '', r.chave_pix or '', ativo_str, supervisor_str, data_criacao])
+        rows.append([idx, r.nome or '', r.chave_pix or '', ativo_str, supervisor_str])
 
     today = timezone.now().date().isoformat()
     filename = f'recebedores_{today}'
 
     if fmt == 'csv':
-        response = HttpResponse(content_type='text/csv; charset=utf-8')
-        response['Content-Disposition'] = f'attachment; filename="{filename}.csv"'
-        response.write('\ufeff')
-        writer = csv.writer(response, delimiter=';')
-        writer.writerow(headers)
-        for row in rows:
-            writer.writerow(row)
-        return response
+        return _write_csv_response(headers, rows, filename)
 
     try:
         from openpyxl import Workbook
@@ -634,25 +701,17 @@ def exportar_clientes_empresas(request):
 
     clientes_list = ClienteEmpresa.objects.all().order_by('nome')
 
-    headers = ['Número', 'Nome', 'CNPJ', 'Ativo', 'Data de Criação']
+    headers = ['Número', 'Nome', 'CNPJ', 'Ativo']
     rows = []
     for idx, c in enumerate(clientes_list, start=1):
         ativo_str = 'Sim' if c.ativo else 'Não'
-        data_criacao = c.data_criacao.strftime('%d/%m/%Y %H:%M') if getattr(c, 'data_criacao', None) else ''
-        rows.append([idx, c.nome or '', c.cnpj or '', ativo_str, data_criacao])
+        rows.append([idx, c.nome or '', c.cnpj or '', ativo_str])
 
     today = timezone.now().date().isoformat()
     filename = f'clientes_empresas_{today}'
 
     if fmt == 'csv':
-        response = HttpResponse(content_type='text/csv; charset=utf-8')
-        response['Content-Disposition'] = f'attachment; filename="{filename}.csv"'
-        response.write('\ufeff')
-        writer = csv.writer(response, delimiter=';')
-        writer.writerow(headers)
-        for row in rows:
-            writer.writerow(row)
-        return response
+        return _write_csv_response(headers, rows, filename)
 
     try:
         from openpyxl import Workbook

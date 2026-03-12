@@ -6,6 +6,7 @@ urlpatterns = [
     path("criar/", views.criar_servico, name="criar_servico"),
     path("editar/<int:servico_id>/", views.editar_servico, name="editar_servico"),
     path("deletar/<int:servico_id>/", views.deletar_servico, name="deletar_servico"),
+    path("exportar/", views.exportar_servicos, name="exportar_servicos"),
     # URLs para Recebedores
     path("recebedores/criar/", views.criar_recebedor, name="criar_recebedor"),
     path("recebedores/editar/<int:recebedor_id>/", views.editar_recebedor, name="editar_recebedor"),

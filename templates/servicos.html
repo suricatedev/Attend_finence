@@ -96,10 +96,14 @@
                                 </button>
                             </div>
                             <div class="list-actions">
-                                <button class="btn-secondary" id="exportBtn">
-                                    <i class="fas fa-download"></i>
-                                    Exportar
-                                </button>
+                                <a class="btn-export-recebedores" href="{% url 'exportar_servicos' %}?format=xlsx" title="Exportar serviços em Excel (XLSX)" aria-label="Exportar serviços Excel">
+                                    <i class="fas fa-file-excel"></i>
+                                    Exportar (Excel)
+                                </a>
+                                <a class="btn-export-recebedores btn-export-csv" href="{% url 'exportar_servicos' %}?format=csv" title="Exportar serviços em CSV" aria-label="Exportar serviços CSV">
+                                    <i class="fas fa-file-csv"></i>
+                                    Exportar (CSV)
+                                </a>
                                 <button class="btn-secondary" id="refreshBtn">
                                     <i class="fas fa-sync-alt"></i>
                                     Atualizar

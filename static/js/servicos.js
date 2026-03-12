@@ -1,4 +1,4 @@
-﻿// ========================================
+// ========================================
 // PÁGINA DE SERVIÇOS - FUNCIONALIDADES
 // ========================================
 
@@ -594,11 +594,16 @@ function showNotification(message, type = 'info') {
 
 
 
-// Função para exportar serviços
+// Função para exportar serviços (apenas serviços cadastrados, sem duplicatas)
 function exportServices() {
     try {
-        // Coletar dados dos serviços do HTML
-        const serviceItems = document.querySelectorAll('.service-item, .service-card');
+        // Coletar apenas da lista visível para evitar duplicata (lista e grid têm os mesmos serviços)
+        const listView = document.getElementById('servicesListView');
+        const gridView = document.getElementById('servicesGridView');
+        const listVisible = listView && listView.style.display !== 'none';
+        const selector = listVisible ? '.service-item' : '.service-card';
+        const container = listVisible ? listView : gridView;
+        const serviceItems = container ? container.querySelectorAll(selector) : [];
         
         if (serviceItems.length === 0) {
             showNotification('Nenhum serviço para exportar!', 'info');
@@ -612,7 +617,7 @@ function exportServices() {
         const headers = ['ID', 'Nome', 'Descrição', 'Status'];
         csvContent += headers.join(delimiter) + '\n';
         
-        // Dados dos serviços
+        // Dados dos serviços (cada serviço cadastrado uma única vez)
         serviceItems.forEach(item => {
             const id = item.getAttribute('data-service-id') || '';
             const name = (item.querySelector('.service-name, h3')?.textContent || '').trim();
