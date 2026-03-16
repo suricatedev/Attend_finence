@@ -206,6 +206,9 @@
                     var container = document.querySelector('.dashboard-custos-view');
                     if (container) container.classList.toggle('dashboard-custos-revealed');
                     if (typeof window.refreshDashboardCustosPrivacy === 'function') window.refreshDashboardCustosPrivacy();
+                    setTimeout(function() {
+                        if (typeof window.updateDashboardCustosCharts === 'function') window.updateDashboardCustosCharts();
+                    }, 0);
                 });
             }
 

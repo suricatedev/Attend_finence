@@ -13,15 +13,23 @@
     var serviceTypeData = data.serviceTypeData || [0, 0, 0];
     var evolutionWeeks = data.evolutionWeeks || [];
 
+    var chartInstances = [];
+
     function isDashboardRevealed() {
         var view = document.querySelector('.dashboard-custos-view');
         return view && view.classList.contains('dashboard-custos-revealed');
     }
 
+    window.updateDashboardCustosCharts = function() {
+        chartInstances.forEach(function(chart) {
+            if (chart) chart.update();
+        });
+    };
+
     function initCharts() {
         var ctx1 = document.getElementById('costDistributionChart');
         if (ctx1) {
-            new Chart(ctx1.getContext('2d'), {
+            chartInstances.push(new Chart(ctx1.getContext('2d'), {
                 type: 'doughnut',
                 data: {
                     labels: ['Custo Deslocamento', 'Custo Logístico', 'Custo com Técnicos'],
@@ -50,12 +58,12 @@
                     },
                     cutout: '70%'
                 }
-            });
+            }));
         }
 
         var ctx2 = document.getElementById('serviceTypeChart');
         if (ctx2) {
-            new Chart(ctx2.getContext('2d'), {
+            chartInstances.push(new Chart(ctx2.getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: ['Custo Deslocamento', 'Custo Logístico', 'Custo com Técnicos'],
@@ -94,7 +102,7 @@
                         }
                     }
                 }
-            });
+            }));
         }
 
         var labels = evolutionWeeks.map(function(w) { return w.label || ''; });
@@ -111,7 +119,7 @@
 
         var ctx3 = document.getElementById('evolutionChart');
         if (ctx3) {
-            new Chart(ctx3.getContext('2d'), {
+            chartInstances.push(new Chart(ctx3.getContext('2d'), {
                 type: 'line',
                 data: {
                     labels: labels,
@@ -169,7 +177,7 @@
                         }
                     }
                 }
-            });
+            }));
         }
     }
 

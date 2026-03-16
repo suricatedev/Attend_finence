@@ -1708,6 +1708,38 @@
             }).join('\r\n');
         }
 
+        // Monta bloco de texto por solicitante no formato:
+        // Deslocamento (Ana)
+        //
+        // (123) - R$ 0,05 - Manutenção...
+        //
+        // Adiantamento - R$ X
+        // Receita - R$ Y
+        //
+        // 2 Manutenção...
+        // ————————
+        function buildSolicitanteBlock(tipoLabel, nomeSolicitante, linhas, adiantamentoTotal, receitaTotal, resumoServicos) {
+            const tipo = (tipoLabel || 'Deslocamento');
+            const solicitante = (nomeSolicitante || '-').trim();
+            const linhasValidas = (linhas || []).map(function(l) { return (l || '').trim(); }).filter(function(l) { return !!l; });
+
+            const partes = [];
+            partes.push(tipo + ' (' + solicitante + ')');
+            partes.push('');
+            if (linhasValidas.length) {
+                partes.push(linhasValidas.join('\r\n'));
+                partes.push('');
+            }
+            partes.push('Adiantamento - R$ ' + fmtBRL(adiantamentoTotal || 0));
+            partes.push('Receita - R$ ' + fmtBRL(receitaTotal || 0));
+            partes.push('');
+            if (resumoServicos) {
+                partes.push(resumoServicos);
+            }
+            partes.push('————————');
+            return partes.join('\r\n');
+        }
+
         // Exportar TXT no formato de solicitação AGRUPADA (itens_rota)
         // Modelo:
         // Deslocamento (solicitante)
@@ -1726,10 +1758,13 @@
 
             let adiantamentoTotal = 0;
             let receitaTotal = 0;
+            let receitaFaixaDTotal = 0;
             const servicos = [];
+            const linhasDetalhadas = [];
+            const tickets = [];
 
             // Sempre SOMAR: adiantamento = soma dos detalhamentos (KM+Pedágio+…), receita = soma do valor da atividade de cada item. Nunca subtrair.
-            const linhas = itens.map(function(item) {
+            itens.forEach(function(item) {
                 const vKm = Math.max(0, item.valor_km_raw != null ? item.valor_km_raw : 0);
                 const vPed = Math.max(0, item.valor_pedagio_raw != null ? item.valor_pedagio_raw : 0);
                 const vHosp = Math.max(0, item.valor_hospedagem_raw != null ? item.valor_hospedagem_raw : 0);
@@ -1744,27 +1779,58 @@
                 const ticket = (item.ticket_item || '').trim();
                 const servico = (item.servico || '').trim() || '-';
                 servicos.push(servico);
+                tickets.push(ticket);
                 // Só exibir valor da atividade no final quando o serviço for Manutenção Faixa D
                 const isFaixaD = /faixa\s*d/i.test(servico);
+                if (isFaixaD) {
+                    receitaFaixaDTotal += atividade;
+                }
                 const sufixoValor = isFaixaD ? ' - (R$ ' + fmtBRL(atividade) + ')' : '';
-                return '(' + ticket + ') - R$ ' + fmtBRL(deslocamento) + ' - ' + servico + sufixoValor;
+                linhasDetalhadas.push('(' + ticket + ') - R$ ' + fmtBRL(deslocamento) + ' - ' + servico + sufixoValor);
             });
 
             const resumoServicos = summarizeServiceCounts(servicos);
+            // Compactar sempre em uma linha para o TXT agrupado, usando todos os tickets
+            // e um resumo dos serviços. Exemplo:
+            // (5, 6, 6) - R$ 0,15 - 2 Chamado Logístico, 1 Manutenção Vsat Faixa A
+            let linhas = linhasDetalhadas;
+            if (tickets.length > 0) {
+                const ticketsCompact = tickets
+                    .filter(function(t) { return (t || '').trim(); })
+                    .join(', ');
+                // Transformar resumoServicos (linhas separadas) em uma frase única
+                let servicoInline = '';
+                if (resumoServicos) {
+                    const partes = resumoServicos.split(/\r?\n/).filter(function(p) { return (p || '').trim(); });
+                    if (partes.length === 1) {
+                        servicoInline = partes[0];
+                    } else if (partes.length === 2) {
+                        servicoInline = partes[0] + ' e ' + partes[1];
+                    } else if (partes.length > 2) {
+                        servicoInline = partes.slice(0, partes.length - 1).join(', ') + ' e ' + partes[partes.length - 1];
+                    }
+                }
+                if (!servicoInline) {
+                    servicoInline = (servicos[0] || '').trim() || '-';
+                }
+                // Quando houver Manutenção Faixa D, mostrar o valor total de receita associado a esse serviço
+                const sufixoReceitaFaixaD = receitaFaixaDTotal > 0 ? ' (R$ ' + fmtBRL(receitaFaixaDTotal) + ')' : '';
+                linhas = [
+                    '(' + ticketsCompact + ') - R$ ' + fmtBRL(adiantamentoTotal) + ' - ' + servicoInline + sufixoReceitaFaixaD
+                ];
+            }
 
-            const text = [
-                tipoLabel + ' (' + nomeSolicitante + ')',
-                '',
-                linhas.join('\r\n'),
-                '',
-                'Adiantamento - R$ ' + fmtBRL(adiantamentoTotal),
-                'Receita - R$ ' + fmtBRL(receitaTotal),
-                '',
-                resumoServicos || '',
-                '————————'
-            ].join('\r\n');
+            const text = buildSolicitanteBlock(tipoLabel, nomeSolicitante, linhas, adiantamentoTotal, receitaTotal, resumoServicos || '');
 
-            return { text: text, adiantamento: adiantamentoTotal, receita: receitaTotal };
+            return {
+                text: text,
+                solicitante: nomeSolicitante,
+                tipo_label: tipoLabel,
+                linhas: linhas,
+                adiantamento: adiantamentoTotal,
+                receita: receitaTotal,
+                servicos: servicos
+            };
         }
 
         // Exportar TXT no formato de solicitação SIMPLES (sem itens_rota)
@@ -1785,20 +1851,20 @@
 
             // Solicitação individual: não exibir valor da atividade na linha (só adiantamento e receita no bloco)
             const linha = '(' + ticket + ') - R$ ' + fmtBRL(deslocamento) + ' - ' + servico;
-            const resumoServicos = summarizeServiceCounts([servico]);
+            const linhas = [linha];
+            const servicos = [servico];
+            const resumoServicos = summarizeServiceCounts(servicos);
 
-            const text = [
-                tipoLabel + ' (' + nomeSolicitante + ')',
-                '',
-                linha,
-                '',
-                'Adiantamento - R$ ' + fmtBRL(deslocamento),
-                'Receita - R$ ' + fmtBRL(atividade),
-                '',
-                resumoServicos || '',
-                '————————'
-            ].join('\r\n');
-            return { text: text, adiantamento: deslocamento, receita: atividade };
+            const text = buildSolicitanteBlock(tipoLabel, nomeSolicitante, linhas, deslocamento, atividade, resumoServicos || '');
+            return {
+                text: text,
+                solicitante: nomeSolicitante,
+                tipo_label: tipoLabel,
+                linhas: linhas,
+                adiantamento: deslocamento,
+                receita: atividade,
+                servicos: servicos
+            };
         }
 
         // Exportar uma solicitação simples (sem itens agrupados)
@@ -1816,17 +1882,19 @@
             const tipoLabel = isTecnico ? 'Solicitação de técnico' : 'Deslocamento';
             // Solicitação individual: não exibir valor da atividade na linha
             const linhaDetalhes = `(${ticket}) - R$ ${fmtBRL(adiantamento)} - ${servicoNome || '-'}`;
-            return [
-                `${tipoLabel} (${solicitanteNome})`,
-                '',
-                linhaDetalhes,
-                '',
-                '',
-                'Adiantamento - R$ ' + fmtBRL(adiantamento),
-                'Receita - R$ ' + fmtBRL(valorReceita),
-                '',
-                '————————'
-            ].join('\r\n');
+            const linhas = [linhaDetalhes];
+            const servicos = [servicoNome || '-'];
+            const resumoServicos = summarizeServiceCounts(servicos);
+            const text = buildSolicitanteBlock(tipoLabel, solicitanteNome, linhas, adiantamento, valorReceita, resumoServicos || '');
+            return {
+                text: text,
+                solicitante: solicitanteNome || '',
+                tipo_label: tipoLabel,
+                linhas: linhas,
+                adiantamento: adiantamento,
+                receita: valorReceita,
+                servicos: servicos
+            };
         }
 
         document.addEventListener('click', function(e) {
@@ -1863,20 +1931,65 @@
                         .then(function(res) {
                             if (res && res.success && res.dados) {
                                 if (res.dados.itens_rota && res.dados.itens_rota.length > 0) return buildAgrupadaExportData(res.dados);
-                                return buildSimplesExportDataFromDados(res.dados) || { text: buildCardExportText(card), adiantamento: 0, receita: 0 };
+                                return buildSimplesExportDataFromDados(res.dados) || buildCardExportText(card);
                             }
-                            return { text: buildCardExportText(card), adiantamento: 0, receita: 0 };
+                            return buildCardExportText(card);
                         })
-                        .catch(function() { return { text: buildCardExportText(card), adiantamento: 0, receita: 0 }; });
+                        .catch(function() { return buildCardExportText(card); });
                 })).then(function(blocos) {
                     const blocosOk = (blocos || []).filter(function(b) { return b && typeof b.text === 'string'; });
-                    const totalAdiantamento = blocosOk.reduce(function(acc, b) { return acc + (Number(b.adiantamento) || 0); }, 0);
-                    const totalReceita = blocosOk.reduce(function(acc, b) { return acc + (Number(b.receita) || 0); }, 0);
+                    // Agrupar por tipo + solicitante
+                    const grupos = {};
+                    blocosOk.forEach(function(b) {
+                        const tipoLabel = (b.tipo_label || (b.is_tecnico ? 'Solicitação de técnico' : 'Deslocamento'));
+                        const solicitante = (b.solicitante || '').trim() || '-';
+                        const key = tipoLabel + '||' + solicitante;
+                        if (!grupos[key]) {
+                            grupos[key] = {
+                                tipo_label: tipoLabel,
+                                solicitante: solicitante,
+                                linhas: [],
+                                adiantamento: 0,
+                                receita: 0,
+                                servicos: []
+                            };
+                        }
+                        const g = grupos[key];
+                        (b.linhas || []).forEach(function(l) {
+                            if (l && typeof l === 'string') {
+                                const v = l.trim();
+                                if (v) g.linhas.push(v);
+                            }
+                        });
+                        g.adiantamento += Number(b.adiantamento) || 0;
+                        g.receita += Number(b.receita) || 0;
+                        (b.servicos || []).forEach(function(s) {
+                            const nome = (s || '').trim();
+                            if (nome && nome !== '-' && nome.toLowerCase() !== 'n/a') g.servicos.push(nome);
+                        });
+                    });
 
-                    const textoCorpo = blocosOk.map(function(b) { return b.text; }).join('\r\n\r\n');
+                    const gruposArray = Object.keys(grupos).map(function(k) { return grupos[k]; });
+                    // Somar serviços de todos os grupos para resumo global
+                    const todosServicos = [];
+                    gruposArray.forEach(function(g) {
+                        (g.servicos || []).forEach(function(s) {
+                            const nome = (s || '').trim();
+                            if (nome && nome !== '-' && nome.toLowerCase() !== 'n/a') todosServicos.push(nome);
+                        });
+                    });
+                    const resumoServicosGlobal = summarizeServiceCounts(todosServicos);
+                    const textoCorpo = gruposArray.map(function(g) {
+                        const resumo = summarizeServiceCounts(g.servicos || []);
+                        return buildSolicitanteBlock(g.tipo_label, g.solicitante, g.linhas, g.adiantamento, g.receita, resumo || '');
+                    }).join('\r\n\r\n');
+
+                    const totalAdiantamento = gruposArray.reduce(function(acc, g) { return acc + (Number(g.adiantamento) || 0); }, 0);
+                    const totalReceita = gruposArray.reduce(function(acc, g) { return acc + (Number(g.receita) || 0); }, 0);
                     const textoTotais = [
                         '',
                         '',
+                        resumoServicosGlobal || '',
                         '',
                         '',
                         'valor total de adiantamento R$ ' + fmtBRL(totalAdiantamento),

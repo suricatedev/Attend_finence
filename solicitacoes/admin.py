@@ -6,6 +6,7 @@ from .models import (
     SolicitacaoRotaItem,
     SolicitacaoTecnico,
     Solicitacoes,
+    SolicitacaoExcluida,
 )
 
 @admin.register(Recebedor)
@@ -115,3 +116,11 @@ class AuditoriaLogAdmin(admin.ModelAdmin):
     list_filter = ('acao', 'app', 'modelo', 'data_hora')
     search_fields = ('objeto_id', 'usuario__username', 'origem', 'ip_address')
     readonly_fields = ('data_hora',)
+
+
+@admin.register(SolicitacaoExcluida)
+class SolicitacaoExcluidaAdmin(admin.ModelAdmin):
+    list_display = ('ticket', 'status', 'tipo', 'solicitacao', 'usuario', 'data_hora')
+    list_filter = ('status', 'tipo', 'data_hora', 'usuario')
+    search_fields = ('ticket', 'solicitacao__ticket', 'usuario__username')
+    readonly_fields = ('ticket', 'status', 'tipo', 'usuario', 'origem', 'motivo', 'dados_snapshot', 'data_hora', 'solicitacao')
