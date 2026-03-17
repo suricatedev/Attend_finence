@@ -1703,7 +1703,14 @@
             });
             const keys = Object.keys(counts);
             if (!keys.length) return '';
-            return keys.sort().map(function(nome) {
+            function isFaixaD(nome) { return /faixa\s*d/i.test(String(nome || '')); }
+            return keys.sort(function(a, b) {
+                const aD = isFaixaD(a);
+                const bD = isFaixaD(b);
+                if (aD && !bD) return 1;   // Faixa D sempre por último
+                if (!aD && bD) return -1;
+                return String(a).localeCompare(String(b), 'pt-BR', { sensitivity: 'base' });
+            }).map(function(nome) {
                 return String(counts[nome]) + ' ' + nome;
             }).join('\r\n');
         }
