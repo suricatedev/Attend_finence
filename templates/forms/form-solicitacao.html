@@ -2096,7 +2096,8 @@
                                                     if (atividadeImprodutiva1) atividadeImprodutiva1.checked = !item1.atividade_produtiva_bool;
                                                 }
                                                 
-                                                setTecnicoCampo('tecnicoDescricao1', item1.descricao || '');
+                                                // BUGFIX: setTecnicoCampo não existe neste escopo; usar a função do item 1
+                                                setTecnicoCampoItem1('tecnicoDescricao1', item1.descricao || '');
                                             }
                                             
                                             // Criar IDs dinâmicos para os demais itens
