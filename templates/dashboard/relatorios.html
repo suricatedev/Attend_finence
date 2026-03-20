@@ -295,90 +295,6 @@
                     </div>
                 </div>
 
-                <!-- Dashboard de Indicadores (dentro de Filtros Avançados) -->
-                <div class="dashboard-indicadores-section" id="dashboardIndicadoresSection">
-                    <h3 class="dashboard-indicadores-title"><i class="fas fa-chart-line"></i> Dashboard de Indicadores</h3>
-                    <p class="dashboard-indicadores-subtitle">Eficiência Operacional</p>
-                    <div class="dashboard-indicadores-grid">
-            <!-- 1. Eficiência Operacional – Lead Time Médio -->
-            <div class="indicador-card indicador-card-lead">
-                <div class="indicador-card-header">
-                    <span class="indicador-card-label">Eficiência Operacional – Lead Time Médio</span>
-                </div>
-                <p class="indicador-card-desc">Tempo entre abertura da solicitação e conclusão</p>
-                <div class="indicador-card-value" id="leadTimeValor"><span class="private-value-wrap" data-private-real=""><span class="private-value-display">******</span></span></div>
-                <div class="indicador-card-trend" id="leadTimeTrend">
-                    <span class="trend-badge trend-up"><i class="fas fa-arrow-up"></i> <span id="leadTimeVs">0%</span> (vs Mês Passado)</span>
-                </div>
-                <div class="indicador-mini-chart">
-                    <canvas id="chartPendenciasLinha" height="56"></canvas>
-                    <span class="mini-chart-label">Pendências p/ Analista</span>
-                </div>
-            </div>
-            <!-- 2. Eficiência – Porcentagem de Erros/Ajustes -->
-            <div class="indicador-card indicador-card-percent">
-                <div class="indicador-card-header">
-                    <span class="indicador-card-label">Eficiência (Porcentagem de Erros/Ajustes)</span>
-                </div>
-                <p class="indicador-card-desc">Indicador de qualidade – menor número = menos retrabalho</p>
-                <div class="indicador-card-value" id="taxaPendenciaValor"><span class="private-value-wrap" data-private-real=""><span class="private-value-display">******</span></span></div>
-                <div class="indicador-card-trend" id="taxaPendenciaTrend">
-                    <span class="trend-badge trend-down"><i class="fas fa-arrow-down"></i> <span id="taxaPendenciaVs">0%</span> (vs Mês Passado)</span>
-                </div>
-                <div class="indicador-mini-chart">
-                    <canvas id="chartPendenciasBarras" height="56"></canvas>
-                    <span class="mini-chart-label">Pendências p/ Analista</span>
-                </div>
-            </div>
-            <!-- 3. Pareto de Gastos (Serviço/Departamento) -->
-            <div class="indicador-card indicador-card-pareto">
-                <div class="indicador-card-header">
-                    <span class="indicador-card-label">Pareto de Gastos (Serviço/Departamento)</span>
-                </div>
-                <p class="indicador-card-desc">Maiores centros de custo – princípio 80/20</p>
-                <div class="indicador-card-legend" id="paretoLegend"><span class="private-value-wrap" data-private-real="Serviço/Departamento (R$ 0,00)"><span class="private-value-display">******</span></span></div>
-                <div class="indicador-chart-wrap">
-                    <canvas id="chartPareto" height="180"></canvas>
-                </div>
-            </div>
-            <!-- 4. Concentração por Categoria/Favorecido (Gráfico de Rosca) -->
-            <div class="indicador-card indicador-card-donut">
-                <div class="indicador-card-header">
-                    <span class="indicador-card-label">Concentração por Categoria/Favorecido</span>
-                </div>
-                <p class="indicador-card-desc">Distribuição % entre fornecedores – monitor de dependência</p>
-                <div class="indicador-chart-wrap">
-                    <canvas id="chartConcentracao" height="180"></canvas>
-                </div>
-            </div>
-            <!-- 5. Previsão Próximos 7 Dias (Conciliação) -->
-            <div class="indicador-card indicador-card-previsao">
-                <div class="indicador-card-header">
-                    <span class="indicador-card-label">Previsão Próximos 7 Dias (Conciliação)</span>
-                </div>
-                <p class="indicador-card-desc">% das previsões conciliadas – fluxo de caixa da próxima semana</p>
-                <div class="previsao-content">
-                    <div class="previsao-ring-wrap">
-                        <canvas id="chartPrevisaoRing" width="120" height="120"></canvas>
-                        <div class="previsao-ring-text">
-                            <span class="previsao-pct" id="previsaoPct"><span class="private-value-wrap" data-private-real="0%"><span class="private-value-display">******</span></span></span>
-                            <span class="previsao-label">Conciliado</span>
-                        </div>
-                    </div>
-                    <div class="previsao-calendar" id="previsaoCalendar">
-                        <!-- calendário do mês será preenchido via JS -->
-                    </div>
-                </div>
-                <div class="previsao-toggle">
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="toggleDomiciliacao">
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <span class="toggle-label">Domiciliação</span>
-                </div>
-            </div>
-        </div>
-                </div>
             </div>
         </div>
     </section>
@@ -593,11 +509,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script>
-        window.RELATORIO_INDICADORES_URL = "{% url 'relatorio_indicadores' %}";
-    </script>
     <script src="{% static 'js/relatorios-optimized.js' %}" defer></script>
-    <script src="{% static 'js/relatorios-indicadores.js' %}" defer></script>
     <script>
         // Navbar de relatórios branca; conteúdo mantém fundo escuro
         document.addEventListener('DOMContentLoaded', function() {

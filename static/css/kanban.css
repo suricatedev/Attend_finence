@@ -88,25 +88,53 @@
 .column-total-amount {
     color: #1C1C1C;
 }
-.column-export-txt-btn {
+.column-export-txt-btn,
+.column-export-xlsx-btn {
     flex-shrink: 0;
-    background: rgba(84, 67, 80, 0.12);
-    border: 1px solid rgba(84, 67, 80, 0.3);
-    color: #544350;
-    width: 28px;
-    height: 26px;
-    border-radius: 6px;
+    width: 30px;
+    height: 28px;
+    border-radius: 8px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.8rem;
-    transition: background 0.2s, color 0.2s;
-    margin-left: 4px;
+    font-size: 0.82rem;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+    margin-left: 2px;
 }
+
+.column-export-txt-btn {
+    background: rgba(84, 67, 80, 0.12);
+    border: 1px solid rgba(84, 67, 80, 0.3);
+    color: #544350;
+}
+
 .column-export-txt-btn:hover {
     background: rgba(84, 67, 80, 0.25);
     color: #1C1C1C;
+}
+
+.column-export-xlsx-btn {
+    background: rgba(22, 163, 74, 0.14);
+    border: 1px solid rgba(22, 163, 74, 0.36);
+    color: #15803d;
+}
+
+.column-export-xlsx-btn:hover {
+    background: rgba(22, 163, 74, 0.24);
+    border-color: rgba(22, 163, 74, 0.55);
+    color: #166534;
+}
+
+.column-export-txt-btn:active,
+.column-export-xlsx-btn:active {
+    transform: translateY(1px);
+}
+
+.column-export-txt-btn:focus-visible,
+.column-export-xlsx-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 203, 87, 0.45);
 }
 
 .column-selection-actions {

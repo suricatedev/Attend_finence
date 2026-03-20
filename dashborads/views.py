@@ -260,7 +260,7 @@ def relatorio_indicadores(request):
     """API que retorna dados para os gráficos do dashboard de relatórios (filtro por período)."""
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Não autenticado'}, status=401)
-    if not user_can_view_reports(request.user):
+    if not (user_can_view_reports(request.user) or user_can_view_dashboard(request.user)):
         return JsonResponse({'error': 'Sem permissão'}, status=403)
 
     hoje = timezone.now().date()
