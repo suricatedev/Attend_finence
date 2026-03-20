@@ -1935,7 +1935,20 @@ def obter_detalhes_completos(request, solicitacao_id):
         if is_tecnico:
             itens_tecnico = solicitacao.solicitacoes_tecnico.all().order_by('id')
             dados['itens_tecnico'] = []
+            clientes_principais = []
+            cnpjs_principais = []
+            descricoes_principais = []
             for item in itens_tecnico:
+                valor_total_item = float(item.valor_pagamento_tecnico or 0) + float(item.valor_extra or 0)
+                cliente_nome = item.cliente_empresa.nome if item.cliente_empresa else ''
+                cliente_cnpj = item.cliente_empresa.cnpj if item.cliente_empresa and item.cliente_empresa.cnpj else ''
+                descricao_item = item.descricao or ''
+                if cliente_nome:
+                    clientes_principais.append(cliente_nome)
+                if cliente_cnpj:
+                    cnpjs_principais.append(cliente_cnpj)
+                if descricao_item:
+                    descricoes_principais.append(descricao_item)
                 dados['itens_tecnico'].append({
                     'ticket_tecnico': item.ticket_item or '',
                     'recebedor': item.recebedor.nome if item.recebedor else '',
@@ -1943,17 +1956,28 @@ def obter_detalhes_completos(request, solicitacao_id):
                     'chave_pix': item.recebedor.chave_pix if item.recebedor else '',
                     'servico': item.servico.nome if item.servico else '',
                     'servico_id': item.servico.id if item.servico else None,
-                    'cliente_empresa': item.cliente_empresa.nome if item.cliente_empresa else '',
+                    'cliente_empresa': cliente_nome,
                     'cliente_empresa_id': item.cliente_empresa.id if item.cliente_empresa else None,
+                    'cnpj': cliente_cnpj,
                     'valor_pagamento': format_brl(item.valor_pagamento_tecnico),
                     'valor_pagamento_raw': float(item.valor_pagamento_tecnico or 0),
                     'valor_extra': format_brl(item.valor_extra),
                     'valor_extra_raw': float(item.valor_extra or 0),
-                    'descricao': item.descricao or '',
+                    'valor': format_brl(valor_total_item),
+                    'valor_raw': valor_total_item,
+                    'descricao': descricao_item,
                     'data_realizacao': item.data_realizacao_atividade.strftime('%Y-%m-%d') if item.data_realizacao_atividade else '',
                     'data_pagamento': item.data_pagamento.strftime('%Y-%m-%d') if item.data_pagamento else '',
                     'atividade_produtiva': item.atividade_produtiva if hasattr(item, 'atividade_produtiva') else True,
                 })
+            # Em solicitação técnica, Cliente/CNPJ/Descrição costumam estar no item.
+            # Espelha no nível principal para exportações que leem colunas principais.
+            if not dados.get('cliente_empresa') and clientes_principais:
+                dados['cliente_empresa'] = ' | '.join(dict.fromkeys(clientes_principais))
+            if not dados.get('cnpj') and cnpjs_principais:
+                dados['cnpj'] = ' | '.join(dict.fromkeys(cnpjs_principais))
+            if not dados.get('descricao_em_rota') and descricoes_principais:
+                dados['descricao_em_rota'] = ' | '.join(dict.fromkeys(descricoes_principais))
         
         return JsonResponse({
             'success': True,

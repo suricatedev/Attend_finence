@@ -2061,6 +2061,7 @@
                         chave_pix_item: item.chave_pix || '',
                         servico_item: item.servico || '',
                         cliente_empresa_item: item.cliente_empresa || '',
+                        cnpj_item: item.cnpj || '',
                         valor_pagamento_item: item.valor_pagamento || '',
                         valor_extra_item: item.valor_extra || '',
                         valor_total_item: item.valor || '',
@@ -2149,7 +2150,6 @@
                     flattenDetalhesParaExcel(d).forEach(function(row) { linhas.push(row); });
                 });
 
-                const keys = Object.keys(linhas[0] || {});
                 const headerMap = {
                     tipo_linha: 'TIPO LINHA',
                     ticket_principal: 'TICKET',
@@ -2191,6 +2191,7 @@
                     atividade_produtiva_item: 'ATIVIDADE',
                     descricao_item: 'DESCRICAO ITEM'
                 };
+                const keys = Object.keys(headerMap);
                 const headers = keys.map(function(k) { return headerMap[k] || String(k).toUpperCase(); });
                 const wsData = [headers].concat(linhas.map(function(row) { return keys.map(function(k) { return row[k] != null ? row[k] : ''; }); }));
 
