@@ -1847,6 +1847,8 @@ def obter_detalhes_completos(request, solicitacao_id):
             'data_pagamento_iso': solicitacao.data_de_pagamento.isoformat() if solicitacao.data_de_pagamento else '',
             'valor_total': format_brl(solicitacao.valor),
             'valor_total_raw': float(solicitacao.valor or 0),
+            'valor_total_ticket': '',
+            'valor_total_ticket_raw': 0.0,
             # Calcular valor_receita a partir das atividades (não usar o valor salvo)
             'valor_receita': '',  # Será calculado abaixo
             'valor_receita_raw': 0.0,  # Será calculado abaixo
@@ -1894,9 +1896,19 @@ def obter_detalhes_completos(request, solicitacao_id):
                     for r in Recebedor.objects.filter(q).only('nome', 'chave_pix'):
                         recebedores_pix[r.nome.lower()] = r.chave_pix or ''
             dados['itens_rota'] = []
+            valor_total_solicitacao_calculado = 0.0
             for item in itens_rota:
                 nome_item = (item.recebedor or '').strip()
                 chave_pix_item = (recebedores_pix.get(nome_item.lower(), item.chave_pix or '') if nome_item else (item.chave_pix or ''))
+                valor_total_ticket_item = (
+                    float(item.valor or 0)
+                    + float(item.valor_km or 0)
+                    + float(item.valor_pedagio or 0)
+                    + float(item.valor_hospedagem or 0)
+                    + float(item.valor_fluvial or 0)
+                    + float(item.valor_outros or 0)
+                )
+                valor_total_solicitacao_calculado += valor_total_ticket_item
                 dados['itens_rota'].append({
                     'ordem': item.ordem,
                     'ticket_item': item.ticket_item,
@@ -1918,7 +1930,12 @@ def obter_detalhes_completos(request, solicitacao_id):
                     'valor_fluvial_raw': float(item.valor_fluvial or 0),
                     'valor_outros': format_brl(item.valor_outros),
                     'valor_outros_raw': float(item.valor_outros or 0),
+                    'valor_total_ticket': format_brl(valor_total_ticket_item),
+                    'valor_total_ticket_raw': valor_total_ticket_item,
                 })
+            # Na planilha, o total da solicitação agrupada deve ser a soma dos totais de cada ticket/item.
+            dados['valor_total'] = format_brl(valor_total_solicitacao_calculado)
+            dados['valor_total_raw'] = float(valor_total_solicitacao_calculado)
         else:
             # Para Casual: valor_total - soma_detalhados
             soma_detalhados_casual = (solicitacao.valor_km or 0.0) + (solicitacao.valor_pedagio or 0.0) + \
@@ -1930,6 +1947,8 @@ def obter_detalhes_completos(request, solicitacao_id):
                 valor_receita_calculado = valor_total_casual - soma_detalhados_casual
             dados['valor_receita'] = format_brl(valor_receita_calculado)
             dados['valor_receita_raw'] = float(valor_receita_calculado)
+            dados['valor_total_ticket'] = format_brl(valor_receita_calculado + soma_detalhados_casual)
+            dados['valor_total_ticket_raw'] = float(valor_receita_calculado + soma_detalhados_casual)
         
         # Se for solicitação de técnico, adicionar itens de técnico
         if is_tecnico:
@@ -1965,6 +1984,8 @@ def obter_detalhes_completos(request, solicitacao_id):
                     'valor_extra_raw': float(item.valor_extra or 0),
                     'valor': format_brl(valor_total_item),
                     'valor_raw': valor_total_item,
+                    'valor_total_ticket': format_brl(valor_total_item),
+                    'valor_total_ticket_raw': valor_total_item,
                     'descricao': descricao_item,
                     'data_realizacao': item.data_realizacao_atividade.strftime('%Y-%m-%d') if item.data_realizacao_atividade else '',
                     'data_pagamento': item.data_pagamento.strftime('%Y-%m-%d') if item.data_pagamento else '',
@@ -2379,6 +2400,262 @@ def exportar_pix_ordens_pagamento(request):
         return response
 
     return JsonResponse({'error': 'Formato inválido. Use format=csv ou format=xlsx.'}, status=400)
+
+
+@require_http_methods(["POST"])
+def exportar_solicitacoes_planilha(request):
+    """
+    Exporta planilha XLSX de solicitações (2 abas: deslocamento e técnico), com estilo fixo.
+    Recebe JSON: {"ids": [1,2,3,...]}
+    """
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except Exception:
+        return JsonResponse({'error': 'JSON inválido.'}, status=400)
+
+    ids = payload.get('ids') or []
+    try:
+        ids = [int(i) for i in ids]
+    except Exception:
+        return JsonResponse({'error': 'Lista de ids inválida.'}, status=400)
+    ids = list(dict.fromkeys(ids))
+    if not ids:
+        return JsonResponse({'error': 'Nenhuma solicitação informada para exportação.'}, status=400)
+
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    except Exception as e:
+        return JsonResponse({'error': f'openpyxl indisponível: {str(e)}'}, status=500)
+
+    solicitacoes = (
+        Solicitacoes.objects
+        .filter(id__in=ids, excluida=False)
+        .select_related('servico', 'nome_solicitante')
+        .prefetch_related('itens_rota__servico', 'solicitacoes_tecnico__servico', 'solicitacoes_tecnico__recebedor', 'solicitacoes_tecnico__cliente_empresa')
+    )
+    solicitacoes_map = {s.id: s for s in solicitacoes}
+    solicitacoes_ordenadas = [solicitacoes_map[i] for i in ids if i in solicitacoes_map]
+
+    desloc_headers = [
+        'ID', 'TIPO', 'SOLICITANTE', 'TICKET', 'SERVICO', 'STATUS', 'RECEBEDOR', 'CHAVE PIX',
+        'CLIENTE/EMPRESA', 'CNPJ', 'VALOR DA ATIVIDADE', 'KM', 'PEDAGIO', 'HOSPEDAGEM',
+        'FLUVIAL', 'OUTROS', 'VALOR TOTAL DO TICKET', 'VALOR TOTAL DA SOLICITAÇÃO',
+        'DESCRICAO ITEM', 'CRIACAO', 'PAGAMENTO'
+    ]
+    tecnico_headers = [
+        'ID', 'TIPO DE SOLICITAÇÃO', 'SOLICITANTE', 'TICKET', 'SERVICO', 'STATUS', 'RECEBEDOR', 'CHAVE PIX',
+        'CLIENTE/EMPRESA', 'CNPJ', 'VALOR PAGAMENTO', 'VALOR EXTRA', 'VALOR TOTAL DO TICKET',
+        'VALOR TOTAL DA SOLICITAÇÃO', 'DESCRICAO', 'DATA REALIZACAO', 'DATA PAGAMENTO', 'ATIVIDADE'
+    ]
+
+    def _usuario_nome(u):
+        if not u:
+            return ''
+        full = (u.get_full_name() or '').strip()
+        return full or (getattr(u, 'username', '') or '')
+
+    def _fmt_num(n):
+        return format_brl(float(n or 0))
+
+    def _build_rows_for_solicitacao(sol):
+        tipo = 'tecnico' if sol.is_tecnico() else (sol.tipo or '')
+        solicitante = _usuario_nome(sol.nome_solicitante)
+        status = sol.status or ''
+        servico_principal = sol.servico.nome if sol.servico else ''
+        data_criacao = sol.data_de_criacao.strftime('%d/%m/%Y') if sol.data_de_criacao else ''
+        data_pagamento = sol.data_de_pagamento.strftime('%d/%m/%Y') if sol.data_de_pagamento else ''
+
+        rows = []
+
+        if sol.is_tecnico():
+            itens = list(sol.solicitacoes_tecnico.all().order_by('id'))
+            total_solic = 0.0
+            for it in itens:
+                valor_pagamento = float(it.valor_pagamento_tecnico or 0)
+                valor_extra = float(it.valor_extra or 0)
+                valor_total_ticket = valor_pagamento + valor_extra
+                total_solic += valor_total_ticket
+                rows.append([
+                    sol.id, 'tecnico', solicitante, (it.ticket_item or sol.ticket or ''), (it.servico.nome if it.servico else servico_principal),
+                    status, (it.recebedor.nome if it.recebedor else ''), (it.recebedor.chave_pix if it.recebedor else ''),
+                    (it.cliente_empresa.nome if it.cliente_empresa else ''), (it.cliente_empresa.cnpj if it.cliente_empresa and it.cliente_empresa.cnpj else ''),
+                    _fmt_num(valor_pagamento), _fmt_num(valor_extra), _fmt_num(valor_total_ticket),
+                    '',
+                    (it.descricao or ''),
+                    (it.data_realizacao_atividade.strftime('%d/%m/%Y') if it.data_realizacao_atividade else ''),
+                    (it.data_pagamento.strftime('%d/%m/%Y') if it.data_pagamento else data_pagamento),
+                    ('Produtiva' if bool(it.atividade_produtiva) else 'Improdutiva')
+                ])
+            if rows:
+                # VALOR TOTAL DA SOLICITAÇÃO na primeira linha do grupo; depois será mesclado por ID
+                rows[0][13] = _fmt_num(total_solic)
+            return rows
+
+        if sol.tipo == 'em_rota':
+            itens = list(sol.itens_rota.all().order_by('ordem'))
+            total_solic = 0.0
+            for it in itens:
+                atividade = float(it.valor or 0)
+                km = float(it.valor_km or 0)
+                ped = float(it.valor_pedagio or 0)
+                hosp = float(it.valor_hospedagem or 0)
+                flu = float(it.valor_fluvial or 0)
+                out = float(it.valor_outros or 0)
+                total_ticket = atividade + km + ped + hosp + flu + out
+                total_solic += total_ticket
+                rows.append([
+                    sol.id, 'em_rota', solicitante, (it.ticket_item or sol.ticket or ''), (it.servico.nome if it.servico else servico_principal),
+                    status, (it.recebedor or ''), (it.chave_pix or ''), (it.cliente_empresa or ''), (it.cnpj or ''),
+                    _fmt_num(atividade), _fmt_num(km), _fmt_num(ped), _fmt_num(hosp), _fmt_num(flu), _fmt_num(out),
+                    _fmt_num(total_ticket), '', (sol.descricao_em_rota or ''), data_criacao, data_pagamento
+                ])
+            if rows:
+                rows[0][17] = _fmt_num(total_solic)
+            return rows
+
+        # casual/deslocamento simples
+        km = float(sol.valor_km or 0)
+        ped = float(sol.valor_pedagio or 0)
+        hosp = float(sol.valor_hospedagem or 0)
+        flu = float(sol.valor_fluvial or 0)
+        out = float(sol.valor_outros or 0)
+        soma_detalhados = km + ped + hosp + flu + out
+        total_casual = float(sol.valor or 0)
+        atividade = total_casual - soma_detalhados if total_casual > soma_detalhados else 0.0
+        total_ticket = atividade + soma_detalhados
+        rows.append([
+            sol.id, (sol.tipo or 'casual'), solicitante, (sol.ticket or ''), servico_principal, status,
+            (sol.nome_do_recebedor or ''), (sol.chave_pix or ''), (sol.cliente_empresa or ''), (sol.cnpj or ''),
+            _fmt_num(atividade), _fmt_num(km), _fmt_num(ped), _fmt_num(hosp), _fmt_num(flu), _fmt_num(out),
+            _fmt_num(total_ticket), _fmt_num(total_ticket), (sol.descricao or ''), data_criacao, data_pagamento
+        ])
+        return rows
+
+    desloc_rows = []
+    tecnico_rows = []
+    for sol in solicitacoes_ordenadas:
+        rows = _build_rows_for_solicitacao(sol)
+        if sol.is_tecnico():
+            tecnico_rows.extend(rows)
+        else:
+            desloc_rows.extend(rows)
+
+    wb = Workbook()
+    ws1 = wb.active
+    ws1.title = 'Solicitação deslocamento'
+    ws2 = wb.create_sheet('Solicitação técnico')
+
+    title_fill = PatternFill(fill_type='solid', fgColor='00B5E2')
+    header_fill = PatternFill(fill_type='solid', fgColor='9EDFF0')
+    thin_black = Side(style='thin', color='000000')
+    border_all = Border(left=thin_black, right=thin_black, top=thin_black, bottom=thin_black)
+    title_font = Font(bold=True, size=15, color='000000')
+    header_font = Font(bold=True, size=10, color='000000')
+    body_font = Font(size=10, color='000000')
+    center = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    left = Alignment(horizontal='left', vertical='center', wrap_text=True)
+
+    def _render_sheet(ws, title, rows, headers):
+        ws.append([title] + [''] * (len(headers) - 1))
+        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
+        ws.append(headers)
+        for r in rows:
+            ws.append(r)
+
+        ws.freeze_panes = 'A3'
+        from openpyxl.utils import get_column_letter
+        ws.auto_filter.ref = f"A2:{get_column_letter(len(headers))}{max(2, ws.max_row)}"
+        ws.row_dimensions[1].height = 26
+        ws.row_dimensions[2].height = 20
+
+        # Larguras para evitar quebra de linha no cabeçalho
+        col_widths_map = {
+            'ID': 8,
+            'TIPO': 12,
+            'TIPO DE SOLICITAÇÃO': 20,
+            'SOLICITANTE': 24,
+            'TICKET': 14,
+            'SERVICO': 24,
+            'STATUS': 12,
+            'RECEBEDOR': 18,
+            'CHAVE PIX': 18,
+            'CLIENTE/EMPRESA': 22,
+            'CNPJ': 16,
+            'VALOR DA ATIVIDADE': 18,
+            'KM': 10,
+            'PEDAGIO': 12,
+            'HOSPEDAGEM': 14,
+            'FLUVIAL': 10,
+            'OUTROS': 10,
+            'VALOR TOTAL DO TICKET': 22,
+            'VALOR TOTAL DA SOLICITAÇÃO': 28,
+            'DESCRICAO ITEM': 26,
+            'CRIACAO': 12,
+            'PAGAMENTO': 12,
+            'VALOR PAGAMENTO': 18,
+            'VALOR EXTRA': 14,
+            'VALOR TOTAL': 16,
+            'VALOR TOTAL DO TICKET': 22,
+            'VALOR TOTAL DA SOLICITAÇÃO': 28,
+            'DESCRICAO': 24,
+            'DATA REALIZACAO': 16,
+            'DATA PAGAMENTO': 16,
+            'ATIVIDADE': 14,
+        }
+        for col in range(1, len(headers) + 1):
+            ws.column_dimensions[get_column_letter(col)].width = col_widths_map.get(headers[col - 1], 14)
+
+        idx_id = 1
+        idx_total_sol = headers.index('VALOR TOTAL DA SOLICITAÇÃO') + 1 if 'VALOR TOTAL DA SOLICITAÇÃO' in headers else None
+
+        # Mesclar por ID e centralizar ID + total solicitação
+        if rows and idx_total_sol is not None:
+            start = 3
+            while start <= ws.max_row:
+                current_id = ws.cell(start, idx_id).value
+                end = start + 1
+                while end <= ws.max_row and ws.cell(end, idx_id).value == current_id:
+                    end += 1
+                block_end = end - 1
+                if block_end > start:
+                    ws.merge_cells(start_row=start, start_column=idx_id, end_row=block_end, end_column=idx_id)
+                    ws.merge_cells(start_row=start, start_column=idx_total_sol, end_row=block_end, end_column=idx_total_sol)
+                start = end
+
+        for r in range(1, ws.max_row + 1):
+            for c in range(1, len(headers) + 1):
+                cell = ws.cell(r, c)
+                cell.border = border_all
+                if r == 1:
+                    cell.fill = title_fill
+                    cell.font = title_font
+                    cell.alignment = center
+                elif r == 2:
+                    cell.fill = header_fill
+                    cell.font = header_font
+                    cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=False, shrink_to_fit=True)
+                else:
+                    cell.font = body_font
+                    if c == idx_id or (idx_total_sol is not None and c == idx_total_sol):
+                        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=False)
+                    else:
+                        cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=False)
+
+    _render_sheet(ws1, 'SOLICITAÇÃO DE DESLOCAMENTO', desloc_rows, desloc_headers)
+    _render_sheet(ws2, 'SOLICITAÇÃO DE TÉCNICO', tecnico_rows, tecnico_headers)
+
+    stream = BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+
+    today = timezone.now().date().isoformat()
+    response = HttpResponse(
+        stream.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename=\"solicitacoes_geral_{today}.xlsx\"'
+    return response
 
 
 @group_required('Administrador', 'Financeiro')

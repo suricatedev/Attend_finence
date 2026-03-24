@@ -351,7 +351,6 @@
                             {% endif %}
                             {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="planning" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
-                            <button type="button" class="column-export-xlsx-btn" data-column="planning" title="Exportar todas as solicitações filtradas para Excel (XLSX)"><i class="fas fa-file-excel"></i></button>
                             {% endif %}
                         </div>
                         {% if user|is_financeiro %}
@@ -483,7 +482,6 @@
                             {% endif %}
                             {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="test" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
-                            <button type="button" class="column-export-xlsx-btn" data-column="test" title="Exportar todas as solicitações filtradas para Excel (XLSX)"><i class="fas fa-file-excel"></i></button>
                             {% endif %}
                         </div>
                         {% if user|is_financeiro %}
@@ -620,7 +618,6 @@
                             {% endif %}
                             {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="launch" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
-                            <button type="button" class="column-export-xlsx-btn" data-column="launch" title="Exportar todas as solicitações filtradas para Excel (XLSX)"><i class="fas fa-file-excel"></i></button>
                             {% endif %}
                         </div>
                         {% if user|is_financeiro %}
@@ -752,7 +749,6 @@
                             {% endif %}
                             {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="success" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
-                            <button type="button" class="column-export-xlsx-btn" data-column="success" title="Exportar todas as solicitações filtradas para Excel (XLSX)"><i class="fas fa-file-excel"></i></button>
                             {% endif %}
                         </div>
                         {% if user|is_financeiro %}
@@ -884,7 +880,6 @@
                             {% endif %}
                             {% if user|is_financeiro %}
                             <button type="button" class="column-export-txt-btn" data-column="refund" title="Exportar todas as solicitações filtradas para TXT"><i class="fas fa-file-export"></i></button>
-                            <button type="button" class="column-export-xlsx-btn" data-column="refund" title="Exportar todas as solicitações filtradas para Excel (XLSX)"><i class="fas fa-file-excel"></i></button>
                             {% endif %}
                         </div>
                         {% if user|is_financeiro %}
@@ -2023,8 +2018,18 @@
         });
 
         function flattenDetalhesParaExcel(dados) {
+            const itensRotaLista = Array.isArray(dados.itens_rota) ? dados.itens_rota : [];
+            const isEmRotaAgrupada = !dados.is_tecnico && itensRotaLista.length > 0;
+            const ticketsAgrupados = isEmRotaAgrupada
+                ? itensRotaLista
+                    .map(function(item) { return (item && item.ticket_item) ? String(item.ticket_item).trim() : ''; })
+                    .filter(function(v) { return !!v; })
+                    .join(', ')
+                : '';
             const base = {
                 ticket_principal: dados.ticket || '',
+                qtd_itens: isEmRotaAgrupada ? itensRotaLista.length : '',
+                tickets_agrupados: ticketsAgrupados,
                 id_solicitacao: dados.id || '',
                 titulo: dados.titulo || '',
                 tipo: dados.is_tecnico ? 'tecnico' : (dados.tipo || ''),
@@ -2047,7 +2052,8 @@
                 valor_pedagio: dados.valor_pedagio || '',
                 valor_hospedagem: dados.valor_hospedagem || '',
                 valor_fluvial: dados.valor_fluvial || '',
-                valor_outros: dados.valor_outros || ''
+                valor_outros: dados.valor_outros || '',
+                valor_total_ticket: dados.valor_total_ticket || ''
             };
 
             const rows = [];
@@ -2055,6 +2061,7 @@
                 dados.itens_tecnico.forEach(function(item, idx) {
                     rows.push(Object.assign({}, base, {
                         tipo_linha: 'item_tecnico',
+                        ticket_principal: item.ticket_tecnico || dados.ticket || '',
                         ordem_item: idx + 1,
                         ticket_item: item.ticket_tecnico || '',
                         recebedor_item: item.recebedor || '',
@@ -2065,6 +2072,7 @@
                         valor_pagamento_item: item.valor_pagamento || '',
                         valor_extra_item: item.valor_extra || '',
                         valor_total_item: item.valor || '',
+                        valor_total_ticket: item.valor_total_ticket || '',
                         data_realizacao_item: item.data_realizacao || '',
                         data_pagamento_item: item.data_pagamento || '',
                         atividade_produtiva_item: item.atividade_produtiva === true ? 'Produtiva' : (item.atividade_produtiva === false ? 'Improdutiva' : ''),
@@ -2078,6 +2086,14 @@
                 dados.itens_rota.forEach(function(item) {
                     rows.push(Object.assign({}, base, {
                         tipo_linha: 'item_rota',
+                        ticket_principal: item.ticket_item || dados.ticket || '',
+                        valor_receita: item.valor || '',
+                        valor_km: item.valor_km || '',
+                        valor_pedagio: item.valor_pedagio || '',
+                        valor_hospedagem: item.valor_hospedagem || '',
+                        valor_fluvial: item.valor_fluvial || '',
+                        valor_outros: item.valor_outros || '',
+                        valor_total_ticket: item.valor_total_ticket || '',
                         ordem_item: item.ordem || '',
                         ticket_item: item.ticket_item || '',
                         recebedor_item: item.recebedor || '',
@@ -2150,49 +2166,31 @@
                     flattenDetalhesParaExcel(d).forEach(function(row) { linhas.push(row); });
                 });
 
-                const headerMap = {
-                    tipo_linha: 'TIPO LINHA',
-                    ticket_principal: 'TICKET',
-                    id_solicitacao: 'ID',
-                    titulo: 'TITULO',
-                    tipo: 'TIPO',
-                    status: 'STATUS',
-                    prioridade: 'PRIORIDADE',
-                    solicitante: 'SOLICITANTE',
-                    recebedor_principal: 'RECEBEDOR',
-                    chave_pix_principal: 'CHAVE PIX',
-                    cliente_empresa_principal: 'CLIENTE/EMPRESA',
-                    cnpj_principal: 'CNPJ',
-                    servico_principal: 'SERVICO',
-                    descricao_principal: 'DESCRICAO',
-                    data_criacao: 'CRIACAO',
-                    data_pagamento: 'PAGAMENTO',
-                    valor_total: 'VALOR TOTAL',
-                    valor_receita: 'VALOR RECEITA',
-                    valor_em_rota: 'VALOR EM ROTA',
-                    descricao_em_rota: 'DESCRICAO EM ROTA',
-                    valor_km: 'KM',
-                    valor_pedagio: 'PEDAGIO',
-                    valor_hospedagem: 'HOSPEDAGEM',
-                    valor_fluvial: 'FLUVIAL',
-                    valor_outros: 'OUTROS',
-                    ordem_item: 'ORDEM ITEM',
-                    ticket_item: 'TICKET ITEM',
-                    recebedor_item: 'RECEBEDOR ITEM',
-                    chave_pix_item: 'CHAVE PIX ITEM',
-                    servico_item: 'SERVICO ITEM',
-                    cliente_empresa_item: 'CLIENTE/EMPRESA ITEM',
-                    cnpj_item: 'CNPJ ITEM',
-                    valor_pagamento_item: 'VALOR PAGAMENTO ITEM',
-                    valor_extra_item: 'VALOR EXTRA ITEM',
-                    valor_total_item: 'VALOR TOTAL ITEM',
-                    data_realizacao_item: 'DATA REALIZACAO ITEM',
-                    data_pagamento_item: 'DATA PAGAMENTO ITEM',
-                    atividade_produtiva_item: 'ATIVIDADE',
-                    descricao_item: 'DESCRICAO ITEM'
-                };
-                const keys = Object.keys(headerMap);
-                const headers = keys.map(function(k) { return headerMap[k] || String(k).toUpperCase(); });
+                const exportColumns = [
+                    { key: 'id_solicitacao', label: 'ID' },
+                    { key: 'tipo', label: 'TIPO' },
+                    { key: 'solicitante', label: 'SOLICITANTE' },
+                    { key: 'ticket_principal', label: 'TICKET' },
+                    { key: 'servico_principal', label: 'SERVICO' },
+                    { key: 'status', label: 'STATUS' },
+                    { key: 'recebedor_principal', label: 'RECEBEDOR' },
+                    { key: 'chave_pix_principal', label: 'CHAVE PIX' },
+                    { key: 'cliente_empresa_principal', label: 'CLIENTE/EMPRESA' },
+                    { key: 'cnpj_principal', label: 'CNPJ' },
+                    { key: 'valor_receita', label: 'VALOR DA ATIVIDADE' },
+                    { key: 'valor_km', label: 'KM' },
+                    { key: 'valor_pedagio', label: 'PEDAGIO' },
+                    { key: 'valor_hospedagem', label: 'HOSPEDAGEM' },
+                    { key: 'valor_fluvial', label: 'FLUVIAL' },
+                    { key: 'valor_outros', label: 'OUTROS' },
+                    { key: 'valor_total_ticket', label: 'VALOR TOTAL DO TICKET' },
+                    { key: 'valor_total', label: 'VALOR TOTAL DA SOLICITAÇÃO' },
+                    { key: 'descricao_item', label: 'DESCRICAO ITEM' },
+                    { key: 'data_criacao', label: 'CRIACAO' },
+                    { key: 'data_pagamento', label: 'PAGAMENTO' }
+                ];
+                const keys = exportColumns.map(function(c) { return c.key; });
+                const headers = exportColumns.map(function(c) { return c.label; });
                 const wsData = [headers].concat(linhas.map(function(row) { return keys.map(function(k) { return row[k] != null ? row[k] : ''; }); }));
 
                 const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -2235,6 +2233,170 @@
                 if (typeof Utils !== 'undefined' && Utils.showNotification) Utils.showNotification('Exportação Excel concluída.', 'success');
             });
         });
+
+        (function setupExportAllSolicitacoesWorkbook() {
+            const btn = document.getElementById('exportAllSolicitacoesXlsxBtn');
+            if (!btn) return;
+
+            function buildWorksheetFromRows(linhas, keys, headers, title) {
+                function parseBrlNumber(v) {
+                    if (v == null) return 0;
+                    const s = String(v).trim();
+                    if (!s) return 0;
+                    const normalized = s.replace(/[^\d,.\-]/g, '').replace(/\./g, '').replace(',', '.');
+                    const n = parseFloat(normalized);
+                    return isNaN(n) ? 0 : n;
+                }
+                function formatBrlCurrency(n) {
+                    const val = Number(n || 0);
+                    return 'R$ ' + val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+                const linhasSafe = (linhas && linhas.length) ? linhas : [{}];
+                const titleRow = new Array(Math.max(headers.length, 1)).fill('');
+                titleRow[0] = title || 'SOLICITAÇÕES';
+                const wsData = [titleRow].concat([headers]).concat(linhasSafe.map(function(row) {
+                    return keys.map(function(k) { return row[k] != null ? row[k] : ''; });
+                }));
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 1, c: 0 }, e: { r: wsData.length - 1, c: headers.length - 1 } }) };
+                ws['!freeze'] = { xSplit: 0, ySplit: 2, topLeftCell: 'A3', activePane: 'bottomLeft', state: 'frozen' };
+                ws['!merges'] = ws['!merges'] || [];
+                ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: Math.max(headers.length - 1, 0) } });
+                ws['!cols'] = keys.map(function(_, i) {
+                    const maxContent = wsData.reduce(function(acc, r) {
+                        const len = String((r[i] == null ? '' : r[i])).length;
+                        return Math.max(acc, len);
+                    }, String(headers[i]).length);
+                    return { wch: Math.max(10, Math.min(maxContent + 2, 42)) };
+                });
+                const headerFill = { patternType: 'solid', fgColor: { rgb: '9EDFF0' } };
+                const titleFill = { patternType: 'solid', fgColor: { rgb: '00B5E2' } };
+                const gridBlack = {
+                    top: { style: 'thin', color: { rgb: '000000' } },
+                    bottom: { style: 'thin', color: { rgb: '000000' } },
+                    left: { style: 'thin', color: { rgb: '000000' } },
+                    right: { style: 'thin', color: { rgb: '000000' } }
+                };
+                const idxId = keys.indexOf('id_solicitacao');
+                const idxTotalTicket = keys.indexOf('valor_total_ticket');
+                const idxTotalSolicitacao = keys.indexOf('valor_total');
+                if (idxId >= 0 && idxTotalTicket >= 0 && idxTotalSolicitacao >= 0 && linhasSafe.length > 1) {
+                    let start = 0;
+                    while (start < linhasSafe.length) {
+                        const currentId = (linhasSafe[start] && linhasSafe[start].id_solicitacao != null)
+                            ? String(linhasSafe[start].id_solicitacao)
+                            : '';
+                        let end = start + 1;
+                        let soma = parseBrlNumber(linhasSafe[start] && linhasSafe[start].valor_total_ticket);
+                        while (end < linhasSafe.length) {
+                            const nextId = (linhasSafe[end] && linhasSafe[end].id_solicitacao != null)
+                                ? String(linhasSafe[end].id_solicitacao)
+                                : '';
+                            if (nextId !== currentId) break;
+                            soma += parseBrlNumber(linhasSafe[end] && linhasSafe[end].valor_total_ticket);
+                            end++;
+                        }
+                        const excelStart = start + 2; // título + cabeçalho
+                        const excelEnd = end + 1;
+                        const totalAddr = XLSX.utils.encode_cell({ r: excelStart, c: idxTotalSolicitacao });
+                        ws[totalAddr] = ws[totalAddr] || { t: 's', v: '' };
+                        ws[totalAddr].t = 's';
+                        ws[totalAddr].v = formatBrlCurrency(soma);
+                        for (let r = excelStart + 1; r <= excelEnd; r++) {
+                            const addr = XLSX.utils.encode_cell({ r: r, c: idxTotalSolicitacao });
+                            if (ws[addr]) ws[addr].v = '';
+                        }
+                        if (end - start > 1) {
+                            ws['!merges'].push({ s: { r: excelStart, c: idxId }, e: { r: excelEnd, c: idxId } });
+                            ws['!merges'].push({ s: { r: excelStart, c: idxTotalSolicitacao }, e: { r: excelEnd, c: idxTotalSolicitacao } });
+                        }
+                        start = end;
+                    }
+                }
+                for (let r = 0; r < wsData.length; r++) {
+                    for (let c = 0; c < headers.length; c++) {
+                        const addr = XLSX.utils.encode_cell({ r: r, c: c });
+                        if (!ws[addr]) continue;
+                        const isTitle = r === 0;
+                        const isHeader = r === 1;
+                        const shouldCenterDataCol = (c === idxId || c === idxTotalSolicitacao) && r >= 2;
+                        ws[addr].s = {
+                            font: {
+                                bold: isTitle || isHeader,
+                                sz: isTitle ? 15 : 10,
+                                color: { rgb: '000000' }
+                            },
+                            fill: isTitle ? titleFill : (isHeader ? headerFill : undefined),
+                            alignment: {
+                                horizontal: (isTitle || isHeader || shouldCenterDataCol) ? 'center' : 'left',
+                                vertical: 'center',
+                                wrapText: true
+                            },
+                            border: gridBlack
+                        };
+                    }
+                }
+                ws['!rows'] = ws['!rows'] || [];
+                ws['!rows'][0] = { hpt: 26 };
+                ws['!rows'][1] = { hpt: 20 };
+                return ws;
+            }
+
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Exportação geral: considerar todos os cards existentes no Kanban
+                // (inclui deslocamento e técnico, independente do seletor de tipo ativo).
+                const cards = Array.from(document.querySelectorAll('.column-content .card[data-card-id]:not(.empty-column)'));
+                if (!cards.length) {
+                    if (typeof Utils !== 'undefined' && Utils.showNotification) Utils.showNotification('Nenhuma solicitação visível para exportar.', 'info');
+                    else alert('Nenhuma solicitação visível para exportar.');
+                    return;
+                }
+
+                const cardIdsSeen = new Set();
+                const cardsUnicos = cards.filter(function(card) {
+                    const id = card.getAttribute('data-card-id');
+                    if (!id || cardIdsSeen.has(id)) return false;
+                    cardIdsSeen.add(id);
+                    return true;
+                });
+
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') && document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const headersReq = { 'Content-Type': 'application/json', 'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' };
+                headersReq['X-CSRFToken'] = csrfToken || (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
+                const ids = cardsUnicos.map(function(card) { return parseInt(card.getAttribute('data-card-id'), 10); }).filter(function(v) { return !isNaN(v); });
+                fetch('/solicitacoes/exportar-solicitacoes-planilha/', {
+                    method: 'POST',
+                    headers: headersReq,
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ ids: ids })
+                })
+                .then(function(resp) {
+                    if (!resp.ok) {
+                        return resp.json().then(function(j) { throw new Error((j && (j.error || j.message)) || 'Falha na exportação.'); })
+                            .catch(function() { throw new Error('Falha na exportação.'); });
+                    }
+                    return resp.blob();
+                })
+                .then(function(blob) {
+                    const hoje = new Date().toISOString().slice(0, 10);
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'solicitacoes_geral_' + hoje + '.xlsx';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                    if (typeof Utils !== 'undefined' && Utils.showNotification) Utils.showNotification('Exportação geral Excel concluída.', 'success');
+                })
+                .catch(function(err) {
+                    alert((err && err.message) ? err.message : 'Erro ao exportar planilha.');
+                });
+            });
+        })();
 
         // Selecionar todas / mover selecionados em massa
         function getVisibleCardsInColumn(column) {

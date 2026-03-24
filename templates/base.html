@@ -281,6 +281,12 @@
                         <i class="fas fa-plus"></i>
                         <span>Nova Solicitação Financeira</span>
                     </button>
+                    {% if request.resolver_match.url_name == 'home' %}
+                    <button class="btn-primary" id="exportAllSolicitacoesXlsxBtn" title="Exportar solicitações visíveis para Excel">
+                        <i class="fas fa-file-excel"></i>
+                        <span>Exportar Excel</span>
+                    </button>
+                    {% endif %}
                 </div>
                 {% endif %}
 
