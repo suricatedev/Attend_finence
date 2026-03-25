@@ -2440,12 +2440,12 @@ def exportar_solicitacoes_planilha(request):
     desloc_headers = [
         'ID', 'TIPO', 'SOLICITANTE', 'TICKET', 'SERVICO', 'STATUS', 'RECEBEDOR', 'CHAVE PIX',
         'CLIENTE/EMPRESA', 'CNPJ', 'VALOR DA ATIVIDADE', 'KM', 'PEDAGIO', 'HOSPEDAGEM',
-        'FLUVIAL', 'OUTROS', 'VALOR TOTAL DO TICKET', 'VALOR TOTAL DA SOLICITAÇÃO',
+        'FLUVIAL', 'OUTROS', 'VALOR POR TICKET', 'VALOR TOTAL DA SOLICITAÇÃO',
         'DESCRICAO ITEM', 'CRIACAO', 'PAGAMENTO'
     ]
     tecnico_headers = [
         'ID', 'TIPO DE SOLICITAÇÃO', 'SOLICITANTE', 'TICKET', 'SERVICO', 'STATUS', 'RECEBEDOR', 'CHAVE PIX',
-        'CLIENTE/EMPRESA', 'CNPJ', 'VALOR PAGAMENTO', 'VALOR EXTRA', 'VALOR TOTAL DO TICKET',
+        'CLIENTE/EMPRESA', 'CNPJ', 'VALOR PAGAMENTO', 'VALOR EXTRA', 'VALOR POR TICKET',
         'VALOR TOTAL DA SOLICITAÇÃO', 'DESCRICAO', 'DATA REALIZACAO', 'DATA PAGAMENTO', 'ATIVIDADE'
     ]
 
@@ -2502,13 +2502,14 @@ def exportar_solicitacoes_planilha(request):
                 hosp = float(it.valor_hospedagem or 0)
                 flu = float(it.valor_fluvial or 0)
                 out = float(it.valor_outros or 0)
-                total_ticket = atividade + km + ped + hosp + flu + out
-                total_solic += total_ticket
+                valor_por_ticket = km + ped + hosp + flu + out
+                valor_total_ticket = atividade + valor_por_ticket
+                total_solic += valor_total_ticket
                 rows.append([
                     sol.id, 'em_rota', solicitante, (it.ticket_item or sol.ticket or ''), (it.servico.nome if it.servico else servico_principal),
                     status, (it.recebedor or ''), (it.chave_pix or ''), (it.cliente_empresa or ''), (it.cnpj or ''),
                     _fmt_num(atividade), _fmt_num(km), _fmt_num(ped), _fmt_num(hosp), _fmt_num(flu), _fmt_num(out),
-                    _fmt_num(total_ticket), '', (sol.descricao_em_rota or ''), data_criacao, data_pagamento
+                    _fmt_num(valor_por_ticket), '', (sol.descricao_em_rota or ''), data_criacao, data_pagamento
                 ])
             if rows:
                 rows[0][17] = _fmt_num(total_solic)
@@ -2523,12 +2524,13 @@ def exportar_solicitacoes_planilha(request):
         soma_detalhados = km + ped + hosp + flu + out
         total_casual = float(sol.valor or 0)
         atividade = total_casual - soma_detalhados if total_casual > soma_detalhados else 0.0
-        total_ticket = atividade + soma_detalhados
+        valor_por_ticket = soma_detalhados
+        total_solic = atividade + soma_detalhados
         rows.append([
             sol.id, (sol.tipo or 'casual'), solicitante, (sol.ticket or ''), servico_principal, status,
             (sol.nome_do_recebedor or ''), (sol.chave_pix or ''), (sol.cliente_empresa or ''), (sol.cnpj or ''),
             _fmt_num(atividade), _fmt_num(km), _fmt_num(ped), _fmt_num(hosp), _fmt_num(flu), _fmt_num(out),
-            _fmt_num(total_ticket), _fmt_num(total_ticket), (sol.descricao or ''), data_criacao, data_pagamento
+            _fmt_num(valor_por_ticket), _fmt_num(total_solic), (sol.descricao or ''), data_criacao, data_pagamento
         ])
         return rows
 
@@ -2588,7 +2590,7 @@ def exportar_solicitacoes_planilha(request):
             'HOSPEDAGEM': 14,
             'FLUVIAL': 10,
             'OUTROS': 10,
-            'VALOR TOTAL DO TICKET': 22,
+            'VALOR POR TICKET': 22,
             'VALOR TOTAL DA SOLICITAÇÃO': 28,
             'DESCRICAO ITEM': 26,
             'CRIACAO': 12,
@@ -2596,7 +2598,7 @@ def exportar_solicitacoes_planilha(request):
             'VALOR PAGAMENTO': 18,
             'VALOR EXTRA': 14,
             'VALOR TOTAL': 16,
-            'VALOR TOTAL DO TICKET': 22,
+            'VALOR POR TICKET': 22,
             'VALOR TOTAL DA SOLICITAÇÃO': 28,
             'DESCRICAO': 24,
             'DATA REALIZACAO': 16,
