@@ -2495,7 +2495,8 @@ def exportar_solicitacoes_planilha(request):
         if sol.tipo == 'em_rota':
             itens = list(sol.itens_rota.all().order_by('ordem'))
             total_solic = 0.0
-            for it in itens:
+            descricao_grupo = (sol.descricao_em_rota or sol.descricao or '')
+            for idx, it in enumerate(itens):
                 atividade = float(it.valor or 0)
                 km = float(it.valor_km or 0)
                 ped = float(it.valor_pedagio or 0)
@@ -2509,7 +2510,7 @@ def exportar_solicitacoes_planilha(request):
                     sol.id, 'em_rota', solicitante, (it.ticket_item or sol.ticket or ''), (it.servico.nome if it.servico else servico_principal),
                     status, (it.recebedor or ''), (it.chave_pix or ''), (it.cliente_empresa or ''), (it.cnpj or ''),
                     _fmt_num(atividade), _fmt_num(km), _fmt_num(ped), _fmt_num(hosp), _fmt_num(flu), _fmt_num(out),
-                    _fmt_num(valor_por_ticket), '', (sol.descricao_em_rota or ''), data_criacao, data_pagamento
+                    _fmt_num(valor_por_ticket), '', (descricao_grupo if idx == 0 else ''), data_criacao, data_pagamento
                 ])
             if rows:
                 rows[0][17] = _fmt_num(total_solic)
@@ -2610,6 +2611,11 @@ def exportar_solicitacoes_planilha(request):
 
         idx_id = 1
         idx_total_sol = headers.index('VALOR TOTAL DA SOLICITAÇÃO') + 1 if 'VALOR TOTAL DA SOLICITAÇÃO' in headers else None
+        idx_desc = None
+        if 'DESCRICAO ITEM' in headers:
+            idx_desc = headers.index('DESCRICAO ITEM') + 1
+        elif 'DESCRICAO' in headers:
+            idx_desc = headers.index('DESCRICAO') + 1
 
         # Mesclar por ID e centralizar ID + total solicitação
         if rows and idx_total_sol is not None:
@@ -2623,6 +2629,8 @@ def exportar_solicitacoes_planilha(request):
                 if block_end > start:
                     ws.merge_cells(start_row=start, start_column=idx_id, end_row=block_end, end_column=idx_id)
                     ws.merge_cells(start_row=start, start_column=idx_total_sol, end_row=block_end, end_column=idx_total_sol)
+                    if idx_desc is not None:
+                        ws.merge_cells(start_row=start, start_column=idx_desc, end_row=block_end, end_column=idx_desc)
                 start = end
 
         for r in range(1, ws.max_row + 1):
