@@ -1071,16 +1071,11 @@ def receber_dados(request):
                         valor_item = limpar_valor_monetario(route_valor_raw) if route_valor_raw else 0.0
                         print(f"🔍 DEBUG Em Rota - Item {i} valor processado: {valor_item}")
                         
-                        # Se não há valor de atividade, calcular a partir dos valores detalhados
+                        # Regra de negócio:
+                        # "Valor da atividade" é a receita e só deve existir se o usuário preencher.
+                        # Se estiver vazio/0, NÃO inferir automaticamente a partir dos detalhados.
                         if valor_item <= 0:
-                            valor_detalhados = valor_km + valor_pedagio + valor_hospedagem + valor_fluvial + valor_outros
-                            if valor_detalhados > 0:
-                                valor_item = valor_detalhados
-                                print(f"🔍 DEBUG Em Rota - Item {i} valor calculado a partir dos detalhados: {valor_item}")
-                            else:
-                                # Se não há valor de atividade nem valores detalhados, permitir mas com valor 0
-                                print(f"⚠️ DEBUG Em Rota - Item {i} sem valor de atividade nem valores detalhados")
-                                valor_item = 0.0
+                            valor_item = 0.0
                         
                         # Verificar se pelo menos um valor (atividade ou detalhados) foi preenchido
                         total_valores = valor_item + valor_km + valor_pedagio + valor_hospedagem + valor_fluvial + valor_outros
