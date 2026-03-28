@@ -13,6 +13,7 @@ urlpatterns = [
     path("solicitacoes/", include("solicitacoes.urls")),
     path("servicos/", include("servicos.urls")),
     path("dashboards/", include("dashborads.urls")), # Mantido para dashboards
+    path("crm/", include("crm.urls")),
 ]
 
 # Servir arquivos estáticos

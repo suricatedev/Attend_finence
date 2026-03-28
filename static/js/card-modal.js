@@ -542,6 +542,7 @@ async function extractCardData(card) {
                                     valor_hospedagem: item.valor_hospedagem || 'R$ 0,00',
                                     valor_fluvial: item.valor_fluvial || 'R$ 0,00',
                                     valor_outros: item.valor_outros || 'R$ 0,00',
+                                    receita_liquida_item: formatarValorMonetario(Math.max(0, valorAtividade - somaDetalhados)),
                                     valor_total_item: item.valor_total_item || formatarValorMonetario(valorAtividade + somaDetalhados),
                                     valor_atividade: formatarValorMonetario(valorAtividade)
                                 };
@@ -861,6 +862,35 @@ function setModalValorPrivado(valorStr, valorReceitaStr, columnRevealed) {
     }
 }
 
+function setModalValoresDetalhadosPrivado(valoresDetalhadosStr, columnRevealed) {
+    const wrapDetalhados = document.getElementById('modal-valores-detalhados-wrap');
+    const displayDetalhados = document.getElementById('modal-valores-detalhados');
+    if (wrapDetalhados && displayDetalhados) {
+        wrapDetalhados.setAttribute('data-private-real', valoresDetalhadosStr || 'R$ 0,00');
+        displayDetalhados.textContent = columnRevealed ? (valoresDetalhadosStr || 'R$ 0,00') : '******';
+    }
+}
+
+function setMetricLabelWithHelp(labelElement, labelText, tooltipText) {
+    if (!labelElement) return;
+    labelElement.innerHTML = `
+        ${labelText}
+        <i class="fas fa-info-circle metric-help-icon" title="${tooltipText}"></i>
+    `;
+}
+
+function parseValorMonetarioSeguro(valorStr) {
+    if (valorStr === null || valorStr === undefined) return 0;
+    const limpo = String(valorStr).replace(/[^\d,-]/g, '').replace(/\./g, '').replace(',', '.');
+    const numero = parseFloat(limpo);
+    return Number.isFinite(numero) ? numero : 0;
+}
+
+function formatarValorMonetarioSeguro(valor) {
+    const numero = Number(valor || 0);
+    return `R$ ${numero.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 // Função para preencher os dados do card no modal
 function populateCardDetails(data) {
     // Preencher informações básicas
@@ -987,17 +1017,32 @@ function populateCardDetails(data) {
             }
         }
         
-        // ✅ MOSTRAR o campo "Valor Total" - não ocultar (valores com privacidade ******)
+        // ✅ MOSTRAR o campo "Receita Líquida" - não ocultar (valores com privacidade ******)
         if (valorContainer && valorElement) {
             valorContainer.style.display = '';
             const valorLabel = valorContainer.querySelector('.detail-label');
             if (valorLabel) {
-                valorLabel.textContent = 'Valor Total';
+                setMetricLabelWithHelp(
+                    valorLabel,
+                    'Receita Líquida',
+                    'Receita Líquida = max(0, Valor da Receita - Valores detalhados)'
+                );
                 valorLabel.style.display = '';
             }
             valorElement.style.display = '';
-            setModalValorPrivado(data.valor || 'R$ 0,00', data.valorReceita || 'R$ 0,00', data.columnRevealed);
-            console.log('✅ Campo Valor Total configurado (mascarado)');
+            const atividadeTotal = parseValorMonetarioSeguro(data.valorReceita || 'R$ 0,00');
+            const detalhadosTotal = (data.itensRota || []).reduce((soma, item) => {
+                return soma
+                    + parseValorMonetarioSeguro(item.valor_km || 'R$ 0,00')
+                    + parseValorMonetarioSeguro(item.valor_pedagio || 'R$ 0,00')
+                    + parseValorMonetarioSeguro(item.valor_hospedagem || 'R$ 0,00')
+                    + parseValorMonetarioSeguro(item.valor_fluvial || 'R$ 0,00')
+                    + parseValorMonetarioSeguro(item.valor_outros || 'R$ 0,00');
+            }, 0);
+            const receitaLiquida = Math.max(0, atividadeTotal - detalhadosTotal);
+            setModalValorPrivado(formatarValorMonetarioSeguro(receitaLiquida), data.valorReceita || 'R$ 0,00', data.columnRevealed);
+            setModalValoresDetalhadosPrivado(formatarValorMonetarioSeguro(detalhadosTotal), data.columnRevealed);
+            console.log('✅ Campo Receita Líquida configurado (mascarado)');
         } else {
             console.warn('⚠️ valorContainer ou valorElement não encontrado');
         }
@@ -1058,6 +1103,14 @@ function populateCardDetails(data) {
             const valorHospedagem = item.valor_hospedagem || 'R$ 0,00';
             const valorFluvial = item.valor_fluvial || 'R$ 0,00';
             const valorOutros = item.valor_outros || 'R$ 0,00';
+            const atividadeItem = parseValorMonetarioSeguro(item.valor_atividade || item.valor || 'R$ 0,00');
+            const detalhadosItem =
+                parseValorMonetarioSeguro(valorKm) +
+                parseValorMonetarioSeguro(valorPedagio) +
+                parseValorMonetarioSeguro(valorHospedagem) +
+                parseValorMonetarioSeguro(valorFluvial) +
+                parseValorMonetarioSeguro(valorOutros);
+            const receitaLiquidaItem = formatarValorMonetarioSeguro(Math.max(0, atividadeItem - detalhadosItem));
             const valoresDetalhados = [];
             valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">KM:</span><span class="private-value-wrap" data-private-real="${esc(valorKm)}"><span class="private-value-display">${priv(valorKm)}</span></span></div>`);
             valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Pedágio:</span><span class="private-value-wrap" data-private-real="${esc(valorPedagio)}"><span class="private-value-display">${priv(valorPedagio)}</span></span></div>`);
@@ -1105,7 +1158,7 @@ function populateCardDetails(data) {
                         <span class="route-item-modal-id">#${item.id || 'N/A'}</span>
                     </div>
                     <div class="route-item-header-right">
-                        <span class="route-item-modal-total">${item.valor_total_item || item.valor || 'R$ 0,00'}</span>
+                        <span class="route-item-modal-total">${item.receita_liquida_item || receitaLiquidaItem}</span>
                     </div>
                 </div>
                 <div class="route-item-modal-details">
@@ -1178,17 +1231,32 @@ function populateCardDetails(data) {
             }
         }
         
-        // MOSTRAR o campo "Valor Total"
+        // Para Técnico: valor principal exibido é o total (pagamento + extra)
         if (valorContainer && valorElement) {
             valorContainer.style.display = '';
             const valorLabel = valorContainer.querySelector('.detail-label');
             if (valorLabel) {
-                valorLabel.textContent = 'Valor Total';
+                setMetricLabelWithHelp(
+                    valorLabel,
+                    'Valor Total',
+                    'Valor Total (Técnico) = Valor Pagamento + Valor Extra'
+                );
                 valorLabel.style.display = '';
             }
             valorElement.style.display = '';
-            setModalValorPrivado(data.valorTotalTecnico || data.valor || 'R$ 0,00', data.valorReceita || 'R$ 0,00', data.columnRevealed);
-            console.log('✅ Campo Valor Total configurado (mascarado)');
+            const atividadeTotalTecnico = (data.itensTecnico || []).reduce(
+                (soma, item) => soma + parseValorMonetarioSeguro(item.valor_pagamento_tecnico || item.valor_pagamento || 'R$ 0,00'),
+                0
+            );
+            const detalhadosTotalTecnico = (data.itensTecnico || []).reduce(
+                (soma, item) => soma + parseValorMonetarioSeguro(item.valor_extra || 'R$ 0,00'),
+                0
+            );
+            const valorTotalTecnico = Math.max(0, atividadeTotalTecnico + detalhadosTotalTecnico);
+            const receitaAtividadeTecnico = formatarValorMonetarioSeguro(atividadeTotalTecnico);
+            setModalValorPrivado(formatarValorMonetarioSeguro(valorTotalTecnico), receitaAtividadeTecnico, data.columnRevealed);
+            setModalValoresDetalhadosPrivado(formatarValorMonetarioSeguro(detalhadosTotalTecnico), data.columnRevealed);
+            console.log('✅ Campo Valor Total (Técnico) configurado (mascarado)');
         }
         
         // Remover seção anterior se existir
@@ -1239,12 +1307,17 @@ function populateCardDetails(data) {
             const escTec = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
             const colRevTec = !!data.columnRevealed;
             const privTec = (v) => colRevTec ? escTec(v) : '******';
+            const valorPagamentoItem = item.valor_pagamento_tecnico || item.valor_pagamento || 'R$ 0,00';
+            const valorExtraItem = item.valor_extra || 'R$ 0,00';
+            const valorTotalTecnicoItem = formatarValorMonetarioSeguro(
+                Math.max(0, parseValorMonetarioSeguro(valorPagamentoItem) + parseValorMonetarioSeguro(valorExtraItem))
+            );
             const valoresDetalhados = [];
-            if (item.valor_pagamento_tecnico && item.valor_pagamento_tecnico !== 'R$ 0,00') {
-                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Valor Pagamento:</span><span class="private-value-wrap" data-private-real="${escTec(item.valor_pagamento_tecnico)}"><span class="private-value-display">${privTec(item.valor_pagamento_tecnico)}</span></span></div>`);
+            if (valorPagamentoItem && valorPagamentoItem !== 'R$ 0,00') {
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Valor Pagamento:</span><span class="private-value-wrap" data-private-real="${escTec(valorPagamentoItem)}"><span class="private-value-display">${privTec(valorPagamentoItem)}</span></span></div>`);
             }
-            if (item.valor_extra && item.valor_extra !== 'R$ 0,00') {
-                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Valor Extra:</span><span class="private-value-wrap" data-private-real="${escTec(item.valor_extra)}"><span class="private-value-display">${privTec(item.valor_extra)}</span></span></div>`);
+            if (valorExtraItem && valorExtraItem !== 'R$ 0,00') {
+                valoresDetalhados.push(`<div class="route-item-detail-value"><span class="detail-label-mini">Valor Extra:</span><span class="private-value-wrap" data-private-real="${escTec(valorExtraItem)}"><span class="private-value-display">${privTec(valorExtraItem)}</span></span></div>`);
             }
             
             const valoresDetalhadosHTML = valoresDetalhados.length > 0 
@@ -1296,7 +1369,7 @@ function populateCardDetails(data) {
                         <span class="route-item-modal-id">#${item.ticket_tecnico || item.id || 'N/A'}</span>
                     </div>
                     <div class="route-item-header-right">
-                        <span class="route-item-modal-total">${item.valor_total_item || item.valor || 'R$ 0,00'}</span>
+                        <span class="route-item-modal-total">${valorTotalTecnicoItem}</span>
                     </div>
                 </div>
                 <div class="route-item-modal-details">
@@ -1331,17 +1404,31 @@ function populateCardDetails(data) {
             }
         }
         
-        // ✅ MOSTRAR o campo "Valor Total"
+        // ✅ MOSTRAR o campo "Receita Líquida"
         if (valorContainer && valorElement) {
             valorContainer.style.display = '';
             const valorLabel = valorContainer.querySelector('.detail-label');
             if (valorLabel) {
-                valorLabel.textContent = 'Valor Total';
+                setMetricLabelWithHelp(
+                    valorLabel,
+                    'Receita Líquida',
+                    'Receita Líquida = max(0, Valor da Receita - Valores detalhados)'
+                );
                 valorLabel.style.display = '';
             }
             valorElement.style.display = '';
-            setModalValorPrivado(data.valoresDetalhados.valor_total || data.valor || 'R$ 0,00', data.valoresDetalhados.valor_receita || data.valorReceita || 'R$ 0,00', data.columnRevealed);
-            console.log('✅ Campo Valor Total Casual configurado (mascarado)');
+            const valoresCasual = data.valoresDetalhados || {};
+            const atividadeCasual = parseValorMonetarioSeguro(valoresCasual.valor_receita || data.valorReceita || 'R$ 0,00');
+            const detalhadosCasual =
+                parseValorMonetarioSeguro(valoresCasual.valor_km || 'R$ 0,00') +
+                parseValorMonetarioSeguro(valoresCasual.valor_pedagio || 'R$ 0,00') +
+                parseValorMonetarioSeguro(valoresCasual.valor_hospedagem || 'R$ 0,00') +
+                parseValorMonetarioSeguro(valoresCasual.valor_fluvial || 'R$ 0,00') +
+                parseValorMonetarioSeguro(valoresCasual.valor_outros || 'R$ 0,00');
+            const receitaLiquidaCasual = Math.max(0, atividadeCasual - detalhadosCasual);
+            setModalValorPrivado(formatarValorMonetarioSeguro(receitaLiquidaCasual), valoresCasual.valor_receita || data.valorReceita || 'R$ 0,00', data.columnRevealed);
+            setModalValoresDetalhadosPrivado(formatarValorMonetarioSeguro(detalhadosCasual), data.columnRevealed);
+            console.log('✅ Campo Receita Líquida Casual configurado (mascarado)');
         }
         
         // Remover seção anterior se existir
@@ -1457,9 +1544,18 @@ function populateCardDetails(data) {
         if (valorContainer) {
             valorContainer.style.display = '';
             const valorLabel = valorContainer.querySelector('.detail-label');
-            if (valorLabel) valorLabel.style.display = '';
+            if (valorLabel) {
+                setMetricLabelWithHelp(
+                    valorLabel,
+                    'Receita Líquida',
+                    'Receita Líquida = max(0, Valor da Receita - Valores detalhados)'
+                );
+                valorLabel.style.display = '';
+            }
             if (valorElement) valorElement.style.display = '';
-            setModalValorPrivado(data.valor || 'R$ 0,00', data.valorReceita || 'R$ 0,00', data.columnRevealed);
+            const atividadePadrao = parseValorMonetarioSeguro(data.valorReceita || data.valor || 'R$ 0,00');
+            setModalValorPrivado(formatarValorMonetarioSeguro(atividadePadrao), data.valorReceita || 'R$ 0,00', data.columnRevealed);
+            setModalValoresDetalhadosPrivado('R$ 0,00', data.columnRevealed);
         }
         
         // Remover seções de valores detalhados se existirem

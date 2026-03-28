@@ -428,9 +428,12 @@ class FormManager {
         // Adicionar nova mensagem de erro
         const errorDiv = document.createElement('div');
         errorDiv.className = 'error-message';
-        errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-exclamation-circle';
+        errorDiv.appendChild(icon);
+        errorDiv.appendChild(document.createTextNode(' ' + message));
         formGroup.appendChild(errorDiv);
-        
+
         // Garantir que o grupo tem a classe error
         formGroup.classList.add('error');
     }

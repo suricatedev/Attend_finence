@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}CRM - Pipeline de Vendas{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/crm.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+        <h1>Pipeline de Vendas</h1>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNovaOportunidade">
+            <i class="fas fa-plus"></i> Nova Oportunidade
+        </button>
+    </div>
+
+    <!-- Kanban Pipeline -->
+    <div class="row flex-nowrap overflow-auto pb-3" id="pipeline-kanban" style="min-height: 400px;">
+        <p class="text-muted p-4">Carregando pipeline...</p>
+    </div>
+
+    <!-- Lista de Oportunidades -->
+    <div class="card shadow mt-4 mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Todas as Oportunidades</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Lead</th>
+                            <th>Estágio</th>
+                            <th>Status</th>
+                            <th>Prioridade</th>
+                            <th>Valor Est.</th>
+                            <th>Prob.</th>
+                            <th>Valor Pond.</th>
+                            <th>Responsável</th>
+                            <th>Fech. Prev.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="oportunidades-tbody">
+                        <tr><td colspan="10" class="text-center text-muted">Carregando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Oportunidade -->
+<div class="modal fade" id="modalNovaOportunidade" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nova Oportunidade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formNovaOportunidade">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Título *</label>
+                            <input type="text" class="form-control" name="titulo" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Valor Estimado</label>
+                            <input type="number" class="form-control" name="valor_estimado" step="0.01" value="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Probabilidade (%)</label>
+                            <input type="number" class="form-control" name="probabilidade" min="0" max="100" value="50">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Prioridade</label>
+                            <select class="form-select" name="prioridade">
+                                <option value="baixa">Baixa</option>
+                                <option value="media" selected>Média</option>
+                                <option value="alta">Alta</option>
+                                <option value="critica">Crítica</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Data de Fechamento Prevista</label>
+                            <input type="date" class="form-control" name="data_fechamento_prevista">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Estágio</label>
+                            <select class="form-select" name="estagio_id" id="select-estagio">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Descrição</label>
+                            <textarea class="form-control" name="descricao" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Criar Oportunidade</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    carregarEstagios();
+    carregarOportunidades();
+
+    document.getElementById('formNovaOportunidade').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const data = {};
+        formData.forEach((v, k) => { if (k !== 'csrfmiddlewaretoken') data[k] = v; });
+
+        fetch('/crm/api/oportunidades/criar/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+            },
+            body: JSON.stringify(data),
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalNovaOportunidade'));
+                if (modal) modal.hide();
+                this.reset();
+                carregarOportunidades();
+                carregarEstagios();
+            } else {
+                alert('Erro: ' + resp.message);
+            }
+        })
+        .catch(err => alert('Erro: ' + err));
+    });
+});
+
+let estagiosData = [];
+
+function carregarEstagios() {
+    fetch('/crm/api/estagios/')
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) return;
+            estagiosData = data.estagios;
+
+            // Preencher select
+            const sel = document.getElementById('select-estagio');
+            sel.innerHTML = '<option value="">Selecione...</option>' +
+                data.estagios.map(e => `<option value="${e.id}">${escapeHtml(e.nome)}</option>`).join('');
+
+            // Montar kanban
+            montarKanban();
+        });
+}
+
+function montarKanban() {
+    fetch('/crm/api/oportunidades/?status=aberta')
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) return;
+            const container = document.getElementById('pipeline-kanban');
+
+            if (estagiosData.length === 0) {
+                container.innerHTML = '<div class="col-12 p-4"><p class="text-muted">Nenhum estágio configurado. Configure os estágios no painel Admin.</p></div>';
+                return;
+            }
+
+            container.innerHTML = estagiosData.map(estagio => {
+                const ops = data.oportunidades.filter(o => o.estagio_id === estagio.id);
+                return `<div class="col-md-3 col-lg-2" style="min-width: 280px;">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header text-white text-center" style="background-color: ${escapeAttr(estagio.cor)}">
+                            <strong>${escapeHtml(estagio.nome)}</strong>
+                            <span class="badge bg-light text-dark ms-1">${ops.length}</span>
+                        </div>
+                        <div class="card-body p-2" style="max-height: 500px; overflow-y: auto;">
+                            ${ops.length > 0 ? ops.map(o => `
+                                <div class="card mb-2 border-start border-3" style="border-color: ${prioridadeCor(o.prioridade)} !important">
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title mb-1" style="font-size: 0.85rem;">${escapeHtml(o.titulo)}</h6>
+                                        <small class="text-muted d-block">${escapeHtml(o.lead_nome)}</small>
+                                        <div class="d-flex justify-content-between mt-1">
+                                            <small class="text-success fw-bold">R$ ${o.valor_estimado.toLocaleString('pt-BR')}</small>
+                                            <small class="text-muted">${o.probabilidade}%</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('') : '<p class="text-muted text-center small">Vazio</p>'}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        });
+}
+
+function carregarOportunidades() {
+    fetch('/crm/api/oportunidades/')
+        .then(r => r.json())
+        .then(data => {
+            const tbody = document.getElementById('oportunidades-tbody');
+            if (!data.success || data.oportunidades.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">Nenhuma oportunidade.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.oportunidades.map(o => `<tr>
+                <td><strong>${escapeHtml(o.titulo)}</strong></td>
+                <td>${escapeHtml(o.lead_nome)}</td>
+                <td>${escapeHtml(o.estagio)}</td>
+                <td><span class="badge bg-${statusOpColor(o.status)}">${escapeHtml(o.status_display)}</span></td>
+                <td>${escapeHtml(o.prioridade)}</td>
+                <td>R$ ${o.valor_estimado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                <td>${o.probabilidade}%</td>
+                <td>R$ ${o.valor_ponderado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                <td>${escapeHtml(o.responsavel)}</td>
+                <td>${escapeHtml(o.data_fechamento_prevista)}</td>
+            </tr>`).join('');
+        });
+}
+
+function prioridadeCor(p) {
+    return {'baixa':'#6B7280','media':'#F59E0B','alta':'#EF4444','critica':'#991B1B'}[p] || '#6B7280';
+}
+
+function statusOpColor(s) {
+    return {'aberta':'primary','em_negociacao':'warning','ganha':'success','perdida':'danger'}[s] || 'secondary';
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+}
+
+function escapeAttr(str) {
+    return String(str).replace(/[&<>"']/g, function(m) {
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+    });
+}
+</script>
+{% endblock %}

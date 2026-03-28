@@ -1,3 +1,9 @@
+import csv
+import json
+import logging
+from datetime import time, datetime, timedelta
+from io import BytesIO
+
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
@@ -6,6 +12,8 @@ from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Q
+from django.utils import timezone
+
 from .models import (
     Solicitacoes,
     SolicitacaoRotaItem,
@@ -17,13 +25,10 @@ from .models import (
     SolicitacaoExcluida,
 )
 from servicos.models import Servico
-from django.utils import timezone
-from datetime import time, datetime, timedelta
-from io import BytesIO
-import csv
-import json
 from usuarios.decorators import group_required, user_can_view_dashboard
 from .audit_utils import serialize_instance
+
+logger = logging.getLogger('solicitacoes')
 
 STATUS_VALIDOS = {choice[0] for choice in Solicitacoes._meta.get_field('status').choices}
 
@@ -149,10 +154,10 @@ def registrar_recebedor(nome, chave_pix=None):
             chave_pix=chave_pix_normalizada or "",
             ativo=True,
         )
-        print(f"✅ Recebedor '{recebedor_obj.nome}' registrado automaticamente.")
+        logger.debug(f" Recebedor '{recebedor_obj.nome}' registrado automaticamente.")
         return recebedor_obj
     except Exception as e:
-        print(f"⚠️ Erro ao registrar recebedor '{nome}': {e}")
+        logger.warning(f" Erro ao registrar recebedor '{nome}': {e}")
         return None
 
 
@@ -202,7 +207,7 @@ def garantir_migracao_campos():
                 campos_adicionados = True
             except Exception as e:
                 if "already exists" not in str(e).lower() and "duplicate" not in str(e).lower():
-                    print(f"⚠️ Erro ao criar tabela ClienteEmpresa: {e}")
+                    logger.warning(f" Erro ao criar tabela ClienteEmpresa: {e}")
         else:
             # Se a tabela existe, verificar se tem o campo CNPJ
             cursor.execute("PRAGMA table_info(solicitacoes_clienteempresa)")
@@ -214,7 +219,7 @@ def garantir_migracao_campos():
                     campos_adicionados = True
                 except Exception as e:
                     if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
-                        print(f"⚠️ Erro ao adicionar campo cnpj na tabela ClienteEmpresa: {e}")
+                        logger.warning(f" Erro ao adicionar campo cnpj na tabela ClienteEmpresa: {e}")
 
         # Verificar e criar tabela Recebedor se não existir
         cursor.execute("""
@@ -238,7 +243,7 @@ def garantir_migracao_campos():
                 alteracoes_0007 = True
             except Exception as e:
                 if "already exists" not in str(e).lower() and "duplicate" not in str(e).lower():
-                    print(f"⚠️ Erro ao criar tabela Recebedor: {e}")
+                    logger.warning(f" Erro ao criar tabela Recebedor: {e}")
         else:
             # Se a tabela Recebedor existe, verificar se tem o campo supervisor
             cursor.execute("PRAGMA table_info(solicitacoes_recebedor)")
@@ -253,7 +258,7 @@ def garantir_migracao_campos():
                     campos_adicionados = True
                 except Exception as e:
                     if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
-                        print(f"⚠️ Erro ao adicionar campo supervisor na tabela Recebedor: {e}")
+                        logger.warning(f" Erro ao adicionar campo supervisor na tabela Recebedor: {e}")
         
         cursor.execute("PRAGMA table_info(solicitacoes_solicitacoes)")
         columns = [row[1] for row in cursor.fetchall()]
@@ -273,11 +278,11 @@ def garantir_migracao_campos():
             if campo not in columns:
                 try:
                     cursor.execute(sql)
-                    print(f"✅ Campo {campo} adicionado ao banco de dados")
+                    logger.debug(f" Campo {campo} adicionado ao banco de dados")
                     campos_adicionados = True
                 except Exception as e:
                     if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
-                        print(f"⚠️ Erro ao adicionar campo {campo}: {e}")
+                        logger.warning(f" Erro ao adicionar campo {campo}: {e}")
         
         # Verificar também na tabela de itens de rota
         cursor.execute("PRAGMA table_info(solicitacoes_solicitacaorotaitem)")
@@ -286,21 +291,21 @@ def garantir_migracao_campos():
         if 'cliente_empresa' not in columns_rota:
             try:
                 cursor.execute("ALTER TABLE solicitacoes_solicitacaorotaitem ADD COLUMN cliente_empresa VARCHAR(200) DEFAULT NULL;")
-                print(f"✅ Campo cliente_empresa adicionado à tabela solicitacoes_solicitacaorotaitem")
+                logger.debug(f" Campo cliente_empresa adicionado à tabela solicitacoes_solicitacaorotaitem")
                 campos_adicionados = True
             except Exception as e:
                 if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
-                    print(f"⚠️ Erro ao adicionar campo cliente_empresa na tabela de itens: {e}")
+                    logger.warning(f" Erro ao adicionar campo cliente_empresa na tabela de itens: {e}")
         
         # Verificar se campo CNPJ existe na tabela de itens de rota
         if 'cnpj' not in columns_rota:
             try:
                 cursor.execute("ALTER TABLE solicitacoes_solicitacaorotaitem ADD COLUMN cnpj VARCHAR(18) DEFAULT NULL;")
-                print(f"✅ Campo cnpj adicionado à tabela solicitacoes_solicitacaorotaitem")
+                logger.debug(f" Campo cnpj adicionado à tabela solicitacoes_solicitacaorotaitem")
                 campos_adicionados = True
             except Exception as e:
                 if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
-                    print(f"⚠️ Erro ao adicionar campo cnpj na tabela de itens: {e}")
+                    logger.warning(f" Erro ao adicionar campo cnpj na tabela de itens: {e}")
 
         # Verificar campos de recebedor na tabela de itens de rota (migração 0007)
         if 'recebedor' not in columns_rota:
@@ -310,7 +315,7 @@ def garantir_migracao_campos():
                 alteracoes_0007 = True
             except Exception as e:
                 if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
-                    print(f"⚠️ Erro ao adicionar campo recebedor na tabela de itens: {e}")
+                    logger.warning(f" Erro ao adicionar campo recebedor na tabela de itens: {e}")
 
         if 'chave_pix' not in columns_rota:
             try:
@@ -319,17 +324,17 @@ def garantir_migracao_campos():
                 alteracoes_0007 = True
             except Exception as e:
                 if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
-                    print(f"⚠️ Erro ao adicionar campo chave_pix na tabela de itens: {e}")
+                    logger.warning(f" Erro ao adicionar campo chave_pix na tabela de itens: {e}")
         
         # Verificar se campo CNPJ existe na tabela principal
         if 'cnpj' not in columns:
             try:
                 cursor.execute("ALTER TABLE solicitacoes_solicitacoes ADD COLUMN cnpj VARCHAR(18) DEFAULT NULL;")
-                print(f"✅ Campo cnpj adicionado à tabela solicitacoes_solicitacoes")
+                logger.debug(f" Campo cnpj adicionado à tabela solicitacoes_solicitacoes")
                 campos_adicionados = True
             except Exception as e:
                 if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
-                    print(f"⚠️ Erro ao adicionar campo cnpj: {e}")
+                    logger.warning(f" Erro ao adicionar campo cnpj: {e}")
         
         # Verificar tabela SolicitacaoTecnico e seus campos
         cursor.execute("""
@@ -349,7 +354,7 @@ def garantir_migracao_campos():
                     campos_adicionados = True
                 except Exception as e:
                     if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
-                        print(f"⚠️ Erro ao adicionar campo cliente_empresa_id na tabela SolicitacaoTecnico: {e}")
+                        logger.warning(f" Erro ao adicionar campo cliente_empresa_id na tabela SolicitacaoTecnico: {e}")
             
             # Verificar e adicionar campo data_pagamento se não existir
             if 'data_pagamento' not in columns_tecnico:
@@ -359,7 +364,7 @@ def garantir_migracao_campos():
                     campos_adicionados = True
                 except Exception as e:
                     if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
-                        print(f"⚠️ Erro ao adicionar campo data_pagamento na tabela SolicitacaoTecnico: {e}")
+                        logger.warning(f" Erro ao adicionar campo data_pagamento na tabela SolicitacaoTecnico: {e}")
         
         # Se data_entrada_status foi adicionado, atualizar registros existentes
         if campos_adicionados:
@@ -373,9 +378,9 @@ def garantir_migracao_campos():
                         SET data_entrada_status = datetime(data_de_criacao || ' ' || time(tempo_criacao))
                         WHERE data_entrada_status IS NULL;
                     """)
-                    print(f"✅ {cursor.rowcount} registros atualizados com data_entrada_status")
+                    logger.debug(f" {cursor.rowcount} registros atualizados com data_entrada_status")
             except Exception as e:
-                print(f"⚠️ Erro ao atualizar data_entrada_status: {e}")
+                logger.warning(f" Erro ao atualizar data_entrada_status: {e}")
         
         # Registrar migração se aplicou alguma
         if campos_adicionados:
@@ -386,7 +391,7 @@ def garantir_migracao_campos():
                 )
                 print("✅ Migração 0006 registrada no Django")
             except Exception as e:
-                print(f"⚠️ Erro ao registrar migração (pode ser ignorado): {e}")
+                logger.warning(f" Erro ao registrar migração (pode ser ignorado): {e}")
         if alteracoes_0007:
             try:
                 cursor.execute(
@@ -395,9 +400,9 @@ def garantir_migracao_campos():
                 )
                 print("✅ Migração 0007 registrada no Django")
             except Exception as e:
-                print(f"⚠️ Erro ao registrar migração 0007 (pode ser ignorado): {e}")
+                logger.warning(f" Erro ao registrar migração 0007 (pode ser ignorado): {e}")
     except Exception as e:
-        print(f"⚠️ Erro ao verificar/aplicar migração: {e}")
+        logger.warning(f" Erro ao verificar/aplicar migração: {e}")
 
 def receber_dados(request):
     # Garantir que o usuário está autenticado antes de qualquer processamento
@@ -410,31 +415,31 @@ def receber_dados(request):
     try:
         garantir_migracao_campos()
     except Exception as e:
-        print(f"⚠️ Aviso ao garantir migração: {e}")
+        logger.warning(f" Aviso ao garantir migração: {e}")
     garantir_migracao_campos()
     
     if request.method == 'POST':
         try:
             solicitacao_id_raw = (request.POST.get('solicitacao_id') or '').strip()
-            print(f"🔍 DEBUG EDIÇÃO - solicitacao_id recebido: '{solicitacao_id_raw}'")
-            print(f"🔍 DEBUG EDIÇÃO - Todos os campos POST recebidos: {list(request.POST.keys())}")
+            logger.debug(f" DEBUG EDIÇÃO - solicitacao_id recebido: '{solicitacao_id_raw}'")
+            logger.debug(f" DEBUG EDIÇÃO - Todos os campos POST recebidos: {list(request.POST.keys())}")
             solicitacao_existente = None
             if solicitacao_id_raw:
                 try:
                     solicitacao_existente = Solicitacoes.objects.select_related('servico').prefetch_related('itens_rota').get(id=int(solicitacao_id_raw))
-                    print(f"✅ DEBUG EDIÇÃO - Solicitação encontrada: ID={solicitacao_existente.id}, Ticket={solicitacao_existente.ticket}, Status={solicitacao_existente.status}")
+                    logger.debug(f" DEBUG EDIÇÃO - Solicitação encontrada: ID={solicitacao_existente.id}, Ticket={solicitacao_existente.ticket}, Status={solicitacao_existente.status}")
                 except (ValueError, Solicitacoes.DoesNotExist) as e:
-                    print(f"❌ DEBUG EDIÇÃO - Erro ao buscar solicitação: {e}")
+                    logger.error(f" DEBUG EDIÇÃO - Erro ao buscar solicitação: {e}")
                     messages.error(request, 'Solicitação para edição não foi encontrada ou já foi removida.')
                     return redirect('/solicitacoes/home/')
                 
                 if normalizar_status(solicitacao_existente.status) != 'pendente':
-                    print(f"❌ DEBUG EDIÇÃO - Status não permite edição: {solicitacao_existente.status}")
+                    logger.error(f" DEBUG EDIÇÃO - Status não permite edição: {solicitacao_existente.status}")
                     messages.error(request, 'Somente solicitações pendentes podem ser editadas.')
                     return redirect('/solicitacoes/home/')
             
             is_edit_mode = solicitacao_existente is not None
-            print(f"🔍 DEBUG EDIÇÃO - Modo edição ativado: {is_edit_mode}")
+            logger.debug(f" DEBUG EDIÇÃO - Modo edição ativado: {is_edit_mode}")
             success_message = 'Solicitação atualizada com sucesso!' if is_edit_mode else 'Solicitação criada com sucesso!'
             
             # Verificar se é uma solicitação de técnico ANTES de processar outros tipos
@@ -460,9 +465,9 @@ def receber_dados(request):
                             # Só adicionar se TODOS os campos obrigatórios estiverem preenchidos
                             if recebedor and servico and valor and data_realizacao:
                                 tecnico_ids_encontrados.append(num_id)
-                                print(f"✅ ID {num_id} válido - todos os campos obrigatórios preenchidos")
+                                logger.debug(f" ID {num_id} válido - todos os campos obrigatórios preenchidos")
                             else:
-                                print(f"⚠️ ID {num_id} ignorado - campos obrigatórios faltando (recebedor={bool(recebedor)}, servico={bool(servico)}, valor={bool(valor)}, data={bool(data_realizacao)})")
+                                logger.warning(f" ID {num_id} ignorado - campos obrigatórios faltando (recebedor={bool(recebedor)}, servico={bool(servico)}, valor={bool(valor)}, data={bool(data_realizacao)})")
                     except ValueError:
                         continue
             
@@ -488,14 +493,14 @@ def receber_dados(request):
             # Se modo_tecnico não é 'true', NÃO é solicitação de técnico (mesmo que haja campos vazios)
             if modo_tecnico != 'true':
                 is_solicitacao_tecnico = False
-                print(f"🔍 DEBUG: modo_tecnico não é 'true' ({modo_tecnico}), ignorando campos de técnico")
+                logger.debug(f" DEBUG: modo_tecnico não é 'true' ({modo_tecnico}), ignorando campos de técnico")
             
-            print(f"🔍 DEBUG: Verificando solicitação de técnico - IDs encontrados: {tecnico_ids_encontrados}, modo_tecnico: {modo_tecnico}, is_solicitacao_tecnico: {is_solicitacao_tecnico}")
-            print(f"🔍 DEBUG: Primeiros 50 campos POST: {list(request.POST.keys())[:50]}")
+            logger.debug(f" DEBUG: Verificando solicitação de técnico - IDs encontrados: {tecnico_ids_encontrados}, modo_tecnico: {modo_tecnico}, is_solicitacao_tecnico: {is_solicitacao_tecnico}")
+            logger.debug(f" DEBUG: Primeiros 50 campos POST: {list(request.POST.keys())[:50]}")
             
             if is_solicitacao_tecnico:
                 # Processar solicitação de técnico (múltiplos tickets)
-                print(f"🔍 DEBUG: Processando solicitação de técnico - IDs encontrados: {tecnico_ids_encontrados}")
+                logger.debug(f" DEBUG: Processando solicitação de técnico - IDs encontrados: {tecnico_ids_encontrados}")
                 
                 # Ordenar para processar na ordem correta
                 tecnico_ids_encontrados.sort()
@@ -585,25 +590,25 @@ def receber_dados(request):
                             # Buscar cliente/empresa (opcional)
                             cliente_empresa_obj = None
                             if tecnico_cliente_empresa_id:
-                                print(f"🔍 DEBUG Item {i}: Buscando Cliente/Empresa ID: '{tecnico_cliente_empresa_id}'")
+                                logger.debug(f" DEBUG Item {i}: Buscando Cliente/Empresa ID: '{tecnico_cliente_empresa_id}'")
                                 try:
                                     cliente_empresa_obj = ClienteEmpresa.objects.get(id=int(tecnico_cliente_empresa_id), ativo=True)
-                                    print(f"✅ DEBUG Item {i}: Cliente/Empresa encontrado: {cliente_empresa_obj.nome}")
+                                    logger.debug(f" DEBUG Item {i}: Cliente/Empresa encontrado: {cliente_empresa_obj.nome}")
                                 except ClienteEmpresa.DoesNotExist:
                                     # Não é erro crítico, apenas log
-                                    print(f"⚠️ Cliente/Empresa ID {tecnico_cliente_empresa_id} não encontrado ou inativo para o ID {i}")
+                                    logger.warning(f" Cliente/Empresa ID {tecnico_cliente_empresa_id} não encontrado ou inativo para o ID {i}")
                                 except (ValueError, TypeError) as e:
-                                    print(f"⚠️ ID de Cliente/Empresa inválido para o ID {i}: '{tecnico_cliente_empresa_id}', Erro: {e}")
+                                    logger.warning(f" ID de Cliente/Empresa inválido para o ID {i}: '{tecnico_cliente_empresa_id}', Erro: {e}")
                             
                             # Converter valores monetários
-                            print(f"🔍 DEBUG Item {i}: Valor pagamento raw: '{tecnico_valor_pagamento_raw}', Valor extra raw: '{tecnico_valor_extra_raw}'")
+                            logger.debug(f" DEBUG Item {i}: Valor pagamento raw: '{tecnico_valor_pagamento_raw}', Valor extra raw: '{tecnico_valor_extra_raw}'")
                             valor_pagamento_tecnico = limpar_valor_monetario(tecnico_valor_pagamento_raw)
                             valor_extra = limpar_valor_monetario(tecnico_valor_extra_raw) if tecnico_valor_extra_raw else 0.0
-                            print(f"🔍 DEBUG Item {i}: Valor pagamento convertido: {valor_pagamento_tecnico}, Valor extra convertido: {valor_extra}")
+                            logger.debug(f" DEBUG Item {i}: Valor pagamento convertido: {valor_pagamento_tecnico}, Valor extra convertido: {valor_extra}")
                             
                             if valor_pagamento_tecnico <= 0:
                                 error_msg = f'O valor a pagar para o técnico do ID {i} deve ser maior que zero. Valor recebido: "{tecnico_valor_pagamento_raw}"'
-                                print(f"❌ ERRO: {error_msg}")
+                                logger.error(f" ERRO: {error_msg}")
                                 if is_ajax:
                                     return JsonResponse({'success': False, 'message': error_msg}, status=400)
                                 messages.error(request, error_msg)
@@ -612,10 +617,10 @@ def receber_dados(request):
                             # Validar e converter data de realização
                             try:
                                 data_realizacao_atividade = datetime.strptime(tecnico_data_realizacao_str, '%Y-%m-%d').date()
-                                print(f"🔍 DEBUG Item {i}: Data realização convertida: {data_realizacao_atividade}")
+                                logger.debug(f" DEBUG Item {i}: Data realização convertida: {data_realizacao_atividade}")
                             except (ValueError, TypeError) as e:
                                 error_msg = f'Data da realização da atividade do ID {i} inválida. Use o formato correto. Valor recebido: "{tecnico_data_realizacao_str}"'
-                                print(f"❌ ERRO: {error_msg}, Exception: {e}")
+                                logger.error(f" ERRO: {error_msg}, Exception: {e}")
                                 if is_ajax:
                                     return JsonResponse({'success': False, 'message': error_msg}, status=400)
                                 messages.error(request, error_msg)
@@ -626,10 +631,10 @@ def receber_dados(request):
                             if tecnico_data_pagamento_str:
                                 try:
                                     data_pagamento = datetime.strptime(tecnico_data_pagamento_str, '%Y-%m-%d').date()
-                                    print(f"🔍 DEBUG Item {i}: Data pagamento convertida: {data_pagamento}")
+                                    logger.debug(f" DEBUG Item {i}: Data pagamento convertida: {data_pagamento}")
                                 except (ValueError, TypeError) as e:
                                     error_msg = f'Data de pagamento do ID {i} inválida. Use o formato correto. Valor recebido: "{tecnico_data_pagamento_str}"'
-                                    print(f"❌ ERRO: {error_msg}, Exception: {e}")
+                                    logger.error(f" ERRO: {error_msg}, Exception: {e}")
                                     if is_ajax:
                                         return JsonResponse({'success': False, 'message': error_msg}, status=400)
                                     messages.error(request, error_msg)
@@ -663,7 +668,7 @@ def receber_dados(request):
                                 'valor_total': valor_total
                             })
                             
-                            print(f"✅ Item de técnico {i} validado e preparado. Ticket: {tecnico_id_solicitacao}, Valor: {valor_total}")
+                            logger.debug(f" Item de técnico {i} validado e preparado. Ticket: {tecnico_id_solicitacao}, Valor: {valor_total}")
                         
                         # Em solicitação agrupada por técnico, todos os itens devem ter o MESMO recebedor e chave PIX do primeiro item
                         if len(itens_tecnico) >= 1:
@@ -682,8 +687,8 @@ def receber_dados(request):
                             messages.error(request, error_msg)
                             return redirect('/solicitacoes/home/')
                         
-                        print(f"🔍 DEBUG: Criando UMA ÚNICA solicitação principal com {len(itens_tecnico)} item(ns)")
-                        print(f"🔍 DEBUG: Tickets coletados: {tickets_tecnico}")
+                        logger.debug(f" DEBUG: Criando UMA ÚNICA solicitação principal com {len(itens_tecnico)} item(ns)")
+                        logger.debug(f" DEBUG: Tickets coletados: {tickets_tecnico}")
                         
                         # Gerar ticket principal (usar o primeiro ticket ou criar um ticket único)
                         ticket_principal = tickets_tecnico[0]
@@ -694,9 +699,9 @@ def receber_dados(request):
                             # Se o ticket principal já existe, gerar um ticket único com timestamp
                             timestamp = int(timezone.now().timestamp())
                             ticket_principal = f"TECNICO-{timestamp}"
-                            print(f"⚠️ Ticket '{tickets_tecnico[0]}' já existe. Usando ticket único: '{ticket_principal}'")
+                            logger.warning(f" Ticket '{tickets_tecnico[0]}' já existe. Usando ticket único: '{ticket_principal}'")
                         else:
-                            print(f"✅ Ticket principal '{ticket_principal}' é único - usando este ticket")
+                            logger.debug(f" Ticket principal '{ticket_principal}' é único - usando este ticket")
                         
                         # Criar título com todos os tickets (similar a Em Rota)
                         # Limitar o título a 70 caracteres (limite do campo no modelo)
@@ -709,7 +714,7 @@ def receber_dados(request):
                         if len(titulo_principal) > 70:
                             titulo_principal = titulo_principal[:67] + "..."
                         
-                        print(f"🔍 DEBUG: Ticket principal: '{ticket_principal}', Título: '{titulo_principal}', Valor total: R$ {valor_total_geral:.2f}")
+                        logger.debug(f" DEBUG: Ticket principal: '{ticket_principal}', Título: '{titulo_principal}', Valor total: R$ {valor_total_geral:.2f}")
                         
                         # Criar descrição combinada ou usar a primeira
                         descricao_principal = ''
@@ -725,7 +730,7 @@ def receber_dados(request):
                         if is_edit_mode:
                             # MODO EDIÇÃO: Atualizar solicitação existente
                             solicitacao_principal = solicitacao_existente
-                            print(f"🔍 DEBUG EDIÇÃO TÉCNICO - Atualizando solicitação ID={solicitacao_principal.id}")
+                            logger.debug(f" DEBUG EDIÇÃO TÉCNICO - Atualizando solicitação ID={solicitacao_principal.id}")
                             
                             # Atualizar campos da solicitação principal
                             solicitacao_principal.titulo = titulo_principal
@@ -739,13 +744,13 @@ def receber_dados(request):
                                 solicitacao_principal.anexo = anexo_tecnico
                             solicitacao_principal.save()
                             
-                            print(f"✅ Solicitação principal atualizada: ID={solicitacao_principal.id}, Ticket={solicitacao_principal.ticket}, Valor Total={valor_total_geral}")
+                            logger.debug(f" Solicitação principal atualizada: ID={solicitacao_principal.id}, Ticket={solicitacao_principal.ticket}, Valor Total={valor_total_geral}")
                             
                             # Deletar todos os itens de técnico existentes
                             itens_antigos = SolicitacaoTecnico.objects.filter(solicitacao=solicitacao_principal)
                             num_itens_antigos = itens_antigos.count()
                             itens_antigos.delete()
-                            print(f"🗑️ {num_itens_antigos} item(ns) de técnico antigo(s) deletado(s)")
+                            logger.debug(f" {num_itens_antigos} item(ns) de técnico antigo(s) deletado(s)")
                             
                             # Criar novos itens de técnico com os dados atualizados
                             for idx, item in enumerate(itens_tecnico):
@@ -769,7 +774,7 @@ def receber_dados(request):
                                     'ticket': item['tecnico_id_solicitacao']
                                 })
                                 
-                                print(f"✅ Item de técnico {idx + 1}/{len(itens_tecnico)} atualizado! ID Técnico: {solicitacao_tecnico.id}, Ticket: {item['tecnico_id_solicitacao']}")
+                                logger.debug(f" Item de técnico {idx + 1}/{len(itens_tecnico)} atualizado! ID Técnico: {solicitacao_tecnico.id}, Ticket: {item['tecnico_id_solicitacao']}")
                         else:
                             # MODO CRIAÇÃO: Criar nova solicitação
                             solicitacao_principal = Solicitacoes.objects.create(
@@ -793,7 +798,7 @@ def receber_dados(request):
                                 tipo='casual'  # Usar tipo casual para aparecer no Kanban
                             )
                             
-                            print(f"✅ Solicitação principal criada: ID={solicitacao_principal.id}, Ticket={ticket_principal}, Valor Total={valor_total_geral}")
+                            logger.debug(f" Solicitação principal criada: ID={solicitacao_principal.id}, Ticket={ticket_principal}, Valor Total={valor_total_geral}")
                             
                             # Criar todos os registros de SolicitacaoTecnico vinculados à solicitação principal
                             for idx, item in enumerate(itens_tecnico):
@@ -817,21 +822,21 @@ def receber_dados(request):
                                     'ticket': item['tecnico_id_solicitacao']
                                 })
                                 
-                                print(f"✅ Item de técnico {idx + 1}/{len(itens_tecnico)} criado! ID Técnico: {solicitacao_tecnico.id}, Ticket: {item['tecnico_id_solicitacao']}, Vinculado à solicitação principal ID={solicitacao_principal.id}")
+                                logger.debug(f" Item de técnico {idx + 1}/{len(itens_tecnico)} criado! ID Técnico: {solicitacao_tecnico.id}, Ticket: {item['tecnico_id_solicitacao']}, Vinculado à solicitação principal ID={solicitacao_principal.id}")
                         
                         # Verificação final: garantir que todos os itens estão vinculados à mesma solicitação principal
                         itens_criados = SolicitacaoTecnico.objects.filter(solicitacao=solicitacao_principal)
                         acao = 'atualizado(s)' if is_edit_mode else 'criado(s)'
-                        print(f"✅ Total: {len(solicitacoes_criadas)} item(ns) de técnico {acao} vinculado(s) à solicitação principal ID={solicitacao_principal.id}")
-                        print(f"🔍 DEBUG: Verificação final - {itens_criados.count()} itens encontrados vinculados à solicitação principal ID={solicitacao_principal.id}")
+                        logger.debug(f" Total: {len(solicitacoes_criadas)} item(ns) de técnico {acao} vinculado(s) à solicitação principal ID={solicitacao_principal.id}")
+                        logger.debug(f" DEBUG: Verificação final - {itens_criados.count()} itens encontrados vinculados à solicitação principal ID={solicitacao_principal.id}")
                         
                         # Confirmar que apenas UMA solicitação foi criada (apenas em modo criação)
                         if not is_edit_mode:
                             solicitacoes_com_ticket = Solicitacoes.objects.filter(ticket=ticket_principal)
                             if solicitacoes_com_ticket.count() > 1:
-                                print(f"❌ ERRO: Foram criadas {solicitacoes_com_ticket.count()} solicitações com o mesmo ticket '{ticket_principal}'! Isso não deveria acontecer.")
+                                logger.error(f" ERRO: Foram criadas {solicitacoes_com_ticket.count()} solicitações com o mesmo ticket '{ticket_principal}'! Isso não deveria acontecer.")
                             else:
-                                print(f"✅ Confirmado: Apenas 1 solicitação foi criada com o ticket '{ticket_principal}'")
+                                logger.debug(f" Confirmado: Apenas 1 solicitação foi criada com o ticket '{ticket_principal}'")
                         
                         # Verificar se é requisição AJAX
                         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -849,8 +854,8 @@ def receber_dados(request):
                 except Exception as e:
                     import traceback
                     error_trace = traceback.format_exc()
-                    print(f"❌ ERRO ao criar solicitação de técnico: {e}")
-                    print(f"📋 Traceback completo:\n{error_trace}")
+                    logger.error(f" ERRO ao criar solicitação de técnico: {e}")
+                    logger.debug(f" Traceback completo:\n{error_trace}")
                     
                     # Verificar se é requisição AJAX
                     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -883,7 +888,7 @@ def receber_dados(request):
             else:
                 tipo = 'casual'
             
-            print(f"🔍 DEBUG: Tipo recebido do formulário: '{tipo_raw}' -> processado como: '{tipo}'")
+            logger.debug(f" DEBUG: Tipo recebido do formulário: '{tipo_raw}' -> processado como: '{tipo}'")
             
             # Capturar dados comuns
             status = normalizar_status(request.POST.get('status') or 'pendente')
@@ -932,18 +937,18 @@ def receber_dados(request):
                 valor_receita = limpar_valor_monetario(valor_receita_raw)
                 
                 if is_edit_mode:
-                    print(f"🔍 DEBUG EDIÇÃO CASUAL - Valores capturados do formulário:")
-                    print(f"   - casual_valor_km: '{valor_km_raw}' -> {valor_km}")
-                    print(f"   - casual_valor_pedagio: '{valor_pedagio_raw}' -> {valor_pedagio}")
-                    print(f"   - casual_valor_hospedagem: '{valor_hospedagem_raw}' -> {valor_hospedagem}")
-                    print(f"   - casual_valor_fluvial: '{valor_fluvial_raw}' -> {valor_fluvial}")
-                    print(f"   - casual_valor_outros: '{valor_outros_raw}' -> {valor_outros}")
-                    print(f"   - casual_valor_receita: '{valor_receita_raw}' -> {valor_receita}")
+                    logger.debug(f" DEBUG EDIÇÃO CASUAL - Valores capturados do formulário:")
+                    logger.debug(f"   - casual_valor_km: '{valor_km_raw}' -> {valor_km}")
+                    logger.debug(f"   - casual_valor_pedagio: '{valor_pedagio_raw}' -> {valor_pedagio}")
+                    logger.debug(f"   - casual_valor_hospedagem: '{valor_hospedagem_raw}' -> {valor_hospedagem}")
+                    logger.debug(f"   - casual_valor_fluvial: '{valor_fluvial_raw}' -> {valor_fluvial}")
+                    logger.debug(f"   - casual_valor_outros: '{valor_outros_raw}' -> {valor_outros}")
+                    logger.debug(f"   - casual_valor_receita: '{valor_receita_raw}' -> {valor_receita}")
                 
                 # Registrar recebedor no catálogo principal para reaproveitamento
                 registrar_recebedor(nome_do_recebedor, chave_pix_casual)
             
-            print(f"🔍 DEBUG Campos - Tipo: '{tipo}', Recebedor: '{nome_do_recebedor}', Descrição: '{descricao[:50]}...', Data: '{data_de_pagamento_str}', Prioridade: '{prioridade}'")
+            logger.debug(f" DEBUG Campos - Tipo: '{tipo}', Recebedor: '{nome_do_recebedor}', Descrição: '{descricao[:50]}...', Data: '{data_de_pagamento_str}', Prioridade: '{prioridade}'")
             
             # Validação básica dos campos obrigatórios (apenas para feedback do backend)
             # A validação principal deve ser feita no frontend
@@ -1019,7 +1024,7 @@ def receber_dados(request):
                 
                 # Ordenar para processar na ordem correta
                 route_ids_encontrados.sort()
-                print(f"🔍 DEBUG Em Rota - IDs encontrados: {route_ids_encontrados}")
+                logger.debug(f" DEBUG Em Rota - IDs encontrados: {route_ids_encontrados}")
                 
                 ordem_atual = 1
                 recebedor_principal = ''
@@ -1059,7 +1064,7 @@ def receber_dados(request):
                     valor_fluvial = limpar_valor_monetario(request.POST.get(f'route_valor_fluvial_{i}', '').strip())
                     valor_outros = limpar_valor_monetario(request.POST.get(f'route_valor_outros_{i}', '').strip())
                     
-                    print(f"🔍 DEBUG Em Rota - Item {i} (ordem {ordem_atual}): ID='{route_id}', Valor='{route_valor_raw}', Servico='{route_servico_id}'")
+                    logger.debug(f" DEBUG Em Rota - Item {i} (ordem {ordem_atual}): ID='{route_id}', Valor='{route_valor_raw}', Servico='{route_servico_id}'")
                     
                     if route_id:  # Se há ID, deve ter serviço (valor é opcional)
                         # Validação: se ID está preenchido, serviço é obrigatório
@@ -1069,7 +1074,7 @@ def receber_dados(request):
                         
                         # Limpar valor - mesmo tratamento do Casual (opcional)
                         valor_item = limpar_valor_monetario(route_valor_raw) if route_valor_raw else 0.0
-                        print(f"🔍 DEBUG Em Rota - Item {i} valor processado: {valor_item}")
+                        logger.debug(f" DEBUG Em Rota - Item {i} valor processado: {valor_item}")
                         
                         # Regra de negócio:
                         # "Valor da atividade" é a receita e só deve existir se o usuário preencher.
@@ -1169,7 +1174,7 @@ def receber_dados(request):
                         f'⚠️ Os seguintes IDs já estão cadastrados no sistema: {tickets_str}. '
                         f'Por favor, use IDs diferentes para os itens da rota.'
                     )
-                    print(f"❌ ERRO: IDs já existem no banco de dados: {tickets_existentes}")
+                    logger.error(f" ERRO: IDs já existem no banco de dados: {tickets_existentes}")
                     return redirect('/solicitacoes/home/')
                 
                 route_tickets = [item['ticket'] for item in itens_rota]
@@ -1180,11 +1185,11 @@ def receber_dados(request):
                     ticket_fallback = solicitacao_existente.ticket
                 ticket_final = ticket_principal or ticket_fallback
                 
-                print(f"🔍 DEBUG Salvando solicitação Em Rota:")
-                print(f"   - Ticket final: {ticket_final}")
-                print(f"   - Valor Total: {valor_total}")
-                print(f"   - Itens: {len(itens_rota)}")
-                print(f"   - Modo edição: {is_edit_mode}")
+                logger.debug(f" DEBUG Salvando solicitação Em Rota:")
+                logger.debug(f"   - Ticket final: {ticket_final}")
+                logger.debug(f"   - Valor Total: {valor_total}")
+                logger.debug(f"   - Itens: {len(itens_rota)}")
+                logger.debug(f"   - Modo edição: {is_edit_mode}")
                 
                 itens_para_criar = []
                 for item in itens_rota:
@@ -1208,10 +1213,10 @@ def receber_dados(request):
                 with transaction.atomic():
                     if is_edit_mode:
                         solicitacao = solicitacao_existente
-                        print(f"🔍 DEBUG EDIÇÃO EM ROTA - Valores antes do save:")
-                        print(f"   - Valor Total: {valor_total} (anterior: {solicitacao.valor})")
-                        print(f"   - Valor Receita: {valor_receita} (anterior: {solicitacao.valor_receita})")
-                        print(f"   - Número de itens: {len(itens_rota)}")
+                        logger.debug(f" DEBUG EDIÇÃO EM ROTA - Valores antes do save:")
+                        logger.debug(f"   - Valor Total: {valor_total} (anterior: {solicitacao.valor})")
+                        logger.debug(f"   - Valor Receita: {valor_receita} (anterior: {solicitacao.valor_receita})")
+                        logger.debug(f"   - Número de itens: {len(itens_rota)}")
                         solicitacao.ticket = ticket_final
                         solicitacao.titulo = titulo
                         solicitacao.nome_do_recebedor = nome_do_recebedor
@@ -1235,7 +1240,7 @@ def receber_dados(request):
                         if anexo:
                             solicitacao.anexo = anexo
                         solicitacao.save()
-                        print(f"✅ DEBUG EDIÇÃO EM ROTA - Solicitação salva com sucesso! ID: {solicitacao.id}")
+                        logger.debug(f" DEBUG EDIÇÃO EM ROTA - Solicitação salva com sucesso! ID: {solicitacao.id}")
                         solicitacao.itens_rota.all().delete()
                     else:
                         # Se criar com status aprovado ou concluido, preencher data_aprovacao
@@ -1285,7 +1290,7 @@ def receber_dados(request):
                 valor_raw = request.POST.get('casual_valor', '').strip()
                 servico_id = request.POST.get('casual_service', '').strip()
                 
-                print(f"🔍 DEBUG Casual - ID='{id}', Valor='{valor_raw}', Servico='{servico_id}'")
+                logger.debug(f" DEBUG Casual - ID='{id}', Valor='{valor_raw}', Servico='{servico_id}'")
                 
                 # ⚠️ VALIDAÇÃO: Verificar se o ID (ticket) já existe no banco de dados
                 if id:
@@ -1308,7 +1313,7 @@ def receber_dados(request):
                                 f'⚠️ O ID "{id}" já está cadastrado no sistema! '
                                 f'Por favor, use um ID diferente.'
                             )
-                        print(f"❌ ERRO: ID '{id}' já existe no banco de dados!")
+                        logger.error(f" ERRO: ID '{id}' já existe no banco de dados!")
                         return redirect('/solicitacoes/home/')
                     
                     consulta_item = SolicitacaoRotaItem.objects.filter(ticket_item=id)
@@ -1330,12 +1335,12 @@ def receber_dados(request):
                                 f'⚠️ O ID "{id}" já está cadastrado como item de rota em outra solicitação! '
                                 f'Por favor, use um ID diferente.'
                             )
-                        print(f"❌ ERRO: ID '{id}' já existe como item de rota!")
+                        logger.error(f" ERRO: ID '{id}' já existe como item de rota!")
                         return redirect('/solicitacoes/home/')
                 
                 # Limpar valor usando função auxiliar
                 valor = limpar_valor_monetario(valor_raw)
-                print(f"🔍 DEBUG Casual - Valor recebido do formulário: '{valor_raw}' -> processado: {valor}")
+                logger.debug(f" DEBUG Casual - Valor recebido do formulário: '{valor_raw}' -> processado: {valor}")
                 
                 # Se o valor for 0 ou não foi calculado, calcular a partir dos valores detalhados
                 if valor == 0.0 or not valor_raw or valor_raw.strip() == '':
@@ -1344,23 +1349,23 @@ def receber_dados(request):
                         valor_km + valor_pedagio + valor_hospedagem + 
                         valor_fluvial + valor_outros + valor_receita
                     )
-                    print(f"🔍 DEBUG Casual - Valores detalhados: KM={valor_km}, Pedágio={valor_pedagio}, Hospedagem={valor_hospedagem}, Fluvial={valor_fluvial}, Outros={valor_outros}, Receita={valor_receita}")
-                    print(f"🔍 DEBUG Casual - Valor calculado a partir dos detalhados: {valor_calculado}")
+                    logger.debug(f" DEBUG Casual - Valores detalhados: KM={valor_km}, Pedágio={valor_pedagio}, Hospedagem={valor_hospedagem}, Fluvial={valor_fluvial}, Outros={valor_outros}, Receita={valor_receita}")
+                    logger.debug(f" DEBUG Casual - Valor calculado a partir dos detalhados: {valor_calculado}")
                     
                     if valor_calculado > 0:
                         valor = valor_calculado
-                        print(f"🔍 DEBUG - Valor recalculado a partir dos detalhados: {valor}")
+                        logger.debug(f" DEBUG - Valor recalculado a partir dos detalhados: {valor}")
                     else:
                         messages.error(request, 'O valor total da solicitação deve ser maior que zero. Preencha pelo menos um valor detalhado ou o valor de receita.')
-                        print(f"❌ ERRO - Valor calculado é zero ou negativo: {valor_calculado}")
+                        logger.error(f" ERRO - Valor calculado é zero ou negativo: {valor_calculado}")
                         return redirect('/solicitacoes/home/')
                 
-                print(f"🔍 DEBUG - Valor final processado: {valor}")
+                logger.debug(f" DEBUG - Valor final processado: {valor}")
                 
                 # Validação: valor deve ser maior que zero
                 if valor <= 0:
                     messages.error(request, 'O valor total da solicitação deve ser maior que zero.')
-                    print(f"❌ ERRO - Valor final é zero ou negativo: {valor}")
+                    logger.error(f" ERRO - Valor final é zero ou negativo: {valor}")
                     return redirect('/solicitacoes/home/')
                 
                 # Buscar o objeto Servico pelo ID
@@ -1378,22 +1383,22 @@ def receber_dados(request):
                     ticket_fallback = solicitacao_existente.ticket
                 ticket_final = id if id else ticket_fallback
                 
-                print(f"🔍 DEBUG Salvando solicitação Casual:")
-                print(f"   - ID/Ticket: {ticket_final}")
-                print(f"   - Valor: {valor}")
-                print(f"   - Serviço: {servico_obj}")
-                print(f"   - Tipo: casual")
-                print(f"   - Modo edição: {is_edit_mode}")
+                logger.debug(f" DEBUG Salvando solicitação Casual:")
+                logger.debug(f"   - ID/Ticket: {ticket_final}")
+                logger.debug(f"   - Valor: {valor}")
+                logger.debug(f"   - Serviço: {servico_obj}")
+                logger.debug(f"   - Tipo: casual")
+                logger.debug(f"   - Modo edição: {is_edit_mode}")
                 
                 try:
                     with transaction.atomic():
                         if is_edit_mode:
                             solicitacao = solicitacao_existente
-                            print(f"🔍 DEBUG EDIÇÃO CASUAL - Valores antes do save:")
-                            print(f"   - Valor: {valor} (anterior: {solicitacao.valor})")
-                            print(f"   - Valor Receita: {valor_receita} (anterior: {solicitacao.valor_receita})")
-                            print(f"   - Valor KM: {valor_km} (anterior: {solicitacao.valor_km})")
-                            print(f"   - Recebedor: {nome_do_recebedor} (anterior: {solicitacao.nome_do_recebedor})")
+                            logger.debug(f" DEBUG EDIÇÃO CASUAL - Valores antes do save:")
+                            logger.debug(f"   - Valor: {valor} (anterior: {solicitacao.valor})")
+                            logger.debug(f"   - Valor Receita: {valor_receita} (anterior: {solicitacao.valor_receita})")
+                            logger.debug(f"   - Valor KM: {valor_km} (anterior: {solicitacao.valor_km})")
+                            logger.debug(f"   - Recebedor: {nome_do_recebedor} (anterior: {solicitacao.nome_do_recebedor})")
                             solicitacao.ticket = ticket_final
                             solicitacao.titulo = titulo
                             solicitacao.nome_do_recebedor = nome_do_recebedor
@@ -1417,8 +1422,8 @@ def receber_dados(request):
                             if anexo:
                                 solicitacao.anexo = anexo
                             solicitacao.save()
-                            print(f"✅ DEBUG EDIÇÃO CASUAL - Solicitação salva com sucesso! ID: {solicitacao.id}")
-                            print(f"✅ DEBUG EDIÇÃO CASUAL - Valores após save: Valor={solicitacao.valor}, Receita={solicitacao.valor_receita}")
+                            logger.debug(f" DEBUG EDIÇÃO CASUAL - Solicitação salva com sucesso! ID: {solicitacao.id}")
+                            logger.debug(f" DEBUG EDIÇÃO CASUAL - Valores após save: Valor={solicitacao.valor}, Receita={solicitacao.valor_receita}")
                             # Garantir que itens anteriores (se existirem) sejam removidos
                             solicitacao.itens_rota.all().delete()
                         else:
@@ -1459,9 +1464,9 @@ def receber_dados(request):
                                 descricao_em_rota=''
                             )
                     
-                    print(f"✅ Solicitação Casual salva com sucesso! ID: {solicitacao.id}, Ticket: {solicitacao.ticket}")
+                    logger.debug(f" Solicitação Casual salva com sucesso! ID: {solicitacao.id}, Ticket: {solicitacao.ticket}")
                 except Exception as e:
-                    print(f"❌ ERRO ao salvar solicitação Casual: {e}")
+                    logger.error(f" ERRO ao salvar solicitação Casual: {e}")
                     messages.error(request, f'Erro ao salvar solicitação Casual: {str(e)}')
                     return redirect('/solicitacoes/home/')
             
@@ -1476,17 +1481,17 @@ def receber_dados(request):
                 })
             
             messages.success(request, success_message)
-            print(f"✅ DEBUG EDIÇÃO - Mensagem de sucesso enviada: {success_message}")
+            logger.debug(f" DEBUG EDIÇÃO - Mensagem de sucesso enviada: {success_message}")
             if is_edit_mode:
-                print(f"✅ DEBUG EDIÇÃO - Redirecionando após edição. Solicitação ID: {solicitacao_existente.id if solicitacao_existente else 'N/A'}")
+                logger.debug(f" DEBUG EDIÇÃO - Redirecionando após edição. Solicitação ID: {solicitacao_existente.id if solicitacao_existente else 'N/A'}")
             # Redirect para a mesma página para recarregar e mostrar o novo card
             return redirect('/solicitacoes/home/')
             
         except Exception as e:
             import traceback
             error_trace = traceback.format_exc()
-            print(f"❌ ERRO GERAL ao processar solicitação: {str(e)}")
-            print(f"📋 Traceback completo:\n{error_trace}")
+            logger.error(f" ERRO GERAL ao processar solicitação: {str(e)}")
+            logger.debug(f" Traceback completo:\n{error_trace}")
             
             # Verificar se é requisição AJAX
             is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -1528,7 +1533,7 @@ def receber_dados(request):
                     
                     # Ajustar o objeto em memória para manter consistência na renderização
                     if solicitacao.status != status_normalizado:
-                        print(f"⚠️ Normalizando status da solicitação {solicitacao.id} ({solicitacao.ticket}): '{solicitacao.status}' -> '{status_normalizado}'")
+                        logger.warning(f" Normalizando status da solicitação {solicitacao.id} ({solicitacao.ticket}): '{solicitacao.status}' -> '{status_normalizado}'")
                         solicitacao.status = status_normalizado
                         objetos_para_corrigir.append(solicitacao)
                     
@@ -1561,8 +1566,8 @@ def receber_dados(request):
             except Exception as e:
                 import traceback
                 error_trace = traceback.format_exc()
-                print(f"❌ Erro ao buscar solicitações: {str(e)}")
-                print(f"📋 Traceback:\n{error_trace}")
+                logger.error(f" Erro ao buscar solicitações: {str(e)}")
+                logger.debug(f" Traceback:\n{error_trace}")
                 # Retornar página vazia ao invés de erro
                 return render(request, 'home/index.html', {
                     'solicitacoes_pendentes': [],
@@ -2009,7 +2014,7 @@ def obter_detalhes_completos(request, solicitacao_id):
     except Exception as e:
         import traceback
         error_trace = traceback.format_exc()
-        print(f"❌ Erro ao obter detalhes completos: {str(e)}")
+        logger.error(f" Erro ao obter detalhes completos: {str(e)}")
         print(f"Traceback: {error_trace}")
         return JsonResponse({
             'success': False,
@@ -2103,6 +2108,7 @@ def exportar_relatorio_card(request, solicitacao_id):
         # Calcular valores
         valor_total_detalhados = solicitacao.get_valor_detalhados()
         valor_receita_calculado = 0.0
+        receita_liquida_total = 0.0
         
         # Se for Em Rota, calcular receita e preparar itens
         itens_rota_data = []
@@ -2113,8 +2119,12 @@ def exportar_relatorio_card(request, solicitacao_id):
             ordem = 1
             
             for item in itens_tecnico:
-                valor_total_item = (item.valor_pagamento_tecnico or 0.0) + (item.valor_extra or 0.0)
-                valor_receita_calculado += valor_total_item  # Para técnico, o valor total é a receita
+                valor_atividade_item = item.valor_pagamento_tecnico or 0.0
+                soma_detalhados_item = item.valor_extra or 0.0
+                # Regra técnico: total = valor pagamento + valor extra
+                receita_liquida_item = max(0.0, float(valor_atividade_item) + float(soma_detalhados_item))
+                valor_receita_calculado += valor_atividade_item
+                receita_liquida_total += receita_liquida_item
                 
                 # Usar ticket_item se existir, senão usar o ticket da solicitação principal
                 ticket_item = item.ticket_item if hasattr(item, 'ticket_item') and item.ticket_item else solicitacao.ticket
@@ -2132,14 +2142,15 @@ def exportar_relatorio_card(request, solicitacao_id):
                     'chave_pix': item.recebedor.chave_pix if item.recebedor else '',
                     'cliente_empresa': item.cliente_empresa.nome if item.cliente_empresa else '',
                     'cnpj': cnpj,
-                    'valor_total': valor_total_item,
+                    'valor_total': receita_liquida_item,
                     'valor_km': 0.0,  # Técnico não tem valores detalhados como deslocamento
                     'valor_pedagio': 0.0,
                     'valor_hospedagem': 0.0,
                     'valor_fluvial': 0.0,
-                    'valor_outros': item.valor_extra or 0.0,  # valor_extra como "outros"
-                    'soma_detalhados': item.valor_extra or 0.0,
-                    'valor_atividade': item.valor_pagamento_tecnico or 0.0,  # valor principal
+                    'valor_outros': soma_detalhados_item,  # valor_extra como "outros"
+                    'soma_detalhados': soma_detalhados_item,
+                    'valor_atividade': valor_atividade_item,  # valor principal
+                    'receita_liquida': receita_liquida_item,
                     'data_realizacao': item.data_realizacao_atividade.strftime('%d/%m/%Y') if item.data_realizacao_atividade else '',
                     'data_pagamento': item.data_pagamento.strftime('%d/%m/%Y') if item.data_pagamento else '',
                     'atividade_produtiva': item.atividade_produtiva if hasattr(item, 'atividade_produtiva') else True,
@@ -2157,7 +2168,8 @@ def exportar_relatorio_card(request, solicitacao_id):
                 soma_detalhados_item = (item.valor_km or 0.0) + (item.valor_pedagio or 0.0) + \
                                        (item.valor_hospedagem or 0.0) + (item.valor_fluvial or 0.0) + \
                                        (item.valor_outros or 0.0)
-                valor_total_item = valor_atividade_item + soma_detalhados_item
+                receita_liquida_item = max(0.0, float(valor_atividade_item) - float(soma_detalhados_item))
+                receita_liquida_total += receita_liquida_item
                 
                 itens_rota_data.append({
                     'ordem': item.ordem,
@@ -2167,7 +2179,7 @@ def exportar_relatorio_card(request, solicitacao_id):
                     'chave_pix': item.chave_pix or '',
                     'cliente_empresa': item.cliente_empresa or '',
                     'cnpj': item.cnpj or '',
-                    'valor_total': valor_total_item,
+                    'valor_total': receita_liquida_item,
                     'valor_km': item.valor_km or 0.0,
                     'valor_pedagio': item.valor_pedagio or 0.0,
                     'valor_hospedagem': item.valor_hospedagem or 0.0,
@@ -2175,6 +2187,7 @@ def exportar_relatorio_card(request, solicitacao_id):
                     'valor_outros': item.valor_outros or 0.0,
                     'soma_detalhados': soma_detalhados_item,
                     'valor_atividade': valor_atividade_item,
+                    'receita_liquida': receita_liquida_item,
                     'atividade_produtiva': None,  # Em Rota não tem atividade produtiva/improdutiva
                 })
         else:
@@ -2186,6 +2199,8 @@ def exportar_relatorio_card(request, solicitacao_id):
             valor_total_casual = solicitacao.valor or 0.0
             if valor_total_casual > soma_detalhados_casual:
                 valor_receita_calculado = valor_total_casual - soma_detalhados_casual
+            receita_liquida_item = max(0.0, float(valor_receita_calculado) - float(soma_detalhados_casual))
+            receita_liquida_total += receita_liquida_item
             
             # Para Casual, criar um item único na lista para exibir na tabela "Detalhamento por ID"
             itens_rota_data.append({
@@ -2196,7 +2211,7 @@ def exportar_relatorio_card(request, solicitacao_id):
                 'chave_pix': solicitacao.chave_pix or '',
                 'cliente_empresa': solicitacao.cliente_empresa or '',
                 'cnpj': solicitacao.cnpj or '',
-                'valor_total': valor_total_casual,
+                'valor_total': receita_liquida_item,
                 'valor_km': solicitacao.valor_km or 0.0,
                 'valor_pedagio': solicitacao.valor_pedagio or 0.0,
                 'valor_hospedagem': solicitacao.valor_hospedagem or 0.0,
@@ -2204,13 +2219,16 @@ def exportar_relatorio_card(request, solicitacao_id):
                 'valor_outros': solicitacao.valor_outros or 0.0,
                 'soma_detalhados': soma_detalhados_casual,
                 'valor_atividade': valor_receita_calculado,
+                'receita_liquida': receita_liquida_item,
                 'atividade_produtiva': None,  # Casual não tem atividade produtiva/improdutiva
             })
         
         context = {
             'solicitacao': solicitacao,
+            'is_tecnico': is_tecnico,
             'valor_total_detalhados': valor_total_detalhados,
             'valor_receita': valor_receita_calculado,  # Usar valor calculado, não o salvo
+            'receita_liquida': receita_liquida_total,
             'itens_rota': itens_rota_data,
             'justificativa_estorno': ultimo_estorno.justificativa if ultimo_estorno else '',
             'data_justificativa_estorno': ultimo_estorno.data_hora if ultimo_estorno else None,
@@ -2969,7 +2987,7 @@ def buscar_recebedores(request):
             'recebedores': recebedores_list
         })
     except Exception as e:
-        print(f"❌ Erro ao buscar recebedores: {e}")
+        logger.error(f" Erro ao buscar recebedores: {e}")
         return JsonResponse({
             'success': False,
             'recebedores': [],
@@ -3024,7 +3042,7 @@ def buscar_clientes_empresas(request):
             'clientes_empresas': clientes_list
         })
     except Exception as e:
-        print(f"❌ Erro ao buscar clientes/empresas: {e}")
+        logger.error(f" Erro ao buscar clientes/empresas: {e}")
         return JsonResponse({
             'success': False,
             'clientes_empresas': [],

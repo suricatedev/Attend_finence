@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -65,8 +66,8 @@ class Solicitacoes(models.Model):
         ('casual', 'Casual'),
         ('em_rota', 'Em Rota'),
     ]
-    ticket = models.CharField(max_length=25, unique=True, help_text="ID único da solicitação (Ex: INC001, ROTA-002)")
-    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='pendente')
+    ticket = models.CharField(max_length=25, unique=True, db_index=True, help_text="ID único da solicitação (Ex: INC001, ROTA-002)")
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='pendente', db_index=True)
     titulo = models.CharField(max_length = 70) 
     nome_solicitante = models.ForeignKey(User, on_delete=models.CASCADE)
     recebedor = models.ForeignKey(Recebedor, on_delete=models.SET_NULL, null=True, blank=True, related_name='solicitacoes_principal', verbose_name="Recebedor")
@@ -74,10 +75,10 @@ class Solicitacoes(models.Model):
     chave_pix = models.CharField(max_length=255, blank=True, null=True, verbose_name="Chave PIX (legado)")
     cliente_empresa = models.CharField(max_length=200, blank=True, null=True, verbose_name="Cliente/Empresa")
     cnpj = models.CharField(max_length=18, blank=True, null=True, verbose_name="CNPJ")
-    valor = models.FloatField()
+    valor = models.DecimalField(max_digits=12, decimal_places=2)
     descricao = models.TextField()
     data_de_pagamento = models.DateField()
-    data_de_criacao = models.DateField()
+    data_de_criacao = models.DateField(db_index=True)
     anexo = models.FileField(upload_to = 'anexos/', blank = True, null = True)
     tempo_criacao = models.TimeField()
     tempo_fila =  models.TimeField()
@@ -85,16 +86,16 @@ class Solicitacoes(models.Model):
     data_aprovacao = models.DateTimeField(null=True, blank=True, verbose_name="Data de Aprovação")
     prioridade = models.CharField(max_length=20, choices=PRIORIDADE_CHOICES, default='baixa')
     servico = models.ForeignKey('servicos.Servico', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Serviço")
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='casual', verbose_name="Tipo de Solicitação")
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='casual', db_index=True, verbose_name="Tipo de Solicitação")
     
     # Campos de valores detalhados (para Casual e geral Em Rota)
-    valor_km = models.FloatField(default=0.0, verbose_name="Valor KM")
-    valor_pedagio = models.FloatField(default=0.0, verbose_name="Valor Pedagio")
-    valor_hospedagem = models.FloatField(default=0.0, verbose_name="Valor Hospedagem")
-    valor_fluvial = models.FloatField(default=0.0, verbose_name="Valor Fluvial")
-    valor_outros = models.FloatField(default=0.0, verbose_name="Valor Outros")
-    valor_receita = models.FloatField(default=0.0, verbose_name="Valor de Receita")
-    valor_em_rota = models.FloatField(default=0.0, verbose_name="Valor EM ROTA")
+    valor_km = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Valor KM")
+    valor_pedagio = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Valor Pedagio")
+    valor_hospedagem = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Valor Hospedagem")
+    valor_fluvial = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Valor Fluvial")
+    valor_outros = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Valor Outros")
+    valor_receita = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Valor de Receita")
+    valor_em_rota = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Valor EM ROTA")
     descricao_em_rota = models.TextField(blank=True, null=True, verbose_name="Descrição do Pagamento EM ROTA")
     excluida = models.BooleanField(default=False, verbose_name="Excluída")
     data_exclusao = models.DateTimeField(null=True, blank=True, verbose_name="Data de Exclusão")
@@ -121,46 +122,44 @@ class Solicitacoes(models.Model):
         Para Casual: soma apenas os valores detalhados do próprio modelo
         Para Solicitações de Técnico: retorna o valor total da solicitação (já que não há valores detalhados)
         """
+        ZERO = Decimal('0')
         # Verificar se é uma solicitação de técnico
         if hasattr(self, 'solicitacoes_tecnico') and self.solicitacoes_tecnico.exists():
-            # Para solicitações de técnico, retornar o valor total
-            return self.valor or 0.0
-        
+            return self.valor or ZERO
+
         if self.tipo == 'em_rota':
-            # Para Em Rota, somar valores detalhados de todos os itens
-            total = 0.0
+            total = ZERO
             for item in self.itens_rota.all():
-                total += (item.valor_km or 0.0) + (item.valor_pedagio or 0.0) + \
-                         (item.valor_hospedagem or 0.0) + (item.valor_fluvial or 0.0) + \
-                         (item.valor_outros or 0.0)
+                total += (item.valor_km or ZERO) + (item.valor_pedagio or ZERO) + \
+                         (item.valor_hospedagem or ZERO) + (item.valor_fluvial or ZERO) + \
+                         (item.valor_outros or ZERO)
             return total
         else:
-            # Para Casual, somar apenas os valores detalhados do próprio modelo
-            return (self.valor_km or 0.0) + (self.valor_pedagio or 0.0) + \
-                   (self.valor_hospedagem or 0.0) + (self.valor_fluvial or 0.0) + \
-                   (self.valor_outros or 0.0)
+            return (self.valor_km or ZERO) + (self.valor_pedagio or ZERO) + \
+                   (self.valor_hospedagem or ZERO) + (self.valor_fluvial or ZERO) + \
+                   (self.valor_outros or ZERO)
 
 class SolicitacaoRotaItem(models.Model):
     """Modelo para armazenar os itens de uma solicitação Em Rota"""
     solicitacao = models.ForeignKey(Solicitacoes, on_delete=models.CASCADE, related_name='itens_rota')
     ticket_item = models.CharField(max_length=25, verbose_name="ID da Solicitação")
-    valor = models.FloatField(verbose_name="Valor")
+    valor = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Valor")
     servico = models.ForeignKey('servicos.Servico', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Serviço")
     ordem = models.IntegerField(default=1, verbose_name="Ordem")
-    
+
     # Recebedor como FK; nome/chave_pix legados mantidos para migração
     recebedor_fk = models.ForeignKey(Recebedor, on_delete=models.SET_NULL, null=True, blank=True, related_name='itens_rota', verbose_name="Recebedor")
     recebedor = models.CharField(max_length=100, blank=True, null=True, verbose_name="Nome do Recebedor (legado)")
     chave_pix = models.CharField(max_length=255, blank=True, null=True, verbose_name="Chave PIX (legado)")
     cliente_empresa = models.CharField(max_length=200, blank=True, null=True, verbose_name="Cliente/Empresa")
     cnpj = models.CharField(max_length=18, blank=True, null=True, verbose_name="CNPJ")
-    
+
     # Campos de valores detalhados (para cada ID em Em Rota)
-    valor_km = models.FloatField(default=0.0, verbose_name="Valor KM")
-    valor_pedagio = models.FloatField(default=0.0, verbose_name="Valor Pedagio")
-    valor_hospedagem = models.FloatField(default=0.0, verbose_name="Valor Hospedagem")
-    valor_fluvial = models.FloatField(default=0.0, verbose_name="Valor Fluvial")
-    valor_outros = models.FloatField(default=0.0, verbose_name="Valor Outros")
+    valor_km = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Valor KM")
+    valor_pedagio = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Valor Pedagio")
+    valor_hospedagem = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Valor Hospedagem")
+    valor_fluvial = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Valor Fluvial")
+    valor_outros = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Valor Outros")
 
     class Meta:
         ordering = ['ordem']
@@ -177,8 +176,8 @@ class SolicitacaoTecnico(models.Model):
     recebedor = models.ForeignKey(Recebedor, on_delete=models.CASCADE, related_name='solicitacoes_tecnico', verbose_name="Nome do Técnico")
     servico = models.ForeignKey('servicos.Servico', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Tipo de Serviço")
     cliente_empresa = models.ForeignKey(ClienteEmpresa, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Cliente/Empresa")
-    valor_pagamento_tecnico = models.FloatField(verbose_name="Valor que vai pagar para o técnico")
-    valor_extra = models.FloatField(default=0.0, blank=True, null=True, verbose_name="Valor Extra")
+    valor_pagamento_tecnico = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Valor que vai pagar para o técnico")
+    valor_extra = models.DecimalField(max_digits=12, decimal_places=2, default=0, blank=True, null=True, verbose_name="Valor Extra")
     descricao = models.TextField(blank=True, null=True, verbose_name="Descrição")
     data_realizacao_atividade = models.DateField(verbose_name="Data da Realização da Atividade", null=True, blank=True)
     data_pagamento = models.DateField(verbose_name="Data de Pagamento", null=True, blank=True)
@@ -213,10 +212,10 @@ class AuditoriaLog(models.Model):
         ('login', 'Login'),
     ]
 
-    app = models.CharField(max_length=100, verbose_name="App")
-    modelo = models.CharField(max_length=100, verbose_name="Modelo")
+    app = models.CharField(max_length=100, db_index=True, verbose_name="App")
+    modelo = models.CharField(max_length=100, db_index=True, verbose_name="Modelo")
     objeto_id = models.CharField(max_length=64, verbose_name="ID do Objeto")
-    acao = models.CharField(max_length=20, choices=ACAO_CHOICES, verbose_name="Ação")
+    acao = models.CharField(max_length=20, choices=ACAO_CHOICES, db_index=True, verbose_name="Ação")
     usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Usuário")
     dados_anteriores = models.JSONField(null=True, blank=True, verbose_name="Dados Anteriores")
     dados_novos = models.JSONField(null=True, blank=True, verbose_name="Dados Novos")

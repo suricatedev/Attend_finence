@@ -760,12 +760,14 @@ body.cannot-see-values .column-total-amount-wrap .btn-reveal-value {
 .detail-item-row {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     gap: 16px;
     margin-bottom: 16px;
 }
 
 .detail-item-half {
     flex: 1;
+    min-width: 180px;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -784,6 +786,22 @@ body.cannot-see-values .column-total-amount-wrap .btn-reveal-value {
     color: #666;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+.detail-label-with-help {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.metric-help-icon {
+    color: #64748b;
+    font-size: 0.85rem;
+    cursor: help;
+}
+
+.metric-help-icon:hover {
+    color: #334155;
 }
 
 .detail-value {

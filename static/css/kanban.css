@@ -743,8 +743,9 @@
     min-height: 0;
     flex-grow: 1;
     flex-shrink: 1;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: #FFCB57 rgba(84, 67, 80, 0.1); /* Firefox */
+    -ms-overflow-style: auto; /* IE and Edge */
 }
 
 /* Garantir que todos os cards tenham o mesmo formato */
@@ -756,34 +757,24 @@
     flex-shrink: 0;
 }
 
-/* Esconder scrollbar por padrão */
+/* Scrollbar estilizada sempre visível */
 .column-content::-webkit-scrollbar {
-    width: 0px;
-    background: transparent;
-}
-
-/* Mostrar scrollbar apenas quando necessário */
-.column-content[data-scrollable="true"] {
-    scrollbar-width: thin; /* Firefox */
-    -ms-overflow-style: auto; /* IE and Edge */
-}
-
-.column-content[data-scrollable="true"]::-webkit-scrollbar {
     width: 6px;
     background: transparent;
 }
 
-.column-content[data-scrollable="true"]::-webkit-scrollbar-track {
+.column-content::-webkit-scrollbar-track {
     background: rgba(84, 67, 80, 0.1);
     border-radius: 3px;
 }
 
-.column-content[data-scrollable="true"]::-webkit-scrollbar-thumb {
+.column-content::-webkit-scrollbar-thumb {
     background: #FFCB57;
     border-radius: 3px;
+    min-height: 40px;
 }
 
-.column-content[data-scrollable="true"]::-webkit-scrollbar-thumb:hover {
+.column-content::-webkit-scrollbar-thumb:hover {
     background: #1C1C1C;
 }
 

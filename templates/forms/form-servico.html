@@ -17,6 +17,7 @@
                     <p>Preencha os dados do serviço que será oferecido pela empresa</p>
                 </div>
                 <form id="addServiceForm">
+                    {% csrf_token %}
                     <div class="form-row">
                         <div class="form-group">
                             <label for="serviceName">

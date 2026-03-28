@@ -236,8 +236,9 @@ body {
 .main-content-body {
     flex: 1;
     min-height: 0;
-    overflow-y: scroll; /* barra vertical à direita */
-    overflow-x: scroll;  /* barra horizontal sempre visível embaixo da tela */
+    overflow-y: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Header */

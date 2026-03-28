@@ -1,7 +1,10 @@
-# View para solicitações de técnico - Adicionar ao final de views.py
+import logging
+
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from .models import SolicitacaoTecnico
+
+logger = logging.getLogger('solicitacoes')
 
 @require_http_methods(["GET"])
 def listar_solicitacoes_tecnico(request):
@@ -43,8 +46,7 @@ def listar_solicitacoes_tecnico(request):
         })
     
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Erro ao buscar solicitações de técnico: {e}", exc_info=True)
         return JsonResponse({
             'success': False,
             'message': f'Erro ao buscar solicitações de técnico: {str(e)}'

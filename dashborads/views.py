@@ -1,6 +1,7 @@
+from decimal import Decimal
 from django.shortcuts import render
 from django.contrib import messages
-from django.db.models import Sum, Count, Avg, Q, F, Min, Max
+from django.db.models import Sum, Count, Avg, Q, F, Min, Max, DecimalField, Value
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.safestring import mark_safe
@@ -84,7 +85,7 @@ def dashboard(request):
         custo_deslocamento = float(custo_desloc_solic + custo_desloc_itens)
         # Custo com Técnicos = soma do Valor Total de cada item (Valor que vai pagar para o técnico + Valor Extra)
         agg_tec = SolicitacaoTecnico.objects.filter(solicitacao_id__in=ids_custos).aggregate(
-            s=Sum(F('valor_pagamento_tecnico') + Coalesce(F('valor_extra'), 0.0))
+            s=Sum(F('valor_pagamento_tecnico') + Coalesce(F('valor_extra'), Value(Decimal('0'), output_field=DecimalField())))
         )
         custo_tecnicos = float(agg_tec['s'] or 0)
         cost_distribution = [custo_deslocamento, custo_logistico, custo_tecnicos]
@@ -109,7 +110,7 @@ def dashboard(request):
             agg_wi = SolicitacaoRotaItem.objects.filter(solicitacao__data_de_criacao__gte=ini, solicitacao__data_de_criacao__lte=fim).aggregate(i_km=Sum('valor_km'), i_ped=Sum('valor_pedagio'), i_hosp=Sum('valor_hospedagem'), i_flu=Sum('valor_fluvial'), i_out=Sum('valor_outros'))
             desl_i = (agg_wi['i_km'] or 0) + (agg_wi['i_ped'] or 0) + (agg_wi['i_hosp'] or 0) + (agg_wi['i_flu'] or 0) + (agg_wi['i_out'] or 0)
             agg_tec_w = SolicitacaoTecnico.objects.filter(solicitacao_id__in=ids_w).aggregate(
-                s=Sum(F('valor_pagamento_tecnico') + Coalesce(F('valor_extra'), 0.0))
+                s=Sum(F('valor_pagamento_tecnico') + Coalesce(F('valor_extra'), Value(Decimal('0'), output_field=DecimalField())))
             )
             tec_w = float(agg_tec_w['s'] or 0)
             evolution_weeks.append({'label': f'Semana {4 - i}', 'tecnicos': tec_w, 'logistica': log_w, 'deslocamento': float(desl_s) + float(desl_i)})

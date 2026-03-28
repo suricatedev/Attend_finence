@@ -1,0 +1,157 @@
+/* CRM Module Styles */
+
+/* KPI Cards */
+.border-left-primary { border-left: 4px solid #3B82F6 !important; }
+.border-left-success { border-left: 4px solid #10B981 !important; }
+.border-left-info { border-left: 4px solid #06B6D4 !important; }
+.border-left-warning { border-left: 4px solid #F59E0B !important; }
+
+.text-xs {
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+}
+
+/* Pipeline Kanban */
+#pipeline-kanban {
+    gap: 1rem;
+    padding-bottom: 1rem;
+}
+
+#pipeline-kanban .card-header {
+    font-size: 0.9rem;
+    padding: 0.6rem;
+}
+
+#pipeline-kanban .card-body {
+    padding: 0.5rem;
+}
+
+#pipeline-kanban .card-body .card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
+}
+
+#pipeline-kanban .card-body .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Lead Status Badges */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+    border-radius: 0.375rem;
+}
+
+/* Tables */
+#tabela-leads th,
+.table th {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #6B7280;
+    border-bottom: 2px solid #E5E7EB;
+}
+
+#tabela-leads td,
+.table td {
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+
+/* Filters */
+.card.shadow .form-control,
+.card.shadow .form-select {
+    border-radius: 0.5rem;
+    border: 1px solid #D1D5DB;
+    transition: border-color 0.15s ease;
+}
+
+.card.shadow .form-control:focus,
+.card.shadow .form-select:focus {
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Modal */
+.modal-content {
+    border-radius: 0.75rem;
+    border: none;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    border-bottom: 1px solid #E5E7EB;
+    padding: 1.25rem 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #E5E7EB;
+    padding: 1rem 1.5rem;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    #pipeline-kanban {
+        flex-direction: column;
+        overflow-x: hidden;
+    }
+
+    #pipeline-kanban > div {
+        min-width: 100% !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .container-fluid {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .container-fluid h1 {
+        font-size: 1.3rem;
+    }
+
+    /* Filtros empilhados no mobile */
+    .card .row.g-3 > [class*="col-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    /* Tabela responsiva */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table-responsive::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #FFCB57;
+        border-radius: 3px;
+    }
+
+    /* Modal forms */
+    .modal-dialog.modal-lg {
+        margin: 8px;
+        max-width: calc(100% - 16px);
+    }
+
+    .modal-body .row > [class*="col-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .container-fluid h1 {
+        font-size: 1.15rem;
+    }
+
+    .btn {
+        font-size: 0.85rem;
+        padding: 8px 14px;
+    }
+}

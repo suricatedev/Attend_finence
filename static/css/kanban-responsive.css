@@ -634,12 +634,7 @@
     }
 }
 
-
-
-
-   ======================================== */
-
-/* REGRA CRÍTICA: Forçar layout vertical em telas pequenas (mobile) */
+/* REGRA CRÍTICA (reforço): Forçar layout vertical em telas pequenas (mobile) */
 @media screen and (max-width: 768px) {
     /* Forçar com máxima especificidade possível */
     html body .main-content .kanban-board,

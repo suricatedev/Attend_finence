@@ -649,8 +649,8 @@
             <h2>Resumo de Valores</h2>
             <div class="valores-resumo">
                 <div class="valor-card">
-                    <div class="valor-card-label">Valor Total (Detalhados)</div>
-                    <div class="valor-card-value private-value-wrap" data-private-real="{{ valor_total_detalhados|brl }}">
+                    <div class="valor-card-label">Receita Líquida</div>
+                    <div class="valor-card-value private-value-wrap" data-private-real="{{ receita_liquida|brl }}">
                         <span class="private-value-display">******</span>
                     </div>
                 </div>
@@ -686,7 +686,7 @@
                         <th>Chave PIX</th>
                         <th>Cliente/Empresa</th>
                         <th>CNPJ</th>
-                        <th>Valor Total</th>
+                        <th>{% if is_tecnico %}Valor Total{% else %}Receita Líquida{% endif %}</th>
                         <th>Valores Detalhados</th>
                         <th>Atividade</th>
                         <th>Produtiva/Improdutiva</th>
@@ -711,7 +711,7 @@
                             </span>
                         </td>
                         <td class="valor-destaque">
-                            <span class="private-value-wrap" data-private-real="{{ item.valor_total|brl }}">
+                            <span class="private-value-wrap" data-private-real="{{ item.receita_liquida|brl }}">
                                 <span class="private-value-display">******</span>
                             </span>
                         </td>

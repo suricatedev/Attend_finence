@@ -1,3 +1,5 @@
+import logging
+
 from django.apps import apps
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.signals import user_logged_in
@@ -6,10 +8,12 @@ from django.db.models.signals import post_save, pre_delete, pre_save
 from .audit_utils import get_current_request, pop_old_state, serialize_instance, set_old_state
 from .models import AuditoriaLog
 
+logger = logging.getLogger('solicitacoes')
 
-TARGET_APP_LABELS = {'solicitacoes', 'servicos', 'usuarios', 'dashborads', 'auth'}
+
+TARGET_APP_LABELS = {'solicitacoes', 'servicos', 'usuarios', 'dashborads', 'auth', 'crm'}
 EXCLUDED_MODEL_NAMES = {'auditorialog', 'session', 'logentry'}
-SENSITIVE_FIELDS = {'password'}
+SENSITIVE_FIELDS = {'password', 'chave_pix', 'cnpj'}
 
 
 def _should_log(model):
@@ -104,7 +108,7 @@ def auditoria_post_save(sender, instance, created, **kwargs):
             origem=origem,
         )
     except Exception as e:
-        print(f"❌ Erro na auditoria (post_save): {str(e)}")
+        logger.error(f"Erro na auditoria (post_save): {e}")
 
 
 def auditoria_pre_delete(sender, instance, **kwargs):
@@ -135,7 +139,7 @@ def auditoria_pre_delete(sender, instance, **kwargs):
             origem=origem,
         )
     except Exception as e:
-        print(f"❌ Erro na auditoria (pre_delete): {str(e)}")
+        logger.error(f"Erro na auditoria (pre_delete): {e}")
 
 
 def log_user_login(sender, request, user, **kwargs):
@@ -159,7 +163,7 @@ def log_user_login(sender, request, user, **kwargs):
             origem=origem,
         )
     except Exception as e:
-        print(f"❌ Erro ao registrar login na auditoria: {str(e)}")
+        logger.error(f"Erro ao registrar login na auditoria: {e}")
 
 
 def connect_auditoria_signals():

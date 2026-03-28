@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}CRM - Gestão de Leads{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/crm.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+        <h1>Gestão de Leads</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoLead">
+            <i class="fas fa-plus"></i> Novo Lead
+        </button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" id="filtro-busca" placeholder="Buscar por nome, empresa, email...">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="filtro-status">
+                        <option value="">Todos os Status</option>
+                        <option value="novo">Novo</option>
+                        <option value="contatado">Contatado</option>
+                        <option value="qualificado">Qualificado</option>
+                        <option value="proposta">Proposta Enviada</option>
+                        <option value="convertido">Convertido</option>
+                        <option value="perdido">Perdido</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="filtro-origem">
+                        <option value="">Todas as Origens</option>
+                        <option value="indicacao">Indicação</option>
+                        <option value="site">Site</option>
+                        <option value="telefone">Telefone</option>
+                        <option value="email">E-mail</option>
+                        <option value="evento">Evento</option>
+                        <option value="rede_social">Rede Social</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-secondary w-100" id="btn-filtrar">
+                        <i class="fas fa-filter"></i> Filtrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Leads -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="tabela-leads">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Empresa</th>
+                            <th>E-mail</th>
+                            <th>Telefone</th>
+                            <th>Status</th>
+                            <th>Origem</th>
+                            <th>Valor Est.</th>
+                            <th>Responsável</th>
+                            <th>Data</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leads-tbody">
+                        <tr><td colspan="9" class="text-center text-muted">Carregando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-muted" id="leads-total"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Lead -->
+<div class="modal fade" id="modalNovoLead" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo Lead</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formNovoLead">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nome *</label>
+                            <input type="text" class="form-control" name="nome" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Empresa</label>
+                            <input type="text" class="form-control" name="empresa">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">E-mail</label>
+                            <input type="email" class="form-control" name="email">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Telefone</label>
+                            <input type="text" class="form-control" name="telefone">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">CNPJ</label>
+                            <input type="text" class="form-control" name="cnpj">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Valor Estimado</label>
+                            <input type="number" class="form-control" name="valor_estimado" step="0.01" value="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Origem</label>
+                            <select class="form-select" name="origem">
+                                <option value="indicacao">Indicação</option>
+                                <option value="site">Site</option>
+                                <option value="telefone">Telefone</option>
+                                <option value="email">E-mail</option>
+                                <option value="evento">Evento</option>
+                                <option value="rede_social">Rede Social</option>
+                                <option value="outro" selected>Outro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status">
+                                <option value="novo" selected>Novo</option>
+                                <option value="contatado">Contatado</option>
+                                <option value="qualificado">Qualificado</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Observações</label>
+                            <textarea class="form-control" name="observacoes" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Lead</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    carregarLeads();
+
+    document.getElementById('btn-filtrar').addEventListener('click', carregarLeads);
+    document.getElementById('filtro-busca').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') carregarLeads();
+    });
+
+    document.getElementById('formNovoLead').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const data = {};
+        formData.forEach((v, k) => { if (k !== 'csrfmiddlewaretoken') data[k] = v; });
+
+        fetch('/crm/api/leads/criar/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+            },
+            body: JSON.stringify(data),
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalNovoLead'));
+                if (modal) modal.hide();
+                this.reset();
+                carregarLeads();
+            } else {
+                alert('Erro: ' + resp.message);
+            }
+        })
+        .catch(err => alert('Erro ao criar lead: ' + err));
+    });
+});
+
+function carregarLeads() {
+    const busca = document.getElementById('filtro-busca').value;
+    const status = document.getElementById('filtro-status').value;
+    const origem = document.getElementById('filtro-origem').value;
+
+    let url = '/crm/api/leads/?';
+    if (busca) url += 'q=' + encodeURIComponent(busca) + '&';
+    if (status) url += 'status=' + status + '&';
+    if (origem) url += 'origem=' + origem + '&';
+
+    fetch(url)
+        .then(r => r.json())
+        .then(data => {
+            const tbody = document.getElementById('leads-tbody');
+            if (!data.success || data.leads.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Nenhum lead encontrado.</td></tr>';
+                document.getElementById('leads-total').textContent = '0 leads';
+                return;
+            }
+
+            tbody.innerHTML = data.leads.map(l => `<tr>
+                <td><strong>${escapeHtml(l.nome)}</strong></td>
+                <td>${escapeHtml(l.empresa)}</td>
+                <td>${escapeHtml(l.email)}</td>
+                <td>${escapeHtml(l.telefone)}</td>
+                <td><span class="badge bg-${statusColor(l.status)}">${escapeHtml(l.status_display)}</span></td>
+                <td>${escapeHtml(l.origem_display)}</td>
+                <td>R$ ${l.valor_estimado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                <td>${escapeHtml(l.responsavel)}</td>
+                <td>${escapeHtml(l.data_criacao)}</td>
+            </tr>`).join('');
+
+            document.getElementById('leads-total').textContent = data.total + ' leads';
+        })
+        .catch(err => console.error('Erro:', err));
+}
+
+function statusColor(status) {
+    const colors = {
+        'novo': 'primary', 'contatado': 'warning', 'qualificado': 'info',
+        'proposta': 'secondary', 'convertido': 'success', 'perdido': 'danger'
+    };
+    return colors[status] || 'secondary';
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+}
+</script>
+{% endblock %}
