@@ -1,0 +1,235 @@
+[
+  {
+    "id": 1,
+    "titulo": "Implante",
+    "descricao": "Perder um dente afeta muito mais que a estética. Com os implantes dentários, você recupera a função e a confiança no sorriso.",
+    "subtitulo": "Com tecnologia avançada, os implantes oferecem:",
+    "beneficios": [
+      "Aparência natural, igual a um dente verdadeiro.",
+      "Conforto para falar e mastigar sem limitações."
+    ],
+    "imagem": "Procedimento de Botox",
+    "whatsapp": "https://wa.me/5599981009379"
+  },
+  {
+    "id": 2,
+    "titulo": "Fios de PDO Técnica Coreana",
+    "descricao": "Os fios de PDO estimulam colágeno e promovem um lifting natural, sem cirurgia.",
+    "subtitulo": "Agende seu tratamento e conquiste rejuvenescimento de forma segura e eficaz.",
+    "beneficios": [
+      "Redefine contornos facias.",
+      "Estimula firmeza e elasticidade.",
+      "Resultados visíveis e naturais."
+    ],
+    "imagem": "Procedimento de Preenchimento Labial",
+    "whatsapp": "https://wa.me/5599981009379"
+  },
+  {
+    "id": 3,
+    "titulo": "Aparelho Ortodôntico",
+    "descricao": "O aparelho ortodôntico corrige o posicionamento dos dentes e melhora a saúde bucal.",
+    "subtitulo": "Comece hoje sua jornada para um sorriso perfeito.",
+    "beneficios": [
+      "Corrige mordida e alinhamento.",
+      "Facilita a higiene oral.",
+      "Melhora estética e confiança ao sorrir."
+    ],
+    "imagem": "Procedimento de Lipo de Papada",
+    "whatsapp": "https://wa.me/5599981009379"
+  },
+  {
+    "id": 4,
+    "titulo": "Preenchimento Labial",
+    "descricao": "O preenchimento labial valoriza o contorno e volume dos lábios.",
+    "subtitulo": "Agende já sua avaliação e conquiste os lábios dos seus sonhos.",
+    "beneficios": [
+      "Lábios mais hidratados e volumosos.",
+      "Melhora simetria e contorno.",
+      "Resultado natural e harmonioso."
+    ],
+    "imagem": "Procedimento de Bioestimulador de Colágeno",
+    "whatsapp": "https://wa.me/5599981009379"
+  },
+  {
+    "id": 5,
+    "titulo": "Bioestimulador de Colágeno",
+    "descricao": "Os bioestimuladores devolvem firmeza e elasticidade à pele ao estimular a produção de colágeno.",
+    "subtitulo": "Invista em sua pele com um tratamento que valoriza sua beleza ao longo do tempo.",
+    "beneficios": [
+      "Combate flacidez e rugas.",
+      "Resultados progressivos e duradouros.",
+      "Efeito natural e saudável."
+    ],
+    "imagem": "Procedimento de Skinbooster",
+    "whatsapp": "https://wa.me/5599981009379"
+  },
+  {
+    "id": 6,
+    "titulo": "Perfiloplastia",
+    "descricao": "A perfiloplastia integra procedimentos estéticos para equilibrar e valorizar os traços do rosto.",
+    "subtitulo": "Transforme seu perfil e revele sua melhor versão.",
+    "beneficios": [
+      "Proporção e equilíbrio facial.",
+      "Resultados naturais e personalizados.",
+      "Realce da beleza individual."
+    ],
+    "imagem": "Procedimento de Skinbooster",
+    "whatsapp": "https://wa.me/5599981009379"
+  },
+  {
+    "id": 7,
+    "titulo": "Ultrafomer MPT",
+    "descricao": "O Ultrafomer MPT atua no combate à flacidez facial e corporal, com efeito lifting imediato.",
+    "subtitulo": "Agende seu tratamento e descubra a tecnologia que redefine contornos faciais.",
+    "beneficios": [
+      "Estimula colágeno em profundidade.",
+      "Pele mais firme e rejuvenescida.",
+      "Procedimento não invasivo."
+    ],
+    "imagem": "Procedimento de Skinbooster",
+    "whatsapp": "https://wa.me/5599981009379"
+  },
+  {
+    "id": 8,
+    "titulo": "PDRN",
+    "descricao": "O PDRN é um tratamento inovador que promove regeneração e rejuvenescimento da pele.",
+    "subtitulo": "Experimente essa tecnologia e sinta a diferença na sua pele.",
+    "beneficios": [
+      "Melhora textura e firmeza.",
+      "Estimula produção de colágeno.",
+      "Pele revitalizada e saudável."
+    ],
+    "imagem": "Procedimento de Skinbooster",
+    "whatsapp": "https://wa.me/5599981009379"
+  },
+  {
+    "id": 9,
+    "titulo": "Harmonização Glútea",
+    "descricao": "A harmonização glútea realça o formato, volume e proporção dos glúteos.",
+    "subtitulo": "Agende seu tratamento e valorize ainda mais suas curvas.",
+    "beneficios": [
+      "Melhora simetria corporal.",
+      "Procedimento minimamente invasivo.",
+      "Resultados naturais e harmônicos."
+    ],
+    "imagem": "Procedimento de Skinbooster",
+    "whatsapp": "https://wa.me/5599981009379"
+  },
+  {
+    "id": 10,
+    "titulo": "Tratamento para Flacidez",
+    "descricao": "A flacidez pode ser tratada com técnicas avançadas que estimulam colágeno e elastina.",
+    "subtitulo": "Descubra como recuperar a firmeza da sua pele com nossos protocolos exclusivos.",
+    "beneficios": [
+      "Pele mais firme e tonificada.",
+      "Redução da aparência envelhecida.",
+      "Resultados naturais e progressivos."
+    ],
+    "imagem": "Procedimento de Skinbooster",
+    "whatsapp": "https://wa.me/5599981009379"
+  },
+  {
+    "id": 11,
+    "titulo": "Tratamento para Melasma",
+    "descricao": "O tratamento para melasma clareia manchas e devolve a uniformidade da pele.",
+    "subtitulo": "Agende sua avaliação e conquiste uma pele mais clara e uniforme.",
+    "beneficios": [
+      "Reduz manchas escuras.",
+      "Melhora textura e brilho.",
+      "Devolve confiança e autoestima."
+    ],
+    "imagem": "Procedimento de Skinbooster",
+    "whatsapp": "https://wa.me/5599981009379"
+  },
+  {
+    "id": 12,
+    "titulo": "Restauração",
+    "descricao": "A restauração dental devolve a forma e a função dos dentes comprometidos.",
+    "subtitulo": "Recupere a saúde e beleza do seu sorriso com restaurações estéticas.",
+    "beneficios": [
+      "Recupera a mastigação.",
+      "Devolve estética natural.",
+      "Previne danos maiores."
+    ],
+    "imagem": "Procedimento de Skinbooster",
+    "whatsapp": "https://wa.me/5599981009379"
+  },
+  {
+    "id": 13,
+    "titulo": "Limpeza Dentária",
+    "descricao": "A limpeza profissional elimina placas, tártaros e previne doenças bucais.",
+    "subtitulo": "Agende sua profilaxia e mantenha sua saúde bucal em dia.",
+    "beneficios": [
+      "Sorriso saudável e livre de inflamações.",
+      "Prevenção contra cáries e gengivite.",
+      "Sensação de frescor e bem-estar."
+    ],
+    "imagem": "Procedimento de Skinbooster",
+    "whatsapp": "https://wa.me/5599981009379"
+  },
+  {
+    "id": 14,
+    "titulo": "Clareamento Dental",
+    "descricao": "O clareamento dental remove manchas e devolve o branco natural dos dentes.",
+    "subtitulo": "Garanta já o seu tratamento e ilumine seu sorriso.",
+    "beneficios": [
+      "Dentes mais claros em poucas sessões.",
+      "Técnica segura e eficaz.",
+      "Eleva a autoconfiança ao sorrir."
+    ],
+    "imagem": "Procedimento de Skinbooster",
+    "whatsapp": "https://wa.me/5599981009379"
+  },
+  {
+    "id": 15,
+    "titulo": "Gengivoplastia",
+    "descricao": "A gengivoplastia remodela o contorno da gengiva, revelando dentes mais proporcionais.",
+    "subtitulo": "Agende sua consulta e conquiste um sorriso equilibrado e bonito.",
+    "beneficios": [
+      "Sorriso mais harmônico.",
+      "Procedimento rápido e seguro.",
+      "Realce natural da estética dental."
+    ],
+    "imagem": "Procedimento de Skinbooster",
+    "whatsapp": "https://wa.me/5599981009379"
+  },
+  {
+    "id": 16,
+    "titulo": "Facetas",
+    "descricao": "As facetas dentárias corrigem imperfeições estéticas, proporcionando um sorriso harmonioso.",
+    "subtitulo": "Descubra como as facetas podem transformar o seu sorriso em poucas sessões.",
+    "beneficios": [
+      "Corrige manchas, desgastes e espaçamentos.",
+      "Resultado imediato e natural.",
+      "Eleva autoestima e confiança."
+    ],
+    "imagem": "Procedimento de Skinbooster",
+    "whatsapp": "https://wa.me/5599981009379"
+  },
+  {
+    "id": 17,
+    "titulo": "Exossomo",
+    "descricao": "Os Exossomos potencializam a regeneração celular, melhorando textura, elasticidade e luminosidade.",
+    "subtitulo": "Agende seu tratamento e sinta sua pele reviver de dentro para fora.",
+    "beneficios": [
+      "Estimula produção natural de colágeno.",
+      "Reduz rugas e linhas finas.",
+      "Pele mais firme e rejuvenescida."
+    ],
+    "imagem": "Procedimento de Skinbooster",
+    "whatsapp": "https://wa.me/5599981009379"
+  },
+  {
+    "id": 18,
+    "titulo": "Protocolo",
+    "descricao": "Perder dentes compromete não só a estética, mas também a mastigação e autoestima. O protocolo devolve tudo isso.",
+    "subtitulo": "Agende sua avaliação e descubra como o protocolo pode transformar sua vida.",
+    "beneficios": [
+      "Fixo e estável como dentes naturais.",
+      "Melhora mastigação e fala.",
+      "Sorriso renovado e harmônico."
+    ],
+    "imagem": "Procedimento de Skinbooster",
+    "whatsapp": "https://wa.me/5599981009379"
+  }
+]
